@@ -1,0 +1,17 @@
+[
+  {
+    "email": "garki@doubleking.com",
+    "role": "BRANCH_ADMIN",
+    "fullName": "Garki Branch Manager"
+  },
+  {
+    "email": "admin@esthington.com",
+    "role": "SUPER_ADMIN",
+    "fullName": "Super Administrator"
+  },
+  {
+    "email": "cc_garki@doubleking.com",
+    "role": "CUSTOMER_CARE",
+    "fullName": "Sarah (Customer Care)"
+  }
+]

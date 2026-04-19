@@ -1,0 +1,24 @@
+=== CURRENT ESTHINGTON ACCOUNTS ===
+
+garki@doubleking.com  |  BRANCH_ADMIN  |  Double King Estate Ltd (Garki)
+admin@esthington.com  |  SUPER_ADMIN  |  Esthington Links Ltd (HQ)
+utako@doubleking.com  |  BRANCH_ADMIN  |  Double King Estate Ltd (Utako)
+gwarimpa@doubleking.com  |  BRANCH_ADMIN  |  Double King Estate Ltd (Gwarimpa)
+kuje@doubleking.com  |  BRANCH_ADMIN  |  Double King Estate Ltd (Kuje)
+headoffice@doublegrace.com  |  BRANCH_ADMIN  |  Double Grace (Head Office)
+headoffice@champions.com  |  BRANCH_ADMIN  |  Champions Properties Ltd (Head Office)
+headoffice@neft.com  |  BRANCH_ADMIN  |  Neft Properties Ltd (Head Office)
+headoffice@toprank.com  |  BRANCH_ADMIN  |  Top Rank Global Project Ltd (Head Office)
+headoffice@esthingtonlinks.com  |  BRANCH_ADMIN  |  Esthington Links Ltd (Head Office)
+staff1@garki.com  |  MARKETER  |  Double King Estate Ltd (Garki)
+staff2@garki.com  |  MARKETER  |  Double King Estate Ltd (Garki)
+staff3@garki.com  |  MARKETER  |  Double King Estate Ltd (Garki)
+staff1@utako.com  |  MARKETER  |  Double King Estate Ltd (Utako)
+staff2@utako.com  |  MARKETER  |  Double King Estate Ltd (Utako)
+md@doubleking.com  |  MANAGING_DIRECTOR  |  Double King Estate Ltd (Garki)
+hr@esthington.com  |  HR_MANAGER  |  Esthington Links Ltd (HQ)
+hr_garki@doubleking.com  |  HR_MANAGER  |  Double King Estate Ltd (Garki)
+accountant_garki@doubleking.com  |  ACCOUNTANT  |  Double King Estate Ltd (Garki)
+accountant_garki
+customer care
+Human Resource

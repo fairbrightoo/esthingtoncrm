@@ -1,0 +1,21 @@
+{
+  "id": "32ebd600-7f19-4100-ab37-48e2b1c3ef31",
+  "name": "New Month Message",
+  "type": "EMAIL",
+  "status": "DRAFT",
+  "scheduledAt": null,
+  "filters": "{\"gender\":\"Male\",\"status\":\"CLIENT\",\"source\":\"\"}",
+  "templateId": "ee1379f1-8135-41ca-a9cc-42aa5a9bfe24",
+  "companyId": "88322db0-aee9-476e-ba1e-d9b5f771a83a",
+  "createdAt": "2026-03-08T07:27:06.802Z",
+  "updatedAt": "2026-03-08T07:27:06.802Z",
+  "template": {
+    "id": "ee1379f1-8135-41ca-a9cc-42aa5a9bfe24",
+    "name": "New Month Message Template",
+    "content": "Happy new month to you all!",
+    "type": "EMAIL",
+    "companyId": "88322db0-aee9-476e-ba1e-d9b5f771a83a",
+    "createdAt": "2026-01-31T06:33:00.778Z",
+    "updatedAt": "2026-01-31T06:33:00.778Z"
+  }
+}

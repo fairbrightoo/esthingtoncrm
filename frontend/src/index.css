@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Globally convert all tables to swipeable blocks on mobile */
+@media (max-width: 768px) {
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table::-webkit-scrollbar {
+        height: 6px;
+    }
+    table::-webkit-scrollbar-track {
+        background: #f1f5f9; 
+        border-radius: 4px;
+    }
+    table::-webkit-scrollbar-thumb {
+        background: #cbd5e1; 
+        border-radius: 4px;
+    }
+    table::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8; 
+    }
+}

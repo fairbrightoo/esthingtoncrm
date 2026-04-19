@@ -1,0 +1,3 @@
+ReferenceError: require is not defined
+    at chatWithCoach (file:///C:/Users/fairb/OneDrive/Documents/esthingtoncrm/backend/dist/controllers/AICoachController.js:129:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

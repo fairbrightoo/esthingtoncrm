@@ -1,0 +1,70 @@
+{
+  "leads": [
+    {
+      "fullName": "Bright Osisiogu",
+      "branchId": "900fc4cc-ec60-4349-9ace-6700ecfea954"
+    },
+    {
+      "fullName": "Bethel Osisiogu",
+      "branchId": "900fc4cc-ec60-4349-9ace-6700ecfea954"
+    },
+    {
+      "fullName": "Ngozi Okoro",
+      "branchId": null
+    },
+    {
+      "fullName": "Tunde Adebayo",
+      "branchId": null
+    },
+    {
+      "fullName": "Fatima Musa",
+      "branchId": null
+    },
+    {
+      "fullName": "Chinedu Eze",
+      "branchId": null
+    },
+    {
+      "fullName": "Amina Bello",
+      "branchId": null
+    },
+    {
+      "fullName": "Segun Olawale",
+      "branchId": null
+    },
+    {
+      "fullName": "Ifeoma Obi",
+      "branchId": null
+    },
+    {
+      "fullName": "Jide Johnson",
+      "branchId": null
+    },
+    {
+      "fullName": "Hadiza Sani",
+      "branchId": null
+    },
+    {
+      "fullName": "Emeka Nwafor",
+      "branchId": null
+    }
+  ],
+  "branches": [
+    {
+      "id": "0e262731-035a-4948-9671-b73e8e7d5f19",
+      "name": "Utako"
+    },
+    {
+      "id": "900fc4cc-ec60-4349-9ace-6700ecfea954",
+      "name": "Garki"
+    },
+    {
+      "id": "1f2ca0ed-ddf6-45c3-a370-a5befa1d5e40",
+      "name": "Gwarimpa"
+    },
+    {
+      "id": "da2c3feb-dda3-471f-a37c-b3c7df1f7a11",
+      "name": "Kuje"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #000; font-size: 13px; line-height: 1.3;">
+    
+    <!-- HEADER: Logo and Date -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+        <tr>
+            <td style="vertical-align: bottom; width: 50%;">
+                <div style="font-weight: bold; border-left: 5px solid #b50b2e; padding-left: 8px; margin-bottom: 5px; font-size: 13px;">
+                    <div style="text-transform: uppercase;">{{CLIENT_NAME}}</div>
+                    <div>{{CLIENT_ADDRESS}}</div>
+                    <div>{{CLIENT_PHONE}}</div>
+                </div>
+            </td>
+            <td style="text-align: right; vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 10px;">
+                    {{COMPANY_LOGO}}
+                </div>
+                <div style="font-weight: bold; font-size: 13px;">
+                    {{CURRENT_DATE}}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- SALUTATION -->
+    <p style="font-weight: bold; font-family: 'Times New Roman', Times, serif; font-size: 14px; margin-bottom: 8px; margin-top: 5px;">Dear Sir/Ma,</p>
+
+    <!-- TITLE -->
+    <h3 style="text-align: center; text-decoration: underline; font-family: 'Times New Roman', Arial, sans-serif; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 10px; margin-top: 5px; font-size: 14px; text-transform: uppercase;">
+        PROVISIONAL ALLOCATION OF LAND SPACE AT {{ESTATE_NAME}},<br/>{{LOCATION}}.
+    </h3>
+
+    <!-- BODY -->
+    <p style="text-align: justify; font-size: 12.5px; margin-bottom: 8px; margin-top: 0;">
+        Following your application and interest at <strong>{{ESTATE_NAME}}, {{LOCATION}}</strong> and upon payment of the sum of <strong>{{AMOUNT_PAID}}</strong> only, we are glad to convey to you a provisional allocation of land space of about <strong>{{PLOT_SIZE}}</strong>, subject to the conditions hereunder appearing.
+    </p>
+
+    <ol style="margin-left: -5px; text-align: justify; font-size: 12px; margin-top: 0; margin-bottom: 8px;">
+        <li style="margin-bottom: 3px;">
+            The final allocation of the land space described above is subject to payment of the balance sum <strong>{{BALANCE_OUTSTANDING}}</strong> only from the date of this provisional allocation.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That this land space is to be used for the construction of a <strong>{{PROTOTYPE}}</strong>.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That a work permit shall be issued before commencement of any construction upon discharge of <strong>100% payment</strong> of cost of land space.<br/>
+            That you are to build strictly according to prototype issued to you.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That all construction works at <strong>{{ESTATE_NAME}}</strong> is to be supervised by our construction team.
+        </li>
+        <li style="margin-bottom: 3px;">
+            The failure of 100% payment of cost of land space within <strong>SIX MONTHS</strong> risk revocation upon one-month notice and relocation to the next phase of the project or attract additional charge (5% 3months, 10% 6months, 20% 12months) on the said balance amount.
+        </li>
+        <li style="margin-bottom: 3px;">
+            Withdrawal of interest, or request for refund attract 20% charge.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That this allocation is not transferable without the prior consent of the developer/company.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That the company has the right to stop your construction if you do not pay up where there is an outstanding balance or deviate from the approved standard of construction.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That it is the sole responsibility of the developer/company to PERPETUALLY appoint a facility Manager for <strong>{{ESTATE_NAME}}</strong>.
+        </li>
+        <li style="margin-bottom: 3px;">
+            That you are obligated to pay a facility management fee which is subject to change by the appointed facility manager on or before the 15th day of January of every year.
+        </li>
+        <li style="margin-bottom: 0px;">
+            That you are expected to pay your infrastructure fee before occupation of your building.
+        </li>
+    </ol>
+
+    <p style="font-weight: bold; font-family: 'Times New Roman', Times, serif; font-size: 14px; margin-top: 5px; margin-bottom: 8px;">CONGRATULATIONS.</p>
+
+    <!-- SIGNATURE -->
+    <div style="margin-top: 15px;">
+        <div style="margin-bottom: 2px; max-height: 40px; overflow: hidden;">{{COMPANY_SIGNATURE}}</div>
+        <div style="border-top: 1px solid #000; width: 220px; padding-top: 2px; font-weight: bold; font-size: 14px;">
+            {{MD_NAME}}
+        </div>
+        <div style="font-weight: bold; font-style: italic; font-family: 'Times New Roman', Times, serif; font-size: 13px;">
+            Managing Director
+        </div>
+    </div>
+
+    <!-- FOOTER: Dynamic Branch Details -->
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; border-top: 3px solid #8B4513; border-bottom: 3px solid #8B4513; font-size: 10px;">
+        <tr>
+            <td style="padding: 6px; width: 60%; line-height: 1.3; border-right: 1px solid #ddd;">
+                <div><span style="color: #b50b2e;">◎</span> <strong>BRANCH OFFICE:</strong> {{BRANCH_ADDRESS}}</div>
+            </td>
+            <td style="padding: 6px; width: 40%; line-height: 1.3;">
+                <div><span style="color: #b50b2e;">✉</span> {{COMPANY_EMAIL}}</div>
+                <div><span style="color: #b50b2e;">🌐</span> {{COMPANY_WEBSITE}}</div>
+                <div><span style="color: #b50b2e;">☎</span> {{BRANCH_PHONE}}</div>
+            </td>
+        </tr>
+    </table>
+
+</div>

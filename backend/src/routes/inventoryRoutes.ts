@@ -1,0 +1,38 @@
+import express from 'express';
+import { EstateController } from '../controllers/EstateController.js';
+import { PlotController } from '../controllers/PlotController.js';
+import { SaleController } from '../controllers/SaleController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
+import { upload } from '../middleware/uploadMiddleware.js';
+
+const router = express.Router();
+
+// --- INVENTORY / ESTATES ROUTES ---
+router.post('/estates', authenticateToken, upload.fields([{ name: 'searchDocument', maxCount: 1 }, { name: 'siteLayout', maxCount: 1 }]), EstateController.createEstate);
+router.get('/estates', authenticateToken, EstateController.getEstates);
+router.put('/estates/:id', authenticateToken, upload.fields([{ name: 'searchDocument', maxCount: 1 }, { name: 'siteLayout', maxCount: 1 }]), EstateController.updateEstate);
+router.delete('/estates/:id', authenticateToken, EstateController.deleteEstate);
+router.post('/estates/secure-pdf-stream', authenticateToken, EstateController.streamSecurePdf);
+
+// --- INVENTORY / PLOTS ROUTES ---
+router.post('/estates/:estateId/plots/bulk', authenticateToken, PlotController.generatePlots);
+router.post('/estates/:estateId/plots/bulk-import', authenticateToken, PlotController.importBulkPlots);
+router.post('/estates/:estateId/plots/manual', authenticateToken, PlotController.addLegacyPlot);
+router.get('/estates/:estateId/plots', authenticateToken, PlotController.getEstatePlots);
+router.get('/plots/available', authenticateToken, PlotController.getAvailablePlots);
+router.put('/plots/:plotId', authenticateToken, PlotController.updatePlot);
+router.put('/plots/:plotId/toggle-cp', authenticateToken, PlotController.toggleCornerPiece);
+router.get('/plots/:plotId/history', authenticateToken, PlotController.getPlotHistory);
+router.put('/estates/:estateId/plots/bulk-price', authenticateToken, PlotController.updateBulkPlotPrices);
+
+// --- SALES & PAYMENTS ROUTES ---
+router.post('/sales', authenticateToken, SaleController.createSale);
+router.get('/leads/:leadId/sales', authenticateToken, SaleController.getLeadSales);
+router.post('/sales/:saleId/payments', authenticateToken, upload.array('proofs', 10), SaleController.recordPayment);
+router.get('/payments/pending', authenticateToken, SaleController.getPendingPayments);
+router.get('/payments/processed', authenticateToken, SaleController.getProcessedPayments);
+router.put('/payments/:paymentId/status', authenticateToken, SaleController.updatePaymentStatus);
+router.patch('/sales/:saleId/plot', authenticateToken, SaleController.assignPlotNumber);
+router.post('/sales/:saleId/exchange', authenticateToken, SaleController.exchangePlot);
+
+export default router;

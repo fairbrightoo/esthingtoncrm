@@ -1,0 +1,207 @@
+import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
+
+const prisma = new PrismaClient();
+
+export const EstateController = {
+    // 1. Create a new Estate (Branch Admin)
+    createEstate: async (req: Request, res: Response) => {
+        try {
+            const { name, location, documentSearchNumber } = req.body;
+            const user = (req as any).user;
+
+            if (!user.companyId || !user.branchId) {
+                return res.status(400).json({ error: "Missing company or branch association for this user." });
+            }
+
+            let searchDocumentUrl = null;
+            let siteLayoutUrl = null;
+
+            if (req.files) {
+                const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+                const uploadDir = path.join(process.cwd(), 'uploads');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+
+                if (files['searchDocument'] && files['searchDocument'][0]) {
+                    const file = files['searchDocument'][0];
+                    const fileName = `searchdoc-${Date.now()}${path.extname(file.originalname)}`;
+                    const filePath = path.join(uploadDir, fileName);
+                    fs.writeFileSync(filePath, file.buffer);
+                    searchDocumentUrl = `/uploads/${fileName}`;
+                }
+
+                if (files['siteLayout'] && files['siteLayout'][0]) {
+                    const file = files['siteLayout'][0];
+                    const fileName = `sitelayout-${Date.now()}${path.extname(file.originalname)}`;
+                    const filePath = path.join(uploadDir, fileName);
+                    fs.writeFileSync(filePath, file.buffer);
+                    siteLayoutUrl = `/uploads/${fileName}`;
+                }
+            }
+
+            const estate = await prisma.estate.create({
+                data: {
+                    name,
+                    location,
+                    documentSearchNumber: documentSearchNumber || null,
+                    searchDocumentUrl,
+                    siteLayoutUrl,
+                    companyId: user.companyId,
+                    managingBranchId: user.branchId
+                }
+            });
+
+            res.status(201).json(estate);
+        } catch (error) {
+            console.error("Create Estate Error:", error);
+            res.status(500).json({ error: "Failed to create estate" });
+        }
+    },
+
+    // 1.5 Update Estate (Branch Admin)
+    updateEstate: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params as { id: string };
+            const { name, location, documentSearchNumber } = req.body;
+
+            const updateData: any = {};
+            if (name !== undefined) updateData.name = name;
+            if (location !== undefined) updateData.location = location;
+            if (documentSearchNumber !== undefined) updateData.documentSearchNumber = documentSearchNumber || null;
+
+            if (req.files) {
+                const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+                const uploadDir = path.join(process.cwd(), 'uploads');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+
+                if (files['searchDocument'] && files['searchDocument'][0]) {
+                    const file = files['searchDocument'][0];
+                    const fileName = `searchdoc-${Date.now()}${path.extname(file.originalname)}`;
+                    const filePath = path.join(uploadDir, fileName);
+                    fs.writeFileSync(filePath, file.buffer);
+                    updateData.searchDocumentUrl = `/uploads/${fileName}`;
+                }
+
+                if (files['siteLayout'] && files['siteLayout'][0]) {
+                    const file = files['siteLayout'][0];
+                    const fileName = `sitelayout-${Date.now()}${path.extname(file.originalname)}`;
+                    const filePath = path.join(uploadDir, fileName);
+                    fs.writeFileSync(filePath, file.buffer);
+                    updateData.siteLayoutUrl = `/uploads/${fileName}`;
+                }
+            }
+
+            const estate = await prisma.estate.update({
+                where: { id },
+                data: updateData
+            });
+
+            res.json(estate);
+        } catch (error) {
+            console.error("Update Estate Error:", error);
+            res.status(500).json({ error: "Failed to update estate" });
+        }
+    },
+
+    // 2. Get All Estates (Global Marketplace Visibility)
+    getEstates: async (req: Request, res: Response) => {
+        try {
+            // Note: We intentionally do NOT filter by companyId. 
+            // All estates are globally visible.
+            const estates = await prisma.estate.findMany({
+                include: {
+                    company: { select: { name: true, themeColor: true } },
+                    branch: { select: { name: true } },
+                    plots: {
+                        select: { status: true } // Fetch just statuses for available unit badge
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // Calculate aggregations dynamically for the frontend
+            const formattedEstates = estates.map(estate => {
+                const totalPlots = estate.plots.length;
+                const availablePlots = estate.plots.filter(p => p.status === 'AVAILABLE').length;
+
+                return {
+                    id: estate.id,
+                    name: estate.name,
+                    location: estate.location,
+                    managingCompany: estate.company.name,
+                    companyTheme: estate.company.themeColor,
+                    managingBranch: estate.branch.name,
+                    documentSearchNumber: estate.documentSearchNumber,
+                    searchDocumentUrl: estate.searchDocumentUrl,
+                    siteLayoutUrl: estate.siteLayoutUrl,
+                    createdAt: estate.createdAt,
+                    totalPlots,
+                    availablePlots
+                };
+            });
+
+            res.json(formattedEstates);
+        } catch (error) {
+            console.error("Get Estates Error:", error);
+            res.status(500).json({ error: "Failed to fetch estates" });
+        }
+    },
+
+    // 3. Delete Estate (Admin)
+    deleteEstate: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params as { id: string };
+
+            // Check if there are generated plots, block deletion if any plots are SOLD or RESERVED
+            const runningPlots = await prisma.plot.count({
+                where: {
+                    estateId: id,
+                    status: { in: ['SOLD', 'RESERVED'] }
+                }
+            });
+
+            if (runningPlots > 0) {
+                return res.status(400).json({ error: "Cannot delete an estate that has reserved or sold plots." });
+            }
+
+            // Safe to delete related plots that are just 'AVAILABLE'
+            await prisma.plot.deleteMany({ where: { estateId: id } });
+            await prisma.estate.delete({ where: { id } });
+
+            res.json({ message: "Estate and its empty plots deleted successfully" });
+        } catch (error) {
+            console.error("Delete Estate Error:", error);
+            res.status(500).json({ error: "Failed to delete estate" });
+        }
+    },
+
+    // 4. Stream Secure PDF to Bypass IDM Checkers
+    streamSecurePdf: async (req: Request, res: Response) => {
+        try {
+            const { filePath } = req.body;
+            if (!filePath) return res.status(400).json({ error: "File path is required" });
+
+            // Security: limit directory traversal
+            const normalizedPath = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
+            const absolutePath = path.join(process.cwd(), normalizedPath);
+
+            if (!fs.existsSync(absolutePath)) {
+                return res.status(404).json({ error: "Secure file not found" });
+            }
+
+            // By explicitly providing application/pdf but through a POST route, 
+            // the Client handles interpretation naturally via Blobs while bypassing extensions blocks.
+            res.setHeader('Content-Type', 'application/pdf');
+            res.sendFile(absolutePath);
+        } catch (error) {
+            console.error("Stream PDF Error:", error);
+            res.status(500).json({ error: "Failed to stream layout securely" });
+        }
+    }
+};

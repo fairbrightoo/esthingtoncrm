@@ -1,0 +1,1 @@
+import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { const mds = await prisma.user.findMany({ where: { role: 'MANAGING_DIRECTOR' }, include: { branch: true } }); console.log(mds.map(m =>({email: m.email, role: m.role, branch: m.branch?.name}))); } main().finally(() => prisma.$disconnect());
