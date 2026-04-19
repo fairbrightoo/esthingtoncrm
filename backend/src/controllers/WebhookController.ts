@@ -201,6 +201,7 @@ export const WebhookController = {
     async handleMetaLeadAdWebhook(req: Request, res: Response) {
         try {
             const companyId = req.params.companyId;
+            const branchId = req.params.branchId || null;
             const body = req.body;
 
             if (body.object === 'page') {
@@ -248,7 +249,8 @@ export const WebhookController = {
                                             email,
                                             source: 'META_ADS',
                                             status: 'PROSPECT',
-                                            companyId: company.id
+                                            companyId: company.id,
+                                            branchId: branchId
                                         }
                                     });
                                     console.log(`[WEBHOOK] Injected Meta Lead: ${fullName}`);

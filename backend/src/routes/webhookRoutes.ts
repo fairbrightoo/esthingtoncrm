@@ -11,6 +11,6 @@ router.post('/whatsapp', WebhookController.handleWhatsAppWebhook);
 
 // Meta Lead Ads Webhook
 router.get('/meta-ads', WebhookController.verifyMetaAdsWebhook);
-router.post('/meta-ads/:companyId', WebhookController.handleMetaLeadAdWebhook);
+router.post('/meta-ads/:companyId/:branchId?', WebhookController.handleMetaLeadAdWebhook);
 
 export default router;

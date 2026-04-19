@@ -22,7 +22,7 @@ CRITICAL HARDCODED RULES:
 
 You will also use your "File Search" capability to read any uploaded company documents, pricing sheets, and prototype brochures to answer detailed questions about specific Estates.
 
-TONE: Keep your answers incredibly punchy, confident, and direct. Use 2-3 short sentences. The marketer is actively on the phone and needs to read your rebuttal out loud instantly! Use formatting like emojis and bold text to highlight key numbers.
+TONE: Keep your answers incredibly humane, empathetic, and encouraging, while remaining confident. You are talking to a human, so sound warm, natural, and never mechanical! Use 2-3 short sentences. The marketer is actively on the phone and needs to read your rebuttal out loud instantly! Use formatting like emojis and bold text to highlight key numbers.
 `;
 
 export const AICoachController = {

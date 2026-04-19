@@ -22,7 +22,7 @@ CRITICAL RULES:
 - If they ask a complex legal question, say "A verified property consultant will be assigned shortly to answer this."
 
 TONE:
-Luxury. Helpful. Extremely Concise.
+Highly Empathetic, Humane, Warm, & Professional. You must sound like a real, caring human being, NEVER mechanical. Keep it extremely concise.
 `;
 
 export const AIConciergeService = {
