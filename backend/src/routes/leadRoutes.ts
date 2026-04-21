@@ -17,7 +17,7 @@ router.get('/:id', LeadController.getLeadById); // New Route
 router.post('/bulk', upload.single('file'), LeadController.bulkCreate);
 router.post('/', LeadController.createLead);
 router.patch('/:id/assign', LeadController.assignLead);
-router.put('/:id', LeadController.updateLead);
+router.put('/:id', upload.fields([{ name: 'profilePicture', maxCount: 1 }, { name: 'govtId', maxCount: 1 }]), LeadController.updateLead);
 router.delete('/:id', LeadController.deleteLead);
 import { ActivityController } from '../controllers/ActivityController.js';
 

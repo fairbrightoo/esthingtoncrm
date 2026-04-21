@@ -181,6 +181,9 @@ model Lead {
   occupation        String?
   nextOfKinName     String?
   nextOfKinPhone    String?
+  profilePictureUrl String?
+  govtIdType        String?
+  govtIdUrl         String?
   companyId         String
   branchId          String?
   assignedToUserId  String?

@@ -299,7 +299,7 @@ export const LeadController = {
             // @ts-ignore
             const user = req.user;
             const { id } = req.params as { id: string };
-            const { fullName, phone, email, gender, source, dateOfBirth, address, occupation, nextOfKinName, nextOfKinPhone, whatsappOptIn } = req.body;
+            const { fullName, phone, email, gender, source, dateOfBirth, address, occupation, nextOfKinName, nextOfKinPhone, whatsappOptIn, govtIdType } = req.body;
 
             // Fetch the lead to check existence and permissions
             const lead = await prisma.lead.findUnique({ where: { id } });
@@ -326,8 +326,8 @@ export const LeadController = {
             }
 
             const updateData: any = {};
-            if (fullName !== undefined) updateData.fullName = String(fullName);
-            if (phone !== undefined) updateData.phone = String(phone);
+            if (fullName !== undefined && fullName !== '') updateData.fullName = String(fullName);
+            if (phone !== undefined && phone !== '') updateData.phone = String(phone);
             if (email !== undefined) updateData.email = email ? String(email) : null;
             if (gender !== undefined) updateData.gender = gender ? String(gender) : null;
             if (source !== undefined) updateData.source = source ? String(source) : null;
@@ -337,6 +337,16 @@ export const LeadController = {
             if (nextOfKinName !== undefined) updateData.nextOfKinName = nextOfKinName ? String(nextOfKinName) : null;
             if (nextOfKinPhone !== undefined) updateData.nextOfKinPhone = nextOfKinPhone ? String(nextOfKinPhone) : null;
             if (whatsappOptIn !== undefined) updateData.whatsappOptIn = Boolean(whatsappOptIn);
+            if (govtIdType !== undefined) updateData.govtIdType = govtIdType ? String(govtIdType) : null;
+
+            // Handle KYC Files
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (files?.profilePicture?.[0]) {
+                updateData.profilePictureUrl = `/uploads/${files.profilePicture[0].filename}`;
+            }
+            if (files?.govtId?.[0]) {
+                updateData.govtIdUrl = `/uploads/${files.govtId[0].filename}`;
+            }
 
             const updatedLead = await prisma.lead.update({
                 where: { id },
