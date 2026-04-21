@@ -22,6 +22,7 @@ export const Announcements = () => {
     const [isLoading, setIsLoading] = useState(true);
     
     const [isCreating, setIsCreating] = useState(false);
+    const [toastError, setToastError] = useState<string | null>(null);
     const [newTitle, setNewTitle] = useState('');
     const [newContent, setNewContent] = useState('');
     const [newPriority, setNewPriority] = useState('NORMAL');
@@ -64,7 +65,10 @@ export const Announcements = () => {
             fetchAnnouncements();
         } catch (error) {
             console.error('Failed to create announcement:', error);
-            alert('Failed to create announcement.');
+            setToastError(error.response?.data?.error || 'Broadcast failed. Please check your network and try again.');
+            
+            // Auto hide error after 5 seconds
+            setTimeout(() => setToastError(null), 5000);
         } finally {
             setIsSubmitting(false);
         }
@@ -80,7 +84,7 @@ export const Announcements = () => {
             fetchAnnouncements();
         } catch (error) {
             console.error('Failed to delete announcement:', error);
-            alert('Failed to delete announcement.');
+            window.alert('Authorization failed: You do not have permission to delete this.');
         } finally {
             setDeletingId(null);
         }
@@ -111,8 +115,18 @@ export const Announcements = () => {
                 <form onSubmit={handleCreate} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="flex justify-between items-center">
                         <h2 className="text-lg font-semibold text-gray-800">New Memo</h2>
-                        <button type="button" onClick={() => setIsCreating(false)} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
+                        <button type="button" onClick={() => { setIsCreating(false); setToastError(null); }} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
                     </div>
+
+                    {toastError && (
+                        <div className="bg-red-50 text-red-700 p-3 rounded-lg flex items-start space-x-3 text-sm animate-in fade-in slide-in-from-top-2 border border-red-100">
+                            <AlertTriangle size={18} className="text-red-500 mt-0.5" />
+                            <div>
+                                <span className="font-semibold block">Broadcast Failed</span>
+                                {toastError}
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
