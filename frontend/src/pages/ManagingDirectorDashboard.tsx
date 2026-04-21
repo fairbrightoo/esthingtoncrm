@@ -99,7 +99,7 @@ export const ManagingDirectorDashboard = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRequisitions(res.data.filter((r: any) => r.status === 'PENDING_MD_APPROVAL'));
-            setProcessedRequisitions(res.data.filter((r: any) => ['APPROVED_BY_MD', 'REJECTED'].includes(r.status)));
+            setProcessedRequisitions(res.data.filter((r: any) => ['APPROVED_BY_MD', 'REJECTED', 'DISBURSED'].includes(r.status)));
         } catch (error) {
             console.error("Failed to fetch fund requests", error);
         }
@@ -569,10 +569,10 @@ export const ManagingDirectorDashboard = () => {
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide ${
-                                                            req.status === 'APPROVED_BY_MD' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
+                                                            ['APPROVED_BY_MD', 'DISBURSED'].includes(req.status) ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
                                                         }`}>
-                                                            {req.status === 'APPROVED_BY_MD' ? <CheckCircle size={14} className="mr-1.5" /> : <XCircle size={14} className="mr-1.5" />}
-                                                            {req.status === 'APPROVED_BY_MD' ? 'APPROVED' : 'REJECTED'}
+                                                            {['APPROVED_BY_MD', 'DISBURSED'].includes(req.status) ? <CheckCircle size={14} className="mr-1.5" /> : <XCircle size={14} className="mr-1.5" />}
+                                                            {req.status === 'DISBURSED' ? 'FUNDED & DISBURSED' : req.status === 'APPROVED_BY_MD' ? 'APPROVED' : 'REJECTED'}
                                                         </span>
                                                     </td>
                                                 </tr>
