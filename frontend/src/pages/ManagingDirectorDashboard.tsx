@@ -66,6 +66,31 @@ export const ManagingDirectorDashboard = () => {
     };
 
     const [requisitions, setRequisitions] = useState<any[]>([]);
+    
+    // Custom UI state for requisition actions
+    const [reqModal, setReqModal] = useState<{ isOpen: boolean, reqId: string, reqTitle: string, action: 'APPROVE' | 'REJECT', amount: number | null }>({ isOpen: false, reqId: '', reqTitle: '', action: 'APPROVE', amount: null });
+    const [reqModalAmount, setReqModalAmount] = useState<number>(0);
+    const [isSubmittingReq, setIsSubmittingReq] = useState(false);
+    
+    const handleReqAction = async () => {
+        setIsSubmittingReq(true);
+        try {
+            if (reqModal.action === 'APPROVE') {
+                await axios.put(`http://localhost:3000/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'APPROVED_BY_MD', amountApproved: reqModalAmount }, { headers: { Authorization: `Bearer ${token}` }});
+                addToast("Requisition successfully approved.", "success");
+            } else {
+                await axios.put(`http://localhost:3000/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'REJECTED' }, { headers: { Authorization: `Bearer ${token}` }});
+                addToast("Requisition has been rejected.", "error");
+            }
+            fetchRequisitions();
+        } catch(e) {
+            addToast("Failed to process requisition.", "error");
+        } finally {
+            setIsSubmittingReq(false);
+            setReqModal({ ...reqModal, isOpen: false });
+        }
+    };
+
     const fetchRequisitions = async () => {
         try {
             const res = await axios.get(`http://localhost:3000/api/requisitions`, {
@@ -208,18 +233,11 @@ export const ManagingDirectorDashboard = () => {
                                             </td>
                                         <td className="px-6 py-4 text-right space-x-2">
                                             <button onClick={() => {
-                                                const amtStr = prompt(`Approve requisition for ${req.title}. Adjust authorized amount if needed:`, String(calcTotal));
-                                                if (amtStr) {
-                                                    axios.put(`http://localhost:3000/api/requisitions/md-approve/${req.id}`, { status: 'APPROVED_BY_MD', amountApproved: Number(amtStr) }, { headers: { Authorization: `Bearer ${token}` }})
-                                                    .then(() => fetchRequisitions())
-                                                    .catch(() => alert('Failed to approve.'));
-                                                }
+                                                setReqModal({ isOpen: true, reqId: req.id, reqTitle: req.title, action: 'APPROVE', amount: calcTotal });
+                                                setReqModalAmount(calcTotal);
                                             }} className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition shadow-sm">Approve</button>
                                             <button onClick={() => {
-                                                if(confirm('Reject this request?')) {
-                                                    axios.put(`http://localhost:3000/api/requisitions/md-approve/${req.id}`, { status: 'REJECTED' }, { headers: { Authorization: `Bearer ${token}` }})
-                                                    .then(() => fetchRequisitions());
-                                                }
+                                                setReqModal({ isOpen: true, reqId: req.id, reqTitle: req.title, action: 'REJECT', amount: null });
                                             }} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition shadow-sm">Reject</button>
                                         </td>
                                     </tr>
@@ -544,6 +562,57 @@ export const ManagingDirectorDashboard = () => {
                                 alt="Full Receipt" 
                                 className="max-w-full max-h-[80vh] object-contain rounded-xl"
                             />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Requisition Prompt / Modal UI */}
+            {reqModal.isOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full outline-none transform transition-all scale-100 overflow-hidden">
+                        <div className={`px-6 py-5 border-b flex justify-between items-center ${reqModal.action === 'APPROVE' ? 'bg-green-50' : 'bg-red-50'}`}>
+                            <h3 className={`font-bold ${reqModal.action === 'APPROVE' ? 'text-green-800' : 'text-red-800'}`}>
+                                {reqModal.action === 'APPROVE' ? 'Approve Requisition' : 'Reject Requisition'}
+                            </h3>
+                            <button onClick={() => setReqModal({ ...reqModal, isOpen: false })} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <div className="mb-4 text-sm text-gray-600">
+                                {reqModal.action === 'APPROVE' ? (
+                                    <>
+                                        <p className="mb-3">You are approving <strong>{reqModal.reqTitle}</strong>.</p>
+                                        <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Authorized Amount (₦)</label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 pointer-events-none">₦</span>
+                                            <input 
+                                                type="number" 
+                                                value={reqModalAmount} 
+                                                onChange={(e) => setReqModalAmount(Number(e.target.value))}
+                                                className="w-full border border-gray-300 rounded-xl pl-8 pr-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-shadow text-lg font-bold text-gray-900"
+                                            />
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-400 flex items-center"><AlertCircle size={12} className="mr-1"/> Adjust if overriding requested amount.</p>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center text-center">
+                                        <div className="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-3">
+                                            <AlertTriangle size={24} />
+                                        </div>
+                                        <p>Are you sure you want to permanently <strong>reject</strong> the requisition for <strong>{reqModal.reqTitle}</strong>?</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button onClick={() => setReqModal({ ...reqModal, isOpen: false })} disabled={isSubmittingReq} className="px-4 py-2 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition">Cancel</button>
+                                <button onClick={handleReqAction} disabled={isSubmittingReq} className={`px-5 py-2 text-white rounded-xl font-bold transition flex items-center ${reqModal.action === 'APPROVE' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
+                                    {isSubmittingReq ? (
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    ) : reqModal.action === 'APPROVE' ? 'Confirm Approval' : 'Yes, Reject'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
