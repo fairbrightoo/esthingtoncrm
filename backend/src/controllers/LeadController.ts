@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { parse } from 'csv-parse/sync';
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -341,11 +343,21 @@ export const LeadController = {
 
             // Handle KYC Files
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            
+            const saveFileFromBuffer = (file: Express.Multer.File, prefix: string) => {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                const ext = file.originalname.includes('.') ? file.originalname.substring(file.originalname.lastIndexOf('.')) : '';
+                const filename = `${prefix}-${uniqueSuffix}${ext}`;
+                const filepath = path.join(process.cwd(), 'uploads', filename);
+                fs.writeFileSync(filepath, file.buffer);
+                return `/uploads/${filename}`;
+            };
+
             if (files?.profilePicture?.[0]) {
-                updateData.profilePictureUrl = `/uploads/${files.profilePicture[0].filename}`;
+                updateData.profilePictureUrl = saveFileFromBuffer(files.profilePicture[0], 'passport');
             }
             if (files?.govtId?.[0]) {
-                updateData.govtIdUrl = `/uploads/${files.govtId[0].filename}`;
+                updateData.govtIdUrl = saveFileFromBuffer(files.govtId[0], 'govtid');
             }
 
             const updatedLead = await prisma.lead.update({
