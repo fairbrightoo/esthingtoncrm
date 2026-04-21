@@ -87,6 +87,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     // Form: New Sale
     const [selectedPlotId, setSelectedPlotId] = useState('');
+    const [plotSearchQuery, setPlotSearchQuery] = useState('');
+    const [isPlotDropdownOpen, setIsPlotDropdownOpen] = useState(false);
     const [isCornerPiece, setIsCornerPiece] = useState(false);
     
     // Purchase Specific Document Details
@@ -266,19 +268,68 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     <button onClick={() => setViewState('LIST')} className="text-sm text-gray-500">Cancel</button>
                 </div>
                 <form onSubmit={handleCreateSale} className="space-y-4 flex-1">
-                    <div>
+                    <div className="relative">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Select Property</label>
-                        <select
-                            className="w-full border rounded px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                            value={selectedPlotId}
-                            onChange={(e) => setSelectedPlotId(e.target.value)}
-                            required
+                        
+                        {/* Searchable Dropdown Button */}
+                        <div 
+                            className="w-full border rounded px-3 py-3 outline-none focus-within:ring-2 focus-within:ring-blue-500 bg-white flex justify-between items-center cursor-pointer"
+                            onClick={() => setIsPlotDropdownOpen(!isPlotDropdownOpen)}
                         >
-                            <option value="">-- Choose Plot --</option>
-                            {plots.map(p => (
-                                <option key={p.id} value={p.id}>{p.plotNumber} - {p.prototype} in {p.estate.name}</option>
-                            ))}
-                        </select>
+                            <span className={`truncate ${!selectedPlotId ? 'text-gray-400' : 'text-gray-900'}`}>
+                                {selectedPlotId 
+                                    ? (() => { const p = plots.find(x => x.id === selectedPlotId); return p ? `${p.plotNumber} - ${p.prototype} in ${p.estate.name}` : 'Select a plot'; })() 
+                                    : '-- Search & Choose Plot --'}
+                            </span>
+                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${isPlotDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+
+                        {/* Searchable Dropdown Menu */}
+                        {isPlotDropdownOpen && (
+                            <>
+                                {/* Invisible backdrop to close dropdown when clicking outside */}
+                                <div className="fixed inset-0 z-40" onClick={() => setIsPlotDropdownOpen(false)}></div>
+                                
+                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-72 overflow-y-auto">
+                                    <div className="sticky top-0 bg-white p-2 border-b z-10">
+                                        <input 
+                                            type="text" 
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                                            placeholder="Search by plot number, prototype or estate..."
+                                            value={plotSearchQuery}
+                                            onChange={(e) => setPlotSearchQuery(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="p-1">
+                                        {plots.filter(p => `${p.plotNumber} ${p.prototype} ${p.estate.name}`.toLowerCase().includes(plotSearchQuery.toLowerCase())).length === 0 ? (
+                                            <div className="p-4 text-sm text-gray-500 text-center flex flex-col items-center">
+                                                <Tag size={20} className="text-gray-300 mb-2" />
+                                                No properties matched your search.
+                                            </div>
+                                        ) : (
+                                            plots.filter(p => `${p.plotNumber} ${p.prototype} ${p.estate.name}`.toLowerCase().includes(plotSearchQuery.toLowerCase())).map(p => (
+                                                <div 
+                                                    key={p.id} 
+                                                    className={`p-2 hover:bg-blue-50 cursor-pointer rounded-md text-sm transition-colors ${selectedPlotId === p.id ? 'bg-blue-50 text-blue-700 border-blue-100 border' : 'text-gray-700 border border-transparent'}`}
+                                                    onClick={() => {
+                                                        setSelectedPlotId(p.id);
+                                                        setIsPlotDropdownOpen(false);
+                                                        setPlotSearchQuery('');
+                                                    }}
+                                                >
+                                                    <div className={`font-bold ${selectedPlotId === p.id ? 'text-blue-700' : 'text-gray-900'}`}>{p.plotNumber}</div>
+                                                    <div className="text-xs text-gray-500 mt-0.5">{p.prototype} <span className="mx-1">•</span> {p.estate.name}</div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                        {/* Hidden input to strictly satisfy HTML5 'required' attribute on form submit */}
+                        <input type="text" className="h-0 w-0 absolute opacity-0 pointer-events-none" required value={selectedPlotId} onChange={() => {}} />
                     </div>
 
                     <div className="flex items-center space-x-3 p-3 border rounded bg-gray-50">
