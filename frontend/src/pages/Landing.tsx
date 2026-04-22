@@ -55,9 +55,9 @@ export const Landing = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 flex flex-col items-center justify-center p-6">
             <div className="text-center mb-16 space-y-4">
-                <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight">Esthington Group</h1>
-                <h2 className="text-2xl font-semibold text-gray-700">Customer Relationship Management System</h2>
-                <p className="text-xl text-gray-500 font-light">Select your entity to access the workspace</p>
+                <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight">Esthington Group OS</h1>
+                <h2 className="text-2xl font-semibold text-gray-700">Enterprise Real Estate Operating System</h2>
+                <p className="text-xl text-gray-500 font-light">Select your organization to initialize the workspace</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl w-full px-4">

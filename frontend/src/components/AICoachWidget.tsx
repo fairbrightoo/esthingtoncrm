@@ -17,6 +17,60 @@ export const AICoachWidget: React.FC = () => {
     const [isThinking, setIsThinking] = useState(false);
     const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
+    // Draggable Logic
+    const [position, setPosition] = useState({ bottom: 24, right: 24 });
+    const dragData = useRef({ isDragging: false, hasDragged: false, startX: 0, startY: 0, startB: 24, startR: 24 });
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!dragData.current.isDragging) return;
+            const dx = e.clientX - dragData.current.startX;
+            const dy = e.clientY - dragData.current.startY;
+            
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                dragData.current.hasDragged = true;
+            }
+
+            if (dragData.current.hasDragged) {
+                 const newRight = Math.min(Math.max(-20, dragData.current.startR - dx), window.innerWidth - 60);
+                 const newBottom = Math.min(Math.max(-20, dragData.current.startB - dy), window.innerHeight - 60);
+                 setPosition({ right: newRight, bottom: newBottom });
+            }
+        };
+
+        const handleMouseUp = () => {
+            dragData.current.isDragging = false;
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, []);
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if ((e.target as HTMLElement).closest('.no-drag')) return;
+        dragData.current = {
+            isDragging: true,
+            hasDragged: false,
+            startX: e.clientX,
+            startY: e.clientY,
+            startB: position.bottom,
+            startR: position.right
+        };
+    };
+
+    const handleToggleClick = (e: React.MouseEvent) => {
+        if (dragData.current.hasDragged) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        setIsOpen(!isOpen);
+    };
+
     // Initial Welcome Message
     useEffect(() => {
         if (messages.length === 0) {
@@ -87,14 +141,18 @@ export const AICoachWidget: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div 
+            className={`fixed z-50 flex flex-col items-end touch-none ${isOpen ? '' : 'cursor-pointer'}`}
+            style={{ bottom: `${position.bottom}px`, right: `${position.right}px` }}
+            onMouseDown={handleMouseDown}
+        >
             
             {/* The Chat Window */}
             {isOpen && (
-                <div className="bg-white w-96 max-w-[90vw] h-[500px] max-h-[80vh] rounded-2xl shadow-2xl flex flex-col border border-gray-200 mb-4 overflow-hidden animate-in slide-in-from-bottom-5">
+                <div className="bg-white w-96 max-w-[90vw] h-[500px] max-h-[80vh] rounded-2xl shadow-2xl flex flex-col border border-gray-200 mb-4 overflow-hidden animate-in slide-in-from-bottom-5 no-drag cursor-auto">
                     
                     {/* Header */}
-                    <div className="bg-indigo-600 text-white p-4 flex items-center justify-between shadow-md z-10">
+                    <div className="bg-indigo-600 text-white p-4 flex items-center justify-between shadow-md z-10 cursor-grab active:cursor-grabbing">
                         <div className="flex items-center space-x-2">
                             <Sparkles size={20} className="text-yellow-300" />
                             <div>
@@ -106,8 +164,8 @@ export const AICoachWidget: React.FC = () => {
                             <button onClick={handleReset} className="p-1.5 hover:bg-indigo-500 rounded-full text-indigo-100 transition-colors" title="Reset Conversation">
                                 <RefreshCcw size={16} />
                             </button>
-                            <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-indigo-500 rounded-full transition-colors">
-                                <X size={20} />
+                            <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-indigo-500 rounded-full transition-colors fab-close">
+                                <X size={20} className="pointer-events-none" />
                             </button>
                         </div>
                     </div>
@@ -190,8 +248,8 @@ export const AICoachWidget: React.FC = () => {
 
             {/* Toggle Button */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center ${
+                onClick={handleToggleClick}
+                className={`fab-toggle p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center ${
                     isOpen ? 'bg-indigo-700 hover:bg-indigo-800 scale-90' : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-105'
                 }`}
                 style={{ boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.5)' }}

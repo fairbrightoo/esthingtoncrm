@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: esthington-os-backend
+    env: node
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '3000'
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: static
+    name: esthington-os-frontend
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        # This forces the frontend to dynamically use the backend's external URL, which must be overridden in the dashboard if you use a custom domain.
+        sync: false
