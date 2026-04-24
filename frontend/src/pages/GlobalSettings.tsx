@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Building2, Plus, Edit2, Trash2, MapPin, Check, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { DocumentTemplatesConfig } from '../components/DocumentTemplatesConfig';
+import { ProfileSettings } from '../components/ProfileSettings';
 
 export const GlobalSettings = () => {
     const { token } = useAuth();
@@ -320,6 +321,16 @@ export const GlobalSettings = () => {
                 >
                     Auto-Generated Documents
                 </button>
+                <button
+                    onClick={() => setActiveTab('SECURITY')}
+                    className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                        activeTab === 'SECURITY'
+                            ? 'border-b-2 border-blue-600 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Security & Profile
+                </button>
             </div>
 
             {activeTab === 'COMPANIES' ? (
@@ -631,8 +642,10 @@ export const GlobalSettings = () => {
                 </div>
             )}
             </>
-            ) : (
+            ) : activeTab === 'DOCUMENTS' ? (
                 <DocumentTemplatesConfig />
+            ) : (
+                <ProfileSettings />
             )}
 
         </div>
