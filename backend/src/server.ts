@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
@@ -26,7 +26,7 @@ app.use('/uploads', express.static(uploadDir));
 
 // (Payload limits moved higher up to prevent 413 errors)
 
-app.post('/api/dom-dump', (req, res) => {
+app.post('/api/dom-dump', (req: Request, res: Response) => {
     try {
         const { dom, fixedElements } = req.body;
         const html = `<!DOCTYPE html><html><head><title>DOM Dump</title></head><body><h2>Fixed Elements:</h2><pre>${fixedElements}</pre><hr/><h2>DOM:</h2>${dom}</body></html>`;
@@ -112,7 +112,7 @@ import gmdAnalyticsRoutes from './routes/gmdAnalyticsRoutes.js';
 app.use('/api/gmd-analytics', gmdAnalyticsRoutes);
 
 // Basic health check
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date() });
 });
 

@@ -70,6 +70,8 @@ export const AutomationService = {
 
     async runDay7NurturingEmail() {
         try {
+            const systemAdmin = await prisma.user.findFirst({ where: { role: 'SUPER_ADMIN' } });
+
             const sevenDaysAgoStart = new Date();
             sevenDaysAgoStart.setDate(sevenDaysAgoStart.getDate() - 7);
             sevenDaysAgoStart.setHours(0, 0, 0, 0);
@@ -104,16 +106,19 @@ export const AutomationService = {
 
                 const sentId = await EmailService.send(lead.email, `Your Property Investment Portfolio - ROI Breakdown`, html);
                 
-                await prisma.communicationLog.create({
-                    data: {
-                        leadId: lead.id,
-                        type: 'EMAIL',
-                        direction: 'OUTBOUND',
-                        content: 'Auto Drip: 7-Day Asset ROI Breakdown Email',
-                        status: 'SENT',
-                        providerId: sentId
-                    }
-                });
+                if (systemAdmin) {
+                    await prisma.communicationLog.create({
+                        data: {
+                            leadId: lead.id,
+                            userId: systemAdmin.id,
+                            type: 'EMAIL',
+                            direction: 'OUTBOUND',
+                            content: 'Auto Drip: 7-Day Asset ROI Breakdown Email',
+                            status: 'SENT',
+                            providerId: sentId
+                        }
+                    });
+                }
                 console.log(`[CRON] Sent 7-Day ROI email to ${lead.email}`);
             }
         } catch (error) {
@@ -123,6 +128,8 @@ export const AutomationService = {
 
     async runBirthdayEmails() {
         try {
+            const systemAdmin = await prisma.user.findFirst({ where: { role: 'SUPER_ADMIN' } });
+
             const today = new Date();
             const month = today.getMonth() + 1; // 1-12
             const day = today.getDate();
@@ -152,16 +159,19 @@ export const AutomationService = {
 
                 const sentId = await EmailService.send(lead.email, `Happy Birthday from ${lead.company.name}! 🎉`, html);
                 
-                await prisma.communicationLog.create({
-                    data: {
-                        leadId: lead.id,
-                        type: 'EMAIL',
-                        direction: 'OUTBOUND',
-                        content: 'Auto Drip: Happy Birthday Greeting',
-                        status: 'SENT',
-                        providerId: sentId
-                    }
-                });
+                if (systemAdmin) {
+                    await prisma.communicationLog.create({
+                        data: {
+                            leadId: lead.id,
+                            userId: systemAdmin.id,
+                            type: 'EMAIL',
+                            direction: 'OUTBOUND',
+                            content: 'Auto Drip: Happy Birthday Greeting',
+                            status: 'SENT',
+                            providerId: sentId
+                        }
+                    });
+                }
                 console.log(`[CRON] Sent Birthday email to ${lead.email}`);
             }
         } catch (error) {
