@@ -21,11 +21,11 @@ export const BranchDashboard = () => {
                 const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
                 
                 // 1. Fetch Financial & Lead Stats
-                const statsResponse = await axios.get('http://localhost:3000/api/analytics/stats', { headers });
+                const statsResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats`, { headers });
                 setStats(statsResponse.data);
 
                 // 2. Fetch Branch Requisitions (To see what branch money is pending)
-                const reqsResponse = await axios.get('http://localhost:3000/api/requisitions', { headers });
+                const reqsResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers });
                 const branchReqs = reqsResponse.data.filter((r: any) => 
                     r.status === 'PENDING_MD_APPROVAL' || r.status === 'APPROVED_BY_MD'
                 );
@@ -33,7 +33,7 @@ export const BranchDashboard = () => {
 
                 // 3. Fetch Staff Roll for Activity
                 if (user?.companyId && user?.branchId) {
-                    const staffRes = await axios.get(`http://localhost:3000/api/companies/${user.companyId}/branches/${user.branchId}/users`, { headers });
+                    const staffRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${user.companyId}/branches/${user.branchId}/users`, { headers });
                     setStaffCount(staffRes.data.length);
                 }
 

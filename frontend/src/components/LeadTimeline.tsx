@@ -51,7 +51,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
 
     const fetchLead = async () => { // New fetch lead
         try {
-            const res = await axios.get(`http://localhost:3000/api/leads/${leadId}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setLead(res.data);
@@ -63,10 +63,10 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
     const fetchActivities = async () => {
         try {
             const [actsRes, logsRes] = await Promise.all([
-                axios.get(`http://localhost:3000/api/leads/${leadId}/activities`, {
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}/activities`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 }),
-                axios.get(`http://localhost:3000/api/communication/logs/${leadId}`, {
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/logs/${leadId}`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 })
             ]);
@@ -92,7 +92,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/tasks', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             // Client-side filtering for now
@@ -111,7 +111,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
     const handleTaskSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3000/api/tasks', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks`, {
                 title: newTaskTitle,
                 dueDate: newTaskDate || undefined,
                 leadId
@@ -129,7 +129,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`http://localhost:3000/api/leads/${leadId}/activities`, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}/activities`, {
                 type: activityType,
                 direction: 'OUTBOUND', // Default for now, maybe add toggle
                 notes: newNote
@@ -147,7 +147,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
         setIsDeleting(activityId);
         setDeleteConfirmModal(null); // Close modal when deleting starts
         try {
-            await axios.delete(`http://localhost:3000/api/leads/${leadId}/activities/${activityId}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}/activities/${activityId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             fetchActivities();

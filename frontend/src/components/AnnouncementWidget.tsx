@@ -22,7 +22,7 @@ export const AnnouncementWidget = () => {
     useEffect(() => {
         const fetchAnnouncements = async () => {
             try {
-                const res = await axios.get('http://localhost:3000/api/announcements', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 setAnnouncements(res.data);

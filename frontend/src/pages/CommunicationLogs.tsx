@@ -15,7 +15,7 @@ export const CommunicationLogs = () => {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const res = await axios.get('http://localhost:3000/api/communication/logs', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/logs`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setLogs(res.data);

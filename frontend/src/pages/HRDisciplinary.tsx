@@ -27,7 +27,7 @@ export const HRDisciplinary = () => {
     const fetchQueries = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:3000/api/hr-workflows/queries/branch-queries', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/branch-queries`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setQueries(res.data);
@@ -46,7 +46,7 @@ export const HRDisciplinary = () => {
             const brId = userData.branchId || userData.branch?.id;
             
             if (coId && brId) {
-                const res = await axios.get(`http://localhost:3000/api/companies/${coId}/branches/${brId}/users`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${coId}/branches/${brId}/users`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setBranchStaff(res.data);
@@ -60,7 +60,7 @@ export const HRDisciplinary = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:3000/api/hr-workflows/queries', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries`, {
                 staffId: targetStaffId, subject, description, severity
             }, { headers: { Authorization: `Bearer ${token}` } });
             
@@ -78,7 +78,7 @@ export const HRDisciplinary = () => {
         if (!queryId) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:3000/api/hr-workflows/queries/${queryId}/resolve`, {}, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/${queryId}/resolve`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast('Query resolved successfully.', 'success');

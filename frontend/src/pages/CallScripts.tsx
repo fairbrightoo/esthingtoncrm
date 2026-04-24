@@ -30,7 +30,7 @@ export const CallScripts = () => {
 
     const fetchScripts = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/scripts', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/scripts`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setScripts(res.data);
@@ -47,14 +47,14 @@ export const CallScripts = () => {
         try {
             if (selectedScript && isEditing) {
                 // Update
-                await axios.put(`http://localhost:3000/api/scripts/${selectedScript.id}`, {
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/scripts/${selectedScript.id}`, {
                     title: formTitle,
                     content: formContent,
                     category: formCategory
                 }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
             } else {
                 // Create
-                await axios.post(`http://localhost:3000/api/scripts`, {
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/scripts`, {
                     title: formTitle,
                     content: formContent,
                     category: formCategory
@@ -73,7 +73,7 @@ export const CallScripts = () => {
     const handleDelete = async (id: string) => {
         if (!confirm('Delete this script?')) return;
         try {
-            await axios.delete(`http://localhost:3000/api/scripts/${id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/scripts/${id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             fetchScripts();

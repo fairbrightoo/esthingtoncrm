@@ -18,7 +18,7 @@ export const Landing = () => {
 
     useEffect(() => {
         // Fetch companies
-        axios.get('http://localhost:3000/api/companies')
+        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`)
             .then(res => {
                 const sortedCompanies = res.data.sort((a: Company, b: Company) => {
                     const order = [

@@ -32,7 +32,7 @@ export const Announcements = () => {
     const fetchAnnouncements = async () => {
         setIsLoading(true);
         try {
-            const res = await axios.get('http://localhost:3000/api/announcements', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setAnnouncements(res.data);
@@ -51,7 +51,7 @@ export const Announcements = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await axios.post('http://localhost:3000/api/announcements', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements`, {
                 title: newTitle,
                 content: newContent,
                 priority: newPriority
@@ -78,7 +78,7 @@ export const Announcements = () => {
         if (!window.confirm("Are you sure you want to permanently delete this announcement?")) return;
         setDeletingId(id);
         try {
-            await axios.delete(`http://localhost:3000/api/announcements/${id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements/${id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             fetchAnnouncements();

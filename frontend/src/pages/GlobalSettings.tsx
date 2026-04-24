@@ -48,7 +48,7 @@ export const GlobalSettings = () => {
 
     const fetchCompanies = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/companies');
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`);
             setCompanies(res.data);
         } catch (error) {
             console.error("Failed to fetch companies", error);
@@ -59,7 +59,7 @@ export const GlobalSettings = () => {
 
     const fetchBranchLeaders = async (companyId: string, branchId: string) => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/companies/${companyId}/branches/${branchId}/users`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches/${branchId}/users`);
             const leaders = res.data.filter((u: any) => u.role === 'BRANCH_ADMIN' || u.role === 'MANAGING_DIRECTOR');
             setBranchLeaders(leaders);
         } catch (error) {
@@ -69,7 +69,7 @@ export const GlobalSettings = () => {
 
     const fetchGroupMDs = async (companyId: string) => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/companies/${companyId}/users`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/users`);
             // We need a specific endpoint to fetch company users or filter them.
             // Wait, previously `getBranchUsers` was used. We might need to just fetch them or we can just assume `getCompanyUsers` exists, if not we'll create it.
             // Let's use a workaround: we will fetch all users from backend by adding a generic company users endpoint, or just add `getGroupMDs` endpoint.
@@ -86,7 +86,7 @@ export const GlobalSettings = () => {
     const handleManageGroupMD = async (companyId: string) => {
         setSelectedCompanyId(companyId);
         try {
-            const res = await axios.get(`http://localhost:3000/api/companies/${companyId}/group-md`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/group-md`, { headers: { Authorization: `Bearer ${token}` } });
             setGroupMDs(res.data);
         } catch (e) {
             setGroupMDs([]);
@@ -98,13 +98,13 @@ export const GlobalSettings = () => {
         if (!selectedCompanyId || !selectedBranchId) return;
         try {
             if (editingAdmin) {
-                await axios.put(`http://localhost:3000/api/companies/users/${editingAdmin.id}`,
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${editingAdmin.id}`,
                     adminFormData,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             } else {
                 const endpoint = adminFormData.role === 'MANAGING_DIRECTOR' ? 'mds' : 'admins';
-                await axios.post(`http://localhost:3000/api/companies/${selectedCompanyId}/branches/${selectedBranchId}/${endpoint}`,
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${selectedCompanyId}/branches/${selectedBranchId}/${endpoint}`,
                     adminFormData,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
@@ -121,7 +121,7 @@ export const GlobalSettings = () => {
     const handleDeleteAdmin = async (adminId: string) => {
         if (!confirm('Delete this admin?')) return;
         try {
-            await axios.delete(`http://localhost:3000/api/companies/users/${adminId}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${adminId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (showAdminModal && selectedCompanyId && selectedBranchId) {
@@ -141,7 +141,7 @@ export const GlobalSettings = () => {
 
     const fetchBranches = async (companyId: string) => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/companies/${companyId}/branches`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches`);
             setCompanies(prev => prev.map(c =>
                 c.id === companyId ? { ...c, branches: res.data } : c
             ));
@@ -175,11 +175,11 @@ export const GlobalSettings = () => {
             if (logoFile) data.append('logo', logoFile);
 
             if (editingCompany) {
-                await axios.put(`http://localhost:3000/api/companies/${editingCompany.id}`, data,
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${editingCompany.id}`, data,
                     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
                 );
             } else {
-                await axios.post(`http://localhost:3000/api/companies`, data,
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, data,
                     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
                 );
             }
@@ -195,7 +195,7 @@ export const GlobalSettings = () => {
     const handleDeleteCompany = async (id: string) => {
         if (!confirm('Are you sure? This will fail if the company has active data.')) return;
         try {
-            await axios.delete(`http://localhost:3000/api/companies/${id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCompanies();
@@ -210,11 +210,11 @@ export const GlobalSettings = () => {
         try {
             const payload = { name: formData.name, address: formData.address, phone: formData.phone, email: formData.email };
             if (editingBranch) {
-                await axios.put(`http://localhost:3000/api/companies/branches/${editingBranch.id}`, payload,
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branches/${editingBranch.id}`, payload,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             } else {
-                await axios.post(`http://localhost:3000/api/companies/${selectedCompanyId}/branches`, payload,
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${selectedCompanyId}/branches`, payload,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             }
@@ -230,7 +230,7 @@ export const GlobalSettings = () => {
     const handleDeleteBranch = async (branchId: string, companyId: string) => {
         if (!confirm('Are you sure you want to delete this branch?')) return;
         try {
-            await axios.delete(`http://localhost:3000/api/companies/branches/${branchId}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branches/${branchId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchBranches(companyId);
@@ -269,7 +269,7 @@ export const GlobalSettings = () => {
             website: company.website || '',
             phone: ''
         });
-        setLogoPreview(company.logoUrl ? `http://localhost:3000${company.logoUrl}` : null);
+        setLogoPreview(company.logoUrl ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.logoUrl}` : null);
         setShowCompanyModal(true);
     };
 
@@ -608,13 +608,13 @@ export const GlobalSettings = () => {
                                     <button onClick={async () => {
                                         try {
                                             if (editingAdmin) {
-                                                await axios.put(`http://localhost:3000/api/companies/users/${editingAdmin.id}`, adminFormData, { headers: { Authorization: `Bearer ${token}` } });
+                                                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${editingAdmin.id}`, adminFormData, { headers: { Authorization: `Bearer ${token}` } });
                                             } else {
-                                                await axios.post(`http://localhost:3000/api/companies/${selectedCompanyId}/group-md`, adminFormData, { headers: { Authorization: `Bearer ${token}` } });
+                                                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${selectedCompanyId}/group-md`, adminFormData, { headers: { Authorization: `Bearer ${token}` } });
                                             }
                                             if(selectedCompanyId) {
                                                 // Refresh the list immediately after save
-                                                const res = await axios.get(`http://localhost:3000/api/companies/${selectedCompanyId}/group-md`, { headers: { Authorization: `Bearer ${token}` } });
+                                                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${selectedCompanyId}/group-md`, { headers: { Authorization: `Bearer ${token}` } });
                                                 setGroupMDs(res.data);
                                             }
                                             setEditingAdmin(null);

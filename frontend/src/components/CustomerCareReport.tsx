@@ -16,8 +16,8 @@ export const CustomerCareReport = () => {
         const fetchCareData = async () => {
             try {
                 const [ticketsRes, logsRes] = await Promise.all([
-                    axios.get('http://localhost:3000/api/tickets', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:3000/api/communication/logs', { headers: { Authorization: `Bearer ${token}` } })
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tickets`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/logs`, { headers: { Authorization: `Bearer ${token}` } })
                 ]);
                 setTickets(ticketsRes.data);
                 setLogs(logsRes.data);

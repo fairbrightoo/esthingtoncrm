@@ -13,7 +13,7 @@ export const AccountantOverview = () => {
             try {
                 // Determine branch filter. Accountant only sees their specific branch
                 const branchId = user?.branchId;
-                const res = await axios.get(`http://localhost:3000/api/analytics/reports/md?timeframe=this_month${branchId ? `&branchId=${branchId}` : ''}`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/reports/md?timeframe=this_month${branchId ? `&branchId=${branchId}` : ''}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setAnalytics(res.data);

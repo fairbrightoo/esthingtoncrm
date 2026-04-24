@@ -75,7 +75,7 @@ export const Campaigns = () => {
 
     const fetchWhatsAppTemplates = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/communication/whatsapp-templates', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/whatsapp-templates`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setWaTemplates(res.data);
@@ -86,7 +86,7 @@ export const Campaigns = () => {
 
     const fetchTemplates = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/communication/templates', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/templates`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setTemplates(res.data);
@@ -97,7 +97,7 @@ export const Campaigns = () => {
 
     const fetchCampaigns = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/communication/campaigns', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setCampaigns(res.data);
@@ -112,7 +112,7 @@ export const Campaigns = () => {
         setIsLogsModalOpen(true);
         setIsLoadingLogs(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/communication/campaigns/${campaign.id}/logs`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns/${campaign.id}/logs`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setCampaignLogs(res.data);
@@ -128,7 +128,7 @@ export const Campaigns = () => {
         if (!selectedCampaign) return;
         setIsResending(true);
         try {
-            const res = await axios.post(`http://localhost:3000/api/communication/campaigns/${selectedCampaign.id}/resend-failed`, {}, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns/${selectedCampaign.id}/resend-failed`, {}, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             toast.success(`Resent ${res.data.resent} failed messages successfully!`);
@@ -157,7 +157,7 @@ export const Campaigns = () => {
             if (type === 'WHATSAPP' && mediaFile) {
                 const formData = new FormData();
                 formData.append('media', mediaFile);
-                const mediaRes = await axios.post('http://localhost:3000/api/communication/meta-upload', formData, {
+                const mediaRes = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/meta-upload`, formData, {
                     headers: { 
                         'Content-Type': 'multipart/form-data',
                         Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -170,7 +170,7 @@ export const Campaigns = () => {
             // 2. Draft Template Creation
             let templateId = selectedTemplateId;
             if (saveAsTemplate || !templateId) {
-                const templateRes = await axios.post('http://localhost:3000/api/communication/templates', {
+                const templateRes = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/templates`, {
                     name: type === 'WHATSAPP' ? name : (saveAsTemplate ? `${name} Template` : `Draft Template - ${name}`),
                     type,
                     content
@@ -185,7 +185,7 @@ export const Campaigns = () => {
                 filters.waMediaType = waMediaType;
             }
 
-            const campaignRes = await axios.post('http://localhost:3000/api/communication/campaigns', {
+            const campaignRes = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns`, {
                 name,
                 type,
                 templateId,
@@ -195,7 +195,7 @@ export const Campaigns = () => {
             const campaignId = campaignRes.data.id;
 
             // 3. Trigger Send Immediately
-            await axios.post(`http://localhost:3000/api/communication/campaigns/${campaignId}/send`, {}, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns/${campaignId}/send`, {}, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
 

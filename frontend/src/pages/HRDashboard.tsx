@@ -31,22 +31,22 @@ export const HRDashboard = () => {
             let awardsCount = 0;
 
             try {
-                const analyticsRes = await axios.get('http://localhost:3000/api/hr-analytics', { headers });
+                const analyticsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-analytics`, { headers });
                 headcount = analyticsRes.data?.data?.headcount || 0;
             } catch (e) { console.error('Analytics load error:', e); }
 
             try {
-                const leavesRes = await axios.get('http://localhost:3000/api/hr-workflows/leaves/branch-leaves', { headers });
+                const leavesRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/branch-leaves`, { headers });
                 pendingLeaves = Array.isArray(leavesRes.data) ? leavesRes.data.filter((l: any) => l.status === 'PENDING_HR_VETTING').length : 0;
             } catch (e) { console.error('Leaves load error:', e); }
 
             try {
-                const queriesRes = await axios.get('http://localhost:3000/api/hr-workflows/queries/branch-queries', { headers });
+                const queriesRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/branch-queries`, { headers });
                 openQueries = Array.isArray(queriesRes.data) ? queriesRes.data.filter((q: any) => q.status === 'OPEN').length : 0;
             } catch (e) { console.error('Queries load error:', e); }
 
             try {
-                const awardsRes = await axios.get('http://localhost:3000/api/hr-workflows/awards', { headers });
+                const awardsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/awards`, { headers });
                 awardsCount = Array.isArray(awardsRes.data) ? awardsRes.data.length : 0;
             } catch (e) { console.error('Awards load error:', e); }
 

@@ -23,7 +23,7 @@ export const AccountantTaxCompliance = () => {
     const fetchEstimates = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/taxes/estimates?month=${month}&year=${year}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/taxes/estimates?month=${month}&year=${year}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setData(res.data);
@@ -45,7 +45,7 @@ export const AccountantTaxCompliance = () => {
         e.preventDefault();
         setIsRemitting(true);
         try {
-            await axios.post('http://localhost:3000/api/taxes/remittance', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/taxes/remittance`, {
                 taxType,
                 amount,
                 applicablePeriod: `${month}/${year}`,

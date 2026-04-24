@@ -63,7 +63,7 @@ export const MyLeads = () => {
 
         if (!isMarketer && effectiveCompanyId && effectiveBranchId) {
             // Fetch users for assignment dropdown
-            axios.get(`http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`, {
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
                 .then(res => setBranchUsers(res.data))
@@ -79,7 +79,7 @@ export const MyLeads = () => {
             if (sourceFilter !== 'ALL') params.source = sourceFilter;
             // if (searchTerm) params.search = searchTerm; // Implement debounce for search later
 
-            const res = await axios.get('http://localhost:3000/api/leads', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
                 params
             });
@@ -103,7 +103,7 @@ export const MyLeads = () => {
     const confirmVerification = async () => {
         if (!leadToVerify) return;
         try {
-            await axios.patch(`http://localhost:3000/api/leads/${leadToVerify.id}/verify`, {}, {
+            await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadToVerify.id}/verify`, {}, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             fetchLeads();
@@ -126,7 +126,7 @@ export const MyLeads = () => {
         if (!selectedLead || !newAssigneeId) return;
 
         try {
-            await axios.patch(`http://localhost:3000/api/leads/${selectedLead.id}/assign`,
+            await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${selectedLead.id}/assign`,
                 { assignedToUserId: newAssigneeId },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );
@@ -147,7 +147,7 @@ export const MyLeads = () => {
         const formData = new FormData(e.currentTarget);
 
         try {
-            await axios.post('http://localhost:3000/api/leads', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads`, {
                 fullName: formData.get('fullName'),
                 phone: formData.get('phone'),
                 email: formData.get('email'),
@@ -173,7 +173,7 @@ export const MyLeads = () => {
         const formData = new FormData(e.currentTarget);
 
         try {
-            await axios.put(`http://localhost:3000/api/leads/${leadToEdit.id}`, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadToEdit.id}`, {
                 fullName: formData.get('fullName'),
                 phone: formData.get('phone'),
                 email: formData.get('email'),
@@ -197,7 +197,7 @@ export const MyLeads = () => {
     const handleDeleteConfirm = async () => {
         if (!leadToDelete) return;
         try {
-            await axios.delete(`http://localhost:3000/api/leads/${leadToDelete.id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadToDelete.id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setIsDeleteModalOpen(false);

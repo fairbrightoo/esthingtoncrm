@@ -47,7 +47,7 @@ export const BranchSettings = () => {
             }
 
             const targetBranchId = user?.branchId || user?.branch?.id;
-            const res = await axios.put(`http://localhost:3000/api/companies/branches/${targetBranchId}`,
+            const res = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branches/${targetBranchId}`,
                 formData,
                 { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
             );
@@ -81,7 +81,7 @@ export const BranchSettings = () => {
         }
         setPasswordLoading(true);
         try {
-            await axios.post('http://localhost:3000/api/users/change-password', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/change-password`, {
                 userId: user?.id,
                 currentPassword,
                 newPassword
@@ -193,7 +193,7 @@ export const BranchSettings = () => {
                                             <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-xl flex flex-col items-center justify-center">
                                                 <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-bold">Currently Saved Signature</p>
                                                 <img 
-                                                    src={`http://localhost:3000${(user.branch as any).signatureUrl}`} 
+                                                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${(user.branch as any).signatureUrl}`} 
                                                     alt="Manager Signature" 
                                                     className="h-12 object-contain" 
                                                 />

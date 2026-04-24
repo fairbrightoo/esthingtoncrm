@@ -31,7 +31,7 @@ export const ProfileSettings = () => {
         try {
             // Note: If you don't have a change-password route yet, this acts as a placeholder
             // for the UI. Usually it maps to /api/users/change-password
-            await axios.post('http://localhost:3000/api/users/change-password', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/change-password`, {
                 userId: user?.id,
                 currentPassword,
                 newPassword

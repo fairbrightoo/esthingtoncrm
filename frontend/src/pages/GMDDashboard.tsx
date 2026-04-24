@@ -13,7 +13,7 @@ export const GMDDashboard = () => {
         const fetchStats = async () => {
             try {
                 setLoading(true);
-                let url = 'http://localhost:3000/api/gmd-analytics/metrics';
+                let url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/gmd-analytics/metrics`;
                 if (filterMonth) {
                     const [year, month] = filterMonth.split('-');
                     const start = new Date(Number(year), Number(month) - 1, 1).toISOString().split('T')[0];

@@ -23,7 +23,7 @@ export const Login = () => {
     useEffect(() => {
         if (companyId) {
             // Fetch company details for branding
-            axios.get(`http://localhost:3000/api/companies`)
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`)
                 .then(res => {
                     const company = res.data.find((c: any) => c.id === companyId);
                     if (company) {
@@ -35,7 +35,7 @@ export const Login = () => {
 
             // Fetch branch details if branchId exists
             if (branchId) {
-                axios.get(`http://localhost:3000/api/companies/${companyId}/branches`)
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches`)
                     .then(res => {
                         const branch = res.data.find((b: any) => b.id === branchId);
                         if (branch) {
@@ -60,7 +60,7 @@ export const Login = () => {
                 branchId
             };
 
-            const res = await axios.post('http://localhost:3000/api/auth/login', loginPayload);
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/login`, loginPayload);
 
             const user = res.data.user;
             login(res.data.token, user);

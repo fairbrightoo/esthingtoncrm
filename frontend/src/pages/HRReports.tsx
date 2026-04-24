@@ -42,7 +42,7 @@ export const HRReports = () => {
         const fetchAnalytics = async () => {
             try {
                 setIsLoading(true);
-                const res = await axios.get(`http://localhost:3000/api/hr-analytics?month=${selectedMonth}`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-analytics?month=${selectedMonth}`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 if (res.data.success) {
@@ -196,7 +196,7 @@ export const HRReports = () => {
                             <div key={staff.id} className={`flex items-center space-x-4 p-4 rounded-xl border ${index === 0 ? 'border-yellow-300 bg-yellow-50' : 'border-gray-100 bg-gray-50'}`}>
                                 <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                                     {staff.avatar ? (
-                                        <img src={`http://localhost:3000${staff.avatar}`} alt={staff.name} className="w-full h-full object-cover" />
+                                        <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${staff.avatar}`} alt={staff.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full uppercase flex items-center justify-center font-bold text-gray-500">{staff.name.charAt(0)}</div>
                                     )}

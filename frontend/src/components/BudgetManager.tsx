@@ -18,7 +18,7 @@ export const BudgetManager = () => {
 
     const fetchBudgets = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/budgets', { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/budgets`, { headers: { Authorization: `Bearer ${token}` } });
             setBudgets(res.data);
         } catch (err) {
             console.error("Error fetching budgets");
@@ -50,7 +50,7 @@ export const BudgetManager = () => {
         setError('');
         
         try {
-            await axios.post('http://localhost:3000/api/budgets/create', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/budgets/create`, {
                 title, periodType, periodStartDate, periodEndDate, items
             }, { headers: { Authorization: `Bearer ${token}` } });
             setIsCreating(false);

@@ -44,7 +44,7 @@ export const BranchAttendance = () => {
         try {
             // Fetch users
             const usersRes = await axios.get(
-                `http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -55,7 +55,7 @@ export const BranchAttendance = () => {
             // Fetch attendance for selected date
             const dateStr = selectedDate.toISOString().split('T')[0];
             const attRes = await axios.get(
-                `http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/attendance?date=${dateStr}`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/attendance?date=${dateStr}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -77,7 +77,7 @@ export const BranchAttendance = () => {
         try {
             const dateStr = selectedDate.toISOString().split('T')[0];
             const res = await axios.post(
-                `http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/attendance`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/attendance`,
                 {
                     userId,
                     date: dateStr,
@@ -178,7 +178,7 @@ export const BranchAttendance = () => {
                                             <td className="p-5">
                                                 <div className="flex items-center space-x-3">
                                                     {member.passportUrl ? (
-                                                        <img src={`http://localhost:3000${member.passportUrl}`} alt={member.fullName} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                                                        <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${member.passportUrl}`} alt={member.fullName} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                                                             <UserIcon size={20} />

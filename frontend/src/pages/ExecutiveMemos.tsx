@@ -27,8 +27,8 @@ export const ExecutiveMemos = () => {
     const fetchData = async () => {
         try {
             const [memosRes, contactsRes] = await Promise.all([
-                axios.get('http://localhost:3000/api/memos', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/memos/contacts', { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/memos`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/memos/contacts`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             setMemos(memosRes.data);
             setContacts(contactsRes.data);
@@ -43,7 +43,7 @@ export const ExecutiveMemos = () => {
         e.preventDefault();
         setProcessing(true);
         try {
-            await axios.post('http://localhost:3000/api/memos', formData, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/memos`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast('Memo sent successfully', 'success');
@@ -60,7 +60,7 @@ export const ExecutiveMemos = () => {
     const handleRespond = async (memoId: string, status: 'APPROVED' | 'DECLINED') => {
         if(!confirm(`Are you sure you want to mark this as ${status}?`)) return;
         try {
-            await axios.put(`http://localhost:3000/api/memos/${memoId}/respond`, { status }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/memos/${memoId}/respond`, { status }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast(`Memo marked as ${status}`, 'success');

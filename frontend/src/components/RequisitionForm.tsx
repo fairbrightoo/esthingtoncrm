@@ -70,7 +70,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
 
         try {
             await axios.post(
-                'http://localhost:3000/api/requisitions/create',
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/create`,
                 {
                     title,
                     description,

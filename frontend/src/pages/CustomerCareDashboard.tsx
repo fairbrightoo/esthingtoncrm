@@ -52,10 +52,10 @@ export const CustomerCareDashboard = () => {
                 const query = timeFilter !== 'ALL' ? `?startDate=${currentMonthStart}&endDate=${currentMonthEnd}` : '';
 
                 const [statsRes, birthdaysRes] = await Promise.all([
-                    axios.get(`http://localhost:3000/api/analytics/stats${query}`, {
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats${query}`, {
                         headers: { Authorization: `Bearer ${token}` }
                     }),
-                    axios.get(`http://localhost:3000/api/events/clients`, {
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events/clients`, {
                         headers: { Authorization: `Bearer ${token}` }
                     })
                 ]);
@@ -76,7 +76,7 @@ export const CustomerCareDashboard = () => {
         setSendingMsg(true);
         try {
             await axios.post(
-                'http://localhost:3000/api/communications/send',
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`,
                 {
                     leadId: selectedClient.id,
                     type: messageType,

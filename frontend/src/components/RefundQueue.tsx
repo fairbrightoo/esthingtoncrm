@@ -31,7 +31,7 @@ export const RefundQueue = ({ roleContext }: { roleContext: 'BRANCH_ADMIN' | 'MA
     const fetchRefunds = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/refunds`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/refunds`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -89,7 +89,7 @@ export const RefundQueue = ({ roleContext }: { roleContext: 'BRANCH_ADMIN' | 'MA
         }
 
         try {
-            await axios.put(`http://localhost:3000/api/refunds/${refundId}/status`, { action: actionPayload }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/refunds/${refundId}/status`, { action: actionPayload }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast(`Refund processed successfully.`, 'success');

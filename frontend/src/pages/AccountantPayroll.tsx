@@ -31,14 +31,14 @@ export const AccountantPayroll = () => {
     const fetchPayroll = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/payroll?month=${month}&year=${year}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll?month=${month}&year=${year}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRecords(res.data);
 
             // Fetch live context context to ensure up-to-date logos and signatures
             if (user?.companyId) {
-                const compRes = await axios.get(`http://localhost:3000/api/companies`, {
+                const compRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const myCompany = compRes.data.find((c: any) => c.id === user.companyId);
@@ -46,7 +46,7 @@ export const AccountantPayroll = () => {
 
                 if (user?.branchId) {
                     try {
-                        const branchRes = await axios.get(`http://localhost:3000/api/companies/${user.companyId}/branches`, {
+                        const branchRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${user.companyId}/branches`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
                         const myBranch = branchRes.data.find((b: any) => b.id === user.branchId);
@@ -68,7 +68,7 @@ export const AccountantPayroll = () => {
 
     const handleDisburseSingle = async (id: string) => {
         try {
-            await axios.post(`http://localhost:3000/api/payroll/disburse/${id}`, {}, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll/disburse/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Salary marked as paid", "success");
@@ -81,7 +81,7 @@ export const AccountantPayroll = () => {
     const handleMassDisburse = async () => {
         if (!confirm("Are you sure you want to mass-disburse all pending salaries for this month?")) return;
         try {
-            await axios.post(`http://localhost:3000/api/payroll/disburse-mass`, { month, year }, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll/disburse-mass`, { month, year }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Mass disbursement successful!", "success");
@@ -267,7 +267,7 @@ export const AccountantPayroll = () => {
                                 <div className="border-b-4 border-blue-900 pb-6 mb-8 flex justify-between items-start">
                                     <div className="flex flex-col">
                                         {(branchInfo?.logoUrl || companyInfo?.logoUrl || user?.company?.logoUrl) && (
-                                            <img src={`http://localhost:3000${branchInfo?.logoUrl || companyInfo?.logoUrl || user?.company?.logoUrl}`} alt="Company Logo" className="h-12 object-contain mb-3 w-max" />
+                                            <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${branchInfo?.logoUrl || companyInfo?.logoUrl || user?.company?.logoUrl}`} alt="Company Logo" className="h-12 object-contain mb-3 w-max" />
                                         )}
                                         <h1 className="text-3xl font-black text-blue-900 uppercase tracking-tighter">
                                             {companyInfo?.name || user?.company?.name || "Company Name"}
@@ -342,7 +342,7 @@ export const AccountantPayroll = () => {
                                     <div className="text-center">
                                         {/* Company/Branch Signature or Auth Mark */}
                                         {(branchInfo?.signatureUrl || companyInfo?.signatureUrl) ? (
-                                            <img src={`http://localhost:3000${branchInfo?.signatureUrl || companyInfo?.signatureUrl}`} alt="MD Signature" className="h-16 mx-auto mb-2 opacity-80" />
+                                            <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${branchInfo?.signatureUrl || companyInfo?.signatureUrl}`} alt="MD Signature" className="h-16 mx-auto mb-2 opacity-80" />
                                         ) : (
                                             <div className="h-16 w-32 border-b-2 border-gray-400 mx-auto mb-2"></div>
                                         )}

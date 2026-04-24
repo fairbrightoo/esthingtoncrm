@@ -23,7 +23,7 @@ export const HREventsDashboard = () => {
 
     const fetchEvents = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/events', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setBirthdays(res.data.upcomingBirthdays || []);
@@ -39,7 +39,7 @@ export const HREventsDashboard = () => {
     const handleCreateHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3000/api/events/holidays', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events/holidays`, {
                 name: newHolidayName,
                 date: newHolidayDate
             }, {
@@ -59,7 +59,7 @@ export const HREventsDashboard = () => {
     const handleDeleteHoliday = async (id: string, name: string) => {
         if (!confirm(`Are you sure you want to delete ${name}?`)) return;
         try {
-            await axios.delete(`http://localhost:3000/api/events/holidays/${id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events/holidays/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast('Holiday deleted', 'success');

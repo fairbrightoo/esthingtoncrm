@@ -60,7 +60,7 @@ export const DocumentTemplatesConfig = () => {
     const fetchCompanies = async () => {
         if (user?.role !== 'SUPER_ADMIN') return;
         try {
-            const res = await axios.get('http://localhost:3000/api/companies', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCompanies(res.data);
@@ -76,8 +76,8 @@ export const DocumentTemplatesConfig = () => {
         setIsLoading(true);
         try {
             const url = user?.role === 'SUPER_ADMIN' && selectedCompanyId 
-                ? `http://localhost:3000/api/documents/templates?companyId=${selectedCompanyId}` 
-                : 'http://localhost:3000/api/documents/templates';
+                ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/documents/templates?companyId=${selectedCompanyId}` 
+                : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/documents/templates`;
 
             const res = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -100,8 +100,8 @@ export const DocumentTemplatesConfig = () => {
         setIsSaving(true);
         try {
             const url = user?.role === 'SUPER_ADMIN' && selectedCompanyId 
-                ? `http://localhost:3000/api/documents/templates?companyId=${selectedCompanyId}` 
-                : 'http://localhost:3000/api/documents/templates';
+                ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/documents/templates?companyId=${selectedCompanyId}` 
+                : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/documents/templates`;
 
             await axios.post(url, {
                 type: selectedType,

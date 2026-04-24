@@ -29,7 +29,7 @@ export const CompanyPolicies = () => {
     const fetchDocuments = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:3000/api/hr-workflows/documents', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/documents`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDocuments(res.data);
@@ -44,7 +44,7 @@ export const CompanyPolicies = () => {
         if (readingDoc && readingDoc.fileUrl.toLowerCase().endsWith('.pdf')) {
             setPreviewLoading(true);
             const token = localStorage.getItem('token');
-            axios.get(`http://localhost:3000${readingDoc.fileUrl}`, {
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${readingDoc.fileUrl}`, {
                 responseType: 'blob',
                 headers: { Authorization: `Bearer ${token}` }
             }).then((res) => {
@@ -77,7 +77,7 @@ export const CompanyPolicies = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:3000/api/hr-workflows/documents', formData, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/documents`, formData, {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
             });
             addToast('Document successfully published.', 'success');
@@ -93,7 +93,7 @@ export const CompanyPolicies = () => {
         if (!confirm('Are you sure you want to delete this official document?')) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:3000/api/hr-workflows/documents/${id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/documents/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast('Document removed.', 'success');
@@ -163,7 +163,7 @@ export const CompanyPolicies = () => {
                                         <BookOpen size={14} className="mr-1.5" /> Read Online
                                     </button>
                                     <a 
-                                        href={`http://localhost:3000${doc.fileUrl}`} 
+                                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.fileUrl}`} 
                                         target="_blank" 
                                         rel="noreferrer"
                                         className="flex items-center justify-center w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-xs font-bold transition-colors"
@@ -263,7 +263,7 @@ export const CompanyPolicies = () => {
                                     <h4 className="text-lg font-bold text-gray-900 mb-2">Preview Unavailable</h4>
                                     <p className="text-gray-500 text-sm mb-6">This document is a Word file (.doc / .docx) or another format that cannot be previewed natively inside the browser.</p>
                                     <a 
-                                        href={`http://localhost:3000${readingDoc.fileUrl}`} 
+                                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${readingDoc.fileUrl}`} 
                                         className="inline-flex items-center justify-center py-2 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors"
                                         download
                                     >

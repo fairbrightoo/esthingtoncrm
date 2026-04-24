@@ -55,7 +55,7 @@ export const BranchUsers = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUsers(res.data);
@@ -74,7 +74,7 @@ export const BranchUsers = () => {
         }
 
         try {
-            await axios.post(`http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`,
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`,
                 formData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -96,7 +96,7 @@ export const BranchUsers = () => {
             return;
         }
         try {
-            await axios.put(`http://localhost:3000/api/companies/users/${editingUser.id}`,
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${editingUser.id}`,
                 {
                     fullName: formData.fullName,
                     email: formData.email,
@@ -131,7 +131,7 @@ export const BranchUsers = () => {
 
         try {
             const res = await axios.post(
-                `http://localhost:3000/api/companies/users/${staffId}/documents`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${staffId}/documents`,
                 formData,
                 { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` } }
             );
@@ -152,7 +152,7 @@ export const BranchUsers = () => {
         setDeletingDoc(true);
         try {
             const res = await axios.delete(
-                `http://localhost:3000/api/companies/users/${docToDelete.staffId}/documents/${docToDelete.documentType}`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${docToDelete.staffId}/documents/${docToDelete.documentType}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             addToast(`${docToDelete.name} removed successfully`, 'success');
@@ -198,7 +198,7 @@ export const BranchUsers = () => {
     const handleDeleteUser = async (userId: string) => {
         if (!confirm('Are you sure you want to remove this staff member?')) return;
         try {
-            await axios.delete(`http://localhost:3000/api/companies/users/${userId}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchUsers();
@@ -273,7 +273,7 @@ export const BranchUsers = () => {
                                     <div className="flex items-center space-x-3">
                                         {u.passportUrl ? (
                                             <img
-                                                src={`http://localhost:3000${u.passportUrl}`}
+                                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${u.passportUrl}`}
                                                 alt={u.fullName}
                                                 className="w-8 h-8 rounded-full object-cover border border-gray-200"
                                             />
@@ -348,7 +348,7 @@ export const BranchUsers = () => {
                                 <div>
                                     {selectedStaffDocs.passportUrl ? (
                                         <div className="flex items-center space-x-3">
-                                            <a href={`http://localhost:3000${selectedStaffDocs.passportUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedStaffDocs.passportUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 <ExternalLink size={16} className="mr-1" /> View
                                             </a>
                                             <label className="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium transition">
@@ -385,7 +385,7 @@ export const BranchUsers = () => {
                                 <div>
                                     {selectedStaffDocs.cvUrl ? (
                                         <div className="flex items-center space-x-3">
-                                            <a href={`http://localhost:3000${selectedStaffDocs.cvUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedStaffDocs.cvUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 <ExternalLink size={16} className="mr-1" /> View
                                             </a>
                                             <label className="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium transition">
@@ -422,7 +422,7 @@ export const BranchUsers = () => {
                                 <div>
                                     {selectedStaffDocs.agreementUrl ? (
                                         <div className="flex items-center space-x-3">
-                                            <a href={`http://localhost:3000${selectedStaffDocs.agreementUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedStaffDocs.agreementUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 <ExternalLink size={16} className="mr-1" /> View
                                             </a>
                                             <label className="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium transition">
@@ -598,7 +598,7 @@ export const BranchUsers = () => {
                                             formData.append('file', bulkFile);
                                             try {
                                                 const res = await axios.post(
-                                                    `http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users/bulk`,
+                                                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users/bulk`,
                                                     formData,
                                                     { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` } }
                                                 );

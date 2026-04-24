@@ -11,7 +11,7 @@ export const MDBudgetReview = () => {
 
     const fetchBudgets = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/budgets', { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/budgets`, { headers: { Authorization: `Bearer ${token}` } });
             // MD should only review DRAFT / PENDING logic
             setBudgets(res.data.filter((b: any) => b.status === 'DRAFT' || b.status === 'PENDING_MD_APPROVAL'));
         } catch (err) {
@@ -31,7 +31,7 @@ export const MDBudgetReview = () => {
         
         try {
             setActionLoading(true);
-            await axios.put(`http://localhost:3000/api/budgets/md-approve/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/budgets/md-approve/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
             await fetchBudgets();
         } catch (err) {
             alert(`Failed to ${action} budget.`);

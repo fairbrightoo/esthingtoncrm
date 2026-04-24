@@ -30,7 +30,7 @@ export const BiodataTab = ({ leadId, onUpdate }: { leadId: string, onUpdate?: ()
 
     const fetchLeadData = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/leads/${leadId}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             const lead = res.data;
@@ -71,7 +71,7 @@ export const BiodataTab = ({ leadId, onUpdate }: { leadId: string, onUpdate?: ()
             if (profilePictureFile) data.append('profilePicture', profilePictureFile);
             if (govtIdFile) data.append('govtId', govtIdFile);
 
-            await axios.put(`http://localhost:3000/api/leads/${leadId}`, data, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}`, data, {
                 headers: { 
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'multipart/form-data'
@@ -96,7 +96,7 @@ export const BiodataTab = ({ leadId, onUpdate }: { leadId: string, onUpdate?: ()
         <div className="p-4 space-y-6">
             <div className="flex items-center space-x-3 mb-2">
                 {profilePictureUrl ? (
-                    <img src={`http://localhost:3000${profilePictureUrl}`} alt="Client KYC Profile" className="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-blue-100" />
+                    <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${profilePictureUrl}`} alt="Client KYC Profile" className="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-blue-100" />
                 ) : (
                     <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shadow-sm ring-1 ring-blue-100/50">
                         <UserCircle size={24} strokeWidth={1.5} />

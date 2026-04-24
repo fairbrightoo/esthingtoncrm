@@ -20,9 +20,9 @@ export const AccountantDashboard = () => {
         try {
             if (!isBackground) setLoading(true);
             const [reqRes, commRes, pendRes] = await Promise.all([
-                axios.get('http://localhost:3000/api/requisitions', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/requisitions/pending-commissions', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/payments/pending', { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
 
             // Filter for only ones needing accountant action (Approved by MD)
@@ -50,7 +50,7 @@ export const AccountantDashboard = () => {
     const handleDisburseFund = async (reqId: string) => {
         try {
             setActionLoading(true);
-            await axios.put(`http://localhost:3000/api/requisitions/accountant-disburse/${reqId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/accountant-disburse/${reqId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
             await fetchData();
         } catch (error) {
             alert('Failed to disburse funds.');
@@ -66,7 +66,7 @@ export const AccountantDashboard = () => {
     const handleDisburseCommission = async (paymentId: string) => {
         try {
             setActionLoading(true);
-            await axios.put(`http://localhost:3000/api/requisitions/pay-commission/${paymentId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pay-commission/${paymentId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
             await fetchData();
         } catch (error) {
             alert('Failed to disburse commission.');

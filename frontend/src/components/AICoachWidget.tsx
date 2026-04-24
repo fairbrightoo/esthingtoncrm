@@ -106,7 +106,7 @@ export const AICoachWidget: React.FC = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                'http://localhost:3000/api/ai/chat/message',
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/chat/message`,
                 { message: newUserMessage.content },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -134,7 +134,7 @@ export const AICoachWidget: React.FC = () => {
         setMessages([{ id: '1', role: 'assistant', content: "Conversation resetted. What's the new client objection?" }]);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:3000/api/ai/chat/reset', {}, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/chat/reset`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
         } catch(e) {}

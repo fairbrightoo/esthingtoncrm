@@ -36,8 +36,8 @@ export const HRAppraisals = () => {
         try {
             const token = localStorage.getItem('token');
             const [apsRes, awRes] = await Promise.all([
-                axios.get('http://localhost:3000/api/hr-workflows/appraisals/branch-appraisals', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/hr-workflows/awards', { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/appraisals/branch-appraisals`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/awards`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             setAppraisals(apsRes.data);
             setAwards(awRes.data);
@@ -55,7 +55,7 @@ export const HRAppraisals = () => {
             const brId = userData.branchId || userData.branch?.id;
             
             if (coId && brId) {
-                const res = await axios.get(`http://localhost:3000/api/companies/${coId}/branches/${brId}/users`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${coId}/branches/${brId}/users`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setBranchStaff(res.data.filter((u: any) => u.role !== 'BRANCH_ADMIN'));
@@ -79,7 +79,7 @@ export const HRAppraisals = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:3000/api/hr-workflows/appraisals', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/appraisals`, {
                 staffId,
                 period,
                 score: aggregateOverallScore(),
@@ -103,7 +103,7 @@ export const HRAppraisals = () => {
         try {
             const token = localStorage.getItem('token');
             const d = new Date();
-            await axios.post('http://localhost:3000/api/hr-workflows/awards', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/awards`, {
                 staffId: targetStaffId,
                 title: awardTitle,
                 month: d.getMonth() + 1,

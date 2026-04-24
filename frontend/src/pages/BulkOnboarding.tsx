@@ -24,7 +24,7 @@ export const BulkOnboarding = () => {
 
     const fetchCompanies = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/companies', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCompanies(res.data);
@@ -50,7 +50,7 @@ export const BulkOnboarding = () => {
 
         setUploading(true);
         try {
-            const res = await axios.post('http://localhost:3000/api/onboarding/bulk', formData, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/onboarding/bulk`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`

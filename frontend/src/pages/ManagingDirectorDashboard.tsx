@@ -42,7 +42,7 @@ export const ManagingDirectorDashboard = () => {
     const fetchPendingPayments = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/payments/pending`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPayments(res.data);
@@ -56,7 +56,7 @@ export const ManagingDirectorDashboard = () => {
 
     const fetchProcessedPayments = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/payments/processed`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/processed`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProcessedPayments(res.data);
@@ -78,10 +78,10 @@ export const ManagingDirectorDashboard = () => {
         setIsSubmittingReq(true);
         try {
             if (reqModal.action === 'APPROVE') {
-                await axios.put(`http://localhost:3000/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'APPROVED_BY_MD', amountApproved: reqModalAmount }, { headers: { Authorization: `Bearer ${token}` }});
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'APPROVED_BY_MD', amountApproved: reqModalAmount }, { headers: { Authorization: `Bearer ${token}` }});
                 addToast("Requisition successfully approved.", "success");
             } else {
-                await axios.put(`http://localhost:3000/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'REJECTED' }, { headers: { Authorization: `Bearer ${token}` }});
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'REJECTED' }, { headers: { Authorization: `Bearer ${token}` }});
                 addToast("Requisition has been rejected.", "error");
             }
             fetchRequisitions();
@@ -95,7 +95,7 @@ export const ManagingDirectorDashboard = () => {
 
     const fetchRequisitions = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/requisitions`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRequisitions(res.data.filter((r: any) => r.status === 'PENDING_MD_APPROVAL'));
@@ -122,7 +122,7 @@ export const ManagingDirectorDashboard = () => {
         setConfirmModal({ isOpen: false, paymentId: '', status: null });
 
         try {
-            await axios.put(`http://localhost:3000/api/payments/${paymentId}/status`, { status }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/${paymentId}/status`, { status }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast(`Payment marked as ${status}`, "success");
@@ -352,7 +352,7 @@ export const ManagingDirectorDashboard = () => {
                                                                     className="relative group overflow-hidden rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                                                 >
                                                                     <img 
-                                                                        src={`http://localhost:3000${url}`} 
+                                                                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`} 
                                                                         alt="Receipt Thumbnail" 
                                                                         className="w-16 h-16 object-cover transition-transform duration-300 group-hover:scale-110"
                                                                     />
@@ -363,7 +363,7 @@ export const ManagingDirectorDashboard = () => {
                                                             ) : (
                                                                 <a
                                                                     key={idx}
-                                                                    href={`http://localhost:3000${url}`}
+                                                                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="flex flex-col items-center justify-center w-16 h-16 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group flex-shrink-0"
@@ -483,7 +483,7 @@ export const ManagingDirectorDashboard = () => {
                                                                         className="relative group overflow-hidden rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                                                     >
                                                                         <img 
-                                                                            src={`http://localhost:3000${url}`} 
+                                                                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`} 
                                                                             alt="Receipt Thumbnail" 
                                                                             className="w-12 h-12 object-cover transition-transform duration-300 group-hover:scale-110"
                                                                         />
@@ -491,7 +491,7 @@ export const ManagingDirectorDashboard = () => {
                                                                 ) : (
                                                                     <a
                                                                         key={idx}
-                                                                        href={`http://localhost:3000${url}`}
+                                                                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         className="flex flex-col items-center justify-center w-12 h-12 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group flex-shrink-0"
@@ -643,7 +643,7 @@ export const ManagingDirectorDashboard = () => {
                         </div>
                         <div className="bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl p-2 border border-white/10 flex-1 min-h-0">
                             <img 
-                                src={`http://localhost:3000${receiptModal.url}`} 
+                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${receiptModal.url}`} 
                                 alt="Full Receipt" 
                                 className="max-w-full max-h-[80vh] object-contain rounded-xl"
                             />

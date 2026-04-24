@@ -129,7 +129,7 @@ function App() {
         return style.position === 'fixed' || style.position === 'absolute';
       }).map(el => `<${el.tagName.toLowerCase()} class="${el.className}">`).join('\n');
 
-      fetch('http://localhost:3000/api/dom-dump', {
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/dom-dump`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dom: document.body.innerHTML, fixedElements: fixedStr })

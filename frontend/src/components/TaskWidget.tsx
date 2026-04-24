@@ -28,7 +28,7 @@ export const TaskWidget = () => {
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/tasks', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             const sorted = res.data.sort((a: Task, b: Task) => {
@@ -45,7 +45,7 @@ export const TaskWidget = () => {
 
     const toggleTask = async (task: Task) => {
         try {
-            await axios.put(`http://localhost:3000/api/tasks/${task.id}`,
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${task.id}`,
                 { isCompleted: !task.isCompleted },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );

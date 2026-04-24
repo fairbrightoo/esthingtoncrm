@@ -27,7 +27,7 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>((p
     const buildImageUrl = (path?: string) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
-        return `http://localhost:3000${path}`;
+        return `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${path}`;
     };
 
     const logoUrl = buildImageUrl(branding.logoUrl);

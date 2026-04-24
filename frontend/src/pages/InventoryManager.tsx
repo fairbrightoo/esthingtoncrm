@@ -43,7 +43,7 @@ const SecurePdfViewer = ({ estate }: { estate: Estate }) => {
         setLoading(true);
         if (!estate.siteLayoutUrl) return;
 
-        axios.post('http://localhost:3000/api/estates/secure-pdf-stream', 
+        axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/secure-pdf-stream`, 
             { filePath: estate.siteLayoutUrl }, 
             { 
                 responseType: 'blob',
@@ -161,7 +161,7 @@ export const InventoryManager = () => {
     const fetchEstates = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('http://localhost:3000/api/estates', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEstates(res.data);
@@ -175,7 +175,7 @@ export const InventoryManager = () => {
     const fetchEstatePlots = async (estateId: string) => {
         setPlotsLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/estates/${estateId}/plots`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${estateId}/plots`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEstatePlots(res.data);
@@ -197,7 +197,7 @@ export const InventoryManager = () => {
             if (searchDocument) formData.append('searchDocument', searchDocument);
             if (siteLayout) formData.append('siteLayout', siteLayout);
 
-            await axios.post('http://localhost:3000/api/estates', formData, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates`, formData, {
                 headers: { 
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -225,7 +225,7 @@ export const InventoryManager = () => {
             if (searchDocument) formData.append('searchDocument', searchDocument);
             if (siteLayout) formData.append('siteLayout', siteLayout);
             
-            await axios.put(`http://localhost:3000/api/estates/${selectedEstate.id}`, formData, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}`, formData, {
                 headers: { 
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -238,7 +238,7 @@ export const InventoryManager = () => {
             setSiteLayout(null);
             // Re-fetch to update detail view
             fetchEstates();
-            const res = await axios.get('http://localhost:3000/api/estates', { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates`, { headers: { Authorization: `Bearer ${token}` } });
             const updated = res.data.find((E: Estate) => E.id === selectedEstate.id);
             if(updated) setSelectedEstate(updated);
         } catch (error) {
@@ -250,7 +250,7 @@ export const InventoryManager = () => {
         if (!estateToDelete) return;
         setIsDeleting(true);
         try {
-            await axios.delete(`http://localhost:3000/api/estates/${estateToDelete.id}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${estateToDelete.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Estate deleted", "success");
@@ -273,7 +273,7 @@ export const InventoryManager = () => {
         if (!selectedEstate) return;
         setIsGenerating(true);
         try {
-            await axios.post(`http://localhost:3000/api/estates/${selectedEstate.id}/plots/bulk`, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/plots/bulk`, {
                 prototype: plotForm.prototype,
                 size: Number(plotForm.size),
                 price: Number(plotForm.price),
@@ -312,7 +312,7 @@ export const InventoryManager = () => {
             });
             setEstatePlots(updatedPlots);
 
-            await axios.put(`http://localhost:3000/api/plots/${plotId}/toggle-cp`, { isCornerPiece: newValue }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/plots/${plotId}/toggle-cp`, { isCornerPiece: newValue }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Corner piece toggled", "success");
@@ -327,7 +327,7 @@ export const InventoryManager = () => {
         if (!selectedEstate) return;
         setIsLegacyLoading(true);
         try {
-            await axios.post(`http://localhost:3000/api/estates/${selectedEstate.id}/plots/manual`, legacyPlotForm, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/plots/manual`, legacyPlotForm, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Legacy plot imported successfully", "success");
@@ -368,7 +368,7 @@ export const InventoryManager = () => {
 
             setIsLegacyLoading(true);
 
-            const res = await axios.post(`http://localhost:3000/api/estates/${selectedEstate.id}/plots/bulk-import`, { plots: preparedPlots }, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/plots/bulk-import`, { plots: preparedPlots }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -387,7 +387,7 @@ export const InventoryManager = () => {
         if (!selectedEstate) return;
         setIsUpdatingBulkPrice(true);
         try {
-            const res = await axios.put(`http://localhost:3000/api/estates/${selectedEstate.id}/plots/bulk-price`, bulkPriceForm, {
+            const res = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/plots/bulk-price`, bulkPriceForm, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast(`Successfully updated the price of ${res.data.updatedCount} plots.`, "success");
@@ -404,7 +404,7 @@ export const InventoryManager = () => {
     const fetchPlotHistory = async (plot: Plot) => {
         setHistoryModal({ isOpen: true, plot, logs: [], loading: true });
         try {
-            const res = await axios.get(`http://localhost:3000/api/plots/${plot.id}/history`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/plots/${plot.id}/history`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setHistoryModal({ isOpen: true, plot, logs: res.data, loading: false });
@@ -592,7 +592,7 @@ export const InventoryManager = () => {
                                     </div>
                                 )}
                                 {selectedEstate.searchDocumentUrl && (
-                                    <a href={`http://localhost:3000${selectedEstate.searchDocumentUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline">
+                                    <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedEstate.searchDocumentUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline">
                                         <Save size={14} className="mr-1" /> View/Download Search Document
                                     </a>
                                 )}
@@ -932,7 +932,7 @@ export const InventoryManager = () => {
                                 <SecurePdfViewer estate={selectedEstate} />
                             ) : (
                                 <img 
-                                    src={`http://localhost:3000${selectedEstate.siteLayoutUrl}`} 
+                                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedEstate.siteLayoutUrl}`} 
                                     alt={`${selectedEstate.name} Site Layout`}
                                     className="max-w-full max-h-full object-contain rounded-xl shadow-2xl border border-slate-700 bg-slate-100"
                                 />

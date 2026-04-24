@@ -24,7 +24,7 @@ export const CustomerCareInbox = () => {
         setIsLoadingLeads(true);
         try {
             // Fetch all leads (In a real scenario, you'd filter by branch/company which backend handles)
-            const res = await axios.get('http://localhost:3000/api/leads?status=ALL', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads?status=ALL`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Let's filter to those likely using WA (For MVP, just show all leads, sort by Recency)
@@ -40,7 +40,7 @@ export const CustomerCareInbox = () => {
     const fetchLogs = async (leadId: string) => {
         setIsLoadingLogs(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/communications/leads/${leadId}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/leads/${leadId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Reverse logs so oldest is at top, newest at bottom
@@ -75,7 +75,7 @@ export const CustomerCareInbox = () => {
         setIsSending(true);
 
         try {
-            await axios.post('http://localhost:3000/api/communications/send', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`, {
                 leadId: selectedLead.id,
                 type: 'WHATSAPP',
                 content: messageDraft
@@ -93,7 +93,7 @@ export const CustomerCareInbox = () => {
     const handleTakeover = async () => {
         if (!selectedLead) return;
         try {
-            await axios.put(`http://localhost:3000/api/leads/${selectedLead.id}`, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${selectedLead.id}`, {
                 status: 'CONTACTED' // Disables AI Concierge safely
             }, { headers: { Authorization: `Bearer ${token}` } });
             
@@ -112,7 +112,7 @@ export const CustomerCareInbox = () => {
         setIsSending(true);
         try {
             const promoMessage = `🎁 Special Offer! Use code ESTHINGTON5 for an instant 5% discount on your initial deposit if you secure your plot this week. Can I assist you with the paperwork?`;
-            await axios.post('http://localhost:3000/api/communications/send', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`, {
                 leadId: selectedLead.id,
                 type: 'WHATSAPP',
                 content: promoMessage

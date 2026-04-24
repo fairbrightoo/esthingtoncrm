@@ -20,7 +20,7 @@ export const BranchRequisitions = () => {
     const fetchRequisitions = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('http://localhost:3000/api/requisitions', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRequisitions(res.data);

@@ -22,7 +22,7 @@ export const BranchSelection = () => {
     useEffect(() => {
         if (companyId) {
             // Fetch company details for branding
-            axios.get(`http://localhost:3000/api/companies`)
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`)
                 .then(res => {
                     const company = res.data.find((c: any) => c.id === companyId);
                     if (company) {
@@ -33,7 +33,7 @@ export const BranchSelection = () => {
                 .catch(err => console.error("Error fetching company", err));
 
             // Fetch branches
-            axios.get(`http://localhost:3000/api/companies/${companyId}/branches`)
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches`)
                 .then(res => {
                     setBranches(res.data);
                     // If no branches, maybe redirect to login directly? 

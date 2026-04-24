@@ -21,8 +21,8 @@ export const HRLeaveManagement = () => {
         try {
             const token = localStorage.getItem('token');
             const url = user?.role === 'MANAGING_DIRECTOR' 
-                ? 'http://localhost:3000/api/hr-workflows/leaves/company-leaves'
-                : 'http://localhost:3000/api/hr-workflows/leaves/branch-leaves';
+                ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/company-leaves`
+                : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/branch-leaves`;
                 
             const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
             setLeaves(res.data);
@@ -40,8 +40,8 @@ export const HRLeaveManagement = () => {
 
         try {
             const endpoint = user?.role === 'MANAGING_DIRECTOR' 
-                ? `http://localhost:3000/api/hr-workflows/leaves/${leaveId}/approve`
-                : `http://localhost:3000/api/hr-workflows/leaves/${leaveId}/vet`;
+                ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/${leaveId}/approve`
+                : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/${leaveId}/vet`;
             
             const payload = user?.role === 'MANAGING_DIRECTOR'
                 ? { status, mdRemarks: vetRemarks }

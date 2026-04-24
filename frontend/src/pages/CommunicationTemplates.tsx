@@ -34,7 +34,7 @@ export const CommunicationTemplates = () => {
 
     const fetchTemplates = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/communication/templates', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/templates`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setTemplates(res.data);
@@ -73,7 +73,7 @@ export const CommunicationTemplates = () => {
             // If ID exists, we probably don't have a PUT endpoint right now. Let's just create a new one for now if edit is clicked
             // To be safe against backend limitations, we'll try PUT, and if 404, fallback to creating a new one.
 
-            await axios.post('http://localhost:3000/api/communication/templates', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/templates`, {
                 name,
                 type,
                 content

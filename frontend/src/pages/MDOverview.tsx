@@ -21,19 +21,19 @@ export const MDOverview = () => {
                 const branchId = user?.branchId;
                 
                 // Fetch high-level analytics
-                const analyticsRes = await axios.get(`http://localhost:3000/api/analytics/reports/md?timeframe=this_month${branchId ? `&branchId=${branchId}` : ''}`, {
+                const analyticsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/reports/md?timeframe=this_month${branchId ? `&branchId=${branchId}` : ''}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setAnalytics(analyticsRes.data);
 
                 // Fetch Action Items (Payments)
-                const paymentsRes = await axios.get(`http://localhost:3000/api/payments/pending`, {
+                const paymentsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setPendingPaymentsCount(paymentsRes.data.length || 0);
 
                 // Fetch Action Items (Requisitions)
-                const reqsRes = await axios.get(`http://localhost:3000/api/requisitions`, {
+                const reqsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const reqsCount = reqsRes.data.filter((r: any) => r.status === 'PENDING_MD_APPROVAL').length;

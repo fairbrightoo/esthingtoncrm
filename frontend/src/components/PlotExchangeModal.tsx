@@ -27,7 +27,7 @@ export const PlotExchangeModal = ({ isOpen, onClose, originalSale, onSuccess }: 
 
     const fetchPlots = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/plots/available`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/plots/available`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setAvailablePlots(res.data);
@@ -44,7 +44,7 @@ export const PlotExchangeModal = ({ isOpen, onClose, originalSale, onSuccess }: 
 
         setIsSubmitting(true);
         try {
-            const res = await axios.post(`http://localhost:3000/api/sales/${originalSale.id}/exchange`, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${originalSale.id}/exchange`, {
                 newPlotId: selectedPlotId
             }, {
                 headers: { Authorization: `Bearer ${token}` }

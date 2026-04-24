@@ -111,7 +111,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     const fetchSales = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/leads/${leadId}/sales`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadId}/sales`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSales(res.data);
@@ -122,7 +122,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     const fetchPlots = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/plots/available`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/plots/available`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPlots(res.data);
@@ -139,7 +139,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             return;
         }
         try {
-            await axios.post(`http://localhost:3000/api/sales`, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales`, {
                 leadId,
                 plotId: selectedPlotId,
                 isCornerPiece,
@@ -163,7 +163,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         e.preventDefault();
         setIsSubmittingRefund(true);
         try {
-            await axios.post('http://localhost:3000/api/refunds', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/refunds`, {
                 saleId: saleForRefund.id,
                 reason: refundReason
             }, { headers: { Authorization: `Bearer ${token}` } });
@@ -185,7 +185,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         try {
             if (paymentMethod === 'EQUITY_WALLET') {
                 // Ignore File Upload rules for Equity Wallet drawdown
-                await axios.post(`http://localhost:3000/api/sales/${selectedSaleId}/payments`, {
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${selectedSaleId}/payments`, {
                     amount: paymentAmount,
                     method: 'EQUITY_WALLET',
                     reference: paymentRef,
@@ -207,7 +207,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     formData.append('proofs', file);
                 });
 
-                await axios.post(`http://localhost:3000/api/sales/${selectedSaleId}/payments`, formData, { 
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${selectedSaleId}/payments`, formData, { 
                     headers: { 
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'

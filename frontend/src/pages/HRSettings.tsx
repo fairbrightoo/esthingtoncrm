@@ -24,7 +24,7 @@ export const HRSettings = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await axios.get('http://localhost:3000/api/hr-settings', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-settings`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 if (res.data) setSettings(res.data);
@@ -44,7 +44,7 @@ export const HRSettings = () => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await axios.put('http://localhost:3000/api/hr-settings', settings, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-settings`, settings, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             alert('HR Rules & Settings saved successfully.');

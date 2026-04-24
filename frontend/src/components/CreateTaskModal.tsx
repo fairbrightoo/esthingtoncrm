@@ -25,7 +25,7 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, preselectedLea
 
     const fetchLeads = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/leads', { // Using lead listing endpoint
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads`, { // Using lead listing endpoint
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setLeads(res.data);
@@ -39,7 +39,7 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, preselectedLea
         setIsLoading(true);
 
         try {
-            await axios.post('http://localhost:3000/api/tasks', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks`, {
                 title,
                 description,
                 dueDate,

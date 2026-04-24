@@ -20,8 +20,8 @@ export const HelpdeskTickets = () => {
     const fetchTicketsAndLeads = async () => {
         try {
             const [ticketsRes, leadsRes] = await Promise.all([
-                axios.get('http://localhost:3000/api/tickets', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/leads', { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tickets`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             setTickets(ticketsRes.data);
             setLeads(leadsRes.data);
@@ -40,7 +40,7 @@ export const HelpdeskTickets = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await axios.post('http://localhost:3000/api/tickets', newTicket, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tickets`, newTicket, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Ticket created successfully!", "success");
@@ -56,7 +56,7 @@ export const HelpdeskTickets = () => {
 
     const updateStatus = async (id: string, status: string) => {
         try {
-            await axios.put(`http://localhost:3000/api/tickets/${id}`, { status }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tickets/${id}`, { status }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Ticket status updated", "success");

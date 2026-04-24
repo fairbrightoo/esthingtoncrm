@@ -30,7 +30,7 @@ const AIKnowledgeBase: React.FC = () => {
     const fetchFiles = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:3000/api/ai/knowledge/files', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/knowledge/files`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setActiveFiles(res.data.files || []);
@@ -51,7 +51,7 @@ const AIKnowledgeBase: React.FC = () => {
         setIsDeleting(fileId);
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:3000/api/ai/knowledge/files/${fileId}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/knowledge/files/${fileId}`, {
                  headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Document erased successfully", "success");
@@ -82,7 +82,7 @@ const AIKnowledgeBase: React.FC = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:3000/api/ai/knowledge/upload', formData, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/knowledge/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`

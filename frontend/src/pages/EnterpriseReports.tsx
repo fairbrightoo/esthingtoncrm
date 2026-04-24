@@ -33,7 +33,7 @@ export const EnterpriseReports = () => {
 
     const fetchMetadata = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/companies', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCompanies(res.data);
@@ -72,17 +72,17 @@ export const EnterpriseReports = () => {
 
             if (activeTab === 'FINANCIAL') {
                 if (statusFilter !== 'ALL') params.append('status', statusFilter);
-                const res = await axios.get(`http://localhost:3000/api/analytics/enterprise/financial?${params.toString()}`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/enterprise/financial?${params.toString()}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setFinancialData(res.data.data);
             } else if (activeTab === 'MARKETER_KPI') {
-                const res = await axios.get(`http://localhost:3000/api/analytics/enterprise/marketer-kpi?${params.toString()}`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/enterprise/marketer-kpi?${params.toString()}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setKpiData(res.data.data);
             } else if (activeTab === 'HR_PAYROLL') {
-                const res = await axios.get(`http://localhost:3000/api/analytics/enterprise/hr-payroll?${params.toString()}`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/enterprise/hr-payroll?${params.toString()}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setHrData(res.data.data);

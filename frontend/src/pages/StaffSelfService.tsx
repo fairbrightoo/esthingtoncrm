@@ -31,9 +31,9 @@ export const StaffSelfService = () => {
         try {
             const token = localStorage.getItem('token');
             const [lRes, qRes, aRes] = await Promise.all([
-                axios.get('http://localhost:3000/api/hr-workflows/leaves/my-leaves', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/hr-workflows/queries/my-queries', { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get('http://localhost:3000/api/hr-workflows/appraisals/my-appraisals', { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/my-leaves`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/my-queries`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/appraisals/my-appraisals`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             setLeaves(lRes.data);
             setQueries(qRes.data);
@@ -48,7 +48,7 @@ export const StaffSelfService = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:3000/api/hr-workflows/leaves', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves`, {
                 startDate: leaveStart, endDate: leaveEnd, type: leaveType, reason: leaveReason
             }, { headers: { Authorization: `Bearer ${token}` } });
             
@@ -67,7 +67,7 @@ export const StaffSelfService = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:3000/api/hr-workflows/queries/${queryId}/reply`, { staffReply: queryReply }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/${queryId}/reply`, { staffReply: queryReply }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast('Query response submitted.', 'success');

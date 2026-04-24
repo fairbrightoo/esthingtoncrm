@@ -31,7 +31,7 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
 
     const fetchTemplates = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/communication/templates?type=${type}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/templates?type=${type}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setTemplates(res.data);
@@ -51,14 +51,14 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
             if (attachment && type === 'WHATSAPP') {
                 const formData = new FormData();
                 formData.append('media', attachment);
-                const uploadRes = await axios.post('http://localhost:3000/api/communication/upload-media', formData, {
+                const uploadRes = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/upload-media`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
-                mediaUrl = `http://localhost:3000${uploadRes.data.url}`;
+                mediaUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${uploadRes.data.url}`;
                 mediaType = attachmentType;
             }
 
-            await axios.post('http://localhost:3000/api/communication/send', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/send`, {
                 leadId,
                 type,
                 subject: type === 'EMAIL' ? subject : undefined,

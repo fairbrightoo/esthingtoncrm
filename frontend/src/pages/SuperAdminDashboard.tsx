@@ -45,7 +45,7 @@ export const SuperAdminDashboard = () => {
                 queryParams = `?startDate=${start.toISOString()}&endDate=${end.toISOString()}`;
             }
 
-            const res = await axios.get(`http://localhost:3000/api/analytics/global${queryParams}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/global${queryParams}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setData(res.data);

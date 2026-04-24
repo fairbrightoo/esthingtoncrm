@@ -49,7 +49,7 @@ export const BranchReports = () => {
                 startParams = `&startDate=${ninetyDaysAgo.toISOString()}`;
             }
 
-            const res = await axios.get(`http://localhost:3000/api/analytics/reports/md?branchId=${branchId}${startParams}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/reports/md?branchId=${branchId}${startParams}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStats(res.data);

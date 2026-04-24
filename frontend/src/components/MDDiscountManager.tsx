@@ -38,7 +38,7 @@ export const MDDiscountManager = () => {
 
     const fetchDiscounts = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/discounts', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/discounts`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDiscounts(res.data);
@@ -64,7 +64,7 @@ export const MDDiscountManager = () => {
         let finalExpiry = expiryMode === 'DATE' && expiryDate ? new Date(expiryDate).toISOString() : null;
 
         try {
-            await axios.post('http://localhost:3000/api/discounts', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/discounts`, {
                 type,
                 value,
                 maxUses: finalMaxUses,
@@ -87,7 +87,7 @@ export const MDDiscountManager = () => {
 
     const toggleStatus = async (id: string) => {
         try {
-            await axios.patch(`http://localhost:3000/api/discounts/${id}/toggle`, {}, {
+            await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/discounts/${id}/toggle`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Code status updated.", "success");

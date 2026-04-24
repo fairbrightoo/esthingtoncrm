@@ -37,7 +37,7 @@ export const GlobalUserManagement = () => {
 
     const fetchMetadata = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/companies', {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCompanies(res.data);
@@ -53,7 +53,7 @@ export const GlobalUserManagement = () => {
             if (selectedCompany !== 'ALL') params.append('companyId', selectedCompany);
             if (selectedRole !== 'ALL') params.append('role', selectedRole);
 
-            const res = await axios.get(`http://localhost:3000/api/users/global?${params.toString()}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global?${params.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUsers(res.data.data);
@@ -80,7 +80,7 @@ export const GlobalUserManagement = () => {
     const handleSaveUpdate = async () => {
         if (!editingUser) return;
         try {
-            await axios.put(`http://localhost:3000/api/users/global/${editingUser.id}`, formData, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/${editingUser.id}`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             

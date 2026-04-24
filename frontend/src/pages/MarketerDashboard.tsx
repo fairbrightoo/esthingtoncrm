@@ -52,7 +52,7 @@ export const MarketerDashboard = () => {
                     params = `?startDate=${encodeURIComponent(start)}&endDate=${encodeURIComponent(end)}`;
                 }
 
-                const response = await axios.get(`http://localhost:3000/api/analytics/stats${params}`, {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats${params}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setStats(response.data);
@@ -71,7 +71,7 @@ export const MarketerDashboard = () => {
         setSendingMsg(true);
         try {
             await axios.post(
-                'http://localhost:3000/api/communications/send',
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`,
                 {
                     leadId: selectedClient.id,
                     type: messageType,

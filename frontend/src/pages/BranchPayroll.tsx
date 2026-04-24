@@ -39,7 +39,7 @@ export const BranchPayroll = () => {
         setLoading(true);
         try {
             const res = await axios.get(
-                `http://localhost:3000/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/payroll?month=${selectedMonth}&year=${selectedYear}`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/payroll?month=${selectedMonth}&year=${selectedYear}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setPayroll(res.data);
