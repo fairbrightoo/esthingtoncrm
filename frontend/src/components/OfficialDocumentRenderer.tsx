@@ -108,12 +108,12 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{BALANCE_OUTSTANDING}}/g, formatCurrency(balance > 0 ? balance : 0));
 
         // Company Branding (Rendered as image tags if urls exist)
-        const logoHtml = companyInfo?.logoUrl ? `<img src=`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${companyInfo.logoUrl}` style="max-width: 250px; max-height: 80px; display: block; margin: 0 auto; border: none; outline: none;" alt="Logo" />` : `<h2 style="text-align: right; margin: 0;">${companyInfo?.name || 'Company Name'}</h2>`;
+        const logoHtml = companyInfo?.logoUrl ? `<img src="${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${companyInfo.logoUrl}" style="max-width: 250px; max-height: 80px; display: block; margin: 0 auto; border: none; outline: none;" alt="Logo" />` : `<h2 style="text-align: right; margin: 0;">${companyInfo?.name || 'Company Name'}</h2>`;
         html = html.replace(/{{COMPANY_LOGO}}/g, logoHtml);
 
         // Branch signature takes precedence if it exists
         const signatureUrl = branchInfo?.signatureUrl || companyInfo?.signatureUrl;
-        const sigHtml = signatureUrl ? `<img src=`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${signatureUrl}` style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
+        const sigHtml = signatureUrl ? `<img src="${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${signatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{COMPANY_SIGNATURE}}/g, sigHtml);
         
         // Branch manager name takes precedence if it exists
