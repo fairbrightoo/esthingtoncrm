@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { uploadFile } from '../services/StorageService.js';
 
 const prisma = new PrismaClient();
 
@@ -91,14 +92,7 @@ export const CompanyController = {
 
         try {
             if (req.file) {
-                const uploadsDir = path.join(process.cwd(), 'uploads', 'logos');
-                if (!fs.existsSync(uploadsDir)) {
-                    fs.mkdirSync(uploadsDir, { recursive: true });
-                }
-                const filename = `logo-${Date.now()}${path.extname(req.file.originalname) || '.svg'}`;
-                const filePath = path.join(uploadsDir, filename);
-                fs.writeFileSync(filePath, req.file.buffer);
-                logoUrl = `/uploads/logos/${filename}`;
+                logoUrl = await uploadFile(req.file.buffer, req.file.originalname, 'logos');
             }
 
             const company = await prisma.company.create({
@@ -164,14 +158,7 @@ export const CompanyController = {
 
         try {
             if (req.file) {
-                const uploadsDir = path.join(process.cwd(), 'uploads', 'logos');
-                if (!fs.existsSync(uploadsDir)) {
-                    fs.mkdirSync(uploadsDir, { recursive: true });
-                }
-                const filename = `logo-${Date.now()}${path.extname(req.file.originalname) || '.svg'}`;
-                const filePath = path.join(uploadsDir, filename);
-                fs.writeFileSync(filePath, req.file.buffer);
-                logoUrl = `/uploads/logos/${filename}`;
+                logoUrl = await uploadFile(req.file.buffer, req.file.originalname, 'logos');
             }
 
             const company = await prisma.company.update({
@@ -242,14 +229,7 @@ export const CompanyController = {
 
         try {
             if (req.file) {
-                const uploadsDir = path.join(process.cwd(), 'uploads', 'logos'); // reuse logos folder since frontend points there often, or signatures if preferred
-                if (!fs.existsSync(uploadsDir)) {
-                    fs.mkdirSync(uploadsDir, { recursive: true });
-                }
-                const filename = `branch-sig-${Date.now()}${path.extname(req.file.originalname) || '.png'}`;
-                const filePath = path.join(uploadsDir, filename);
-                fs.writeFileSync(filePath, req.file.buffer);
-                signatureUrl = `/uploads/logos/${filename}`;
+                signatureUrl = await uploadFile(req.file.buffer, req.file.originalname, 'signatures');
             }
 
             const branch = await prisma.branch.update({
@@ -638,17 +618,7 @@ export const CompanyController = {
                 return;
             }
 
-            const uploadDir = path.join(process.cwd(), 'uploads');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            const fileName = `${id}-${documentType}-${Date.now()}${path.extname(req.file.originalname)}`;
-            const filePath = path.join(uploadDir, fileName);
-
-            fs.writeFileSync(filePath, req.file.buffer);
-
-            const fileUrl = `/uploads/${fileName}`;
+            const fileUrl = await uploadFile(req.file.buffer, req.file.originalname, `staff-${documentType}`);
 
             const updateData: any = {};
             if (documentType === 'passport') updateData.passportUrl = fileUrl;

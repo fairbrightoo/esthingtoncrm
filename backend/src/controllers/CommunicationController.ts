@@ -97,7 +97,7 @@ export const CommunicationController = {
             const logs = await prisma.communicationLog.findMany({
                 where: { leadId },
                 orderBy: { createdAt: 'desc' },
-                include: { user: { select: { fullName: true } } }
+                include: { user: { select: { id: true, fullName: true, role: true } } }
             });
             res.json(logs);
         } catch (error) {

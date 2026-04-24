@@ -108,6 +108,79 @@ export const AICoachController = {
         }
     },
 
+    // 2.5 List Documents in Vector Store
+    async listKnowledgeFiles(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const user = req.user;
+            if (user.role !== 'MANAGING_DIRECTOR' && user.role !== 'SUPER_ADMIN') {
+                return res.status(403).json({ error: 'Access denied.' });
+            }
+
+            const company = await prisma.company.findUnique({ where: { id: user.companyId } });
+            if (!company || !company.aiVectorStoreId) {
+                return res.json({ files: [] });
+            }
+
+            const openai = getOpenAI();
+            const vectorFiles = await openai.vectorStores.files.list(company.aiVectorStoreId);
+            
+            const fileDetailsList = await Promise.all(
+                vectorFiles.data.map(async (vf) => {
+                    try {
+                        const fileData = await openai.files.retrieve(vf.id);
+                        return {
+                            id: vf.id,
+                            filename: fileData.filename,
+                            bytes: fileData.bytes,
+                            createdAt: fileData.created_at,
+                            status: vf.status
+                        };
+                    } catch (e) {
+                         return { id: vf.id, filename: "Unknown File", status: vf.status };
+                    }
+                })
+            );
+
+            res.json({ files: fileDetailsList });
+        } catch (error) {
+            console.error('KB List Error:', error);
+            res.status(500).json({ error: "Failed to fetch active documents." });
+        }
+    },
+
+    // 2.6 Delete Document from Vector Store
+    async deleteKnowledgeFile(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const user = req.user;
+            const { fileId } = req.params;
+            const company = await prisma.company.findUnique({ where: { id: user.companyId } });
+            if (!company?.aiVectorStoreId) return res.status(404).json({ error: "No vector store found." });
+            
+            const openai = getOpenAI();
+            
+            // Attempt to remove from vector store. This will fail if the file was rejected/failed.
+            try {
+                await openai.vectorStores.files.del(company.aiVectorStoreId, fileId);
+            } catch (e: any) {
+                console.warn("Ignored Vector Store Deletion Error (Likely failed file):", e.message);
+            }
+
+            // Attempt to erase completely from OpenAI's global storage
+            try {
+                await openai.files.del(fileId); 
+            } catch (e: any) {
+                console.warn("Ignored Global File Deletion Error:", e.message);
+            }
+
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Delete File Error', error);
+            res.status(500).json({ error: "Failed to delete file" });
+        }
+    },
+
     // 3. The Core Chat Engine for Marketers
     async chatWithCoach(req: Request, res: Response) {
         try {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import { uploadFile } from '../services/StorageService.js';
 
 const prisma = new PrismaClient();
 
@@ -346,17 +347,7 @@ export const HRWorkflowController = {
         }
 
         try {
-            const uploadDir = path.join(process.cwd(), 'uploads', 'policies');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            const fileName = `policy-${Date.now()}${path.extname(req.file.originalname)}`;
-            const filePath = path.join(uploadDir, fileName);
-
-            fs.writeFileSync(filePath, req.file.buffer);
-
-            const fileUrl = `/uploads/policies/${fileName}`;
+            const fileUrl = await uploadFile(req.file.buffer, req.file.originalname, 'policies');
 
             // Allow SUPER_ADMIN or MD to create Global company documents
             const assignBranchId = (isGlobal === 'true' && ['SUPER_ADMIN', 'MANAGING_DIRECTOR'].includes(role)) ? null : branchId;

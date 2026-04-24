@@ -133,7 +133,7 @@ export const LeadController = {
                     }
                 },
                 orderBy: { updatedAt: 'desc' },
-                take: 100 // Limit for now
+                take: 5000 // Increased limit to accommodate bulk uploads without proper pagination
             });
 
             // SQLite might need manual validation if case-insensitive search is required, 

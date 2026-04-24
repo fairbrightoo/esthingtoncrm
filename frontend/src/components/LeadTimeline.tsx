@@ -9,6 +9,7 @@ interface Activity {
     direction: 'INBOUND' | 'OUTBOUND';
     notes?: string;
     timestamp: string;
+    isCommunicationLog?: boolean;
     createdByUser?: {
         id: string;
         fullName: string;
@@ -61,10 +62,29 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
 
     const fetchActivities = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/leads/${leadId}/activities`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
-            setActivities(res.data);
+            const [actsRes, logsRes] = await Promise.all([
+                axios.get(`http://localhost:3000/api/leads/${leadId}/activities`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                }),
+                axios.get(`http://localhost:3000/api/communication/logs/${leadId}`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                })
+            ]);
+            
+            const rawActs = actsRes.data;
+            const rawLogs = logsRes.data.map((log: any) => ({
+                id: log.id,
+                type: log.type,
+                direction: log.direction,
+                notes: `[System Log: Message ${log.status}]\n${log.content}`,
+                timestamp: log.createdAt,
+                createdByUser: log.user,
+                isCommunicationLog: true
+            }));
+
+            const combined = [...rawActs, ...rawLogs].sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            
+            setActivities(combined);
         } catch (error) {
             console.error("Failed to load activities", error);
         }
@@ -230,7 +250,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
                                             <span className="text-xs text-gray-500">
                                                 {new Date(activity.timestamp).toLocaleString()}
                                             </span>
-                                            {(activity.createdByUser?.id === user?.id || user?.role === 'SUPER_ADMIN' || user?.role === 'BRANCH_ADMIN') && (
+                                            {(activity.createdByUser?.id === user?.id || user?.role === 'SUPER_ADMIN' || user?.role === 'BRANCH_ADMIN') && !activity.isCommunicationLog && (
                                                 <button
                                                     onClick={() => setDeleteConfirmModal(activity.id)}
                                                     disabled={isDeleting === activity.id}

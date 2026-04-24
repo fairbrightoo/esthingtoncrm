@@ -212,9 +212,9 @@ export const MyLeads = () => {
 
     // Simple client-side search for now to avoid debounce complexity immediately
     const filteredLeads = leads.filter(lead =>
-        lead.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.phone.includes(searchTerm) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+        lead.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.phone?.includes(searchTerm) ||
+        lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (

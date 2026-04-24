@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import axios from 'axios';
+import { uploadFile } from '../services/StorageService.js';
 
 const prisma = new PrismaClient();
 
@@ -21,25 +23,14 @@ export const EstateController = {
 
             if (req.files) {
                 const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-                const uploadDir = path.join(process.cwd(), 'uploads');
-                if (!fs.existsSync(uploadDir)) {
-                    fs.mkdirSync(uploadDir, { recursive: true });
-                }
-
                 if (files['searchDocument'] && files['searchDocument'][0]) {
                     const file = files['searchDocument'][0];
-                    const fileName = `searchdoc-${Date.now()}${path.extname(file.originalname)}`;
-                    const filePath = path.join(uploadDir, fileName);
-                    fs.writeFileSync(filePath, file.buffer);
-                    searchDocumentUrl = `/uploads/${fileName}`;
+                    searchDocumentUrl = await uploadFile(file.buffer, file.originalname, 'estates');
                 }
 
                 if (files['siteLayout'] && files['siteLayout'][0]) {
                     const file = files['siteLayout'][0];
-                    const fileName = `sitelayout-${Date.now()}${path.extname(file.originalname)}`;
-                    const filePath = path.join(uploadDir, fileName);
-                    fs.writeFileSync(filePath, file.buffer);
-                    siteLayoutUrl = `/uploads/${fileName}`;
+                    siteLayoutUrl = await uploadFile(file.buffer, file.originalname, 'estates');
                 }
             }
 
@@ -75,25 +66,14 @@ export const EstateController = {
 
             if (req.files) {
                 const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-                const uploadDir = path.join(process.cwd(), 'uploads');
-                if (!fs.existsSync(uploadDir)) {
-                    fs.mkdirSync(uploadDir, { recursive: true });
-                }
-
                 if (files['searchDocument'] && files['searchDocument'][0]) {
                     const file = files['searchDocument'][0];
-                    const fileName = `searchdoc-${Date.now()}${path.extname(file.originalname)}`;
-                    const filePath = path.join(uploadDir, fileName);
-                    fs.writeFileSync(filePath, file.buffer);
-                    updateData.searchDocumentUrl = `/uploads/${fileName}`;
+                    updateData.searchDocumentUrl = await uploadFile(file.buffer, file.originalname, 'estates');
                 }
 
                 if (files['siteLayout'] && files['siteLayout'][0]) {
                     const file = files['siteLayout'][0];
-                    const fileName = `sitelayout-${Date.now()}${path.extname(file.originalname)}`;
-                    const filePath = path.join(uploadDir, fileName);
-                    fs.writeFileSync(filePath, file.buffer);
-                    updateData.siteLayoutUrl = `/uploads/${fileName}`;
+                    updateData.siteLayoutUrl = await uploadFile(file.buffer, file.originalname, 'estates');
                 }
             }
 
@@ -187,12 +167,20 @@ export const EstateController = {
             const { filePath } = req.body;
             if (!filePath) return res.status(400).json({ error: "File path is required" });
 
+            if (filePath.startsWith('http')) {
+                const response = await axios.get(filePath, { responseType: 'stream' });
+                res.setHeader('Content-Type', 'application/pdf');
+                response.data.pipe(res);
+                return;
+            }
+
             // Security: limit directory traversal
             const normalizedPath = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
             const absolutePath = path.join(process.cwd(), normalizedPath);
 
             if (!fs.existsSync(absolutePath)) {
-                return res.status(404).json({ error: "Secure file not found" });
+                res.status(404).json({ error: "Secure file not found" });
+                return;
             }
 
             // By explicitly providing application/pdf but through a POST route, 

@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import { DocumentAutomationService } from '../services/DocumentAutomationService.js';
+import { uploadFile } from '../services/StorageService.js';
 
 const prisma = new PrismaClient();
 
@@ -185,18 +186,10 @@ export const SaleController = {
                 return;
             }
 
-            // Save the uploaded files
-            const uploadDir = path.join(process.cwd(), 'uploads');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
             const savedUrls: string[] = [];
             for (const file of req.files as Express.Multer.File[]) {
-                const fileName = `payment-${saleId}-${Date.now()}-${Math.floor(Math.random() * 1000)}${path.extname(file.originalname)}`;
-                const filePath = path.join(uploadDir, fileName);
-                fs.writeFileSync(filePath, file.buffer);
-                savedUrls.push(`/uploads/${fileName}`);
+                const url = await uploadFile(file.buffer, file.originalname, 'receipts');
+                savedUrls.push(url);
             }
 
             // Serialize array of URLs
