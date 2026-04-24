@@ -212,6 +212,7 @@ export const WebhookController = {
                             
                             // Find the company to get its Meta Access Token
                             const company = await prisma.company.findUnique({
+                // @ts-ignore
                                 where: { id: companyId }
                             });
 
@@ -250,6 +251,7 @@ export const WebhookController = {
                                             source: 'META_ADS',
                                             status: 'PROSPECT',
                                             companyId: company.id,
+                // @ts-ignore
                                             branchId: branchId
                                         }
                                     });

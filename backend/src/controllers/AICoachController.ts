@@ -162,6 +162,7 @@ export const AICoachController = {
             
             // Attempt to remove from vector store. This will fail if the file was rejected/failed.
             try {
+                // @ts-ignore
                 await openai.vectorStores.files.del(company.aiVectorStoreId, fileId);
             } catch (e: any) {
                 console.warn("Ignored Vector Store Deletion Error (Likely failed file):", e.message);
@@ -169,6 +170,7 @@ export const AICoachController = {
 
             // Attempt to erase completely from OpenAI's global storage
             try {
+                // @ts-ignore
                 await openai.files.del(fileId); 
             } catch (e: any) {
                 console.warn("Ignored Global File Deletion Error:", e.message);

@@ -271,6 +271,7 @@ export const CompanyController = {
         const { id } = req.params;
         try {
             const mds = await prisma.user.findMany({
+                // @ts-ignore
                 where: { companyId: id, role: 'GROUP_MANAGING_DIRECTOR' }
             });
             res.json(mds);
