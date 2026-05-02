@@ -15,7 +15,7 @@ export const BranchRequisitions = () => {
     const token = localStorage.getItem('token');
     
     // Hide refunds from HR roles
-    const canViewRefunds = !['BRANCH_HR', 'HR_MANAGER'].includes(user?.role || '');
+    const canViewRefunds = !['BRANCH_HR'].includes(user?.role || '');
 
     const fetchRequisitions = async () => {
         try {

@@ -20,7 +20,7 @@ export const CompanyPolicies = () => {
     const [isGlobal, setIsGlobal] = useState(false);
     const [file, setFile] = useState<File | null>(null);
 
-    const canUpload = ['HR_MANAGER', 'SUPER_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role || '');
+    const canUpload = ['BRANCH_HR', 'SUPER_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role || '');
 
     useEffect(() => {
         fetchDocuments();

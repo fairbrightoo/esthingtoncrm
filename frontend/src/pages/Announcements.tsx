@@ -100,7 +100,7 @@ export const Announcements = () => {
                     </h1>
                     <p className="text-gray-500 mt-2">Manage company-wide internal memos and broadcasts.</p>
                 </div>
-                {(user?.role === 'HR_MANAGER' || user?.role === 'SUPER_ADMIN' || user?.role === 'BRANCH_ADMIN') && (
+                {(user?.role === 'BRANCH_HR' || user?.role === 'SUPER_ADMIN' || user?.role === 'BRANCH_ADMIN') && (
                     <button
                         onClick={() => setIsCreating(true)}
                         className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm"

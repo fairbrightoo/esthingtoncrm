@@ -141,15 +141,15 @@ export const HRLeaveManagement = () => {
                                         <td className="px-6 py-4 max-w-xs truncate text-gray-500" title={leave.reason}>{leave.reason}</td>
                                         <td className="px-6 py-4">{getStatusBadge(leave.status)}</td>
                                         <td className="px-6 py-4 text-right space-x-2">
-                                            {(user?.role === 'HR_MANAGER' && leave.status === 'PENDING_HR_APPROVAL') && (
-                                                <>
+                                            {(user?.role === 'BRANCH_HR' && leave.status === 'PENDING_HR_APPROVAL') && (
+                                                <div className="flex space-x-2">
                                                     <button onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'PENDING_MD_APPROVAL' })} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="Recommend to MD">
                                                         <CheckCircle size={18} />
                                                     </button>
                                                     <button onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'REJECTED' })} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg transition-colors" title="Reject Request">
                                                         <XCircle size={18} />
                                                     </button>
-                                                </>
+                                                </div>
                                             )}
                                             {(user?.role === 'MANAGING_DIRECTOR' && leave.status === 'PENDING_MD_APPROVAL') && (
                                                 <>
