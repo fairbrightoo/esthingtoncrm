@@ -78,7 +78,7 @@ export const BranchUsers = () => {
         }
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`,
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`,
                 formData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
