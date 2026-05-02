@@ -32,7 +32,7 @@ export const CommunicationController = {
                 if (type === 'EMAIL') {
                     recipient = lead.email || "";
                     if (!recipient) throw new Error("Lead has no email");
-                    providerId = await EmailService.send(recipient, subject || "New Message", content);
+                    providerId = await EmailService.send(recipient, subject || "New Message", content, undefined, lead.company?.email || undefined);
                 } else if (type === 'SMS') {
                     recipient = lead.phone || "";
                     if (!recipient) throw new Error("Lead has no phone");

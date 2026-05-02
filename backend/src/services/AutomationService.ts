@@ -104,7 +104,7 @@ export const AutomationService = {
                 </div>
                 `;
 
-                const sentId = await EmailService.send(lead.email, `Your Property Investment Portfolio - ROI Breakdown`, html);
+                const sentId = await EmailService.send(lead.email, `Your Property Investment Portfolio - ROI Breakdown`, html, undefined, lead.company.email || undefined);
                 
                 if (systemAdmin) {
                     await prisma.communicationLog.create({
@@ -157,7 +157,7 @@ export const AutomationService = {
                 </div>
                 `;
 
-                const sentId = await EmailService.send(lead.email, `Happy Birthday from ${lead.company.name}! 🎉`, html);
+                const sentId = await EmailService.send(lead.email, `Happy Birthday from ${lead.company.name}! 🎉`, html, undefined, lead.company.email || undefined);
                 
                 if (systemAdmin) {
                     await prisma.communicationLog.create({

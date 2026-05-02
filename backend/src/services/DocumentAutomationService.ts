@@ -80,7 +80,8 @@ export const DocumentAutomationService = {
             // Dispatch Email if attachments exist
             if (attachments.length > 0) {
                 emailBody += `<p>Thank you for choosing ${companyInfo?.name || "Us"}.</p>`;
-                await EmailService.send(sale.lead.email, emailSubject, emailBody, attachments);
+                const fromAddress = branchInfo?.email || companyInfo?.email || undefined;
+                await EmailService.send(sale.lead.email, emailSubject, emailBody, attachments, fromAddress);
                 console.log(`[DocAuto] Successfully emailed ${attachments.length} documents for Sale ${saleId}`);
             }
 

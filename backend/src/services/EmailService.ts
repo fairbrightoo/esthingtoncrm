@@ -7,10 +7,10 @@ dotenv.config();
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummykey');
 
 export const EmailService = {
-    async send(to: string, subject: string, html: string, attachments?: { filename: string, content: Buffer }[]) {
+    async send(to: string, subject: string, html: string, attachments?: { filename: string, content: Buffer }[], fromAddress?: string) {
         try {
             const payload: any = {
-                from: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
+                from: fromAddress || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
                 to: [to],
                 subject: subject,
                 html: html,

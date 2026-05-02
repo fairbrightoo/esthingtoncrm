@@ -131,7 +131,7 @@ export const CampaignController = {
                 if (campaign.type === 'EMAIL') {
                     if (lead.email) {
                         try {
-                            providerId = await EmailService.send(lead.email, campaign.name, template.content);
+                            providerId = await EmailService.send(lead.email, campaign.name, template.content, undefined, company?.email || undefined);
                             success = true;
                         } catch (e: any) {
                             status = 'FAILED';
@@ -293,7 +293,7 @@ export const CampaignController = {
 
                 if (campaign.type === 'EMAIL' && lead.email) {
                     try {
-                        providerId = await EmailService.send(lead.email, campaign.name, template.content);
+                        providerId = await EmailService.send(lead.email, campaign.name, template.content, undefined, company?.email || undefined);
                         success = true;
                     } catch (e: any) {
                         errorMessage = e.message;
