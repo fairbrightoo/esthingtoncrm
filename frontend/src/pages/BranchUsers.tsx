@@ -22,6 +22,10 @@ export const BranchUsers = () => {
     const [docToDelete, setDocToDelete] = useState<{ staffId: string; documentType: string; name: string } | null>(null);
     const [deletingDoc, setDeletingDoc] = useState(false);
 
+    // User Deletion Confirmation State
+    const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [deletingUser, setDeletingUser] = useState(false);
+
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [bulkFile, setBulkFile] = useState<File | null>(null);
     const [uploadingBulk, setUploadingBulk] = useState(false);
@@ -195,16 +199,20 @@ export const BranchUsers = () => {
         setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '' });
     };
 
-    const handleDeleteUser = async (userId: string) => {
-        if (!confirm('Are you sure you want to remove this staff member?')) return;
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+        setDeletingUser(true);
         try {
-            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${userId}`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${userToDelete.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchUsers();
             addToast('User removed successfully', 'success');
+            setUserToDelete(null);
         } catch (error: any) {
             addToast('Failed to delete user', 'error');
+        } finally {
+            setDeletingUser(false);
         }
     };
 
@@ -305,7 +313,7 @@ export const BranchUsers = () => {
                                             <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} className="text-blue-500 hover:text-blue-700 p-1">
                                                 Edit
                                             </button>
-                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(u.id); }} className="text-red-500 hover:text-red-700 p-1">
+                                            <button onClick={(e) => { e.stopPropagation(); setUserToDelete({ id: u.id, name: u.fullName }); }} className="text-red-500 hover:text-red-700 p-1">
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
@@ -683,6 +691,46 @@ export const BranchUsers = () => {
                                 disabled={deletingDoc}
                             >
                                 {deletingDoc ? (
+                                    <span className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Deleting...
+                                    </span>
+                                ) : 'Yes, Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Custom Sleek Delete User Confirmation Modal */}
+            {userToDelete && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 size={32} className="text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Remove Staff Member?</h3>
+                            <p className="text-gray-500 text-sm">
+                                Are you sure you want to completely remove <strong>{userToDelete.name}</strong> from this branch? Their account will be deleted and this cannot be undone.
+                            </p>
+                        </div>
+                        <div className="flex border-t border-gray-100">
+                            <button
+                                onClick={() => setUserToDelete(null)}
+                                className="flex-1 py-4 text-gray-600 font-medium hover:bg-gray-50 transition border-r border-gray-100"
+                                disabled={deletingUser}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteUser}
+                                className="flex-1 py-4 text-red-500 font-bold hover:bg-red-50 transition flex justify-center items-center"
+                                disabled={deletingUser}
+                            >
+                                {deletingUser ? (
                                     <span className="flex items-center">
                                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
