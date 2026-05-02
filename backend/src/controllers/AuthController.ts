@@ -52,15 +52,10 @@ export const AuthController = {
                     return;
                 }
 
-                // 2. Mandatory Branch Check for BRANCH_ADMIN
-                if (user.role === 'BRANCH_ADMIN') {
-                    if (!reqBranchId) {
-                        res.status(403).json({ error: 'Branch check failed. Please select your branch.' });
-                        return;
-                    }
-                    // Ensure IDs are strings for comparison
-                    if (user.branchId && String(user.branchId) !== String(reqBranchId)) {
-                        res.status(403).json({ error: 'Invalid credentials for this branch.' });
+                // 2. Mandatory Branch Check for all branch-level staff
+                if (user.branchId) {
+                    if (reqBranchId && String(user.branchId) !== String(reqBranchId)) {
+                        res.status(403).json({ error: 'Invalid credentials for this branch. Please log in from your assigned branch.' });
                         return;
                     }
                 }

@@ -69,7 +69,7 @@ const BranchDashboardRouter = () => {
   const { user } = useAuth();
   const { branchName } = useParams();
 
-  if (user?.role === 'HR_MANAGER') {
+  if (user?.role === 'BRANCH_HR') {
     return <HRDashboard />;
   }
 
@@ -94,7 +94,7 @@ const BranchDashboardRouter = () => {
 
 const SettingsRouter = () => {
   const { user } = useAuth();
-  if (user?.role === 'HR_MANAGER') {
+  if (user?.role === 'BRANCH_HR') {
     return <HRSettings />;
   }
   return <BranchSettings />;
@@ -102,7 +102,7 @@ const SettingsRouter = () => {
 
 const ReportsRouter = () => {
   const { user } = useAuth();
-  if (user?.role === 'HR_MANAGER') {
+  if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
   }
   return <BranchReports />;
