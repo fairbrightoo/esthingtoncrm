@@ -4,7 +4,9 @@ import bcrypt from 'bcryptjs';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { uploadFile } from '../services/StorageService.js';
+import { EmailService } from '../services/EmailService.js';
 
 const prisma = new PrismaClient();
 
@@ -396,11 +398,14 @@ export const CompanyController = {
     },
 
     /**
-     * Create Branch Staff (Marketer/Customer Care)
+     * Create Branch Staff (Marketer/Customer Care/HR)
      */
     async createBranchStaff(req: Request, res: Response) {
         const { companyId, branchId } = req.params as any;
-        const { fullName, email, phone, password, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber } = req.body;
+        const { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber } = req.body;
+        
+        // Accept password from body if provided, otherwise we'll generate one
+        let password = req.body.password;
 
         if (!['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR'].includes(role)) {
             return res.status(400).json({ error: 'Invalid role for branch staff' });
@@ -412,6 +417,10 @@ export const CompanyController = {
                 return res.status(400).json({ error: 'User with this email already exists' });
             }
 
+            if (!password) {
+                password = crypto.randomBytes(4).toString('hex'); // Generate 8 char random password
+            }
+
             const passwordHash = await bcrypt.hash(password, 10);
 
             const user = await prisma.user.create({
@@ -420,7 +429,7 @@ export const CompanyController = {
                     email,
                     phone,
                     passwordHash,
-                    role, // MARKETER or CUSTOMER_CARE
+                    role, 
                     monthlySalary: monthlySalary ? parseFloat(monthlySalary) : 0,
                     commissionRate: commissionRate ? parseFloat(commissionRate) : 5.0,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
@@ -432,19 +441,32 @@ export const CompanyController = {
                 }
             });
 
-            // Trigger n8n Webhook (Fire and Forget)
-            try {
-                const webhookUrl = process.env.N8N_WEBHOOK_STAFF_CREATED || 'http://localhost:5678/webhook/staff-created';
-                axios.post(webhookUrl, {
-                    event: 'staff.created',
-                    user: { id: user.id, email: user.email, role: user.role, fullName: user.fullName },
-                    tempPassword: password // CAUTION: Sending password to webhook for email delivery
-                }).catch(err => console.error('Webhook trigger failed (non-blocking):', err.message));
-            } catch (e) {
-                // Ignore
-            }
+            // Fetch company to get sender email
+            const company = await prisma.company.findUnique({ where: { id: companyId } });
+            const companyEmail = company?.email || undefined;
+            const companyName = company?.name || 'Our Company';
 
-            res.json(user);
+            // Send Welcome Email
+            const emailHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <h2 style="color: #2563eb;">Welcome to ${companyName}!</h2>
+                    <p>Hi ${fullName},</p>
+                    <p>Your account has been successfully created. We are excited to have you on the team!</p>
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="margin-top: 0; color: #1f2937;">Your Login Details</h3>
+                        <p><strong>Role:</strong> ${role.replace('_', ' ')}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Temporary Password:</strong> ${password}</p>
+                    </div>
+                    <p><strong>Security Notice:</strong> Please log in to your dashboard immediately and navigate to <em>Settings</em> to change your password to something secure.</p>
+                    <p>Best regards,<br>${companyName} HR Team</p>
+                </div>
+            `;
+
+            EmailService.send(email, `Welcome to ${companyName}! Your Login Credentials`, emailHtml, undefined, companyEmail)
+                .catch(err => console.error('Failed to send welcome email:', err));
+
+            res.json({ ...user, tempPassword: password });
         } catch (error) {
             console.error('Error creating branch staff:', error);
             res.status(500).json({ error: 'Failed to create staff' });
@@ -535,6 +557,10 @@ export const CompanyController = {
                 errors: [] as any[]
             };
 
+            const company = await prisma.company.findUnique({ where: { id: companyId } });
+            const companyEmail = company?.email || undefined;
+            const companyName = company?.name || 'Our Company';
+
             for (const row of rows) {
                 try {
                     // Basic Validation
@@ -563,7 +589,10 @@ export const CompanyController = {
                         continue;
                     }
 
-                    const defaultPassword = row.password || 'password123';
+                    let defaultPassword = row.password;
+                    if (!defaultPassword) {
+                        defaultPassword = crypto.randomBytes(4).toString('hex');
+                    }
                     const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
                     // Create
@@ -579,6 +608,25 @@ export const CompanyController = {
                             branchId
                         }
                     });
+
+                    // Send Bulk Welcome Email
+                    const emailHtml = `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                            <h2 style="color: #2563eb;">Welcome to ${companyName}!</h2>
+                            <p>Hi ${row.full_name},</p>
+                            <p>Your account has been successfully created. We are excited to have you on the team!</p>
+                            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                <h3 style="margin-top: 0; color: #1f2937;">Your Login Details</h3>
+                                <p><strong>Role:</strong> ${(role || 'MARKETER').replace('_', ' ')}</p>
+                                <p><strong>Email:</strong> ${row.email}</p>
+                                <p><strong>Temporary Password:</strong> ${defaultPassword}</p>
+                            </div>
+                            <p><strong>Security Notice:</strong> Please log in to your dashboard immediately and navigate to <em>Settings</em> to change your password to something secure.</p>
+                            <p>Best regards,<br>${companyName} HR Team</p>
+                        </div>
+                    `;
+                    EmailService.send(row.email, `Welcome to ${companyName}! Your Login Credentials`, emailHtml, undefined, companyEmail)
+                        .catch(err => console.error('Failed to send bulk welcome email:', err));
 
                     results.success++;
                 } catch (err: any) {

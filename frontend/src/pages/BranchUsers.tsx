@@ -83,7 +83,7 @@ export const BranchUsers = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setIsModalOpen(false);
-            setCreatedUserCreds({ ...formData, role: formData.role }); // Show creds
+            setCreatedUserCreds({ ...formData, role: formData.role, password: res.data.tempPassword }); // Show creds with auto-generated password
             setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '' });
             fetchUsers();
             addToast('Staff member created successfully', 'success');
@@ -483,12 +483,13 @@ export const BranchUsers = () => {
                                 <input type="date" className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.dateOfBirth} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Password {editingUser && '(Leave blank to keep current)'}</label>
-                                <input type="password" className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                                    value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                    required={!editingUser} />
-                            </div>
+                            {editingUser && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Reset Password (Leave blank to keep current)</label>
+                                    <input type="password" className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Salary (₦)</label>
