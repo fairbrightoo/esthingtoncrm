@@ -58,6 +58,7 @@ export const Campaigns = () => {
 
     const [isSending, setIsSending] = useState(false);
     const [mediaFile, setMediaFile] = useState<File | null>(null);
+    const [waMessageType, setWaMessageType] = useState<'TEMPLATE' | 'CUSTOM'>('TEMPLATE');
 
     // Logs Modal State
     const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
@@ -212,6 +213,7 @@ export const Campaigns = () => {
             setSaveAsTemplate(false);
             setSelectedTemplateId('');
             setMediaFile(null);
+            setWaMessageType('TEMPLATE');
             fetchTemplates();
 
         } catch (error: any) {
@@ -421,7 +423,29 @@ export const Campaigns = () => {
                                     </div>
                                 </div>
 
-                                {type === 'WHATSAPP' ? (
+                                {type === 'WHATSAPP' && (
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Campaign Type</label>
+                                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                                            <button
+                                                type="button"
+                                                onClick={() => setWaMessageType('TEMPLATE')}
+                                                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${waMessageType === 'TEMPLATE' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                                            >
+                                                Meta Template
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setWaMessageType('CUSTOM')}
+                                                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${waMessageType === 'CUSTOM' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                                            >
+                                                Custom Message
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(type === 'WHATSAPP' && waMessageType === 'TEMPLATE') ? (
                                     <div className="bg-blue-50 text-blue-800 p-4 rounded-lg mt-2 text-sm border border-blue-100">
                                         <div className="font-semibold mb-2 flex items-center">
                                             <AlertCircle size={16} className="mr-2" />
@@ -478,11 +502,19 @@ export const Campaigns = () => {
                                         <div className="h-10 border-t bg-gray-50" /> {/* Pad toolbar bottom */}
                                     </div>
                                 ) : (
-                                    <textarea
-                                        value={content} onChange={e => setContent(e.target.value)}
-                                        className="w-full border rounded-lg p-3 h-32 text-sm font-mono mt-2 outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder={`Type your ${type} message here...`}
-                                    />
+                                    <div>
+                                        {type === 'WHATSAPP' && waMessageType === 'CUSTOM' && (
+                                            <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded mb-2 border border-amber-100 flex items-center">
+                                                <AlertCircle size={14} className="mr-1 inline flex-shrink-0" />
+                                                Custom messages will ONLY be delivered to leads who have replied to your business within the last 24 hours.
+                                            </div>
+                                        )}
+                                        <textarea
+                                            value={content} onChange={e => setContent(e.target.value)}
+                                            className="w-full border rounded-lg p-3 h-32 text-sm font-mono mt-2 outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder={`Type your ${type} message here...`}
+                                        />
+                                    </div>
                                 )}
 
                                 <div className="flex justify-between items-center mt-3">

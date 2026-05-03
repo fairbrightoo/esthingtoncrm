@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Mail, MessageSquare, Send, Paperclip } from 'lucide-react';
+import { X, Mail, MessageSquare, Send, Paperclip, AlertCircle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 interface SendMessageModalProps {
@@ -19,6 +19,8 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
     const [subject, setSubject] = useState('');
     const [content, setContent] = useState('');
     const [templates, setTemplates] = useState<any[]>([]);
+    const [waTemplates, setWaTemplates] = useState<any[]>([]);
+    const [waMessageType, setWaMessageType] = useState<'CUSTOM' | 'TEMPLATE'>('CUSTOM');
     const [isSending, setIsSending] = useState(false);
     const [attachment, setAttachment] = useState<File | null>(null);
     const [attachmentType, setAttachmentType] = useState<'image' | 'document' | 'video' | ''>('');
@@ -26,6 +28,7 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
     useEffect(() => {
         if (isOpen) {
             fetchTemplates();
+            fetchWhatsAppTemplates();
         }
     }, [isOpen, type]);
 
@@ -37,6 +40,17 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
             setTemplates(res.data);
         } catch (error) {
             console.error("Failed to fetch templates", error);
+        }
+    };
+
+    const fetchWhatsAppTemplates = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/whatsapp-templates`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setWaTemplates(res.data);
+        } catch (error) {
+            console.error("Failed to load WA templates", error);
         }
     };
 
@@ -137,14 +151,14 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
                         </span>
                     </div>
 
-                    {/* Template Selector */}
-                    {templates.length > 0 && (
+                    {/* Internal Template Selector (Only for SMS/Email or Custom WhatsApp) */}
+                    {(templates.length > 0 && (type !== 'WHATSAPP' || waMessageType === 'CUSTOM')) && (
                         <div>
                             <select
                                 onChange={(e) => applyTemplate(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
                             >
-                                <option value="">-- Select a Template --</option>
+                                <option value="">-- Select an Internal Template --</option>
                                 {templates.map(t => (
                                     <option key={t.id} value={t.id}>{t.name}</option>
                                 ))}
@@ -165,16 +179,66 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
                         </div>
                     )}
 
-                    <div>
-                        <textarea
-                            required
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows={6}
-                            placeholder="Type your message here..."
-                        />
-                    </div>
+                    {type === 'WHATSAPP' && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Message Type</label>
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                <button
+                                    type="button"
+                                    onClick={() => setWaMessageType('CUSTOM')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${waMessageType === 'CUSTOM' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Custom Message
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setWaMessageType('TEMPLATE')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${waMessageType === 'TEMPLATE' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Meta Template
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {(type !== 'WHATSAPP' || waMessageType === 'CUSTOM') ? (
+                        <div>
+                            <textarea
+                                required
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                rows={6}
+                                placeholder={type === 'WHATSAPP' ? "Type your message (Requires open 24hr window)..." : "Type your message here..."}
+                            />
+                        </div>
+                    ) : (
+                        <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm border border-blue-100">
+                            <div className="font-semibold mb-2 flex items-center">
+                                <AlertCircle size={16} className="mr-2" />
+                                Official Meta pre-approved templates
+                            </div>
+                            <select
+                                required
+                                onChange={(e) => {
+                                    const selectedName = e.target.value;
+                                    const selectedT = waTemplates.find(t => t.name === selectedName);
+                                    if (selectedName) {
+                                        setContent(`META_TEMPLATE|${selectedName}|${selectedT?.language || 'en_US'}`);
+                                    } else {
+                                        setContent('');
+                                    }
+                                }}
+                                className="w-full p-2 border border-blue-200 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">-- Select an Approved Meta Template --</option>
+                                {waTemplates.map(t => (
+                                    <option key={t.id} value={t.name}>{t.name} ({t.language})</option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-blue-600 mt-2">Use this to initiate conversations with new leads.</p>
+                        </div>
+                    )}
 
                     {type === 'WHATSAPP' && (
                         <div className="flex items-center space-x-2">
