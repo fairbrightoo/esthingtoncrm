@@ -345,14 +345,15 @@ export const ManagingDirectorDashboard = () => {
 
                                                         return proofs.map((url, idx) => {
                                                             const isImage = url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/);
+                                                            const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
                                                             return isImage ? (
                                                                 <button 
                                                                     key={idx}
-                                                                    onClick={() => setReceiptModal({ isOpen: true, url: url })}
+                                                                    onClick={() => setReceiptModal({ isOpen: true, url: fullUrl })}
                                                                     className="relative group overflow-hidden rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                                                 >
                                                                     <img 
-                                                                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`} 
+                                                                        src={fullUrl} 
                                                                         alt="Receipt Thumbnail" 
                                                                         className="w-16 h-16 object-cover transition-transform duration-300 group-hover:scale-110"
                                                                     />
@@ -363,7 +364,7 @@ export const ManagingDirectorDashboard = () => {
                                                             ) : (
                                                                 <a
                                                                     key={idx}
-                                                                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`}
+                                                                    href={fullUrl}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="flex flex-col items-center justify-center w-16 h-16 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group flex-shrink-0"
@@ -476,14 +477,15 @@ export const ManagingDirectorDashboard = () => {
 
                                                             return proofs.map((url, idx) => {
                                                                 const isImage = url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/);
+                                                                const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
                                                                 return isImage ? (
                                                                     <button 
                                                                         key={idx}
-                                                                        onClick={() => setReceiptModal({ isOpen: true, url: url })}
+                                                                        onClick={() => setReceiptModal({ isOpen: true, url: fullUrl })}
                                                                         className="relative group overflow-hidden rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                                                     >
                                                                         <img 
-                                                                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`} 
+                                                                            src={fullUrl} 
                                                                             alt="Receipt Thumbnail" 
                                                                             className="w-12 h-12 object-cover transition-transform duration-300 group-hover:scale-110"
                                                                         />
@@ -491,7 +493,7 @@ export const ManagingDirectorDashboard = () => {
                                                                 ) : (
                                                                     <a
                                                                         key={idx}
-                                                                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`}
+                                                                        href={fullUrl}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         className="flex flex-col items-center justify-center w-12 h-12 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group flex-shrink-0"
@@ -643,7 +645,7 @@ export const ManagingDirectorDashboard = () => {
                         </div>
                         <div className="bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl p-2 border border-white/10 flex-1 min-h-0">
                             <img 
-                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${receiptModal.url}`} 
+                                src={receiptModal.url.startsWith('http') ? receiptModal.url : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${receiptModal.url}`} 
                                 alt="Full Receipt" 
                                 className="max-w-full max-h-[80vh] object-contain rounded-xl"
                             />
