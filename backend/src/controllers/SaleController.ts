@@ -344,7 +344,13 @@ export const SaleController = {
                     }
 
                     // Fire off background task to email Receipt & Allocation Letters
-                    DocumentAutomationService.dispatchDocuments(sale.id, 'PAYMENT', payment.id).catch(e => console.error("Doc Auto Error:", e));
+                    try {
+                        await DocumentAutomationService.dispatchDocuments(sale.id, 'PAYMENT', payment.id);
+                    } catch (docError: any) {
+                        return res.status(500).json({ 
+                            error: `Payment approved, but failed to generate/email documents. Reason: ${docError.message}` 
+                        });
+                    }
                 }
             }
 

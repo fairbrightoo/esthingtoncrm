@@ -84,8 +84,9 @@ export const DocumentAutomationService = {
                 console.log(`[DocAuto] Successfully emailed ${attachments.length} documents for Sale ${saleId}`);
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`[DocAuto] Failed to dispatch documents for sale ${saleId}:`, error);
+            throw error;
         }
     }
 };
