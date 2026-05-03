@@ -137,7 +137,7 @@ export const MarketerDashboard = () => {
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500">My Prospects</p>
-                        <h3 className="text-2xl font-bold text-gray-900">{stats?.financial?.salesCount || 0}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{(stats?.financial?.totalLeads || 0) - (stats?.financial?.clientLeads || 0)}</h3>
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center space-x-4">
@@ -146,7 +146,7 @@ export const MarketerDashboard = () => {
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500">Converted Clients</p>
-                        <h3 className="text-2xl font-bold text-gray-900">{mData.recentClients.length}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{stats?.financial?.clientLeads || 0}</h3>
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center space-x-4">
