@@ -80,6 +80,8 @@ export const WhatsAppService = {
             let formattedPhone = to.replace(/\D/g, '');
             if (formattedPhone.startsWith('0') && formattedPhone.length === 11) {
                 formattedPhone = '234' + formattedPhone.slice(1);
+            } else if (formattedPhone.startsWith('2340') && formattedPhone.length === 14) {
+                formattedPhone = '234' + formattedPhone.slice(4);
             }
 
             const url = `https://graph.facebook.com/${META_API_VERSION}/${phoneId}/messages`;
@@ -126,6 +128,8 @@ export const WhatsAppService = {
             let formattedPhone = to.replace(/\D/g, '');
             if (formattedPhone.startsWith('0') && formattedPhone.length === 11) {
                 formattedPhone = '234' + formattedPhone.slice(1);
+            } else if (formattedPhone.startsWith('2340') && formattedPhone.length === 14) {
+                formattedPhone = '234' + formattedPhone.slice(4);
             }
 
             const url = `https://graph.facebook.com/${META_API_VERSION}/${phoneId}/messages`;
