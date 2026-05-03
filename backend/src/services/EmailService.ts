@@ -9,12 +9,17 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_dummykey');
 export const EmailService = {
     async send(to: string, subject: string, html: string, attachments?: { filename: string, content: Buffer }[], fromAddress?: string) {
         try {
+            const defaultFrom = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
             const payload: any = {
-                from: fromAddress || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
+                from: defaultFrom,
                 to: [to],
                 subject: subject,
                 html: html,
             };
+
+            if (fromAddress && fromAddress !== defaultFrom) {
+                payload.reply_to = fromAddress;
+            }
 
             if (attachments && attachments.length > 0) {
                 payload.attachments = attachments;
