@@ -2,7 +2,7 @@ services:
   - type: web
     name: esthington-os-backend
     env: node
-    buildCommand: cd backend && npm install --include=dev && npx puppeteer browsers install chrome && npx prisma generate && npm run build
+    buildCommand: cd backend && npm install --include=dev && npx puppeteer browsers install chrome && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
