@@ -14,6 +14,7 @@ export const ExecutiveMemos = () => {
     
     const [activeTab, setActiveTab] = useState<'INBOX' | 'SENT'>('INBOX');
     const [showCompose, setShowCompose] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{ isOpen: boolean, memoId: string, status: 'APPROVED' | 'DECLINED' | null }>({ isOpen: false, memoId: '', status: null });
     
     const [formData, setFormData] = useState({ subject: '', message: '', recipientId: '' });
     const [processing, setProcessing] = useState(false);
@@ -57,16 +58,20 @@ export const ExecutiveMemos = () => {
         }
     };
 
-    const handleRespond = async (memoId: string, status: 'APPROVED' | 'DECLINED') => {
-        if(!confirm(`Are you sure you want to mark this as ${status}?`)) return;
+    const handleRespond = async () => {
+        const { memoId, status } = confirmAction;
+        if (!memoId || !status) return;
+        
         try {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/memos/${memoId}/respond`, { status }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast(`Memo marked as ${status}`, 'success');
+            setConfirmAction({ isOpen: false, memoId: '', status: null });
             fetchData();
         } catch (error) {
             addToast('Failed to update memo', 'error');
+            setConfirmAction({ isOpen: false, memoId: '', status: null });
         }
     };
 
@@ -148,6 +153,33 @@ export const ExecutiveMemos = () => {
                 </div>
             )}
 
+            {/* Confirm Modal */}
+            {confirmAction.isOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center">
+                        <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 ${confirmAction.status === 'APPROVED' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                            {confirmAction.status === 'APPROVED' ? <CheckCircle size={24} /> : <XCircle size={24} />}
+                        </div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Confirm Action</h2>
+                        <p className="text-gray-500 mb-6">Are you sure you want to mark this memo as <strong>{confirmAction.status}</strong>? This action cannot be undone.</p>
+                        <div className="flex justify-center space-x-3">
+                            <button 
+                                onClick={() => setConfirmAction({ isOpen: false, memoId: '', status: null })}
+                                className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleRespond}
+                                className={`px-5 py-2 text-white rounded-lg font-medium shadow-sm ${confirmAction.status === 'APPROVED' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                            >
+                                Yes, {confirmAction.status === 'APPROVED' ? 'Approve' : 'Decline'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="flex border-b">
                     <button 
@@ -203,13 +235,13 @@ export const ExecutiveMemos = () => {
                                 {activeTab === 'INBOX' && memo.status === 'PENDING' && (
                                     <div className="flex justify-end space-x-3 mt-4 pt-4 border-t border-gray-100">
                                         <button 
-                                            onClick={() => handleRespond(memo.id, 'DECLINED')}
+                                            onClick={() => setConfirmAction({ isOpen: true, memoId: memo.id, status: 'DECLINED' })}
                                             className="px-4 py-2 border border-red-200 text-red-600 rounded flex items-center hover:bg-red-50 font-medium text-sm transition"
                                         >
                                             <XCircle size={16} className="mr-1" /> Decline
                                         </button>
                                         <button 
-                                            onClick={() => handleRespond(memo.id, 'APPROVED')}
+                                            onClick={() => setConfirmAction({ isOpen: true, memoId: memo.id, status: 'APPROVED' })}
                                             className="px-4 py-2 bg-green-600 text-white rounded flex items-center hover:bg-green-700 font-medium text-sm transition shadow-sm"
                                         >
                                             <CheckCircle size={16} className="mr-1" /> Approve
