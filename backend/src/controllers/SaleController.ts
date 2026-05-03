@@ -83,7 +83,13 @@ export const SaleController = {
             });
 
             // Fire off background task to email the Offer Letter automatically
-            DocumentAutomationService.dispatchDocuments(sale.id, 'OFFER').catch(e => console.error("Doc Auto Error:", e));
+            try {
+                await DocumentAutomationService.dispatchDocuments(sale.id, 'OFFER');
+            } catch (docError: any) {
+                return res.status(500).json({ 
+                    error: `Purchase created, but failed to generate/email Offer Letter. Reason: ${docError.message}` 
+                });
+            }
 
             res.status(201).json(sale);
         } catch (error) {
