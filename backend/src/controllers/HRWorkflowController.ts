@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import { uploadFile } from '../services/StorageService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const HRWorkflowController = {
 

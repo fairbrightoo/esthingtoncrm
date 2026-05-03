@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import { DocumentAutomationService } from '../services/DocumentAutomationService.js';
 import { uploadFile } from '../services/StorageService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const SaleController = {
     // 1. Create a Sale (Assign Product to Lead)

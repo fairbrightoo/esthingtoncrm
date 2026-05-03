@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { uploadFile } from '../services/StorageService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const EstateController = {
     // 1. Create a new Estate (Branch Admin)

@@ -1,12 +1,11 @@
 
-import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { parse } from 'csv-parse/sync';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const LeadController = {
     // Public Widget Lead Generation Endpoint

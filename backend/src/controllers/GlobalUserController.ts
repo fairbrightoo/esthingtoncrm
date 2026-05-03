@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const GlobalUserController = {
     // 1. Fetch all users systematically for the Global Table

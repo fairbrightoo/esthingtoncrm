@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import OpenAI from 'openai';
-import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 
 import dotenv from 'dotenv';
+import prisma from '../config/prisma.js';
+
 dotenv.config();
 
-const prisma = new PrismaClient();
 const getOpenAI = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // System Instruction that blends our explicit logic with the RAG file search logic

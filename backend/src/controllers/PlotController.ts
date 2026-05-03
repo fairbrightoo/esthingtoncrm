@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma.js';
 
 // Helper to create acronym from string, ignoring common fluff words like "Bedroom", "with"
 function generateAcronym(text: string): string {

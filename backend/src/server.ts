@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
 import { AutomationService } from './services/AutomationService.js';
 
 import path from 'path';
@@ -9,7 +8,6 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -109,6 +107,8 @@ import executiveMemoRoutes from './routes/executiveMemoRoutes.js';
 app.use('/api/memos', executiveMemoRoutes);
 
 import gmdAnalyticsRoutes from './routes/gmdAnalyticsRoutes.js';
+import prisma from './config/prisma.js';
+
 app.use('/api/gmd-analytics', gmdAnalyticsRoutes);
 
 // Basic health check

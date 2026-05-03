@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const EventController = {
     // Get both Birthdays (next 30 days) and Holidays (future)

@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { EmailService } from '../services/EmailService.js';
 import { SmsService } from '../services/SmsService.js';
 import { WhatsAppService } from '../services/WhatsAppService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const CampaignController = {
     // Create new campaign (Draft)

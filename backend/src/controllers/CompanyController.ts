@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import axios from 'axios';
 import fs from 'fs';
@@ -7,8 +6,8 @@ import path from 'path';
 import crypto from 'crypto';
 import { uploadFile } from '../services/StorageService.js';
 import { EmailService } from '../services/EmailService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const CompanyController = {
     /**

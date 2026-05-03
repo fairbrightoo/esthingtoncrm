@@ -1,9 +1,8 @@
 import { parse } from 'csv-parse/sync';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AutomationService } from './AutomationService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 interface OnboardingRow {
     full_name: string;

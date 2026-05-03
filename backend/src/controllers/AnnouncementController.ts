@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const AnnouncementController = {
     async getAnnouncements(req: Request, res: Response) {

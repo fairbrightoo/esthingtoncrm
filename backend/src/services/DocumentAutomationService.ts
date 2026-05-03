@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { PDFService } from './PDFService.js';
 import { EmailService } from './EmailService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const DocumentAutomationService = {
     async dispatchDocuments(saleId: string, trigger: 'OFFER' | 'PAYMENT', paymentId?: string) {

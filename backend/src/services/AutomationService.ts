@@ -1,10 +1,9 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
-import { PrismaClient } from '@prisma/client';
 import { EmailService } from './EmailService.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 dotenv.config();
 

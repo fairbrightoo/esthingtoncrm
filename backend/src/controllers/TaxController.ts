@@ -1,8 +1,7 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/authMiddleware.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const TaxController = {
   // Compute estimated VAT and WHT based on revenue collected (VERIFIED standard payments)

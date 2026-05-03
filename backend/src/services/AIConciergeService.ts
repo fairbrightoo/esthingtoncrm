@@ -1,10 +1,10 @@
 import OpenAI from 'openai';
-import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import prisma from '../config/prisma.js';
+
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 const getOpenAI = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const CONCIERGE_SYSTEM_PROMPT = `

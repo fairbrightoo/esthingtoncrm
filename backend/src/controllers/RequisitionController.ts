@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/authMiddleware.js';
+import prisma from '../config/prisma.js';
 
-const prisma = new PrismaClient();
 
 export const RequisitionController = {
     // 1. Create a Requisition
