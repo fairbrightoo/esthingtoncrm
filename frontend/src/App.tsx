@@ -118,6 +118,7 @@ const PayrollRouter = () => {
 
 import { ToastProvider } from './context/ToastContext';
 import { useEffect } from 'react';
+import { AutoLogout } from './components/AutoLogout';
 
 function App() {
   // DOM Dump logic
@@ -141,6 +142,7 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <AutoLogout />
         <Router>
           <Routes>
             <Route path="/" element={<Landing />} />
