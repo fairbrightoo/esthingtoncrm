@@ -154,8 +154,10 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             setViewState('LIST');
             fetchSales();
             resetForms();
-        } catch (error) {
-            addToast("Failed to record purchase", "error");
+        } catch (error: any) {
+            console.error("Failed to record purchase", error);
+            const errMsg = error.response?.data?.error || "Failed to record purchase";
+            addToast(errMsg, "error");
         }
     };
 

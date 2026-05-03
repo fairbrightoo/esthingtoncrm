@@ -128,9 +128,10 @@ export const ManagingDirectorDashboard = () => {
             addToast(`Payment marked as ${status}`, "success");
             fetchPendingPayments(); // Refresh the list
             fetchProcessedPayments(); // Update History
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update status", error);
-            addToast("Failed to update payment status.", "error");
+            const errMsg = error.response?.data?.error || "Failed to update payment status.";
+            addToast(errMsg, "error");
         }
     };
 
