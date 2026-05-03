@@ -93,7 +93,7 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 relative animate-in fade-in zoom-in duration-200">
                 <button
                     onClick={onClose}
