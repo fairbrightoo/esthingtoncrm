@@ -11,15 +11,11 @@ export const EmailService = {
         try {
             const defaultFrom = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
             const payload: any = {
-                from: defaultFrom,
+                from: fromAddress || defaultFrom,
                 to: [to],
                 subject: subject,
                 html: html,
             };
-
-            if (fromAddress && fromAddress !== defaultFrom) {
-                payload.reply_to = fromAddress;
-            }
 
             if (attachments && attachments.length > 0) {
                 payload.attachments = attachments;
