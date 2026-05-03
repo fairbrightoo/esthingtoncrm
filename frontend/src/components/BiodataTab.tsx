@@ -96,7 +96,7 @@ export const BiodataTab = ({ leadId, onUpdate }: { leadId: string, onUpdate?: ()
         <div className="p-4 space-y-6">
             <div className="flex items-center space-x-3 mb-2">
                 {profilePictureUrl ? (
-                    <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${profilePictureUrl}`} alt="Client KYC Profile" className="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-blue-100" />
+                    <img src={profilePictureUrl.startsWith('http') ? profilePictureUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${profilePictureUrl}`} alt="Client KYC Profile" className="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-blue-100" />
                 ) : (
                     <div className="p-2.5 bg-blue-50 text-blue-600 rounded-full shadow-sm ring-1 ring-blue-100/50">
                         <UserCircle size={24} strokeWidth={1.5} />
