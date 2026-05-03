@@ -151,6 +151,7 @@ export const GlobalUserManagement = () => {
                         <option value="BRANCH_ADMIN">Branch Admins</option>
                         <option value="MARKETER">Marketers</option>
                         <option value="CUSTOMER_CARE">Customer Care</option>
+                        <option value="ACCOUNTANT">Accountants</option>
                     </select>
                 </div>
             </div>
@@ -304,6 +305,7 @@ export const GlobalUserManagement = () => {
                                             <option value="MARKETER">MARKETER</option>
                                             <option value="CUSTOMER_CARE">CUSTOMER CARE</option>
                                             <option value="HR">HR REPRESENTATIVE</option>
+                                            <option value="ACCOUNTANT">ACCOUNTANT</option>
                                         </select>
                                     </div>
                                 </div>
