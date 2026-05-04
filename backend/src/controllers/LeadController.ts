@@ -90,7 +90,7 @@ export const LeadController = {
             res.status(401).json({ error: 'User not found' });
             return;
         }
-        const { status, search, source } = req.query;
+        const { status, search, source, scope } = req.query;
 
         try {
             let whereClause: any = {
@@ -98,14 +98,14 @@ export const LeadController = {
             };
 
             // Role-Based Filters
-            if (user.role === 'MARKETER') {
+            if (scope === 'my' || user.role === 'MARKETER') {
                 whereClause.assignedToUserId = user.id;
-            } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE') {
+            } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE' || user.role === 'BRANCH_HR' || user.role === 'ACCOUNTANT') {
                 if (user.branchId) {
                     whereClause.branchId = user.branchId;
                 }
             }
-            // SUPER_ADMIN sees all in company (already set)
+            // SUPER_ADMIN and MANAGING_DIRECTOR see all in company (already set)
 
             // Status Filter
             if (status && status !== 'ALL') {

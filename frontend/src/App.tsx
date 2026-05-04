@@ -159,6 +159,7 @@ function App() {
 
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
             <Route path="/dashboard/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
+            <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />
@@ -172,6 +173,7 @@ function App() {
             <Route path="/dashboard/:branchName/leads-import" element={<DashboardLayout><BulkLeadUpload /></DashboardLayout>} />
 
             <Route path="/dashboard/:branchName/leads" element={<DashboardLayout><MyLeads /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/users" element={<DashboardLayout><BranchUsers /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/disbursements" element={<DashboardLayout><AccountantDashboard /></DashboardLayout>} />

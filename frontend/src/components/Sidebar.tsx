@@ -75,11 +75,15 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 )}
 
                 {user?.role === 'GROUP_MANAGING_DIRECTOR' && (
-                    <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
+                    <>
+                        <NavItem to="/dashboard/my-leads" icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
+                    </>
                 )}
 
                 {user?.role === 'BRANCH_ADMIN' && (
                     <>
+                        <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
@@ -92,6 +96,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
 
                 {user?.role === 'BRANCH_HR' && (
                     <>
+                        <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance Tracking" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Payroll Report" />
@@ -109,6 +114,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
 
                 {user?.role === 'CUSTOMER_CARE' && (
                     <>
+                        <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions" />
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Leads" />
@@ -137,6 +143,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
 
                 {user?.role === 'MANAGING_DIRECTOR' && (
                     <>
+                        <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
@@ -146,6 +153,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
 
                 {user?.role === 'ACCOUNTANT' && (
                     <>
+                        <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />

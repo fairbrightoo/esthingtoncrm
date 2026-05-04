@@ -22,7 +22,7 @@ interface Lead {
     whatsappOptIn: boolean;
 }
 
-export const MyLeads = () => {
+export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
     const { user } = useAuth();
     const { addToast } = useToast();
     const [leads, setLeads] = useState<Lead[]>([]);
@@ -77,6 +77,7 @@ export const MyLeads = () => {
             const params: any = {};
             if (statusFilter !== 'ALL') params.status = statusFilter;
             if (sourceFilter !== 'ALL') params.source = sourceFilter;
+            if (scope) params.scope = scope;
             // if (searchTerm) params.search = searchTerm; // Implement debounce for search later
 
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads`, {
@@ -262,7 +263,7 @@ export const MyLeads = () => {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">
-                        {isMarketer ? 'My Leads' : 'All Branch Leads'}
+                        {scope === 'my' || isMarketer ? 'My Leads' : 'All Branch Leads'}
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">
                         {filteredLeads.length} active leads found
