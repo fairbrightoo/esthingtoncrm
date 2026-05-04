@@ -105,9 +105,9 @@ export const AutomationController = {
       const history = await prisma.communicationLog.findMany({
         where: {
           providerId: { in: ['AI_BIRTHDAY_CRON', 'AI_REMINDER_CRON'] },
-          lead: { companyId: dbUser.companyId, ...(dbUser.branchId && dbUser.role !== 'SUPER_ADMIN' && dbUser.role !== 'MANAGING_DIRECTOR' ? { branchId: dbUser.branchId } : {}) }
+          lead: { companyId: dbUser.companyId || '', ...(dbUser.branchId && dbUser.role !== 'SUPER_ADMIN' && dbUser.role !== 'MANAGING_DIRECTOR' ? { branchId: dbUser.branchId } : {}) }
         },
-        orderBy: { timestamp: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: 100,
         include: {
           lead: { select: { fullName: true, phone: true, email: true, company: { select: { name: true } } } }

@@ -114,7 +114,7 @@ export const DailyAIOutreach = () => {
                                         <span className={`text-xs font-bold px-2 py-1 rounded-md ${log.providerId === 'AI_BIRTHDAY_CRON' ? 'bg-pink-50 text-pink-700' : 'bg-amber-50 text-amber-700'}`}>
                                             {log.providerId === 'AI_BIRTHDAY_CRON' ? 'Birthday Greeting' : 'Payment Reminder'}
                                         </span>
-                                        <p className="text-xs text-gray-400 mt-1">{formatDate(log.timestamp)}</p>
+                                        <p className="text-xs text-gray-400 mt-1">{formatDate(log.createdAt)}</p>
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm text-gray-700 italic relative">
