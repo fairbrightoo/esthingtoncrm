@@ -40,7 +40,7 @@ export const CustomerCareInbox = () => {
     const fetchLogs = async (leadId: string) => {
         setIsLoadingLogs(true);
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/leads/${leadId}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/leads/${leadId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Reverse logs so oldest is at top, newest at bottom
@@ -75,7 +75,7 @@ export const CustomerCareInbox = () => {
         setIsSending(true);
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/send`, {
                 leadId: selectedLead.id,
                 type: 'WHATSAPP',
                 content: messageDraft
@@ -112,7 +112,7 @@ export const CustomerCareInbox = () => {
         setIsSending(true);
         try {
             const promoMessage = `🎁 Special Offer! Use code ESTHINGTON5 for an instant 5% discount on your initial deposit if you secure your plot this week. Can I assist you with the paperwork?`;
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/send`, {
                 leadId: selectedLead.id,
                 type: 'WHATSAPP',
                 content: promoMessage
