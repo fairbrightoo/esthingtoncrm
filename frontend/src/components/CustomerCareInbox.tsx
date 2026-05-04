@@ -37,8 +37,8 @@ export const CustomerCareInbox = () => {
         }
     };
 
-    const fetchLogs = async (leadId: string) => {
-        setIsLoadingLogs(true);
+    const fetchLogs = async (leadId: string, showSpinner = true) => {
+        if (showSpinner) setIsLoadingLogs(true);
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/logs/${leadId}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -48,7 +48,7 @@ export const CustomerCareInbox = () => {
         } catch (error) {
             console.error(error);
         } finally {
-            setIsLoadingLogs(false);
+            if (showSpinner) setIsLoadingLogs(false);
         }
     };
 
@@ -58,9 +58,9 @@ export const CustomerCareInbox = () => {
 
     useEffect(() => {
         if (selectedLead) {
-            fetchLogs(selectedLead.id);
+            fetchLogs(selectedLead.id, true);
             // Polling for real-time feel (optional for MVP, but good for WA chat)
-            const interval = setInterval(() => fetchLogs(selectedLead.id), 10000);
+            const interval = setInterval(() => fetchLogs(selectedLead.id, false), 10000);
             return () => clearInterval(interval);
         }
     }, [selectedLead, token]);
@@ -82,7 +82,7 @@ export const CustomerCareInbox = () => {
             }, { headers: { Authorization: `Bearer ${token}` } });
             
             setMessageDraft('');
-            await fetchLogs(selectedLead.id);
+            await fetchLogs(selectedLead.id, false);
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to send message");
         } finally {
@@ -117,7 +117,7 @@ export const CustomerCareInbox = () => {
                 type: 'WHATSAPP',
                 content: promoMessage
             }, { headers: { Authorization: `Bearer ${token}` } });
-            await fetchLogs(selectedLead.id);
+            await fetchLogs(selectedLead.id, false);
             toast.success("Discount promotion sent!");
         } catch (error: any) {
             const serverMsg = error.response?.data?.error || "Failed to send promo";
