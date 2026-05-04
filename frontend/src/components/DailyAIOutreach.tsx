@@ -17,7 +17,7 @@ export const DailyAIOutreach = () => {
 
     const fetchHistory = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/automations/daily-outreach/history`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/daily-outreach/history`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setHistory(res.data);
@@ -39,7 +39,7 @@ export const DailyAIOutreach = () => {
         if (!confirm("This will manually trigger the daily cron job right now and actually send messages. Are you sure?")) return;
         setIsTriggering(true);
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/automations/daily-outreach/trigger-test`, {}, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/daily-outreach/trigger-test`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("AI Outreach triggered successfully!");
