@@ -10,6 +10,8 @@ import { BulkLeadUpload } from './pages/BulkLeadUpload';
 import { MyLeads } from './pages/MyLeads';
 import { BranchSelection } from './pages/BranchSelection';
 import { Login } from './pages/Login';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { BranchDashboard } from './pages/BranchDashboard';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { GlobalSettings } from './pages/GlobalSettings';
@@ -148,6 +150,8 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/select-branch" element={<BranchSelection />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Super Admin Routes */}
             <Route path="/admin" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
             <Route path="/admin/onboarding" element={<DashboardLayout><BulkOnboarding /></DashboardLayout>} />

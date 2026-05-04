@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ArrowRight, Building2, AlertCircle, Eye, EyeOff } from 'lucide-react';
@@ -187,9 +187,9 @@ export const Login = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <a href="#" className="text-sm hover:underline text-gray-500">
+                        <Link to="/forgot-password" className="text-sm hover:underline text-gray-500">
                             Forgot your password?
-                        </a>
+                        </Link>
                     </div>
                 </div>
 
