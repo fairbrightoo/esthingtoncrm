@@ -65,6 +65,16 @@ export const HRReports = () => {
         );
     }
 
+    if (!data) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 text-center animate-in fade-in">
+                <AlertCircle size={48} className="text-red-500 mb-4 opacity-80" />
+                <h2 className="text-2xl font-bold text-gray-900">Failed to load analytics</h2>
+                <p className="text-gray-500 mt-2">There was a problem loading the HR data or you do not have permission.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>

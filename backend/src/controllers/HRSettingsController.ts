@@ -33,7 +33,7 @@ export const HRSettingsController = {
     updateSettings: async (req: Request, res: Response) => {
         try {
             const user = (req as any).user;
-            if (user.role !== 'HR_MANAGER' && user.role !== 'SUPER_ADMIN' && user.role !== 'BRANCH_ADMIN') {
+            if (user.role !== 'BRANCH_HR' && user.role !== 'SUPER_ADMIN' && user.role !== 'BRANCH_ADMIN') {
                 return res.status(403).json({ error: 'Unauthorized to modify HR Settings' });
             }
 

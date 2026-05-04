@@ -34,7 +34,7 @@ export const AnnouncementController = {
             const { title, content, priority } = req.body;
 
             // Only HR or Admin can create
-            if (user.role !== 'HR_MANAGER' && user.role !== 'SUPER_ADMIN' && user.role !== 'BRANCH_ADMIN') {
+            if (user.role !== 'BRANCH_HR' && user.role !== 'SUPER_ADMIN' && user.role !== 'BRANCH_ADMIN') {
                 return res.status(403).json({ error: 'You do not have permission to create announcements' });
             }
 

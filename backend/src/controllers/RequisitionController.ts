@@ -77,7 +77,7 @@ export const RequisitionController = {
             }
 
             // Normal users should only see their own requests
-            if (role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "ACCOUNTANT" && role !== "HR_MANAGER") {
+            if (role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "ACCOUNTANT" && role !== "BRANCH_HR") {
                 whereClause.requestedByUserId = userId;
             }
 

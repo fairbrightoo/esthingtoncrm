@@ -62,7 +62,7 @@ export const BudgetController = {
             if (role !== "SUPER_ADMIN" && companyId) {
                 whereClause.companyId = companyId;
             }
-            if ((role === "ACCOUNTANT" || role === "HR_MANAGER") && branchId) {
+            if ((role === "ACCOUNTANT" || role === "BRANCH_HR") && branchId) {
                 whereClause.branchId = branchId;
             }
 
