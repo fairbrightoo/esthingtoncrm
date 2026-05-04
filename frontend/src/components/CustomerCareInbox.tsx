@@ -40,7 +40,7 @@ export const CustomerCareInbox = () => {
     const fetchLogs = async (leadId: string) => {
         setIsLoadingLogs(true);
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/leads/${leadId}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/logs/${leadId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Reverse logs so oldest is at top, newest at bottom
