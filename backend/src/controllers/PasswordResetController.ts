@@ -35,7 +35,9 @@ export const PasswordResetController = {
                 ? 'https://esthington-os-frontend.onrender.com' 
                 : frontendUrl;
 
-            const resetLink = `${actualFrontendUrl}/reset-password?token=${resetToken}`;
+            let resetLink = `${actualFrontendUrl}/reset-password?token=${resetToken}`;
+            if (user.companyId) resetLink += `&companyId=${user.companyId}`;
+            if (user.branchId) resetLink += `&branchId=${user.branchId}`;
             const html = `
                 <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
                     <h2 style="color: #1e293b; margin-bottom: 20px;">Password Reset Request</h2>

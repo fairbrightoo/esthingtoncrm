@@ -187,7 +187,7 @@ export const Login = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <Link to="/forgot-password" className="text-sm hover:underline text-gray-500">
+                        <Link to={`/forgot-password${window.location.search}`} className="text-sm hover:underline text-gray-500">
                             Forgot your password?
                         </Link>
                     </div>

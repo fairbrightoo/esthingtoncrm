@@ -1,13 +1,46 @@
-import { useState } from 'react';
-import { Mail, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Mail, ArrowRight, ArrowLeft, Building2 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 export const ForgotPassword = () => {
+    const [searchParams] = useSearchParams();
+    const companyId = searchParams.get('companyId');
+    const branchId = searchParams.get('branchId');
+
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [error, setError] = useState('');
+    
+    const [companyName, setCompanyName] = useState('Esthington Group');
+    const [branchName, setBranchName] = useState('');
+    const [companyTheme, setCompanyTheme] = useState('#1e293b'); // Default slate-800
+
+    useEffect(() => {
+        if (companyId) {
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`)
+                .then(res => {
+                    const company = res.data.find((c: any) => c.id === companyId);
+                    if (company) {
+                        setCompanyName(company.name);
+                        setCompanyTheme(company.themeColor || '#1e293b');
+                    }
+                })
+                .catch(() => console.error("Could not fetch company branding"));
+
+            if (branchId) {
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches`)
+                    .then(res => {
+                        const branch = res.data.find((b: any) => b.id === branchId);
+                        if (branch) {
+                            setBranchName(branch.name);
+                        }
+                    })
+                    .catch(() => console.error("Could not fetch branch details"));
+            }
+        }
+    }, [companyId, branchId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,12 +62,22 @@ export const ForgotPassword = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-64 opacity-10 bg-gradient-to-br from-slate-800 to-transparent" />
+            <div 
+                className="absolute top-0 left-0 w-full h-64 opacity-10" 
+                style={{ background: `linear-gradient(to bottom right, ${companyTheme}, transparent)` }}
+            />
 
             <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden relative z-10">
-                <div className="p-8 text-white text-center bg-slate-800">
-                    <h2 className="text-2xl font-bold">Reset Password</h2>
-                    <p className="text-white/80 text-sm mt-2">Enter your email address to receive a secure reset link.</p>
+                <div 
+                    className="p-8 text-white text-center"
+                    style={{ backgroundColor: companyTheme }}
+                >
+                    <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                        <Building2 size={32} className="text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold">{companyName}</h2>
+                    {branchName && <p className="text-white/90 font-medium">{branchName}</p>}
+                    <p className="text-white/80 text-sm mt-2">Password Reset Request</p>
                 </div>
 
                 <div className="p-8">
@@ -60,16 +103,28 @@ export const ForgotPassword = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-800 focus:border-transparent outline-none transition-all"
-                                    placeholder="name@esthington.com"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg outline-none transition-all"
+                                    placeholder={
+                                        companyName.toLowerCase().includes('esthington links')
+                                            ? "name@esthingtonlinks.com"
+                                            : "name@esthington.com"
+                                    }
+                                    style={{ borderColor: 'transparent', boxShadow: 'none' }}
                                 />
+                                <style>{`
+                                    input:focus {
+                                        box-shadow: 0 0 0 2px ${companyTheme}33; 
+                                        border-color: ${companyTheme};
+                                    }
+                                `}</style>
                             </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-3 px-4 bg-slate-800 text-white font-medium rounded-lg shadow-md hover:bg-slate-900 transition-all duration-300 flex items-center justify-center space-x-2"
+                            className="w-full py-3 px-4 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 brightness-110 hover:brightness-125"
+                            style={{ backgroundColor: companyTheme }}
                         >
                             {isLoading ? (
                                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -83,7 +138,7 @@ export const ForgotPassword = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <Link to="/" className="text-sm hover:underline text-gray-500 flex items-center justify-center gap-2">
+                        <Link to={`/login${window.location.search}`} className="text-sm hover:underline text-gray-500 flex items-center justify-center gap-2">
                             <ArrowLeft size={14} /> Back to Login
                         </Link>
                     </div>
@@ -92,3 +147,5 @@ export const ForgotPassword = () => {
         </div>
     );
 };
+
+
