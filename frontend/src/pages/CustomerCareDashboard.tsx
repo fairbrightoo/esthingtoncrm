@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { Loader2, Users, Send, Gift, TrendingUp, MessageCircle, MessageSquare } from 'lucide-react';
+import { Loader2, Users, Send, Gift, TrendingUp, MessageCircle, MessageSquare, Bot } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
 import { CustomerCareInbox } from '../components/CustomerCareInbox';
+import { DailyAIOutreach } from '../components/DailyAIOutreach';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
@@ -23,7 +24,7 @@ export const CustomerCareDashboard = () => {
     const [birthdays, setBirthdays] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [timeFilter, setTimeFilter] = useState<'ALL' | 'THIS_MONTH' | 'LAST_MONTH'>('ALL');
-    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'INBOX'>('OVERVIEW');
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'INBOX' | 'AI_OUTREACH'>('OVERVIEW');
 
     // Quick Message State
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
@@ -148,10 +149,19 @@ export const CustomerCareDashboard = () => {
                     <MessageSquare size={16} className="mr-2" />
                     Omnichannel Inbox
                 </button>
+                <button 
+                    onClick={() => setActiveTab('AI_OUTREACH')} 
+                    className={`pb-4 px-6 font-bold text-sm transition-all border-b-[3px] flex items-center ${activeTab === 'AI_OUTREACH' ? 'border-purple-600 text-purple-700' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'}`}
+                >
+                    <Bot size={16} className="mr-2" />
+                    AI Outreach
+                </button>
             </div>
 
             {activeTab === 'INBOX' ? (
                 <CustomerCareInbox />
+            ) : activeTab === 'AI_OUTREACH' ? (
+                <DailyAIOutreach />
             ) : (
                 <>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">

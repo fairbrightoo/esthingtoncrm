@@ -86,5 +86,62 @@ export const AutomationController = {
       console.error('Error logging inbound activity:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
+  },
+
+  /**
+   * GET /api/automations/daily-outreach/history
+   */
+  async getDailyOutreachHistory(req: Request, res: Response) {
+    try {
+      // @ts-ignore
+      const user = req.user;
+      
+      const dbUser = await prisma.user.findUnique({ where: { id: user.userId }});
+      if (!dbUser) {
+        res.status(401).json({ error: 'User not found' });
+        return;
+      }
+
+      const history = await prisma.communicationLog.findMany({
+        where: {
+          providerId: { in: ['AI_BIRTHDAY_CRON', 'AI_REMINDER_CRON'] },
+          lead: { companyId: dbUser.companyId, ...(dbUser.branchId && dbUser.role !== 'SUPER_ADMIN' && dbUser.role !== 'MANAGING_DIRECTOR' ? { branchId: dbUser.branchId } : {}) }
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 100,
+        include: {
+          lead: { select: { fullName: true, phone: true, email: true, company: { select: { name: true } } } }
+        }
+      });
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching outreach history:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+
+  /**
+   * POST /api/automations/daily-outreach/trigger-test
+   */
+  async triggerDailyOutreachTest(req: Request, res: Response) {
+    try {
+      // @ts-ignore
+      const userRole = req.user?.role;
+      if (userRole !== 'SUPER_ADMIN') {
+         // Allow any admin for testing during development, maybe restrict later
+         console.log("Triggered by role:", userRole);
+      }
+      
+      const { AutomationService } = await import('../services/AutomationService.js');
+      
+      // Run sequentially
+      await AutomationService.runBirthdayEmails();
+      await AutomationService.runDailyAIPaymentReminders();
+      
+      res.json({ success: true, message: 'Test execution triggered successfully' });
+    } catch (error) {
+      console.error('Error triggering test:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
