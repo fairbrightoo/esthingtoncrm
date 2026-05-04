@@ -71,7 +71,7 @@ export const MarketerDashboard = () => {
         setSendingMsg(true);
         try {
             await axios.post(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communications/send`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/send`,
                 {
                     leadId: selectedClient.id,
                     type: messageType,
