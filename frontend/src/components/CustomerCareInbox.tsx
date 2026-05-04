@@ -85,6 +85,8 @@ export const CustomerCareInbox = () => {
             await fetchLogs(selectedLead.id, false);
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to send message");
+            // Also refetch logs so the failed log appears!
+            await fetchLogs(selectedLead.id, false);
         } finally {
             setIsSending(false);
         }
@@ -243,11 +245,18 @@ export const CustomerCareInbox = () => {
                                     const isOutbound = log.direction === 'OUTBOUND';
                                     return (
                                         <div key={log.id} className={`flex flex-col ${isOutbound ? 'items-end' : 'items-start'}`}>
-                                            <div className={`max-w-[75%] px-6 py-4 rounded-3xl shadow-sm text-sm ${isOutbound ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm'}`}>
+                                            <div className={`max-w-[75%] px-6 py-4 rounded-3xl shadow-sm text-sm ${
+                                                log.status === 'FAILED' 
+                                                ? 'bg-red-50 border border-red-200 text-red-800 rounded-tr-sm'
+                                                : isOutbound 
+                                                    ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm' 
+                                                    : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm'
+                                            }`}>
                                                 <p className="whitespace-pre-wrap leading-relaxed">{log.content}</p>
                                             </div>
-                                            <p className="text-[10px] text-gray-400 mt-2 font-medium tracking-wide px-2 uppercase">
+                                            <p className={`text-[10px] mt-2 font-medium tracking-wide px-2 uppercase flex items-center ${log.status === 'FAILED' ? 'text-red-500' : 'text-gray-400'}`}>
                                                 {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {log.type}
+                                                {log.status === 'FAILED' && <span className="ml-1 font-bold">(FAILED)</span>}
                                             </p>
                                         </div>
                                     );
