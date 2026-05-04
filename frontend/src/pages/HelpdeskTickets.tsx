@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Settings, Plus, Search, Filter, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { MessageCircle, Settings, Plus, Search, Filter, AlertTriangle, CheckCircle, X, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -16,6 +16,9 @@ export const HelpdeskTickets = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newTicket, setNewTicket] = useState({ title: '', description: '', priority: 'MEDIUM', category: 'GENERAL', leadId: '' });
     const [submitting, setSubmitting] = useState(false);
+    
+    const [isLeadDropdownOpen, setIsLeadDropdownOpen] = useState(false);
+    const [leadSearch, setLeadSearch] = useState('');
 
     const fetchTicketsAndLeads = async () => {
         try {
@@ -212,18 +215,59 @@ export const HelpdeskTickets = () => {
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <div>
+                            <div className="relative">
                                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Select Client / Lead (Optional)</label>
-                                <select 
-                                    value={newTicket.leadId} 
-                                    onChange={e => setNewTicket({...newTicket, leadId: e.target.value})} 
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                <div 
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center"
+                                    onClick={() => setIsLeadDropdownOpen(!isLeadDropdownOpen)}
                                 >
-                                    <option value="">-- General / Internal --</option>
-                                    {leads.map(lead => (
-                                        <option key={lead.id} value={lead.id}>{lead.fullName} ({lead.phone})</option>
-                                    ))}
-                                </select>
+                                    <span className={newTicket.leadId ? "text-gray-900 font-medium" : "text-gray-500"}>
+                                        {newTicket.leadId && leads.find(l => l.id === newTicket.leadId) 
+                                            ? `${leads.find(l => l.id === newTicket.leadId)?.fullName} (${leads.find(l => l.id === newTicket.leadId)?.phone})` 
+                                            : '-- General / Internal --'}
+                                    </span>
+                                    <ChevronDown size={16} className="text-gray-400" />
+                                </div>
+                                
+                                {isLeadDropdownOpen && (
+                                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 flex flex-col">
+                                        <div className="p-2 border-b border-gray-100">
+                                            <div className="relative">
+                                                <Search className="absolute left-2.5 top-2 text-gray-400" size={14} />
+                                                <input 
+                                                    type="text" 
+                                                    autoFocus
+                                                    placeholder="Search name or phone..." 
+                                                    className="w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                    value={leadSearch}
+                                                    onChange={e => setLeadSearch(e.target.value)}
+                                                    onClick={e => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="overflow-y-auto">
+                                            <div 
+                                                className="px-3 py-2.5 text-sm hover:bg-blue-50 cursor-pointer text-gray-500 transition-colors"
+                                                onClick={() => { setNewTicket({...newTicket, leadId: ''}); setIsLeadDropdownOpen(false); setLeadSearch(''); }}
+                                            >
+                                                -- General / Internal --
+                                            </div>
+                                            {leads.filter(l => l.fullName.toLowerCase().includes(leadSearch.toLowerCase()) || l.phone?.includes(leadSearch)).map(lead => (
+                                                <div 
+                                                    key={lead.id}
+                                                    className="px-3 py-2.5 text-sm hover:bg-blue-50 cursor-pointer text-gray-800 transition-colors border-t border-gray-50"
+                                                    onClick={() => { setNewTicket({...newTicket, leadId: lead.id}); setIsLeadDropdownOpen(false); setLeadSearch(''); }}
+                                                >
+                                                    <span className="font-bold">{lead.fullName}</span> 
+                                                    <span className="text-gray-400 text-xs ml-2">{lead.phone}</span>
+                                                </div>
+                                            ))}
+                                            {leads.filter(l => l.fullName.toLowerCase().includes(leadSearch.toLowerCase()) || l.phone?.includes(leadSearch)).length === 0 && (
+                                                <div className="px-3 py-4 text-center text-sm text-gray-400">No matching clients found</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Subject / Title</label>
