@@ -12,7 +12,10 @@ export const PasswordResetController = {
                 return res.status(400).json({ error: "Email is required" });
             }
 
-            const user = await prisma.user.findUnique({ where: { email } });
+            const user = await prisma.user.findUnique({ 
+                where: { email },
+                include: { company: true }
+            });
             if (!user) {
                 // Return success even if user doesn't exist to prevent email enumeration
                 return res.status(200).json({ message: "If an account exists with that email, a reset link has been sent." });
@@ -38,6 +41,20 @@ export const PasswordResetController = {
             let resetLink = `${actualFrontendUrl}/reset-password?token=${resetToken}`;
             if (user.companyId) resetLink += `&companyId=${user.companyId}`;
             if (user.branchId) resetLink += `&branchId=${user.branchId}`;
+            
+            // Construct dynamic sender identity
+            let fromName = "Esthington Group";
+            if (user.company?.name) {
+                fromName = `${user.company.name} Security`;
+            }
+            
+            const envEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+            // Extract just the email if it was configured as "Name <email@domain.com>"
+            const rawEmail = envEmail.includes('<') ? envEmail.match(/<([^>]+)>/)?.[1] || envEmail : envEmail;
+            
+            // Format: "Double King Estate Security" <support@esthingtongroup.org>
+            const fromAddress = `"${fromName}" <${rawEmail}>`;
+
             const html = `
                 <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
                     <h2 style="color: #1e293b; margin-bottom: 20px;">Password Reset Request</h2>
@@ -57,7 +74,9 @@ export const PasswordResetController = {
             await EmailService.send(
                 user.email,
                 "Reset Your Password",
-                html
+                html,
+                undefined,
+                fromAddress
             );
 
             res.status(200).json({ message: "If an account exists with that email, a reset link has been sent." });
