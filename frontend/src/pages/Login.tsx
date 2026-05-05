@@ -20,6 +20,7 @@ export const Login = () => {
     const companyId = searchParams.get('companyId');
     const branchId = searchParams.get('branchId');
     const isAdminLogin = searchParams.get('admin') === 'true';
+    const isChairmanLogin = searchParams.get('chairman') === 'true';
 
     useEffect(() => {
         if (companyId) {
@@ -57,13 +58,26 @@ export const Login = () => {
             const loginPayload = {
                 email,
                 password,
-                companyId: isAdminLogin ? undefined : companyId,
+                companyId: (isAdminLogin || isChairmanLogin) ? undefined : companyId,
                 branchId
             };
 
             const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/login`, loginPayload);
 
             const user = res.data.user;
+
+            if (isAdminLogin && user.role !== 'SUPER_ADMIN') {
+                setError('Invalid credentials for Super Admin portal.');
+                setIsLoading(false);
+                return;
+            }
+
+            if (isChairmanLogin && user.role !== 'GLOBAL_CHAIRMAN') {
+                setError('Invalid credentials for Global Chairman portal.');
+                setIsLoading(false);
+                return;
+            }
+
             login(res.data.token, user);
 
             if (user.role === 'SUPER_ADMIN') {
@@ -101,9 +115,13 @@ export const Login = () => {
                     <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                         <Building2 size={32} className="text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold">{companyName}</h2>
-                    {branchName && <p className="text-white/90 font-medium">{branchName}</p>}
-                    <p className="text-white/80 text-sm mt-1">Workspace Login</p>
+                    <h2 className="text-2xl font-bold">
+                        {isChairmanLogin ? 'Esthington Group' : isAdminLogin ? 'Esthington Systems' : companyName}
+                    </h2>
+                    {branchName && !isChairmanLogin && !isAdminLogin && <p className="text-white/90 font-medium">{branchName}</p>}
+                    <p className="text-white/80 text-sm mt-1">
+                        {isChairmanLogin ? 'Global Command Center' : isAdminLogin ? 'Super Admin Portal' : 'Workspace Login'}
+                    </p>
                 </div>
 
                 {/* Form */}
