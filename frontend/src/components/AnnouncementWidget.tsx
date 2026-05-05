@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Megaphone, AlertTriangle, ChevronRight, X } from 'lucide-react';
+import { Megaphone, AlertTriangle, ChevronRight, X, CheckCircle } from 'lucide-react';
 
 interface Announcement {
     id: string;
@@ -136,12 +136,32 @@ export const AnnouncementWidget = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                        <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
                             <button 
                                 onClick={() => setSelectedMemo(null)}
                                 className="px-6 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-colors text-sm shadow-sm"
                             >
                                 Close
+                            </button>
+                            <button 
+                                onClick={async () => {
+                                    try {
+                                        await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements/read`, {
+                                            id: selectedMemo.id,
+                                            isGlobalBroadcast: selectedMemo.isGlobalBroadcast
+                                        }, {
+                                            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                                        });
+                                        setAnnouncements(prev => prev.filter(a => a.id !== selectedMemo.id));
+                                        setSelectedMemo(null);
+                                    } catch (e) {
+                                        console.error("Failed to mark as read", e);
+                                    }
+                                }}
+                                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors text-sm shadow-sm flex items-center"
+                            >
+                                <CheckCircle size={16} className="mr-2" />
+                                Acknowledge & Archive
                             </button>
                         </div>
                     </div>

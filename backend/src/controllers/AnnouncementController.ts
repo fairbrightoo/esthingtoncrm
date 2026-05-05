@@ -9,10 +9,17 @@ export const AnnouncementController = {
             const user = req.user;
             const companyId = user.companyId;
 
-            // 1. Fetch Standard Company Announcements
+            // 1. Fetch Read Receipts for the current user
+            const readReceipts = await prisma.noticeReadReceipt.findMany({
+                where: { userId: user.userId || user.id }
+            });
+            const readAnnouncementIds = new Set(readReceipts.map(r => r.announcementId).filter(id => id));
+            const readBroadcastIds = new Set(readReceipts.map(r => r.broadcastId).filter(id => id));
+
+            // 2. Fetch Standard Company Announcements
             let announcements: any[] = [];
             if (companyId) {
-                announcements = await prisma.announcement.findMany({
+                const rawAnnouncements = await prisma.announcement.findMany({
                     where: { companyId },
                     include: {
                         author: {
@@ -20,9 +27,10 @@ export const AnnouncementController = {
                         }
                     }
                 });
+                announcements = rawAnnouncements.filter(a => !readAnnouncementIds.has(a.id));
             }
 
-            // 2. Fetch Dashboard Broadcasts from Global Chairman
+            // 3. Fetch Dashboard Broadcasts from Global Chairman
             const dbBroadcasts = await prisma.dashboardBroadcast.findMany({
                 include: {
                     author: {
@@ -31,8 +39,10 @@ export const AnnouncementController = {
                 }
             });
 
-            // 3. Filter Broadcasts depending on audience
+            // 4. Filter Broadcasts depending on audience and read status
             const applicableBroadcasts = dbBroadcasts.filter(b => {
+                if (readBroadcastIds.has(b.id)) return false; // Exclude read broadcasts
+
                 if (b.audienceType === 'ALL_STAFF') return true;
                 if (b.audienceType === 'ALL_MDS' && user.role === 'MANAGING_DIRECTOR') return true;
                 if (b.audienceType === 'COMPANY' && b.targetId === user.companyId) return true;
@@ -40,7 +50,7 @@ export const AnnouncementController = {
                 return false;
             });
 
-            // 4. Map to match Announcement Interface
+            // 5. Map to match Announcement Interface
             const formattedBroadcasts = applicableBroadcasts.map(b => ({
                 id: b.id,
                 title: b.title,
@@ -51,7 +61,7 @@ export const AnnouncementController = {
                 isGlobalBroadcast: true // UI flag
             }));
 
-            // 5. Combine and sort
+            // 6. Combine and sort
             const combined = [...announcements, ...formattedBroadcasts].sort(
                 (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             );
@@ -124,6 +134,80 @@ export const AnnouncementController = {
         } catch (error) {
             console.error('Delete Announcement Error:', error);
             res.status(500).json({ error: 'Failed to delete announcement' });
+        }
+    },
+
+    async markAsRead(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const user = req.user;
+            const { id, isGlobalBroadcast } = req.body;
+
+            await prisma.noticeReadReceipt.create({
+                data: {
+                    userId: user.userId || user.id,
+                    announcementId: isGlobalBroadcast ? null : id,
+                    broadcastId: isGlobalBroadcast ? id : null
+                }
+            });
+
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Mark as Read Error:', error);
+            res.status(500).json({ error: 'Failed to mark as read' });
+        }
+    },
+
+    async getArchive(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const user = req.user;
+            
+            // Fetch all read receipts for this user
+            const readReceipts = await prisma.noticeReadReceipt.findMany({
+                where: { userId: user.userId || user.id },
+                include: {
+                    announcement: {
+                        include: { author: { select: { id: true, fullName: true, role: true } } }
+                    },
+                    broadcast: {
+                        include: { author: { select: { id: true, fullName: true, role: true } } }
+                    }
+                },
+                orderBy: { readAt: 'desc' }
+            });
+
+            const archive = readReceipts.map(r => {
+                if (r.broadcast) {
+                    return {
+                        id: r.broadcast.id,
+                        title: r.broadcast.title,
+                        content: r.broadcast.content,
+                        priority: r.broadcast.priority,
+                        createdAt: r.broadcast.createdAt,
+                        readAt: r.readAt,
+                        author: r.broadcast.author,
+                        isGlobalBroadcast: true
+                    };
+                } else if (r.announcement) {
+                    return {
+                        id: r.announcement.id,
+                        title: r.announcement.title,
+                        content: r.announcement.content,
+                        priority: r.announcement.priority,
+                        createdAt: r.announcement.createdAt,
+                        readAt: r.readAt,
+                        author: r.announcement.author,
+                        isGlobalBroadcast: false
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+
+            res.json(archive);
+        } catch (error) {
+            console.error('Get Archive Error:', error);
+            res.status(500).json({ error: 'Failed to fetch notice archive' });
         }
     }
 };

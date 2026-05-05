@@ -53,6 +53,7 @@ import { ExecutiveMemos } from './pages/ExecutiveMemos';
 
 import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { ChairmanExpenses } from './pages/ChairmanExpenses';
+import { NoticeArchive } from './pages/NoticeArchive';
 import { useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -183,6 +184,7 @@ function App() {
             <Route path="/dashboard/:branchName/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/disbursements" element={<DashboardLayout><AccountantDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
 
             <Route path="/dashboard/:branchName/onboarding" element={<DashboardLayout><BulkOnboarding /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/leads-import" element={<DashboardLayout><BulkLeadUpload /></DashboardLayout>} />

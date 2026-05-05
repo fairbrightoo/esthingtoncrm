@@ -174,6 +174,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 
                 {user?.role !== 'GROUP_MANAGING_DIRECTOR' && (
                     <>
+                        <NavItem to={`${basePath}/archive`} icon={<BookOpen size={20} />} label="Notice Archive" />
                         <NavItem to={`${basePath}/reports`} icon={<FileText size={20} />} label="Reports" />
                         <NavItem to={`${basePath}/settings`} icon={<Settings size={20} />} label="Settings" />
                     </>

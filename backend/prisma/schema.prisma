@@ -149,6 +149,8 @@ model User {
   receivedExecutiveMemos ExecutiveMemo[]     @relation("MemoRecipient")
   dashboardBroadcasts  DashboardBroadcast[]
   globalBroadcastLogs  GlobalBroadcastLog[]
+  readReceipts         NoticeReadReceipt[]
+  
 }
 
 model Attendance {
@@ -397,6 +399,8 @@ model Announcement {
   updatedAt DateTime @updatedAt
   company   Company  @relation(fields: [companyId], references: [id])
   author    User     @relation(fields: [authorId], references: [id])
+  readReceipts         NoticeReadReceipt[]
+  
 }
 
 model Holiday {
@@ -772,6 +776,8 @@ model DashboardBroadcast {
   createdAt    DateTime @default(now())
 
   author       User     @relation(fields: [authorId], references: [id])
+  readReceipts         NoticeReadReceipt[]
+  
 }
 
 model GlobalBroadcastLog {
@@ -787,4 +793,17 @@ model GlobalBroadcastLog {
   createdAt    DateTime @default(now())
 
   author       User     @relation(fields: [authorId], references: [id])
+  
+}
+
+model NoticeReadReceipt {
+  id             String   @id @default(uuid())
+  userId         String
+  announcementId String?
+  broadcastId    String?
+  readAt         DateTime @default(now())
+
+  user           User                 @relation(fields: [userId], references: [id])
+  announcement   Announcement?        @relation(fields: [announcementId], references: [id])
+  broadcast      DashboardBroadcast?  @relation(fields: [broadcastId], references: [id])
 }
