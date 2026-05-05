@@ -8,6 +8,7 @@ interface Announcement {
     content: string;
     priority: string;
     createdAt: string;
+    isGlobalBroadcast?: boolean;
     author: {
         fullName: string;
         role: string;
@@ -60,8 +61,15 @@ export const AnnouncementWidget = () => {
                     <button
                         key={memo.id}
                         onClick={() => setSelectedMemo(memo)}
-                        className={`text-left bg-white rounded-xl p-5 shadow-sm border ${memo.priority === 'HIGH' ? 'border-red-200' : 'border-gray-100'} hover:shadow-md hover:-translate-y-0.5 transition-all group`}
+                        className={`text-left bg-white rounded-xl p-5 shadow-sm border ${memo.isGlobalBroadcast ? 'border-indigo-400 shadow-indigo-100' : memo.priority === 'HIGH' ? 'border-red-200' : 'border-gray-100'} hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden`}
                     >
+                        {memo.isGlobalBroadcast && (
+                            <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">
+                                <div className="absolute transform rotate-45 bg-indigo-600 text-white text-[9px] font-black tracking-widest py-1 right-[-35px] top-[15px] w-[120px] text-center shadow-sm">
+                                    GLOBAL
+                                </div>
+                            </div>
+                        )}
                         <div className="flex justify-between items-start mb-2 hidden md:hidden">
                            {/* Hidden element to maintain flex consistency if needed */}
                         </div>
@@ -69,7 +77,7 @@ export const AnnouncementWidget = () => {
                             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-md">
                                 {new Date(memo.createdAt).toLocaleDateString()}
                             </span>
-                            {memo.priority === 'HIGH' && (
+                            {memo.priority === 'HIGH' && !memo.isGlobalBroadcast && (
                                 <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center">
                                     <AlertTriangle size={10} className="mr-1" /> Urgent
                                 </span>
@@ -96,18 +104,22 @@ export const AnnouncementWidget = () => {
                         onClick={() => setSelectedMemo(null)}
                     ></div>
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-200">
-                        <div className={`px-8 py-6 border-b flex justify-between items-start ${selectedMemo.priority === 'HIGH' ? 'bg-red-50/50 border-red-100' : 'bg-gray-50/50 border-gray-100'}`}>
+                        <div className={`px-8 py-6 border-b flex justify-between items-start ${selectedMemo.isGlobalBroadcast ? 'bg-indigo-50/50 border-indigo-100' : selectedMemo.priority === 'HIGH' ? 'bg-red-50/50 border-red-100' : 'bg-gray-50/50 border-gray-100'}`}>
                             <div>
                                 <div className="flex items-center space-x-3 mb-2">
                                     <h2 className="text-2xl font-bold text-gray-900">{selectedMemo.title}</h2>
-                                    {selectedMemo.priority === 'HIGH' && (
+                                    {selectedMemo.isGlobalBroadcast ? (
+                                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase flex items-center shadow-sm border border-indigo-200">
+                                            <Megaphone size={12} className="mr-1" /> Global
+                                        </span>
+                                    ) : selectedMemo.priority === 'HIGH' && (
                                         <span className="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase flex items-center">
                                             <AlertTriangle size={12} className="mr-1" /> Urgent
                                         </span>
                                     )}
                                 </div>
                                 <div className="text-sm text-gray-500 font-medium">
-                                    From {selectedMemo.author.fullName} ({selectedMemo.author.role.replace('_', ' ')}) • {new Date(selectedMemo.createdAt).toLocaleString()}
+                                    From {selectedMemo.author.fullName} ({selectedMemo.author.role.replace(/_/g, ' ')}) • {new Date(selectedMemo.createdAt).toLocaleString()}
                                 </div>
                             </div>
                             <button 

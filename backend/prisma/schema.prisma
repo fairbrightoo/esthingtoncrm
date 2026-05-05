@@ -147,6 +147,7 @@ model User {
   taxRemittances       TaxRemittance[]       @relation("TaxRemitter")
   sentExecutiveMemos   ExecutiveMemo[]       @relation("MemoSender")
   receivedExecutiveMemos ExecutiveMemo[]     @relation("MemoRecipient")
+  dashboardBroadcasts  DashboardBroadcast[]
 }
 
 model Attendance {
@@ -757,4 +758,17 @@ model ExecutiveMemo {
   branch      Branch?  @relation(fields: [branchId], references: [id])
   sender      User     @relation("MemoSender", fields: [senderId], references: [id])
   recipient   User     @relation("MemoRecipient", fields: [recipientId], references: [id])
+}
+
+model DashboardBroadcast {
+  id           String   @id @default(uuid())
+  title        String
+  content      String
+  audienceType String   // ALL_STAFF, ALL_MDS, COMPANY, BRANCH
+  targetId     String?  // The specific companyId or branchId if applicable
+  authorId     String
+  priority     String   @default("HIGH")
+  createdAt    DateTime @default(now())
+
+  author       User     @relation(fields: [authorId], references: [id])
 }

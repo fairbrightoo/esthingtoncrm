@@ -272,6 +272,19 @@ export const CommunicationController = {
                 return res.status(400).json({ error: "Invalid audience type" });
             }
 
+            if (type === 'DASHBOARD') {
+                await prisma.dashboardBroadcast.create({
+                    data: {
+                        title: subject || "Global Chairman Broadcast",
+                        content,
+                        audienceType,
+                        targetId: targetId || null,
+                        authorId: tokenUser.userId
+                    }
+                });
+                return res.json({ success: true, message: `Dashboard Broadcast dispatched successfully to ${audienceType}.` });
+            }
+
             const targets = await prisma.user.findMany({ where: whereClause, select: { id: true, email: true, phone: true } });
 
             if (targets.length === 0) {

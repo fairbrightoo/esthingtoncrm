@@ -179,14 +179,18 @@ export const GlobalBroadcasts = () => {
 
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Delivery Method</label>
-                            <div className="flex space-x-4">
-                                <label className={`flex-1 cursor-pointer p-4 rounded-xl border-2 transition-all text-center font-bold ${messageType === 'EMAIL' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all text-center font-bold ${messageType === 'EMAIL' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}>
                                     <input type="radio" name="delivery" className="hidden" checked={messageType === 'EMAIL'} onChange={() => setMessageType('EMAIL')} />
                                     Official Email
                                 </label>
-                                <label className={`flex-1 cursor-pointer p-4 rounded-xl border-2 transition-all text-center font-bold ${messageType === 'SMS' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}>
+                                <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all text-center font-bold ${messageType === 'SMS' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}>
                                     <input type="radio" name="delivery" className="hidden" checked={messageType === 'SMS'} onChange={() => setMessageType('SMS')} />
                                     SMS Alert
+                                </label>
+                                <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all text-center font-bold ${messageType === 'DASHBOARD' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}>
+                                    <input type="radio" name="delivery" className="hidden" checked={messageType === 'DASHBOARD'} onChange={() => setMessageType('DASHBOARD')} />
+                                    Dashboard Notice
                                 </label>
                             </div>
                         </div>

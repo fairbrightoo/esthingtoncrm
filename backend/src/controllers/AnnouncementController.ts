@@ -9,17 +9,54 @@ export const AnnouncementController = {
             const user = req.user;
             const companyId = user.companyId;
 
-            const announcements = await prisma.announcement.findMany({
-                where: { companyId },
+            // 1. Fetch Standard Company Announcements
+            let announcements: any[] = [];
+            if (companyId) {
+                announcements = await prisma.announcement.findMany({
+                    where: { companyId },
+                    include: {
+                        author: {
+                            select: { id: true, fullName: true, role: true }
+                        }
+                    }
+                });
+            }
+
+            // 2. Fetch Dashboard Broadcasts from Global Chairman
+            const dbBroadcasts = await prisma.dashboardBroadcast.findMany({
                 include: {
                     author: {
                         select: { id: true, fullName: true, role: true }
                     }
-                },
-                orderBy: { createdAt: 'desc' }
+                }
             });
 
-            res.json(announcements);
+            // 3. Filter Broadcasts depending on audience
+            const applicableBroadcasts = dbBroadcasts.filter(b => {
+                if (b.audienceType === 'ALL_STAFF') return true;
+                if (b.audienceType === 'ALL_MDS' && user.role === 'MANAGING_DIRECTOR') return true;
+                if (b.audienceType === 'COMPANY' && b.targetId === user.companyId) return true;
+                if (b.audienceType === 'BRANCH' && b.targetId === user.branchId) return true;
+                return false;
+            });
+
+            // 4. Map to match Announcement Interface
+            const formattedBroadcasts = applicableBroadcasts.map(b => ({
+                id: b.id,
+                title: b.title,
+                content: b.content,
+                priority: b.priority,
+                createdAt: b.createdAt,
+                author: b.author,
+                isGlobalBroadcast: true // UI flag
+            }));
+
+            // 5. Combine and sort
+            const combined = [...announcements, ...formattedBroadcasts].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            res.json(combined);
         } catch (error) {
             console.error('Get Announcements Error:', error);
             res.status(500).json({ error: 'Failed to fetch announcements' });
