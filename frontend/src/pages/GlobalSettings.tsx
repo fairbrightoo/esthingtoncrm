@@ -44,8 +44,10 @@ export const GlobalSettings = () => {
     const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [showGroupMDModal, setShowGroupMDModal] = useState(false);
+    const [showChairmanModal, setShowChairmanModal] = useState(false);
     const [editingAdmin, setEditingAdmin] = useState<any>(null);
     const [adminFormData, setAdminFormData] = useState({ fullName: '', email: '', password: '', role: 'BRANCH_ADMIN' });
+    const [chairmanFormData, setChairmanFormData] = useState({ email: 'chairman@esthington.com', password: '' });
     const [showPassword, setShowPassword] = useState(false);
 
     const fetchCompanies = async () => {
@@ -336,7 +338,10 @@ export const GlobalSettings = () => {
 
             {activeTab === 'COMPANIES' ? (
                 <>
-                    <div className="flex justify-end mb-4">
+                    <div className="flex justify-end mb-4 space-x-3">
+                        <button onClick={() => setShowChairmanModal(true)} className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                            <span>Manage Global Chairman</span>
+                        </button>
                         <button onClick={openCreateCompany} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
                             <Plus size={18} />
                             <span>Add Company</span>
@@ -661,6 +666,65 @@ export const GlobalSettings = () => {
                                         }
                                     }} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">Save</button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Global Chairman Modal */}
+            {showChairmanModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold">Manage Global Chairman</h2>
+                            <button onClick={() => setShowChairmanModal(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
+                        </div>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-600">Update the Global Chairman's login credentials. Saving this will instantly dispatch an automated email with their new secure password.</p>
+                        </div>
+                        <div className="space-y-3">
+                            <input 
+                                className="w-full px-3 py-2 border rounded" 
+                                placeholder="Email Address" 
+                                type="email" 
+                                value={chairmanFormData.email} 
+                                onChange={e => setChairmanFormData({ ...chairmanFormData, email: e.target.value })} 
+                            />
+                            <div className="relative">
+                                <input 
+                                    className="w-full px-3 py-2 border rounded pr-10" 
+                                    placeholder="New Secure Password" 
+                                    type={showPassword ? "text" : "password"} 
+                                    value={chairmanFormData.password} 
+                                    onChange={e => setChairmanFormData({ ...chairmanFormData, password: e.target.value })} 
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                            <div className="flex justify-end space-x-2 mt-4">
+                                <button onClick={() => setShowChairmanModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
+                                <button onClick={async () => {
+                                    if (!chairmanFormData.password) {
+                                        addToast('Password is required', 'error');
+                                        return;
+                                    }
+                                    try {
+                                        await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman/credentials`, chairmanFormData, { headers: { Authorization: `Bearer ${token}` } });
+                                        addToast('Credentials updated and dispatched!', 'success');
+                                        setShowChairmanModal(false);
+                                        setChairmanFormData({ email: 'chairman@esthington.com', password: '' });
+                                    } catch(e:any) {
+                                        addToast(e.response?.data?.error || 'Failed to dispatch credentials', 'error');
+                                    }
+                                }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+                                    Save & Dispatch
+                                </button>
                             </div>
                         </div>
                     </div>

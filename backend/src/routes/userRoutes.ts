@@ -9,6 +9,7 @@ router.use(authenticateToken);
 // Global User Management
 router.get('/global', requireRole(['SUPER_ADMIN', 'GLOBAL_CHAIRMAN']), GlobalUserController.getAllUsers);
 router.put('/global/:id', requireRole(['SUPER_ADMIN']), GlobalUserController.updateUser);
+router.post('/global/chairman/credentials', requireRole(['SUPER_ADMIN']), GlobalUserController.updateGlobalChairmanCredentials);
 
 // Personal Security
 router.post('/change-password', GlobalUserController.changePassword);

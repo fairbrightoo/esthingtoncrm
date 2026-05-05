@@ -200,5 +200,65 @@ export const GlobalUserController = {
             console.error('Failed to impersonate user:', error);
             res.status(500).json({ error: 'An error occurred while attempting to impersonate.' });
         }
+    },
+
+    // 4. Update Global Chairman Credentials
+    updateGlobalChairmanCredentials: async (req: Request, res: Response) => {
+        try {
+            const { email, password } = req.body;
+            if (!email || !password) {
+                return res.status(400).json({ error: 'Email and password are required' });
+            }
+
+            // Find the GLOBAL_CHAIRMAN
+            const chairman = await prisma.user.findFirst({
+                where: { role: 'GLOBAL_CHAIRMAN' }
+            });
+
+            if (!chairman) {
+                return res.status(404).json({ error: 'Global Chairman account not found in the database. Please ensure it has been injected.' });
+            }
+
+            const bcrypt = (await import('bcryptjs')).default;
+            const passwordHash = await bcrypt.hash(password, 10);
+
+            // Update user
+            const updatedUser = await prisma.user.update({
+                where: { id: chairman.id },
+                data: { email, passwordHash }
+            });
+
+            // Send Email
+            const { EmailService } = await import('../services/EmailService.js');
+            const html = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #1e3a8a; padding: 20px; text-align: center; color: white;">
+                    <h2 style="margin: 0;">Welcome to Esthington Global Command Center</h2>
+                </div>
+                <div style="padding: 30px;">
+                    <p>Dear <strong>${updatedUser.fullName}</strong>,</p>
+                    <p>Your Global Chairman credentials have been securely provisioned. You can now access your master command center to oversee all subsidiaries and operations.</p>
+                    
+                    <div style="background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0 0 10px 0;"><strong>Your Private Credentials:</strong></p>
+                        <p style="margin: 5px 0;"><strong>Role:</strong> Global Chairman</p>
+                        <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                        <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+                    </div>
+                    
+                    <p style="margin-top: 25px;">Please log in through the master Company Portal. For maximum security, we recommend that you navigate to your Profile Settings and change your password immediately after logging in.</p>
+                    
+                    <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>Esthington Group Intelligence</p>
+                </div>
+            </div>
+            `;
+
+            await EmailService.send(email, 'Your Global Chairman Secure Credentials', html);
+
+            res.json({ success: true, message: 'Global Chairman credentials updated and dispatched successfully' });
+        } catch (error) {
+            console.error('Failed to update Global Chairman credentials:', error);
+            res.status(500).json({ error: 'Failed to update credentials' });
+        }
     }
 };
