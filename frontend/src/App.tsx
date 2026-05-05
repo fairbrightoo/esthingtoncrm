@@ -163,10 +163,12 @@ function App() {
             <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
             <Route path="/admin/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
+            <Route path="/admin/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/admin/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
 
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
             <Route path="/dashboard/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
+            <Route path="/dashboard/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
 
             {/* Global Chairman Routes */}
@@ -174,6 +176,7 @@ function App() {
             <Route path="/dashboard/chairman/crm" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
             <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><ChairmanExpenses /></DashboardLayout>} />
             <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/chairman/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
             <Route path="/dashboard/chairman/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
