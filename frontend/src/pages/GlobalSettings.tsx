@@ -285,7 +285,7 @@ export const GlobalSettings = () => {
         resetForm();
         setEditingBranch(branch);
         setSelectedCompanyId(companyId);
-        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '' });
+        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '' });
         setShowBranchModal(true);
     };
 
