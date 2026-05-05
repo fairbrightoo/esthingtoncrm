@@ -245,5 +245,62 @@ export const CommunicationController = {
             console.error("Meta Templates Fetch Error:", error);
             res.status(500).json({ error: error.message || "Failed to fetch Meta templates" });
         }
+    },
+
+    // Broadcast message to staff members (Global Chairman)
+    async broadcastMessage(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const tokenUser = req.user;
+            const { audienceType, targetId, subject, content, type } = req.body; 
+
+            if (tokenUser.role !== 'GLOBAL_CHAIRMAN') {
+                return res.status(403).json({ error: "Only the Global Chairman can send global broadcasts" });
+            }
+
+            // Build audience filter
+            let whereClause: any = { isActive: true };
+            if (audienceType === 'ALL_STAFF') {
+                // target all
+            } else if (audienceType === 'ALL_MDS') {
+                whereClause.role = 'MANAGING_DIRECTOR';
+            } else if (audienceType === 'COMPANY') {
+                whereClause.companyId = targetId;
+            } else if (audienceType === 'BRANCH') {
+                whereClause.branchId = targetId;
+            } else {
+                return res.status(400).json({ error: "Invalid audience type" });
+            }
+
+            const targets = await prisma.user.findMany({ where: whereClause, select: { id: true, email: true, phone: true } });
+
+            if (targets.length === 0) {
+                return res.status(400).json({ error: "No users found for this audience." });
+            }
+
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (const target of targets) {
+                try {
+                    if (type === 'EMAIL' && target.email) {
+                        await EmailService.send(target.email, subject || "Group Broadcast", content);
+                        successCount++;
+                    } else if (type === 'SMS' && target.phone) {
+                        await SmsService.sendSMS(target.phone, content); // Broadcast uses generic sender ID
+                        successCount++;
+                    } else {
+                        failedCount++;
+                    }
+                } catch (e) {
+                    failedCount++;
+                }
+            }
+
+            res.json({ success: true, message: `Broadcast dispatched. Delivered: ${successCount}. Failed: ${failedCount}.` });
+        } catch (error) {
+            console.error("Broadcast Error:", error);
+            res.status(500).json({ error: "Failed to dispatch broadcast" });
+        }
     }
 };

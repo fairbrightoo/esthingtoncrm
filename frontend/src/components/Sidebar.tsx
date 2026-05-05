@@ -21,6 +21,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
     const getBasePath = () => {
         if (user?.role === 'SUPER_ADMIN') return '/admin';
         if (user?.role === 'GROUP_MANAGING_DIRECTOR') return '/dashboard/global';
+        if (user?.role === 'GLOBAL_CHAIRMAN') return '/dashboard/chairman';
         // Fallback to 'head-office' or 'home' if branch missing, but ideally branch is present
         const branchSlug = user?.branch?.name?.toLowerCase().replace(/\s+/g, '-') || 'head-office';
         return `/dashboard/${branchSlug}`;
@@ -71,6 +72,17 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Global User Mgmt" />
                         <NavItem to="/admin/inventory" icon={<Home size={20} />} label="Inventory" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
+                    </>
+                )}
+
+                {user?.role === 'GLOBAL_CHAIRMAN' && (
+                    <>
+                        <NavItem to="/dashboard/chairman/crm" icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to="/dashboard/chairman/expenses" icon={<FileSpreadsheet size={20} />} label="My Expenses" />
+                        <NavItem to="/dashboard/chairman/broadcasts" icon={<Megaphone size={20} />} label="Broadcasts" />
+                        <NavItem to="/dashboard/chairman/reports" icon={<FileText size={20} />} label="Global Reports" />
+                        <NavItem to="/admin/users" icon={<Users size={20} />} label="Group Staff" />
+                        <NavItem to="/dashboard/chairman/settings" icon={<Settings size={20} />} label="Settings" />
                     </>
                 )}
 

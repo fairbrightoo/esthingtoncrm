@@ -4,7 +4,7 @@ interface User {
     id: string;
     email: string;
     fullName: string;
-    role: 'SUPER_ADMIN' | 'BRANCH_ADMIN' | 'CUSTOMER_CARE' | 'MARKETER' | 'BRANCH_HR' | 'MANAGING_DIRECTOR' | 'GROUP_MANAGING_DIRECTOR' | 'ACCOUNTANT';
+    role: 'SUPER_ADMIN' | 'GLOBAL_CHAIRMAN' | 'BRANCH_ADMIN' | 'CUSTOMER_CARE' | 'MARKETER' | 'BRANCH_HR' | 'MANAGING_DIRECTOR' | 'GROUP_MANAGING_DIRECTOR' | 'ACCOUNTANT';
     companyId?: string;
     branchId?: string;
     branch?: { id?: string; name: string; address: string; phone?: string; email?: string };

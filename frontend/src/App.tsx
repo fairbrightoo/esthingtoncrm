@@ -51,12 +51,14 @@ import { AccountantTaxCompliance } from './pages/AccountantTaxCompliance';
 import { GMDDashboard } from './pages/GMDDashboard';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
 
+import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 const DashboardHome = () => {
     const { user } = useAuth();
     if (user?.role === 'SUPER_ADMIN') return <Navigate to="/admin" replace />;
+    if (user?.role === 'GLOBAL_CHAIRMAN') return <Navigate to="/dashboard/chairman" replace />;
     if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDDashboard />;
     
     if (user?.branch?.name) {
@@ -164,6 +166,14 @@ function App() {
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
             <Route path="/dashboard/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
+
+            {/* Global Chairman Routes */}
+            <Route path="/dashboard/chairman" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/crm" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />

@@ -16,6 +16,9 @@ export const CompanyController = {
     async getAllCompanies(req: Request, res: Response) {
         try {
             const companies = await prisma.company.findMany({
+                where: {
+                    name: { not: 'Esthington Group HQ' }
+                },
                 select: {
                     id: true,
                     name: true,

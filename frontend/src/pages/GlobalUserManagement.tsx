@@ -8,7 +8,7 @@ export const GlobalUserManagement = () => {
     const { token, impersonate, user: currentUser } = useAuth();
     const navigate = useNavigate();
     
-    if (currentUser && currentUser.role !== 'SUPER_ADMIN') {
+    if (currentUser && !['SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(currentUser.role)) {
         return <Navigate to="/dashboard" replace />;
     }
     
@@ -203,7 +203,7 @@ export const GlobalUserManagement = () => {
                                     <th className="px-6 py-4">Status & Role</th>
                                     <th className="px-6 py-4">Assignment Layer</th>
                                     <th className="px-6 py-4">Financial Retainer</th>
-                                    <th className="px-6 py-4 text-center">Actions</th>
+                                    {currentUser?.role === 'SUPER_ADMIN' && <th className="px-6 py-4 text-center">Actions</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -241,22 +241,24 @@ export const GlobalUserManagement = () => {
                                             <div className="font-medium text-gray-800">{formatCurrency(user.monthlySalary)} / mo</div>
                                             <div className="text-xs text-green-600 font-bold mt-0.5">{user.commissionRate}% Commission</div>
                                         </td>
-                                        <td className="px-6 py-4 text-center space-x-2">
-                                            <button 
-                                                title="Impersonate User"
-                                                onClick={() => setImpersonationTarget(user)}
-                                                className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors"
-                                            >
-                                                <Eye size={16} />
-                                            </button>
-                                            <button 
-                                                title="Edit User Protocols"
-                                                onClick={() => openEditModal(user)}
-                                                className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition-colors"
-                                            >
-                                                <Edit size={16} />
-                                            </button>
-                                        </td>
+                                        {currentUser?.role === 'SUPER_ADMIN' && (
+                                            <td className="px-6 py-4 text-center space-x-2">
+                                                <button 
+                                                    title="Impersonate User"
+                                                    onClick={() => setImpersonationTarget(user)}
+                                                    className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button 
+                                                    title="Edit User Protocols"
+                                                    onClick={() => openEditModal(user)}
+                                                    className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition-colors"
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                                 {filteredUsers.length === 0 && (

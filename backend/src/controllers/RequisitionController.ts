@@ -17,8 +17,8 @@ export const RequisitionController = {
 
             const { title, description, category, items, receiptUrl, requestDate } = req.body;
 
-            if (category === 'IMPREST' && role !== 'ACCOUNTANT') {
-                res.status(403).json({ error: "Only the Accountant can raise an IMPREST requisition." });
+            if (category === 'IMPREST' && role !== 'ACCOUNTANT' && role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
+                res.status(403).json({ error: "Only the Accountant or Executives can raise an IMPREST requisition." });
                 return;
             }
 
@@ -31,6 +31,20 @@ export const RequisitionController = {
                 return;
             }
 
+            let status = 'PENDING_MD_APPROVAL';
+            let approvedByUserId = null;
+            let amountApproved = null;
+
+            if (role === 'GLOBAL_CHAIRMAN') {
+                status = 'DISBURSED';
+                approvedByUserId = userId;
+                amountApproved = items.reduce((sum: number, item: any) => sum + (parseInt(item.qty) * parseFloat(item.unitPrice)), 0);
+            } else if (role === 'SUPER_ADMIN') {
+                status = 'APPROVED_BY_MD';
+                approvedByUserId = userId;
+                amountApproved = items.reduce((sum: number, item: any) => sum + (parseInt(item.qty) * parseFloat(item.unitPrice)), 0);
+            }
+
             const reqs = await prisma.requisition.create({
                 data: {
                     title,
@@ -38,6 +52,9 @@ export const RequisitionController = {
                     category,
                     companyId,
                     branchId,
+                    status,
+                    approvedByUserId,
+                    amountApproved,
                     requestedByUserId: userId,
                     requestDate: requestDate ? new Date(requestDate) : new Date(),
                     receiptUrl: receiptUrl || null,
@@ -139,7 +156,7 @@ export const RequisitionController = {
     async disburseFunds(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { userId, role } = req.user!;
-            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR") {
+            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "GLOBAL_CHAIRMAN") {
                 res.status(403).json({ error: "Insufficient permission to disburse funds." });
                 return;
             }

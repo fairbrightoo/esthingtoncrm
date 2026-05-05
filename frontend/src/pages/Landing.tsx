@@ -84,12 +84,19 @@ export const Landing = () => {
                     </button>
                 ))}
             </div>
-            <div className="mt-16 text-center">
+            <div className="mt-16 text-center space-x-6">
                 <button
                     onClick={() => navigate('/login?admin=true')}
-                    className="text-sm text-gray-400 hover:text-gray-600 underline decoration-dotted underline-offset-4 transition-colors"
+                    className="text-sm font-semibold text-gray-500 hover:text-gray-800 underline decoration-dotted underline-offset-4 transition-colors"
                 >
                     Super Admin Login
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                    onClick={() => navigate('/login')}
+                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 underline decoration-dotted underline-offset-4 transition-colors"
+                >
+                    Global Chairman Login
                 </button>
             </div>
         </div>
