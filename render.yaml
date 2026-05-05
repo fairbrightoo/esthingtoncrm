@@ -1,6 +1,7 @@
 services:
   - type: web
     name: esthington-os-backend
+    branch: staging
     env: node
     buildCommand: cd backend && npm install --include=dev && npx puppeteer browsers install chrome && npx prisma generate && npx prisma db push && npm run build
     startCommand: cd backend && npm start
@@ -17,6 +18,7 @@ services:
   - type: web
     env: static
     name: esthington-os-frontend
+    branch: staging
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
