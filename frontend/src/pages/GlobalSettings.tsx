@@ -312,7 +312,7 @@ export const GlobalSettings = () => {
             website: company.website || '',
             phone: ''
         });
-        setLogoPreview(company.logoUrl ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.logoUrl}` : null);
+        setLogoPreview(company.logoUrl ? (company.logoUrl.startsWith('http') ? company.logoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.logoUrl}`) : null);
         setShowCompanyModal(true);
     };
 

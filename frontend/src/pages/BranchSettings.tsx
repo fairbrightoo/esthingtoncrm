@@ -193,7 +193,9 @@ export const BranchSettings = () => {
                                             <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-xl flex flex-col items-center justify-center">
                                                 <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-bold">Currently Saved Signature</p>
                                                 <img 
-                                                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${(user.branch as any).signatureUrl}`} 
+                                                    src={(user.branch as any).signatureUrl.startsWith('http') 
+                                                        ? (user.branch as any).signatureUrl 
+                                                        : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${(user.branch as any).signatureUrl}`} 
                                                     alt="Manager Signature" 
                                                     className="h-12 object-contain" 
                                                 />
