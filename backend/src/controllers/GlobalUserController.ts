@@ -237,7 +237,14 @@ export const GlobalUserController = {
             if (!chairman) {
                 // We need the HQ Company to link the Chairman to.
                 let hqCompany = await prisma.company.findUnique({ where: { name: 'Esthington Group HQ' } });
-                if (!hqCompany) return res.status(400).json({ error: 'Esthington Group HQ not found. Cannot create Chairman.' });
+                if (!hqCompany) {
+                    hqCompany = await prisma.company.create({
+                        data: {
+                            name: 'Esthington Group HQ',
+                            themeColor: '#0f172a' // Esthington Corporate Slate
+                        }
+                    });
+                }
                 
                 if (!passwordHash) return res.status(400).json({ error: 'Password is required for new Chairman' });
 
