@@ -81,24 +81,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (token && user) {
             localStorage.setItem('adminToken', token);
             localStorage.setItem('adminUser', JSON.stringify(user));
+            if (selectedCompanyId) {
+                localStorage.setItem('adminCompanyId', selectedCompanyId);
+            }
             setIsAdminImpersonating(true);
         }
         
         // Switch main session to target user
         login(targetToken, targetUser);
+        if (targetUser.companyId) {
+            setSelectedCompanyId(targetUser.companyId);
+        }
     };
 
     const returnToAdmin = () => {
         const adminToken = localStorage.getItem('adminToken');
         const adminUser = localStorage.getItem('adminUser');
+        const adminCompanyId = localStorage.getItem('adminCompanyId');
         
         if (adminToken && adminUser) {
             // Restore admin session
             login(adminToken, JSON.parse(adminUser));
+            if (adminCompanyId) {
+                setSelectedCompanyId(adminCompanyId);
+            } else {
+                setSelectedCompanyId(null);
+            }
             
             // Clear backup
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
+            localStorage.removeItem('adminCompanyId');
             setIsAdminImpersonating(false);
         } else {
             // Fallback if data was corrupted

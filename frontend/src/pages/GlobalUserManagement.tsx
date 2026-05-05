@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network, Eye } from 'lucide-react';
 
 export const GlobalUserManagement = () => {
-    const { token, impersonate } = useAuth();
+    const { token, impersonate, user: currentUser } = useAuth();
     const navigate = useNavigate();
+    
+    if (currentUser && currentUser.role !== 'SUPER_ADMIN') {
+        return <Navigate to="/dashboard" replace />;
+    }
     
     // Data States
     const [users, setUsers] = useState<any[]>([]);
@@ -107,7 +111,15 @@ export const GlobalUserManagement = () => {
             
             setImpersonationTarget(null);
             impersonate(targetToken, targetUserData);
-            navigate('/');
+            
+            if (targetUserData.role === 'SUPER_ADMIN') {
+                navigate('/admin');
+            } else if (['BRANCH_ADMIN', 'BRANCH_HR', 'MARKETER', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR', 'ACCOUNTANT'].includes(targetUserData.role)) {
+                const branchSlug = targetUserData.branch?.name?.toLowerCase().replace(/\s+/g, '-') || 'branch-home';
+                navigate(`/dashboard/${branchSlug}`);
+            } else {
+                navigate('/dashboard');
+            }
         } catch (error: any) {
             alert(error.response?.data?.error || 'Failed to impersonate user.');
             console.error(error);

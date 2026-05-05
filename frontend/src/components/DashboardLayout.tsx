@@ -33,7 +33,7 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
     const handleReturnToAdmin = () => {
         returnToAdmin();
-        navigate('/global-user-management');
+        navigate('/admin/users');
     };
 
     return (
