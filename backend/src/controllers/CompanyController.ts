@@ -581,7 +581,18 @@ export const CompanyController = {
     async deleteUser(req: Request, res: Response) {
         const { id } = req.params as any;
         try {
-            await prisma.user.delete({ where: { id } });
+            const user = await prisma.user.findUnique({ where: { id } });
+            if (!user) return res.status(404).json({ error: 'User not found' });
+
+            const deletedEmail = `${user.email}.deleted.${Date.now()}`;
+            await prisma.user.update({
+                where: { id },
+                data: {
+                    isActive: false,
+                    email: deletedEmail,
+                    role: `DELETED_${user.role}`
+                }
+            });
             res.json({ message: 'User deleted successfully' });
         } catch (error) {
             console.error('Error deleting user:', error);

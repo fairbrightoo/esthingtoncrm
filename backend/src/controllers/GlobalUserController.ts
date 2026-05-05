@@ -300,7 +300,15 @@ export const GlobalUserController = {
             });
             if (!chairman) return res.status(404).json({ error: 'Global Chairman not found' });
 
-            await prisma.user.delete({ where: { id: chairman.id } });
+            const deletedEmail = `${chairman.email}.deleted.${Date.now()}`;
+            await prisma.user.update({ 
+                where: { id: chairman.id },
+                data: {
+                    isActive: false,
+                    email: deletedEmail,
+                    role: 'DELETED_GLOBAL_CHAIRMAN'
+                }
+            });
             res.json({ success: true, message: 'Global Chairman removed' });
         } catch (error) {
             console.error('Failed to delete Global Chairman:', error);
