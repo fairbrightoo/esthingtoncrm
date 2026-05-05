@@ -16,6 +16,9 @@ interface AuthContextType {
     token: string | null;
     login: (token: string, user: User) => void;
     logout: () => void;
+    impersonate: (targetToken: string, targetUser: User) => void;
+    returnToAdmin: () => void;
+    isAdminImpersonating: boolean;
     isAuthenticated: boolean;
     isLoading: boolean;
     selectedCompanyId: string | null;
@@ -29,12 +32,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(null);
     const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Impersonation state
+    const [isAdminImpersonating, setIsAdminImpersonating] = useState(false);
 
     useEffect(() => {
         // Load from local storage
         const storedToken = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
         const storedCompany = localStorage.getItem('selectedCompanyId');
+        
+        // Check if admin is currently impersonating
+        const storedAdminToken = localStorage.getItem('adminToken');
+        if (storedAdminToken) {
+            setIsAdminImpersonating(true);
+        }
 
         if (storedToken) setToken(storedToken);
         if (storedUser) setUser(JSON.parse(storedUser));
@@ -43,10 +55,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
     }, []);
 
-    // Derived state for quick checks
-    // const isAuthenticated = !!token; // Removed to avoid shadowing if already in return value logic or used from state directly
-    // Wait, I see I defined `isAuthenticated: boolean` in interface but didn't actually return it properly from the hook?
-    // Let's actually include it in the Provider value.
     const isAuthenticated = !!token;
 
     const login = (newToken: string, newUser: User) => {
@@ -60,9 +68,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(null);
         setUser(null);
         setSelectedCompanyIdState(null);
+        setIsAdminImpersonating(false);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('selectedCompanyId');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+    };
+    
+    const impersonate = (targetToken: string, targetUser: User) => {
+        // Save current super admin session to safe backup storage
+        if (token && user) {
+            localStorage.setItem('adminToken', token);
+            localStorage.setItem('adminUser', JSON.stringify(user));
+            setIsAdminImpersonating(true);
+        }
+        
+        // Switch main session to target user
+        login(targetToken, targetUser);
+    };
+
+    const returnToAdmin = () => {
+        const adminToken = localStorage.getItem('adminToken');
+        const adminUser = localStorage.getItem('adminUser');
+        
+        if (adminToken && adminUser) {
+            // Restore admin session
+            login(adminToken, JSON.parse(adminUser));
+            
+            // Clear backup
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            setIsAdminImpersonating(false);
+        } else {
+            // Fallback if data was corrupted
+            logout();
+        }
     };
 
     // Wrapper to sync with local storage
@@ -76,7 +117,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, isLoading, selectedCompanyId, setSelectedCompanyId }}>
+        <AuthContext.Provider value={{ 
+            user, token, login, logout, impersonate, returnToAdmin, isAdminImpersonating,
+            isAuthenticated, isLoading, selectedCompanyId, setSelectedCompanyId 
+        }}>
             {children}
         </AuthContext.Provider>
     );

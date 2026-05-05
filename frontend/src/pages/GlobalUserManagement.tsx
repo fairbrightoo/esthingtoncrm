@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network, Eye } from 'lucide-react';
 
 export const GlobalUserManagement = () => {
-    const { token } = useAuth();
+    const { token, impersonate } = useAuth();
+    const navigate = useNavigate();
     
     // Data States
     const [users, setUsers] = useState<any[]>([]);
@@ -88,6 +90,26 @@ export const GlobalUserManagement = () => {
             fetchUsers(); // Refresh grid
         } catch (error) {
             alert('Failed to update User Profile');
+            console.error(error);
+        }
+    };
+
+    const handleImpersonate = async (targetUser: any) => {
+        if (!window.confirm(`Are you sure you want to securely impersonate ${targetUser.fullName}? Actions taken will be recorded as them.`)) {
+            return;
+        }
+        
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/${targetUser.id}/impersonate`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const { token: targetToken, user: targetUserData } = res.data;
+            
+            impersonate(targetToken, targetUserData);
+            navigate('/');
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to impersonate user.');
             console.error(error);
         }
     };
@@ -206,8 +228,16 @@ export const GlobalUserManagement = () => {
                                             <div className="font-medium text-gray-800">{formatCurrency(user.monthlySalary)} / mo</div>
                                             <div className="text-xs text-green-600 font-bold mt-0.5">{user.commissionRate}% Commission</div>
                                         </td>
-                                        <td className="px-6 py-4 text-center">
+                                        <td className="px-6 py-4 text-center space-x-2">
                                             <button 
+                                                title="Impersonate User"
+                                                onClick={() => handleImpersonate(user)}
+                                                className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors"
+                                            >
+                                                <Eye size={16} />
+                                            </button>
+                                            <button 
+                                                title="Edit User Protocols"
                                                 onClick={() => openEditModal(user)}
                                                 className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition-colors"
                                             >

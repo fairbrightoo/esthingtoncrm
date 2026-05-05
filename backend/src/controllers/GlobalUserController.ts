@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
 
 
@@ -123,6 +124,78 @@ export const GlobalUserController = {
         } catch (error) {
             console.error('Failed to change password:', error);
             res.status(500).json({ error: 'An error occurred while upgrading securing.' });
+        }
+    },
+
+    // 4. God-Mode Impersonation
+    impersonateUser: async (req: Request, res: Response) => {
+        try {
+            const reqUser = (req as any).user;
+            // Verify requesting user is SUPER_ADMIN
+            if (!reqUser || reqUser.role !== 'SUPER_ADMIN') {
+                return res.status(403).json({ error: 'Unauthorized: Only Super Admins can impersonate users.' });
+            }
+
+            const targetUserId = req.params.id as string;
+            
+            // Cannot impersonate yourself (pointless)
+            if (reqUser.id === targetUserId) {
+                return res.status(400).json({ error: 'Cannot impersonate yourself.' });
+            }
+
+            // Fetch target user complete with payload needed for JWT and frontend
+            const targetUser = await prisma.user.findUnique({
+                where: { id: targetUserId },
+                include: {
+                    company: true,
+                    branch: true
+                }
+            }) as any;
+
+            if (!targetUser) {
+                return res.status(404).json({ error: 'Target user not found.' });
+            }
+
+            if (!targetUser.isActive) {
+                return res.status(403).json({ error: 'Target user account is suspended.' });
+            }
+
+            // Construct exact same JWT token structure as AuthController.login
+            const tokenPayload = {
+                id: targetUser.id,
+                email: targetUser.email,
+                role: targetUser.role,
+                companyId: targetUser.companyId,
+                branchId: targetUser.branchId
+            };
+
+            const token = jwt.sign(
+                tokenPayload,
+                process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
+                { expiresIn: '24h' }
+            );
+
+            // Construct user object to return
+            const userForFrontend = {
+                id: targetUser.id,
+                email: targetUser.email,
+                fullName: targetUser.fullName,
+                role: targetUser.role,
+                companyId: targetUser.companyId,
+                branchId: targetUser.branchId,
+                company: targetUser.company,
+                branch: targetUser.branch
+            };
+
+            res.status(200).json({
+                message: `Successfully impersonating ${targetUser.fullName}`,
+                token,
+                user: userForFrontend
+            });
+
+        } catch (error) {
+            console.error('Failed to impersonate user:', error);
+            res.status(500).json({ error: 'An error occurred while attempting to impersonate.' });
         }
     }
 };
