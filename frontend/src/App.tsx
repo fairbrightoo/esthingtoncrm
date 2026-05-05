@@ -52,6 +52,7 @@ import { GMDDashboard } from './pages/GMDDashboard';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
 
 import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
+import { ChairmanExpenses } from './pages/ChairmanExpenses';
 import { useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -170,7 +171,7 @@ function App() {
             {/* Global Chairman Routes */}
             <Route path="/dashboard/chairman" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
             <Route path="/dashboard/chairman/crm" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
-            <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><ChairmanExpenses /></DashboardLayout>} />
             <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
             <Route path="/dashboard/chairman/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
             <Route path="/dashboard/chairman/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
