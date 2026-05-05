@@ -202,63 +202,109 @@ export const GlobalUserController = {
         }
     },
 
-    // 4. Update Global Chairman Credentials
-    updateGlobalChairmanCredentials: async (req: Request, res: Response) => {
+    // 4. Global Chairman Management
+    getGlobalChairman: async (req: Request, res: Response) => {
         try {
-            const { email, password } = req.body;
-            if (!email || !password) {
-                return res.status(400).json({ error: 'Email and password are required' });
+            const chairman = await prisma.user.findFirst({
+                where: { role: 'GLOBAL_CHAIRMAN' },
+                select: { id: true, fullName: true, email: true, role: true }
+            });
+            res.json(chairman);
+        } catch (error) {
+            console.error('Failed to get Global Chairman:', error);
+            res.status(500).json({ error: 'Failed to fetch Global Chairman' });
+        }
+    },
+
+    saveGlobalChairman: async (req: Request, res: Response) => {
+        try {
+            const { fullName, email, password } = req.body;
+            if (!email || !fullName) {
+                return res.status(400).json({ error: 'Email and full name are required' });
             }
 
-            // Find the GLOBAL_CHAIRMAN
-            const chairman = await prisma.user.findFirst({
+            let chairman = await prisma.user.findFirst({
                 where: { role: 'GLOBAL_CHAIRMAN' }
             });
 
-            if (!chairman) {
-                return res.status(404).json({ error: 'Global Chairman account not found in the database. Please ensure it has been injected.' });
+            const bcrypt = (await import('bcryptjs')).default;
+            let passwordHash = chairman ? chairman.passwordHash : null;
+            
+            if (password) {
+                passwordHash = await bcrypt.hash(password, 10);
             }
 
-            const bcrypt = (await import('bcryptjs')).default;
-            const passwordHash = await bcrypt.hash(password, 10);
+            if (!chairman) {
+                // We need the HQ Company to link the Chairman to.
+                let hqCompany = await prisma.company.findUnique({ where: { name: 'Esthington Group HQ' } });
+                if (!hqCompany) return res.status(400).json({ error: 'Esthington Group HQ not found. Cannot create Chairman.' });
+                
+                if (!passwordHash) return res.status(400).json({ error: 'Password is required for new Chairman' });
 
-            // Update user
-            const updatedUser = await prisma.user.update({
-                where: { id: chairman.id },
-                data: { email, passwordHash }
-            });
+                chairman = await prisma.user.create({
+                    data: {
+                        fullName,
+                        email,
+                        role: 'GLOBAL_CHAIRMAN',
+                        passwordHash,
+                        companyId: hqCompany.id,
+                        isActive: true
+                    }
+                });
+            } else {
+                chairman = await prisma.user.update({
+                    where: { id: chairman.id },
+                    data: { fullName, email, ...(passwordHash && { passwordHash }) }
+                });
+            }
 
-            // Send Email
-            const { EmailService } = await import('../services/EmailService.js');
-            const html = `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #1e3a8a; padding: 20px; text-align: center; color: white;">
-                    <h2 style="margin: 0;">Welcome to Esthington Global Command Center</h2>
-                </div>
-                <div style="padding: 30px;">
-                    <p>Dear <strong>${updatedUser.fullName}</strong>,</p>
-                    <p>Your Global Chairman credentials have been securely provisioned. You can now access your master command center to oversee all subsidiaries and operations.</p>
-                    
-                    <div style="background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
-                        <p style="margin: 0 0 10px 0;"><strong>Your Private Credentials:</strong></p>
-                        <p style="margin: 5px 0;"><strong>Role:</strong> Global Chairman</p>
-                        <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
-                        <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+            if (password) {
+                // Send Email only if password was provided/updated
+                const { EmailService } = await import('../services/EmailService.js');
+                const html = `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <div style="background-color: #1e3a8a; padding: 20px; text-align: center; color: white;">
+                        <h2 style="margin: 0;">Welcome to Esthington Global Command Center</h2>
                     </div>
-                    
-                    <p style="margin-top: 25px;">Please log in through the master Company Portal. For maximum security, we recommend that you navigate to your Profile Settings and change your password immediately after logging in.</p>
-                    
-                    <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>Esthington Group Intelligence</p>
+                    <div style="padding: 30px;">
+                        <p>Dear <strong>${chairman.fullName}</strong>,</p>
+                        <p>Your Global Chairman credentials have been securely provisioned. You can now access your master command center to oversee all subsidiaries and operations.</p>
+                        
+                        <div style="background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                            <p style="margin: 0 0 10px 0;"><strong>Your Private Credentials:</strong></p>
+                            <p style="margin: 5px 0;"><strong>Role:</strong> Global Chairman</p>
+                            <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                            <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+                        </div>
+                        
+                        <p style="margin-top: 25px;">Please log in through the master Company Portal. For maximum security, we recommend that you navigate to your Profile Settings and change your password immediately after logging in.</p>
+                        
+                        <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>Esthington Group Intelligence</p>
+                    </div>
                 </div>
-            </div>
-            `;
+                `;
+                await EmailService.send(email, 'Your Global Chairman Secure Credentials', html);
+            }
 
-            await EmailService.send(email, 'Your Global Chairman Secure Credentials', html);
-
-            res.json({ success: true, message: 'Global Chairman credentials updated and dispatched successfully' });
+            res.json({ success: true, message: 'Global Chairman saved successfully' });
         } catch (error) {
-            console.error('Failed to update Global Chairman credentials:', error);
-            res.status(500).json({ error: 'Failed to update credentials' });
+            console.error('Failed to save Global Chairman:', error);
+            res.status(500).json({ error: 'Failed to save Global Chairman' });
+        }
+    },
+
+    deleteGlobalChairman: async (req: Request, res: Response) => {
+        try {
+            const chairman = await prisma.user.findFirst({
+                where: { role: 'GLOBAL_CHAIRMAN' }
+            });
+            if (!chairman) return res.status(404).json({ error: 'Global Chairman not found' });
+
+            await prisma.user.delete({ where: { id: chairman.id } });
+            res.json({ success: true, message: 'Global Chairman removed' });
+        } catch (error) {
+            console.error('Failed to delete Global Chairman:', error);
+            res.status(500).json({ error: 'Failed to delete Global Chairman' });
         }
     }
 };

@@ -47,7 +47,8 @@ export const GlobalSettings = () => {
     const [showChairmanModal, setShowChairmanModal] = useState(false);
     const [editingAdmin, setEditingAdmin] = useState<any>(null);
     const [adminFormData, setAdminFormData] = useState({ fullName: '', email: '', password: '', role: 'BRANCH_ADMIN' });
-    const [chairmanFormData, setChairmanFormData] = useState({ email: 'chairman@esthington.com', password: '' });
+    const [chairmanData, setChairmanData] = useState<any>(null);
+    const [chairmanFormData, setChairmanFormData] = useState({ fullName: '', email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
 
     const fetchCompanies = async () => {
@@ -96,6 +97,29 @@ export const GlobalSettings = () => {
             setGroupMDs([]);
         }
         setShowGroupMDModal(true);
+    };
+
+    const handleManageChairman = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman`, { headers: { Authorization: `Bearer ${token}` } });
+            setChairmanData(res.data);
+        } catch (e) {
+            setChairmanData(null);
+        }
+        setShowChairmanModal(true);
+    };
+
+    const handleDeleteChairman = async () => {
+        if (!confirm('Are you sure you want to completely remove the Global Chairman? This account will lose all access.')) return;
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setChairmanData(null);
+            addToast('Global Chairman removed successfully', 'success');
+        } catch (error: any) {
+            addToast(error.response?.data?.error || 'Failed to remove Global Chairman', 'error');
+        }
     };
 
     const handleSaveAdmin = async () => {
@@ -339,7 +363,7 @@ export const GlobalSettings = () => {
             {activeTab === 'COMPANIES' ? (
                 <>
                     <div className="flex justify-end mb-4 space-x-3">
-                        <button onClick={() => setShowChairmanModal(true)} className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                        <button onClick={handleManageChairman} className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
                             <span>Manage Global Chairman</span>
                         </button>
                         <button onClick={openCreateCompany} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
@@ -680,51 +704,78 @@ export const GlobalSettings = () => {
                             <h2 className="text-xl font-bold">Manage Global Chairman</h2>
                             <button onClick={() => setShowChairmanModal(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-600">Update the Global Chairman's login credentials. Saving this will instantly dispatch an automated email with their new secure password.</p>
+
+                        <div className="mb-6 space-y-2">
+                            <h3 className="text-sm font-semibold text-gray-500 uppercase">Existing Global Chairman</h3>
+                            {!chairmanData ? <p className="text-sm text-gray-400 italic">No Global Chairman assigned.</p> :
+                                <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                                    <div>
+                                        <p className="font-medium text-sm">{chairmanData.fullName}</p>
+                                        <p className="text-xs text-gray-500">{chairmanData.email}</p>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <button onClick={() => setChairmanFormData({ fullName: chairmanData.fullName, email: chairmanData.email, password: '' })} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
+                                        <button onClick={handleDeleteChairman} className="text-red-600 hover:text-red-800 text-xs">Remove</button>
+                                    </div>
+                                </div>
+                            }
                         </div>
-                        <div className="space-y-3">
-                            <input 
-                                className="w-full px-3 py-2 border rounded" 
-                                placeholder="Email Address" 
-                                type="email" 
-                                value={chairmanFormData.email} 
-                                onChange={e => setChairmanFormData({ ...chairmanFormData, email: e.target.value })} 
-                            />
-                            <div className="relative">
+
+                        <div className="border-t pt-4">
+                            <h3 className="text-sm font-semibold text-gray-800 mb-3">{chairmanData && chairmanFormData.email === chairmanData.email ? 'Edit Global Chairman' : 'Add Global Chairman'}</h3>
+                            <div className="space-y-3">
                                 <input 
-                                    className="w-full px-3 py-2 border rounded pr-10" 
-                                    placeholder="New Secure Password" 
-                                    type={showPassword ? "text" : "password"} 
-                                    value={chairmanFormData.password} 
-                                    onChange={e => setChairmanFormData({ ...chairmanFormData, password: e.target.value })} 
+                                    className="w-full px-3 py-2 border rounded" 
+                                    placeholder="Full Name" 
+                                    value={chairmanFormData.fullName} 
+                                    onChange={e => setChairmanFormData({ ...chairmanFormData, fullName: e.target.value })} 
                                 />
-                                <button
-                                    type="button"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
-                            </div>
-                            <div className="flex justify-end space-x-2 mt-4">
-                                <button onClick={() => setShowChairmanModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                                <button onClick={async () => {
-                                    if (!chairmanFormData.password) {
-                                        addToast('Password is required', 'error');
-                                        return;
-                                    }
-                                    try {
-                                        await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman/credentials`, chairmanFormData, { headers: { Authorization: `Bearer ${token}` } });
-                                        addToast('Credentials updated and dispatched!', 'success');
-                                        setShowChairmanModal(false);
-                                        setChairmanFormData({ email: 'chairman@esthington.com', password: '' });
-                                    } catch(e:any) {
-                                        addToast(e.response?.data?.error || 'Failed to dispatch credentials', 'error');
-                                    }
-                                }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
-                                    Save & Dispatch
-                                </button>
+                                <input 
+                                    className="w-full px-3 py-2 border rounded" 
+                                    placeholder="Email Address" 
+                                    type="email" 
+                                    value={chairmanFormData.email} 
+                                    onChange={e => setChairmanFormData({ ...chairmanFormData, email: e.target.value })} 
+                                />
+                                <div className="relative">
+                                    <input 
+                                        className="w-full px-3 py-2 border rounded pr-10" 
+                                        placeholder={chairmanData ? "New Secure Password (optional)" : "Secure Password"} 
+                                        type={showPassword ? "text" : "password"} 
+                                        value={chairmanFormData.password} 
+                                        onChange={e => setChairmanFormData({ ...chairmanFormData, password: e.target.value })} 
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                                <div className="flex justify-end space-x-2 mt-4">
+                                    <button onClick={() => { setChairmanFormData({ fullName: '', email: '', password: '' }) }} className="px-3 py-1 text-gray-500 text-sm">Cancel Edit</button>
+                                    <button onClick={async () => {
+                                        if (!chairmanData && !chairmanFormData.password) {
+                                            addToast('Password is required for new Chairman', 'error');
+                                            return;
+                                        }
+                                        try {
+                                            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman`, chairmanFormData, { headers: { Authorization: `Bearer ${token}` } });
+                                            addToast('Global Chairman saved successfully!', 'success');
+                                            
+                                            // Refresh the chairman data
+                                            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman`, { headers: { Authorization: `Bearer ${token}` } });
+                                            setChairmanData(res.data);
+                                            
+                                            setChairmanFormData({ fullName: '', email: '', password: '' });
+                                        } catch(e:any) {
+                                            addToast(e.response?.data?.error || 'Failed to save Global Chairman', 'error');
+                                        }
+                                    }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+                                        Save & Dispatch
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
