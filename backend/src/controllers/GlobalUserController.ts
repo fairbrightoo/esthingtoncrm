@@ -139,7 +139,7 @@ export const GlobalUserController = {
             const targetUserId = req.params.id as string;
             
             // Cannot impersonate yourself (pointless)
-            if (reqUser.id === targetUserId) {
+            if (reqUser.userId === targetUserId) {
                 return res.status(400).json({ error: 'Cannot impersonate yourself.' });
             }
 
@@ -162,7 +162,7 @@ export const GlobalUserController = {
 
             // Construct exact same JWT token structure as AuthController.login
             const tokenPayload = {
-                id: targetUser.id,
+                userId: targetUser.id,
                 email: targetUser.email,
                 role: targetUser.role,
                 companyId: targetUser.companyId,
