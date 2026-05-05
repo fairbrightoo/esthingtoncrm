@@ -282,6 +282,20 @@ export const CommunicationController = {
                         authorId: tokenUser.userId
                     }
                 });
+
+                await prisma.globalBroadcastLog.create({
+                    data: {
+                        title: subject || "Global Chairman Broadcast",
+                        content,
+                        audienceType,
+                        targetId: targetId || null,
+                        deliveryType: type,
+                        authorId: tokenUser.userId,
+                        successCount: 1, // Indicates it was successfully saved
+                        failedCount: 0
+                    }
+                });
+
                 return res.json({ success: true, message: `Dashboard Broadcast dispatched successfully to ${audienceType}.` });
             }
 
@@ -310,10 +324,43 @@ export const CommunicationController = {
                 }
             }
 
+            await prisma.globalBroadcastLog.create({
+                data: {
+                    title: subject || "Group Broadcast",
+                    content,
+                    audienceType,
+                    targetId: targetId || null,
+                    deliveryType: type,
+                    authorId: tokenUser.userId,
+                    successCount,
+                    failedCount
+                }
+            });
+
             res.json({ success: true, message: `Broadcast dispatched. Delivered: ${successCount}. Failed: ${failedCount}.` });
         } catch (error) {
             console.error("Broadcast Error:", error);
             res.status(500).json({ error: "Failed to dispatch broadcast" });
+        }
+    },
+
+    async getGlobalBroadcastHistory(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const tokenUser = req.user;
+            if (tokenUser.role !== 'GLOBAL_CHAIRMAN') {
+                return res.status(403).json({ error: "Unauthorized" });
+            }
+
+            const logs = await prisma.globalBroadcastLog.findMany({
+                where: { authorId: tokenUser.userId },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            res.json(logs);
+        } catch (error) {
+            console.error("Fetch Broadcast History Error:", error);
+            res.status(500).json({ error: "Failed to fetch history" });
         }
     }
 };

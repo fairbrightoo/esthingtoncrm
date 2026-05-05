@@ -25,6 +25,7 @@ router.use(authenticateToken);
 
 router.post('/send', CommunicationController.sendMessage);
 router.post('/broadcast', CommunicationController.broadcastMessage);
+router.get('/broadcast-history', CommunicationController.getGlobalBroadcastHistory);
 router.post('/upload-media', upload.single('media'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const fileUrl = `/uploads/media/${req.file.filename}`;

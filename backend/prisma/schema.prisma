@@ -148,6 +148,7 @@ model User {
   sentExecutiveMemos   ExecutiveMemo[]       @relation("MemoSender")
   receivedExecutiveMemos ExecutiveMemo[]     @relation("MemoRecipient")
   dashboardBroadcasts  DashboardBroadcast[]
+  globalBroadcastLogs  GlobalBroadcastLog[]
 }
 
 model Attendance {
@@ -768,6 +769,21 @@ model DashboardBroadcast {
   targetId     String?  // The specific companyId or branchId if applicable
   authorId     String
   priority     String   @default("HIGH")
+  createdAt    DateTime @default(now())
+
+  author       User     @relation(fields: [authorId], references: [id])
+}
+
+model GlobalBroadcastLog {
+  id           String   @id @default(uuid())
+  title        String
+  content      String
+  audienceType String
+  targetId     String?
+  deliveryType String
+  authorId     String
+  successCount Int      @default(0)
+  failedCount  Int      @default(0)
   createdAt    DateTime @default(now())
 
   author       User     @relation(fields: [authorId], references: [id])

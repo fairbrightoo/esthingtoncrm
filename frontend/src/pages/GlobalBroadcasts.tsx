@@ -15,10 +15,27 @@ export const GlobalBroadcasts = () => {
 
     const [companies, setCompanies] = useState<any[]>([]);
     const [branches, setBranches] = useState<any[]>([]);
+    const [history, setHistory] = useState<any[]>([]);
+    const [fetchingHistory, setFetchingHistory] = useState(false);
 
     useEffect(() => {
         fetchCompanies();
+        fetchHistory();
     }, []);
+
+    const fetchHistory = async () => {
+        setFetchingHistory(true);
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/broadcast-history`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setHistory(res.data);
+        } catch (error) {
+            console.error("Failed to load broadcast history", error);
+        } finally {
+            setFetchingHistory(false);
+        }
+    };
 
     const fetchCompanies = async () => {
         try {
@@ -73,6 +90,7 @@ export const GlobalBroadcasts = () => {
             setStatus({ success: true, message: res.data.message });
             setContent('');
             setSubject('');
+            fetchHistory();
         } catch (error: any) {
             setStatus({ success: false, message: error.response?.data?.error || "Failed to send broadcast." });
         } finally {
@@ -241,6 +259,52 @@ export const GlobalBroadcasts = () => {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            {/* History Section */}
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 mt-8">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <Megaphone size={20} className="mr-2 text-blue-600" />
+                    Broadcast History
+                </h3>
+                
+                {fetchingHistory ? (
+                    <div className="flex justify-center p-8">
+                        <RefreshCw className="animate-spin text-blue-600" />
+                    </div>
+                ) : history.length === 0 ? (
+                    <div className="text-center p-8 text-gray-500 bg-gray-50 rounded-xl">
+                        No broadcasts have been dispatched yet.
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {history.map((item) => (
+                            <div key={item.id} className="border border-gray-100 p-5 rounded-xl hover:bg-gray-50 transition-colors">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h4 className="font-bold text-gray-800">{item.title}</h4>
+                                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-md">
+                                        {new Date(item.createdAt).toLocaleString()}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.content}</p>
+                                <div className="flex items-center text-xs font-semibold text-gray-500 space-x-4">
+                                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md border border-blue-100">
+                                        To: {item.audienceType.replace('_', ' ')}
+                                    </span>
+                                    <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md border border-indigo-100">
+                                        Via: {item.deliveryType}
+                                    </span>
+                                    {item.deliveryType !== 'DASHBOARD' && (
+                                        <span className="text-green-600 flex items-center">
+                                            <CheckCircle size={12} className="mr-1" />
+                                            {item.successCount} Delivered
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
