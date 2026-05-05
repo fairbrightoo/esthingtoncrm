@@ -21,6 +21,7 @@ export const GlobalUserManagement = () => {
     // Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
+    const [impersonationTarget, setImpersonationTarget] = useState<any>(null);
 
     // Form State for editing
     const [formData, setFormData] = useState({
@@ -94,18 +95,17 @@ export const GlobalUserManagement = () => {
         }
     };
 
-    const handleImpersonate = async (targetUser: any) => {
-        if (!window.confirm(`Are you sure you want to securely impersonate ${targetUser.fullName}? Actions taken will be recorded as them.`)) {
-            return;
-        }
+    const executeImpersonation = async () => {
+        if (!impersonationTarget) return;
         
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/${targetUser.id}/impersonate`, {}, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/${impersonationTarget.id}/impersonate`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
             const { token: targetToken, user: targetUserData } = res.data;
             
+            setImpersonationTarget(null);
             impersonate(targetToken, targetUserData);
             navigate('/');
         } catch (error: any) {
@@ -231,7 +231,7 @@ export const GlobalUserManagement = () => {
                                         <td className="px-6 py-4 text-center space-x-2">
                                             <button 
                                                 title="Impersonate User"
-                                                onClick={() => handleImpersonate(user)}
+                                                onClick={() => setImpersonationTarget(user)}
                                                 className="inline-flex items-center justify-center p-2 bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors"
                                             >
                                                 <Eye size={16} />
@@ -389,6 +389,39 @@ export const GlobalUserManagement = () => {
                                 <Save size={18} className="mr-2" />
                                 Commit Protocol Updates
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Impersonation Confirmation Modal */}
+            {impersonationTarget && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm shadow flex justify-center items-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col transform transition-all scale-100">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <ShieldAlert size={32} className="text-red-600" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Initiate God-Mode?</h2>
+                            <p className="text-gray-500 mb-6 text-sm">
+                                You are about to securely impersonate <strong>{impersonationTarget.fullName}</strong>. 
+                                Once active, you will see exactly what they see, and any actions you take will be recorded under their identity.
+                            </p>
+                            
+                            <div className="flex flex-col space-y-3">
+                                <button 
+                                    onClick={executeImpersonation}
+                                    className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors shadow-md flex items-center justify-center"
+                                >
+                                    <Eye size={18} className="mr-2" />
+                                    Confirm Impersonation
+                                </button>
+                                <button 
+                                    onClick={() => setImpersonationTarget(null)}
+                                    className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
