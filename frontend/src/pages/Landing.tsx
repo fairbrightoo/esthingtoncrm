@@ -93,7 +93,7 @@ export const Landing = () => {
                 </button>
                 <span className="text-gray-300">|</span>
                 <button
-                    onClick={() => navigate('/login')}
+                    onClick={() => navigate('/login?admin=true')}
                     className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 underline decoration-dotted underline-offset-4 transition-colors"
                 >
                     Global Chairman Login
