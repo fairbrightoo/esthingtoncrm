@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Building2, Plus, Edit2, Trash2, MapPin, Check, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Plus, Edit2, Trash2, MapPin, Check, X, ChevronDown, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { DocumentTemplatesConfig } from '../components/DocumentTemplatesConfig';
 import { ProfileSettings } from '../components/ProfileSettings';
 
@@ -46,6 +46,7 @@ export const GlobalSettings = () => {
     const [showGroupMDModal, setShowGroupMDModal] = useState(false);
     const [editingAdmin, setEditingAdmin] = useState<any>(null);
     const [adminFormData, setAdminFormData] = useState({ fullName: '', email: '', password: '', role: 'BRANCH_ADMIN' });
+    const [showPassword, setShowPassword] = useState(false);
 
     const fetchCompanies = async () => {
         try {
@@ -562,13 +563,22 @@ export const GlobalSettings = () => {
                                     value={adminFormData.email}
                                     onChange={e => setAdminFormData({ ...adminFormData, email: e.target.value })}
                                 />
-                                <input
-                                    className="w-full px-3 py-2 border rounded"
-                                    placeholder={editingAdmin ? "New Password (leave blank to keep)" : "Password"}
-                                    type="password"
-                                    value={adminFormData.password}
-                                    onChange={e => setAdminFormData({ ...adminFormData, password: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <input
+                                        className="w-full px-3 py-2 border rounded pr-10"
+                                        placeholder={editingAdmin ? "New Password (leave blank to keep)" : "Password"}
+                                        type={showPassword ? "text" : "password"}
+                                        value={adminFormData.password}
+                                        onChange={e => setAdminFormData({ ...adminFormData, password: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                                 <div className="flex justify-end space-x-2 mt-2">
                                     {editingAdmin && <button onClick={() => { setEditingAdmin(null); setAdminFormData({ fullName: '', email: '', password: '', role: 'BRANCH_ADMIN' }) }} className="px-3 py-1 text-gray-500 text-sm">Cancel Edit</button>}
                                     <button onClick={handleSaveAdmin} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
@@ -613,7 +623,22 @@ export const GlobalSettings = () => {
                             <div className="space-y-3">
                                 <input className="w-full px-3 py-2 border rounded" placeholder="Full Name" value={adminFormData.fullName} onChange={e => setAdminFormData({ ...adminFormData, fullName: e.target.value })} />
                                 <input className="w-full px-3 py-2 border rounded" placeholder="Email Address" type="email" value={adminFormData.email} onChange={e => setAdminFormData({ ...adminFormData, email: e.target.value })} />
-                                <input className="w-full px-3 py-2 border rounded" placeholder={editingAdmin ? "New Password" : "Password"} type="password" value={adminFormData.password} onChange={e => setAdminFormData({ ...adminFormData, password: e.target.value })} />
+                                <div className="relative">
+                                    <input 
+                                        className="w-full px-3 py-2 border rounded pr-10" 
+                                        placeholder={editingAdmin ? "New Password" : "Password"} 
+                                        type={showPassword ? "text" : "password"} 
+                                        value={adminFormData.password} 
+                                        onChange={e => setAdminFormData({ ...adminFormData, password: e.target.value })} 
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                                 <div className="flex justify-end space-x-2 mt-2">
                                     {editingAdmin && <button onClick={() => { setEditingAdmin(null); setAdminFormData({ fullName: '', email: '', password: '', role: 'BRANCH_ADMIN' }) }} className="px-3 py-1 text-gray-500 text-sm">Cancel Edit</button>}
                                     <button onClick={async () => {
