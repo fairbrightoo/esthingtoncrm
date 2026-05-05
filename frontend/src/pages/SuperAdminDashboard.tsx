@@ -74,11 +74,6 @@ export const SuperAdminDashboard = () => {
     if (!data && loading) return <div className="p-10 text-center text-gray-500">Loading Global Command Center...</div>;
     if (!data) return <div className="p-10 text-center text-red-500">Failed to load data. Ensure backend is running.</div>;
 
-    const revenueByCompany = data.companies.map((c: any) => ({
-        name: c.name,
-        Revenue: c.revenue,
-        color: c.themeColor
-    }));
 
     return (
         <div className="space-y-8 animate-fade-in pb-12">
@@ -132,7 +127,7 @@ export const SuperAdminDashboard = () => {
             <AnnouncementWidget />
 
             {/* Massive KPI Banner */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard 
                     icon={<DollarSign className="text-emerald-600 mb-1" size={28} />} 
                     label="Collected Revenue" 
@@ -140,10 +135,22 @@ export const SuperAdminDashboard = () => {
                     color="bg-emerald-50 border-emerald-100" 
                 />
                 <StatCard 
-                    icon={<Users className="text-blue-600 mb-1" size={28} />} 
+                    icon={<DollarSign className="text-red-600 mb-1" size={28} />} 
+                    label="Total Expenses" 
+                    value={formatCurrency(data.summary.expenses || 0)} 
+                    color="bg-red-50 border-red-100" 
+                />
+                <StatCard 
+                    icon={<DollarSign className="text-blue-600 mb-1" size={28} />} 
+                    label="Net Income" 
+                    value={formatCurrency(data.summary.netIncome || 0)} 
+                    color="bg-blue-50 border-blue-100" 
+                />
+                <StatCard 
+                    icon={<Users className="text-indigo-600 mb-1" size={28} />} 
                     label="Converted Clients" 
                     value={data.summary.clients.toLocaleString()} 
-                    color="bg-blue-50 border-blue-100" 
+                    color="bg-indigo-50 border-indigo-100" 
                  />
                 <StatCard 
                     icon={<FileText className="text-purple-600 mb-1" size={28} />} 
@@ -165,20 +172,18 @@ export const SuperAdminDashboard = () => {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                         <DollarSign size={20} className="mr-2 text-emerald-500" />
-                        Revenue by Subsidiary
+                        Financials by Subsidiary
                     </h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={revenueByCompany} margin={{ left: 30 }}>
+                            <BarChart data={data.charts.financialsByCompany} margin={{ left: 30 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
                                 <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `₦${(val/1000000).toFixed(1)}M`} fontSize={11} />
                                 <Tooltip cursor={{ fill: '#f3f4f6' }} formatter={(value: any) => formatCurrency(value || 0)} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                                <Bar dataKey="Revenue" radius={[4, 4, 0, 0]}>
-                                    {revenueByCompany.map((entry: any, index: number) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Bar>
+                                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
+                                <Bar dataKey="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue" />
+                                <Bar dataKey="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expenses" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -233,6 +238,8 @@ export const SuperAdminDashboard = () => {
                                 <th className="p-4 font-semibold w-12"></th>
                                 <th className="p-4 font-semibold">Entity</th>
                                 <th className="p-4 font-semibold text-right">Revenue</th>
+                                <th className="p-4 font-semibold text-right">Expenses</th>
+                                <th className="p-4 font-semibold text-right">Net Income</th>
                                 <th className="p-4 font-semibold text-center">Leads</th>
                                 <th className="p-4 font-semibold text-center">Clients</th>
                                 <th className="p-4 font-semibold text-right">Conversion</th>
@@ -260,6 +267,12 @@ export const SuperAdminDashboard = () => {
                                         <td className="p-4 text-right font-medium text-emerald-600">
                                             {formatCurrency(company.revenue)}
                                         </td>
+                                        <td className="p-4 text-right font-medium text-red-500">
+                                            {formatCurrency(company.expenses)}
+                                        </td>
+                                        <td className="p-4 text-right font-bold text-blue-600">
+                                            {formatCurrency(company.netIncome)}
+                                        </td>
                                         <td className="p-4 text-center font-medium text-gray-700">{company.leads}</td>
                                         <td className="p-4 text-center font-medium text-gray-700">{company.clients}</td>
                                         <td className="p-4 text-right font-bold">
@@ -273,7 +286,7 @@ export const SuperAdminDashboard = () => {
                                     {expandedCompany === company.id && (
                                         company.branches.length === 0 ? (
                                             <tr>
-                                                <td colSpan={6} className="p-4 pl-16 text-sm text-gray-400 italic bg-gray-50">No branches registered for this active company.</td>
+                                                <td colSpan={8} className="p-4 pl-16 text-sm text-gray-400 italic bg-gray-50">No branches registered for this active company.</td>
                                             </tr>
                                         ) : (
                                             company.branches.map((branch: any) => (
@@ -287,6 +300,12 @@ export const SuperAdminDashboard = () => {
                                                     </td>
                                                     <td className="p-3 text-right text-sm font-medium text-emerald-600/80">
                                                         {formatCurrency(branch.revenue)}
+                                                    </td>
+                                                    <td className="p-3 text-right text-sm font-medium text-red-500/80">
+                                                        {formatCurrency(branch.expenses)}
+                                                    </td>
+                                                    <td className="p-3 text-right text-sm font-bold text-blue-600/80">
+                                                        {formatCurrency(branch.netIncome)}
                                                     </td>
                                                     <td className="p-3 text-center text-sm font-medium text-gray-600">{branch.leads}</td>
                                                     <td className="p-3 text-center text-sm font-medium text-gray-600">{branch.clients}</td>
