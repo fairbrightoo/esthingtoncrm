@@ -50,6 +50,7 @@ export const GlobalSettings = () => {
     const [chairmanData, setChairmanData] = useState<any>(null);
     const [chairmanFormData, setChairmanFormData] = useState({ fullName: '', email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
+    const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean, title: string, message: string, onConfirm: () => void } | null>(null);
 
     const fetchCompanies = async () => {
         try {
@@ -110,16 +111,23 @@ export const GlobalSettings = () => {
     };
 
     const handleDeleteChairman = async () => {
-        if (!confirm('Are you sure you want to completely remove the Global Chairman? This account will lose all access.')) return;
-        try {
-            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setChairmanData(null);
-            addToast('Global Chairman removed successfully', 'success');
-        } catch (error: any) {
-            addToast(error.response?.data?.error || 'Failed to remove Global Chairman', 'error');
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Remove Global Chairman',
+            message: 'Are you sure you want to completely remove the Global Chairman? This account will lose all access.',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/chairman`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setChairmanData(null);
+                    addToast('Global Chairman removed successfully', 'success');
+                } catch (error: any) {
+                    addToast(error.response?.data?.error || 'Failed to remove Global Chairman', 'error');
+                }
+            }
+        });
     };
 
     const handleSaveAdmin = async () => {
@@ -147,20 +155,27 @@ export const GlobalSettings = () => {
     };
 
     const handleDeleteAdmin = async (adminId: string) => {
-        if (!confirm('Delete this admin?')) return;
-        try {
-            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${adminId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (showAdminModal && selectedCompanyId && selectedBranchId) {
-                fetchBranchLeaders(selectedCompanyId, selectedBranchId);
-            } else if (showGroupMDModal && selectedCompanyId) {
-                handleManageGroupMD(selectedCompanyId);
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Delete Admin',
+            message: 'Are you sure you want to delete this admin?',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${adminId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (showAdminModal && selectedCompanyId && selectedBranchId) {
+                        fetchBranchLeaders(selectedCompanyId, selectedBranchId);
+                    } else if (showGroupMDModal && selectedCompanyId) {
+                        handleManageGroupMD(selectedCompanyId);
+                    }
+                    addToast('User deleted successfully', 'success');
+                } catch (error: any) {
+                    addToast(error.response?.data?.error || 'Failed to delete admin', 'error');
+                }
             }
-            addToast('User deleted successfully', 'success');
-        } catch (error: any) {
-            addToast(error.response?.data?.error || 'Failed to delete admin', 'error');
-        }
+        });
     };
 
     useEffect(() => {
@@ -788,6 +803,34 @@ export const GlobalSettings = () => {
                 <ProfileSettings />
             )}
 
+            {/* Custom Confirm Dialog */}
+            {confirmDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform transition-all">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">{confirmDialog.title}</h3>
+                            <button onClick={() => setConfirmDialog(null)} className="text-gray-400 hover:text-gray-500">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-6">{confirmDialog.message}</p>
+                        <div className="flex justify-end space-x-3">
+                            <button 
+                                onClick={() => setConfirmDialog(null)} 
+                                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmDialog.onConfirm} 
+                                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors shadow-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
