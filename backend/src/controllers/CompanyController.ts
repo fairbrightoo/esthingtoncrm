@@ -381,6 +381,35 @@ export const CompanyController = {
                 }
             });
 
+            // Send Welcome Email
+            try {
+                const html = `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <div style="background-color: #1e3a8a; padding: 20px; text-align: center; color: white;">
+                        <h2 style="margin: 0;">Welcome to Esthington CRM</h2>
+                    </div>
+                    <div style="padding: 30px;">
+                        <p>Dear <strong>${fullName}</strong>,</p>
+                        <p>Your administrative account has been successfully provisioned by the Super Admin. You can now access your customized Command Center to manage your branch operations.</p>
+                        
+                        <div style="background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                            <p style="margin: 0 0 10px 0;"><strong>Your Login Credentials:</strong></p>
+                            <p style="margin: 5px 0;"><strong>Role:</strong> Branch Admin</p>
+                            <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                            <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+                        </div>
+                        
+                        <p style="margin-top: 25px;">Please log in through the Company Portal. For your security, we strongly recommend that you navigate to your Settings and change your password immediately after your first login.</p>
+                        
+                        <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>Esthington Systems Administration</p>
+                    </div>
+                </div>
+                `;
+                await EmailService.send(email, 'Welcome to Esthington CRM - Your Account Credentials', html);
+            } catch (emailError) {
+                console.error("Failed to send welcome email to Admin:", emailError);
+            }
+
             res.json(user);
         } catch (error) {
             console.error('Error creating branch admin:', error);
