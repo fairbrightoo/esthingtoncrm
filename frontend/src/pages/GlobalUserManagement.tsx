@@ -31,10 +31,10 @@ export const GlobalUserManagement = () => {
     const [formData, setFormData] = useState({
         role: '',
         companyId: '',
-        branchId: '',
         monthlySalary: 0,
         commissionRate: 0,
-        isActive: true
+        isActive: true,
+        password: ''
     });
 
     useEffect(() => {
@@ -79,7 +79,8 @@ export const GlobalUserManagement = () => {
             branchId: user.branch?.id || 'REMOVE',
             monthlySalary: user.monthlySalary || 0,
             commissionRate: user.commissionRate || 0,
-            isActive: user.isActive
+            isActive: user.isActive,
+            password: ''
         });
         setIsEditModalOpen(true);
     };
@@ -382,6 +383,22 @@ export const GlobalUserManagement = () => {
                                         </div>
                                     </div>
                                     
+                                </div>
+
+                                {/* Security Block */}
+                                <div className="space-y-4 col-span-1 border p-4 rounded-xl border-gray-100 bg-gray-50/50 mt-4 md:mt-0 md:col-span-2">
+                                    <h4 className="font-semibold text-sm text-gray-800 flex items-center mb-3"><ShieldAlert size={16} className="mr-2 text-red-500" /> Security Override</h4>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Force New Password (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            value={formData.password} 
+                                            onChange={e => setFormData({...formData, password: e.target.value})}
+                                            className="w-full rounded-lg border-gray-300 focus:ring-red-500 focus:border-red-500 text-sm font-mono tracking-wide px-4 py-2"
+                                            placeholder="Leave blank to keep current password"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-1">If filled, the user's password will be instantly overwritten with this value.</p>
+                                    </div>
                                 </div>
                             </div>
 

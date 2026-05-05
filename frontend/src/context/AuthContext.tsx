@@ -78,11 +78,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const impersonate = (targetToken: string, targetUser: User) => {
         // Save current super admin session to safe backup storage
-        if (token && user) {
-            localStorage.setItem('adminToken', token);
-            localStorage.setItem('adminUser', JSON.stringify(user));
-            if (selectedCompanyId) {
-                localStorage.setItem('adminCompanyId', selectedCompanyId);
+        const currentToken = token || localStorage.getItem('token');
+        const currentUser = user || (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
+        const currentCompanyId = selectedCompanyId || localStorage.getItem('selectedCompanyId');
+
+        if (currentToken && currentUser) {
+            localStorage.setItem('adminToken', currentToken);
+            localStorage.setItem('adminUser', JSON.stringify(currentUser));
+            if (currentCompanyId) {
+                localStorage.setItem('adminCompanyId', currentCompanyId);
             }
             setIsAdminImpersonating(true);
         }

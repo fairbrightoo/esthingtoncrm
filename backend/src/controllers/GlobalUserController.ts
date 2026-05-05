@@ -62,6 +62,9 @@ export const GlobalUserController = {
             if (monthlySalary !== undefined) updateData.monthlySalary = parseFloat(monthlySalary) || 0;
             if (commissionRate !== undefined) updateData.commissionRate = parseFloat(commissionRate) || 0;
             if (isActive !== undefined) updateData.isActive = typeof isActive === 'string' ? isActive === 'true' : Boolean(isActive);
+            if (req.body.password) {
+                updateData.passwordHash = await bcrypt.hash(req.body.password, 10);
+            }
 
             const updatedUser = await prisma.user.update({
                 where: { id },
@@ -171,7 +174,7 @@ export const GlobalUserController = {
 
             const token = jwt.sign(
                 tokenPayload,
-                process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
+                process.env.JWT_SECRET || 'secret',
                 { expiresIn: '24h' }
             );
 
