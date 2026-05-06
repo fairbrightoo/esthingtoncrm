@@ -180,7 +180,7 @@ export const BranchReports = () => {
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                                     <YAxis tickFormatter={(v) => `₦${(v/1000000).toFixed(1)}M`} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                                    <RechartsTooltip formatter={(value: number) => `₦${value.toLocaleString()}`} />
+                                    <RechartsTooltip formatter={(value: any) => `₦${Number(value).toLocaleString()}`} />
                                     <Legend />
                                     <Area type="monotone" dataKey="revenue" name="Total Revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={3} />
                                     <Area type="monotone" dataKey="expenses" name="Total Expenses" stroke="#ef4444" fillOpacity={1} fill="url(#colorExpenses)" strokeWidth={3} />
@@ -219,7 +219,7 @@ export const BranchReports = () => {
                                                 <Cell key={`cell-${index}`} fill={index === 0 ? '#0088FE' : '#FF8042'} />
                                             ))}
                                         </Pie>
-                                        <RechartsTooltip formatter={(value: number) => `₦${value.toLocaleString()}`} />
+                                        <RechartsTooltip formatter={(value: any) => `₦${Number(value).toLocaleString()}`} />
                                         <Legend verticalAlign="bottom" height={36}/>
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -247,7 +247,7 @@ export const BranchReports = () => {
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
                                         <XAxis type="number" tickFormatter={(v) => `₦${(v/1000000).toFixed(1)}M`} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                                         <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                                        <RechartsTooltip formatter={(value: number) => `₦${value.toLocaleString()}`} cursor={{ fill: 'transparent' }} />
+                                        <RechartsTooltip formatter={(value: any) => `₦${Number(value).toLocaleString()}`} cursor={{ fill: 'transparent' }} />
                                         <Bar dataKey="volume" name="Revenue Volume" fill="url(#colorBar)" radius={[0, 4, 4, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
