@@ -169,6 +169,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/network`} icon={<Globe size={20} />} label="GM Network" />
                         <NavItem to={`${basePath}/advisory`} icon={<CheckCircle size={20} />} label="Advisory Queue" />
                         <NavItem to={`${basePath}/hr-recommendations`} icon={<Users size={20} />} label="HR Recommendations" />
+                        <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                     </>
                 )}
 
