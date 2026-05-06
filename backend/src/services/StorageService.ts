@@ -68,7 +68,8 @@ function getContentType(ext: string): string {
         '.png': 'image/png',
         '.pdf': 'application/pdf',
         '.gif': 'image/gif',
-        '.webp': 'image/webp'
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml'
     };
     return map[ext.toLowerCase()] || 'application/octet-stream';
 }

@@ -103,12 +103,14 @@ export const PDFService = {
         const baseUrl = process.env.VITE_API_URL || 'http://localhost:3000';
 
         // Company Branding (Rendered as image tags if urls exist)
-        const logoHtml = companyInfo?.logoUrl ? `<img src="${baseUrl}${companyInfo.logoUrl}" style="max-width: 250px; max-height: 80px; display: block; margin: 0 auto; border: none; outline: none;" alt="Logo" />` : `<h2 style="text-align: right; margin: 0;">${companyInfo?.name || 'Company Name'}</h2>`;
+        const resolvedLogoUrl = companyInfo?.logoUrl ? (companyInfo.logoUrl.startsWith('http') ? companyInfo.logoUrl : `${baseUrl}${companyInfo.logoUrl}`) : '';
+        const logoHtml = resolvedLogoUrl ? `<img src="${resolvedLogoUrl}" style="max-width: 250px; max-height: 80px; display: block; margin: 0 auto; border: none; outline: none;" alt="Logo" />` : `<h2 style="text-align: right; margin: 0;">${companyInfo?.name || 'Company Name'}</h2>`;
         html = html.replace(/{{COMPANY_LOGO}}/g, logoHtml);
 
         // Branch signature takes precedence if it exists
         const signatureUrl = branchInfo?.signatureUrl || companyInfo?.signatureUrl;
-        const sigHtml = signatureUrl ? `<img src="${baseUrl}${signatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
+        const resolvedSignatureUrl = signatureUrl ? (signatureUrl.startsWith('http') ? signatureUrl : `${baseUrl}${signatureUrl}`) : '';
+        const sigHtml = resolvedSignatureUrl ? `<img src="${resolvedSignatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{COMPANY_SIGNATURE}}/g, sigHtml);
         
         // Branch manager name takes precedence if it exists
