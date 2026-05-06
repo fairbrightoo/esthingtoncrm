@@ -3,10 +3,11 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, Search, Filter } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 export const GMAdvisoryQueue = () => {
     const { token } = useAuth();
+    const { addToast } = useToast();
     const { branchName } = useParams();
     const [requisitions, setRequisitions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,7 +26,7 @@ export const GMAdvisoryQueue = () => {
             setRequisitions(pending);
         } catch (error) {
             console.error("Failed to fetch requisitions", error);
-            toast.error("Failed to load advisory queue");
+            addToast("Failed to load advisory queue", 'error');
         } finally {
             setLoading(false);
         }
@@ -38,11 +39,11 @@ export const GMAdvisoryQueue = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success(`Marked as ${recommendation === 'RECOMMENDED' ? 'Recommended' : 'Not Recommended'}`);
+            addToast(`Marked as ${recommendation === 'RECOMMENDED' ? 'Recommended' : 'Not Recommended'}`, 'success');
             fetchRequisitions(); // Refresh list
         } catch (error) {
             console.error("Failed to submit recommendation", error);
-            toast.error("Failed to submit recommendation");
+            addToast("Failed to submit recommendation", 'error');
         }
     };
 

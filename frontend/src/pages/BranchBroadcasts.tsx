@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Megaphone, Send, Clock, Trash2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 export const BranchBroadcasts = () => {
     const { token } = useAuth();
+    const { addToast } = useToast();
     const [broadcasts, setBroadcasts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [title, setTitle] = useState('');
@@ -24,7 +25,7 @@ export const BranchBroadcasts = () => {
             setBroadcasts(res.data);
         } catch (error) {
             console.error("Failed to fetch broadcasts", error);
-            toast.error("Failed to load broadcasts");
+            addToast("Failed to load broadcasts", 'error');
         } finally {
             setLoading(false);
         }
@@ -39,13 +40,13 @@ export const BranchBroadcasts = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success("Broadcast dispatched successfully!");
+            addToast("Broadcast dispatched successfully!", 'success');
             setTitle('');
             setContent('');
             fetchBroadcasts();
         } catch (error) {
             console.error("Failed to dispatch broadcast", error);
-            toast.error("Failed to dispatch broadcast");
+            addToast("Failed to dispatch broadcast", 'error');
         } finally {
             setSubmitting(false);
         }

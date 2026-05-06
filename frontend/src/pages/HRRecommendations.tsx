@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Users, Send, FileText, Activity, ArrowUpCircle, XCircle, AlertTriangle, Award } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 export const HRRecommendations = () => {
     const { token, user } = useAuth();
+    const { addToast } = useToast();
     const [recommendations, setRecommendations] = useState<any[]>([]);
     const [staffList, setStaffList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -44,14 +45,14 @@ export const HRRecommendations = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success("HR Recommendation dispatched successfully!");
+            addToast("HR Recommendation dispatched successfully!", 'success');
             setTargetUserId('');
             setType('PROMOTION');
             setReason('');
             fetchData();
         } catch (error) {
             console.error("Failed to dispatch recommendation", error);
-            toast.error("Failed to dispatch recommendation");
+            addToast("Failed to dispatch recommendation", 'error');
         } finally {
             setSubmitting(false);
         }

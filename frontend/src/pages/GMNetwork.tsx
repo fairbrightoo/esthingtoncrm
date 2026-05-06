@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Globe, Send, User, Search, MapPin } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 export const GMNetwork = () => {
     const { token, user } = useAuth();
+    const { addToast } = useToast();
     const [directory, setDirectory] = useState<any[]>([]);
     const [messages, setMessages] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ export const GMNetwork = () => {
             setMessages(msgRes.data.reverse()); // Reverse to show oldest at top for chat flow
         } catch (error) {
             console.error("Failed to fetch network data", error);
-            toast.error("Failed to connect to GM Network");
+            addToast("Failed to connect to GM Network", 'error');
         } finally {
             setLoading(false);
         }
@@ -54,7 +55,7 @@ export const GMNetwork = () => {
             fetchNetworkData();
         } catch (error) {
             console.error("Failed to send message", error);
-            toast.error("Failed to send message");
+            addToast("Failed to send message", 'error');
         }
     };
 
