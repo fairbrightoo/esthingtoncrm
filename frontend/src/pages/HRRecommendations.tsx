@@ -22,9 +22,12 @@ export const HRRecommendations = () => {
 
     const fetchData = async () => {
         try {
+            const effectiveCompanyId = user?.companyId || user?.company?.id;
+            const effectiveBranchId = user?.branchId || user?.branch?.id;
+            
             const [recRes, usersRes] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/gm/hr/recommendations`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/branch`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             setRecommendations(recRes.data);
             // Don't let GM recommend themselves
