@@ -496,7 +496,7 @@ export const CompanyController = {
         // Accept password from body if provided, otherwise we'll generate one
         let password = req.body.password;
 
-        if (!['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT'].includes(role)) {
+        if (!['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER'].includes(role)) {
             return res.status(400).json({ error: 'Invalid role for branch staff' });
         }
 
@@ -672,9 +672,9 @@ export const CompanyController = {
 
                     // Strict role check
                     const role = row.role?.toUpperCase();
-                    if (role && !['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT'].includes(role)) {
+                    if (role && !['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER'].includes(role)) {
                         results.failed++;
-                        results.errors.push({ row, error: 'Invalid role. Must be MARKETER, CUSTOMER_CARE, or BRANCH_HR' });
+                        results.errors.push({ row, error: 'Invalid role. Must be MARKETER, CUSTOMER_CARE, BRANCH_HR, ACCOUNTANT, or GENERAL_MANAGER' });
                         continue;
                     }
 
