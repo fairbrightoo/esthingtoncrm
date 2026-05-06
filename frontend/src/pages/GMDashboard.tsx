@@ -13,11 +13,17 @@ export const GMDashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // We'll reuse the MD dashboard endpoint for overall stats or build a GM specific one
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/dashboard`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                const [statsRes, reqsRes] = await Promise.all([
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers: { Authorization: `Bearer ${token}` } })
+                ]);
+                
+                const pendingAdvisories = reqsRes.data.filter((r: any) => r.status === 'PENDING_MD_APPROVAL').length;
+                
+                setStats({
+                    ...statsRes.data,
+                    pendingRequisitions: pendingAdvisories
                 });
-                setStats(res.data);
             } catch (error) {
                 console.error("Failed to load GM dashboard data:", error);
             } finally {
