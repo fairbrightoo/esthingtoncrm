@@ -107,9 +107,11 @@ import executiveMemoRoutes from './routes/executiveMemoRoutes.js';
 app.use('/api/memos', executiveMemoRoutes);
 
 import gmdAnalyticsRoutes from './routes/gmdAnalyticsRoutes.js';
+import gmRoutes from './routes/gmRoutes.js';
 import prisma from './config/prisma.js';
 
 app.use('/api/gmd-analytics', gmdAnalyticsRoutes);
+app.use('/api/gm', gmRoutes);
 
 // Basic health check
 app.get('/health', (req: Request, res: Response) => {
