@@ -11,7 +11,7 @@ export const DocumentAutomationService = {
                 where: { id: saleId },
                 include: {
                     lead: { include: { branch: true } },
-                    plot: { include: { estate: true } }
+                    plot: { include: { estate: { include: { branch: true } } } }
                 }
             });
 
@@ -24,7 +24,8 @@ export const DocumentAutomationService = {
             if (!companyId) return;
 
             const companyInfo = await prisma.company.findUnique({ where: { id: companyId } });
-            const branchInfo = sale.lead.branch;
+            // Prioritize the managing branch of the estate, fallback to the marketer's branch
+            const branchInfo = sale.plot?.estate?.branch || sale.lead.branch;
 
             // Fetch templates
             const templates = await prisma.documentTemplate.findMany({
