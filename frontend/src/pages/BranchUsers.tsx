@@ -537,6 +537,7 @@ export const BranchUsers = () => {
                                         <option value="MARKETER">Marketer</option>
                                         <option value="CUSTOMER_CARE">Customer Care</option>
                                         <option value="BRANCH_HR">Human Resources</option>
+                                        <option value="GENERAL_MANAGER">General Manager</option>
                                         <option value="ACCOUNTANT">Accountant</option>
                                     </select>
                                 </div>
