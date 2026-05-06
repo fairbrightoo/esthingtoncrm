@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe } from 'lucide-react';
 
 export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onClose?: () => void }) => {
     const { user, logout } = useAuth();
@@ -160,6 +160,15 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
                         <NavItem to={`${basePath}/knowledge-base`} icon={<BookOpen size={20} />} label="AI Knowledge Base" />
+                    </>
+                )}
+
+                {user?.role === 'GENERAL_MANAGER' && (
+                    <>
+                        <NavItem to={`${basePath}/broadcasts`} icon={<Megaphone size={20} />} label="Branch Broadcasts" />
+                        <NavItem to={`${basePath}/network`} icon={<Globe size={20} />} label="GM Network" />
+                        <NavItem to={`${basePath}/advisory`} icon={<CheckCircle size={20} />} label="Advisory Queue" />
+                        <NavItem to={`${basePath}/hr-recommendations`} icon={<Users size={20} />} label="HR Recommendations" />
                     </>
                 )}
 

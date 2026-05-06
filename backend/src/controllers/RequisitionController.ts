@@ -152,6 +152,35 @@ export const RequisitionController = {
         }
     },
 
+    // 3.5 GM Recommends Request
+    async recommendRequisition(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { userId, role } = req.user!;
+            if (role !== "GENERAL_MANAGER" && role !== "SUPER_ADMIN") {
+                res.status(403).json({ error: "Only General Manager can provide recommendations." });
+                return;
+            }
+
+            const reqId = req.params.id as string;
+            const { gmRecommendation } = req.body;
+
+            if (!["RECOMMENDED", "NOT_RECOMMENDED"].includes(gmRecommendation)) {
+                res.status(400).json({ error: "Invalid recommendation." });
+                return;
+            }
+
+            const updated = await prisma.requisition.update({
+                where: { id: reqId },
+                data: { gmRecommendation }
+            });
+
+            res.status(200).json({ message: `Requisition marked as ${gmRecommendation.toLowerCase()}`, requisition: updated });
+        } catch (error) {
+            console.error("Error setting recommendation:", error);
+            res.status(500).json({ error: "Failed to process recommendation." });
+        }
+    },
+
     // 4. Accountant Disburses Funds
     async disburseFunds(req: AuthRequest, res: Response): Promise<void> {
         try {

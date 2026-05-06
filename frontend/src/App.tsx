@@ -48,6 +48,11 @@ import { HelpdeskTickets } from './pages/HelpdeskTickets';
 import { CommunicationLogs } from './pages/CommunicationLogs';
 import { AccountantPayroll } from './pages/AccountantPayroll';
 import { AccountantTaxCompliance } from './pages/AccountantTaxCompliance';
+import { BranchBroadcasts } from './pages/BranchBroadcasts';
+import { GMNetwork } from './pages/GMNetwork';
+import { GMAdvisoryQueue } from './pages/GMAdvisoryQueue';
+import { HRRecommendations } from './pages/HRRecommendations';
+import { GMDashboard } from './pages/GMDashboard';
 import { GMDDashboard } from './pages/GMDDashboard';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
 
@@ -77,6 +82,10 @@ const BranchDashboardRouter = () => {
 
   if (user?.role === 'BRANCH_HR') {
     return <HRDashboard />;
+  }
+
+  if (user?.role === 'GENERAL_MANAGER') {
+    return <GMDashboard />;
   }
 
   if (user?.role === 'MARKETER') {
@@ -182,6 +191,10 @@ function App() {
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/broadcasts" element={<DashboardLayout><BranchBroadcasts /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/network" element={<DashboardLayout><GMNetwork /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/advisory" element={<DashboardLayout><GMAdvisoryQueue /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/hr-recommendations" element={<DashboardLayout><HRRecommendations /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/tasks" element={<DashboardLayout><Tasks /></DashboardLayout>} />
             
             <Route path="/dashboard/:branchName/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />

@@ -8,16 +8,16 @@ datasource db {
 }
 
 model Company {
-  id                   String             @id @default(uuid())
-  name                 String             @unique
+  id                   String              @id @default(uuid())
+  name                 String              @unique
   logoUrl              String?
-  themeColor           String?            @default("#000000")
+  themeColor           String?             @default("#000000")
   smsSenderId          String?
   waPhoneNumberId      String?
   waBusinessAccountId  String?
   waToken              String?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   address              String?
   email                String?
   phone                String?
@@ -57,100 +57,104 @@ model Company {
 }
 
 model Branch {
-  id            String         @id @default(uuid())
-  companyId     String
-  name          String
-  address       String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  email         String?
-  phone         String?
-  managerName   String?
-  signatureUrl  String?
-  attendances   Attendance[]
-  company       Company        @relation(fields: [companyId], references: [id])
-  leads         Lead[]
-  users         User[]
-  estates       Estate[]
-  discountCodes DiscountCode[]
-  requisitions  Requisition[]
-  branchBudgets BranchBudget[]
-  refundRequests RefundRequest[]
-  hrSettings    HRSettings?
-  leaveRequests        LeaveRequest[]
-  queries              DisciplinaryQuery[]
-  appraisals           Appraisal[]
-  performanceAwards    PerformanceAward[]
-  companyDocuments     CompanyDocument[]
-  helpdeskTickets      HelpdeskTicket[]
-  payrollRecords       PayrollRecord[]
-  taxRemittances       TaxRemittance[]
-  executiveMemos       ExecutiveMemo[]
+  id                String              @id @default(uuid())
+  companyId         String
+  name              String
+  address           String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  email             String?
+  phone             String?
+  managerName       String?
+  signatureUrl      String?
+  attendances       Attendance[]
+  company           Company             @relation(fields: [companyId], references: [id])
+  leads             Lead[]
+  users             User[]
+  estates           Estate[]
+  discountCodes     DiscountCode[]
+  requisitions      Requisition[]
+  branchBudgets     BranchBudget[]
+  refundRequests    RefundRequest[]
+  hrSettings        HRSettings?
+  leaveRequests     LeaveRequest[]
+  queries           DisciplinaryQuery[]
+  appraisals        Appraisal[]
+  performanceAwards PerformanceAward[]
+  companyDocuments  CompanyDocument[]
+  helpdeskTickets   HelpdeskTicket[]
+  payrollRecords    PayrollRecord[]
+  taxRemittances    TaxRemittance[]
+  executiveMemos    ExecutiveMemo[]
 }
 
 model User {
-  id                    String             @id @default(uuid())
-  email                 String             @unique
-  fullName              String
-  phone                 String?
-  passwordHash          String
-  role                  String             @default("MARKETER")
-  isActive              Boolean            @default(true)
-  passwordResetRequired Boolean            @default(true)
-  companyId             String?
-  branchId              String?
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  resetToken            String?
-  resetTokenExpiry      DateTime?
-  agreementUrl          String?
-  cvUrl                 String?
-  passportUrl           String?
-  monthlySalary         Float?             @default(0)
-  commissionRate        Float?             @default(5.0)
-  dateOfBirth           DateTime?
-  bankName              String?
-  accountName           String?
-  accountNumber         String?
-  aiThreadId            String?
-  activities            Activity[]
-  attendances           Attendance[]
-  communicationLogs     CommunicationLog[]
-  leads                 Lead[]             @relation("AssignedLeads")
-  Payment               Payment[]
-  tasks                 Task[]
-  branch                Branch?            @relation(fields: [branchId], references: [id])
-  company               Company?           @relation(fields: [companyId], references: [id])
-  announcements         Announcement[]
-  discountCodes         DiscountCode[]
-  requestedRequisitions Requisition[]      @relation("RequisitionRequested")
-  approvedRequisitions  Requisition[]      @relation("RequisitionApproved")
-  disbursedRequisitions Requisition[]      @relation("RequisitionDisbursed")
-  budgetsPrepared       BranchBudget[] @relation("BudgetPrepared")
-  budgetsApproved       BranchBudget[] @relation("BudgetApproved")
-  initiatedRefunds      RefundRequest[] @relation("RefundMarketer")
-  approvedBranchRefunds RefundRequest[] @relation("RefundBranchAdmin")
-  approvedMdRefunds     RefundRequest[] @relation("RefundApprovedBy")
-  disbursedRefunds      RefundRequest[] @relation("RefundDisbursedBy")
-  leaveRequests        LeaveRequest[]        @relation("LeaveStaff")
-  hrApprovedLeaves     LeaveRequest[]        @relation("LeaveHRApprover")
-  mdApprovedLeaves     LeaveRequest[]        @relation("LeaveMDApprover")
-  issuedQueries        DisciplinaryQuery[]   @relation("QueryIssuer")
-  receivedQueries      DisciplinaryQuery[]   @relation("QueryTargetStaff")
-  receivedAppraisals   Appraisal[]           @relation("AppraisalStaff")
-  givenAppraisals      Appraisal[]           @relation("AppraisalReviewer")
-  performanceAwards    PerformanceAward[]
-  createdDocuments     CompanyDocument[]
-  createdTickets       HelpdeskTicket[]      @relation("CreatedTickets")
-  payrolls             PayrollRecord[]       @relation("PayrollStaff")
-  processedPayrolls    PayrollRecord[]       @relation("PayrollProcessor")
-  taxRemittances       TaxRemittance[]       @relation("TaxRemitter")
-  sentExecutiveMemos   ExecutiveMemo[]       @relation("MemoSender")
-  receivedExecutiveMemos ExecutiveMemo[]     @relation("MemoRecipient")
-  dashboardBroadcasts  DashboardBroadcast[]
-  globalBroadcastLogs  GlobalBroadcastLog[]
-  readReceipts         NoticeReadReceipt[]
-  
+  id                     String               @id @default(uuid())
+  email                  String               @unique
+  fullName               String
+  phone                  String?
+  passwordHash           String
+  role                   String               @default("MARKETER")
+  isActive               Boolean              @default(true)
+  passwordResetRequired  Boolean              @default(true)
+  companyId              String?
+  branchId               String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  resetToken             String?
+  resetTokenExpiry       DateTime?
+  agreementUrl           String?
+  cvUrl                  String?
+  passportUrl            String?
+  monthlySalary          Float?               @default(0)
+  commissionRate         Float?               @default(5.0)
+  dateOfBirth            DateTime?
+  bankName               String?
+  accountName            String?
+  accountNumber          String?
+  aiThreadId             String?
+  activities             Activity[]
+  attendances            Attendance[]
+  communicationLogs      CommunicationLog[]
+  leads                  Lead[]               @relation("AssignedLeads")
+  Payment                Payment[]
+  tasks                  Task[]
+  branch                 Branch?              @relation(fields: [branchId], references: [id])
+  company                Company?             @relation(fields: [companyId], references: [id])
+  announcements          Announcement[]
+  discountCodes          DiscountCode[]
+  requestedRequisitions  Requisition[]        @relation("RequisitionRequested")
+  approvedRequisitions   Requisition[]        @relation("RequisitionApproved")
+  disbursedRequisitions  Requisition[]        @relation("RequisitionDisbursed")
+  budgetsPrepared        BranchBudget[]       @relation("BudgetPrepared")
+  budgetsApproved        BranchBudget[]       @relation("BudgetApproved")
+  initiatedRefunds       RefundRequest[]      @relation("RefundMarketer")
+  approvedBranchRefunds  RefundRequest[]      @relation("RefundBranchAdmin")
+  approvedMdRefunds      RefundRequest[]      @relation("RefundApprovedBy")
+  disbursedRefunds       RefundRequest[]      @relation("RefundDisbursedBy")
+  leaveRequests          LeaveRequest[]       @relation("LeaveStaff")
+  hrApprovedLeaves       LeaveRequest[]       @relation("LeaveHRApprover")
+  mdApprovedLeaves       LeaveRequest[]       @relation("LeaveMDApprover")
+  issuedQueries          DisciplinaryQuery[]  @relation("QueryIssuer")
+  receivedQueries        DisciplinaryQuery[]  @relation("QueryTargetStaff")
+  receivedAppraisals     Appraisal[]          @relation("AppraisalStaff")
+  givenAppraisals        Appraisal[]          @relation("AppraisalReviewer")
+  performanceAwards      PerformanceAward[]
+  createdDocuments       CompanyDocument[]
+  createdTickets         HelpdeskTicket[]     @relation("CreatedTickets")
+  payrolls               PayrollRecord[]      @relation("PayrollStaff")
+  processedPayrolls      PayrollRecord[]      @relation("PayrollProcessor")
+  taxRemittances         TaxRemittance[]      @relation("TaxRemitter")
+  sentExecutiveMemos     ExecutiveMemo[]      @relation("MemoSender")
+  receivedExecutiveMemos ExecutiveMemo[]      @relation("MemoRecipient")
+  dashboardBroadcasts    DashboardBroadcast[]
+  globalBroadcastLogs    GlobalBroadcastLog[]
+  readReceipts           NoticeReadReceipt[]
+  sentGmMessages         GMDirectMessage[]    @relation("GMSender")
+  receivedGmMessages     GMDirectMessage[]    @relation("GMRecipient")
+  branchBroadcasts       BranchBroadcast[]    @relation("BranchBroadcastAuthor")
+  authoredHrRecs         HRRecommendation[]   @relation("HRRecommendationAuthor")
+  targetedHrRecs         HRRecommendation[]   @relation("HRRecommendationTarget")
 }
 
 model Attendance {
@@ -173,39 +177,39 @@ model Attendance {
 }
 
 model Lead {
-  id                String             @id @default(uuid())
-  fullName          String
-  phone             String
-  email             String?
-  gender            String?
-  source            String?
-  status            String             @default("PROSPECT")
-  isVerified        Boolean            @default(false)
-  whatsappOptIn     Boolean            @default(true)
-  dateOfBirth       DateTime?
-  address           String?
-  occupation        String?
-  nextOfKinName     String?
-  nextOfKinPhone    String?
-  profilePictureUrl String?
-  govtIdType        String?
-  govtIdUrl         String?
-  companyId         String
-  branchId          String?
-  assignedToUserId  String?
-  equityWalletBalance Float            @default(0.0)
-  aiThreadId        String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  activities        Activity[]
-  communicationLogs CommunicationLog[]
-  assignedToUser    User?              @relation("AssignedLeads", fields: [assignedToUserId], references: [id])
-  branch            Branch?            @relation(fields: [branchId], references: [id])
-  company           Company            @relation(fields: [companyId], references: [id])
-  sales             Sale[]
-  tasks             Task[]
-  refundRequests    RefundRequest[]
-  helpdeskTickets   HelpdeskTicket[]   @relation("LeadTickets")
+  id                  String             @id @default(uuid())
+  fullName            String
+  phone               String
+  email               String?
+  gender              String?
+  source              String?
+  status              String             @default("PROSPECT")
+  isVerified          Boolean            @default(false)
+  whatsappOptIn       Boolean            @default(true)
+  dateOfBirth         DateTime?
+  address             String?
+  occupation          String?
+  nextOfKinName       String?
+  nextOfKinPhone      String?
+  profilePictureUrl   String?
+  govtIdType          String?
+  govtIdUrl           String?
+  companyId           String
+  branchId            String?
+  assignedToUserId    String?
+  equityWalletBalance Float              @default(0.0)
+  aiThreadId          String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  activities          Activity[]
+  communicationLogs   CommunicationLog[]
+  assignedToUser      User?              @relation("AssignedLeads", fields: [assignedToUserId], references: [id])
+  branch              Branch?            @relation(fields: [branchId], references: [id])
+  company             Company            @relation(fields: [companyId], references: [id])
+  sales               Sale[]
+  tasks               Task[]
+  refundRequests      RefundRequest[]
+  helpdeskTickets     HelpdeskTicket[]   @relation("LeadTickets")
 }
 
 model Activity {
@@ -262,15 +266,15 @@ model Estate {
 }
 
 model Plot {
-  id            String   @id @default(uuid())
+  id            String             @id @default(uuid())
   estateId      String
-  plotNumber    String   @unique
+  plotNumber    String             @unique
   prototype     String
   size          Float
   price         Float
-  isCornerPiece Boolean  @default(false)
-  status        String   @default("AVAILABLE")
-  createdAt     DateTime @default(now())
+  isCornerPiece Boolean            @default(false)
+  status        String             @default("AVAILABLE")
+  createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   estate        Estate             @relation(fields: [estateId], references: [id])
   sales         Sale[]
@@ -288,27 +292,27 @@ model PlotPriceHistory {
 }
 
 model Sale {
-  id                String        @id @default(uuid())
+  id                String          @id @default(uuid())
   leadId            String
   plotId            String
-  isCornerPiece     Boolean       @default(false)
+  isCornerPiece     Boolean         @default(false)
   agreedPrice       Float
-  totalPaid         Float         @default(0.0)
-  status            String        @default("ONGOING")
+  totalPaid         Float           @default(0.0)
+  status            String          @default("ONGOING")
   nextPaymentDue    DateTime?
   nameOnDocument    String?
   phoneOnDocument   String?
   addressOnDocument String?
   plotNumber        String?
-  termsAccepted     Boolean       @default(false)
+  termsAccepted     Boolean         @default(false)
   termsAcceptedAt   DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   discountCodeId    String?
   payments          Payment[]
-  plot              Plot          @relation(fields: [plotId], references: [id])
-  lead              Lead          @relation(fields: [leadId], references: [id])
-  discountCode      DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  plot              Plot            @relation(fields: [plotId], references: [id])
+  lead              Lead            @relation(fields: [leadId], references: [id])
+  discountCode      DiscountCode?   @relation(fields: [discountCodeId], references: [id])
   refundRequests    RefundRequest[]
 }
 
@@ -389,18 +393,17 @@ model AutomationRule {
 }
 
 model Announcement {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  priority  String   @default("NORMAL") // e.g., "NORMAL", "HIGH"
-  companyId String
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  company   Company  @relation(fields: [companyId], references: [id])
-  author    User     @relation(fields: [authorId], references: [id])
-  readReceipts         NoticeReadReceipt[]
-  
+  id           String              @id @default(uuid())
+  title        String
+  content      String
+  priority     String              @default("NORMAL") // e.g., "NORMAL", "HIGH"
+  companyId    String
+  authorId     String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  company      Company             @relation(fields: [companyId], references: [id])
+  author       User                @relation(fields: [authorId], references: [id])
+  readReceipts NoticeReadReceipt[]
 }
 
 model Holiday {
@@ -446,16 +449,17 @@ model DiscountCode {
 }
 
 model Requisition {
-  id              String   @id @default(uuid())
-  title           String
-  description     String?
-  category        String // e.g., "IMPREST", "PAYROLL", "FUELING", "GENERAL"
-  
-  // Total calculated from items
-  amountApproved  Float?
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  category    String // e.g., "IMPREST", "PAYROLL", "FUELING", "GENERAL"
 
-  status          String   @default("PENDING_MD_APPROVAL") // "PENDING_MD_APPROVAL", "APPROVED_BY_MD", "DISBURSED", "REJECTED"
-  requestDate     DateTime @default(now())
+  // Total calculated from items
+  amountApproved Float?
+
+  status           String   @default("PENDING_MD_APPROVAL") // "PENDING_MD_APPROVAL", "APPROVED_BY_MD", "DISBURSED", "REJECTED"
+  gmRecommendation String   @default("PENDING") // "PENDING", "RECOMMENDED", "NOT_RECOMMENDED"
+  requestDate      DateTime @default(now())
 
   // Robust Auditing Trail
   requestedByUserId String
@@ -474,62 +478,62 @@ model Requisition {
   disbursedByUser User?   @relation("RequisitionDisbursed", fields: [disbursedByUserId], references: [id])
   company         Company @relation(fields: [companyId], references: [id])
   branch          Branch? @relation(fields: [branchId], references: [id])
-  
-  items           RequisitionItem[]
+
+  items RequisitionItem[]
 }
 
 model RequisitionItem {
-  id                String   @id @default(uuid())
-  requisitionId     String
-  
-  itemRequired      String   
-  qty               Int      
-  itemSpecification String?  
-  purpose           String?  
-  unitPrice         Float
-  totalPrice        Float    
+  id            String @id @default(uuid())
+  requisitionId String
 
-  requisition       Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  itemRequired      String
+  qty               Int
+  itemSpecification String?
+  purpose           String?
+  unitPrice         Float
+  totalPrice        Float
+
+  requisition Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
 }
 
 model BranchBudget {
   id              String   @id @default(uuid())
-  title           String   // e.g., "Q3 2026 Garki Operating Budget"
-  periodType      String   // "MONTHLY", "QUARTERLY"
+  title           String // e.g., "Q3 2026 Garki Operating Budget"
+  periodType      String // "MONTHLY", "QUARTERLY"
   periodStartDate DateTime
   periodEndDate   DateTime
-  
-  status          String   @default("DRAFT") // "DRAFT", "PENDING_MD_APPROVAL", "APPROVED", "REJECTED"
 
-  preparedByUserId String 
-  approvedByUserId String? 
-  
-  companyId       String
-  branchId        String
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status String @default("DRAFT") // "DRAFT", "PENDING_MD_APPROVAL", "APPROVED", "REJECTED"
 
-  items           BranchBudgetItem[]
+  preparedByUserId String
+  approvedByUserId String?
 
-  preparedByUser  User    @relation("BudgetPrepared", fields: [preparedByUserId], references: [id])
-  approvedByUser  User?   @relation("BudgetApproved", fields: [approvedByUserId], references: [id])
-  company         Company @relation(fields: [companyId], references: [id])
-  branch          Branch  @relation(fields: [branchId], references: [id])
+  companyId String
+  branchId  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items BranchBudgetItem[]
+
+  preparedByUser User    @relation("BudgetPrepared", fields: [preparedByUserId], references: [id])
+  approvedByUser User?   @relation("BudgetApproved", fields: [approvedByUserId], references: [id])
+  company        Company @relation(fields: [companyId], references: [id])
+  branch         Branch  @relation(fields: [branchId], references: [id])
 }
 
 model BranchBudgetItem {
-  id              String   @id @default(uuid())
+  id              String  @id @default(uuid())
   budgetId        String
-  category        String   // "Marketing", "Fueling", "Maintenance", "Salaries"
+  category        String // "Marketing", "Fueling", "Maintenance", "Salaries"
   amountAllocated Float
   notes           String?
 
-  budget          BranchBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budget BranchBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
 }
 
 model RefundRequest {
-  id                String    @id @default(uuid())
+  id                String  @id @default(uuid())
   saleId            String
   clientId          String
   marketerId        String
@@ -538,151 +542,151 @@ model RefundRequest {
   disbursedByUserId String?
 
   totalPaidByClient Float
-  penaltyAmount     Float    // 20%
-  refundAmount      Float    // 80%
+  penaltyAmount     Float // 20%
+  refundAmount      Float // 80%
 
-  reason          String?
-  status          String   @default("PENDING_BRANCH_ADMIN") // PENDING_BRANCH_ADMIN, PENDING_MD_APPROVAL, APPROVED_BY_MD, DISBURSED, REJECTED
+  reason String?
+  status String  @default("PENDING_BRANCH_ADMIN") // PENDING_BRANCH_ADMIN, PENDING_MD_APPROVAL, APPROVED_BY_MD, DISBURSED, REJECTED
 
-  requestDate     DateTime  @default(now())
-  disbursedAt     DateTime?
-  
-  companyId       String
-  branchId        String?
+  requestDate DateTime  @default(now())
+  disbursedAt DateTime?
 
-  sale            Sale     @relation(fields: [saleId], references: [id])
-  client          Lead     @relation(fields: [clientId], references: [id])
-  marketer        User     @relation("RefundMarketer", fields: [marketerId], references: [id])
-  branchAdmin     User?    @relation("RefundBranchAdmin", fields: [branchAdminId], references: [id])
-  approvedByMd    User?    @relation("RefundApprovedBy", fields: [approvedByMdId], references: [id])
-  disbursedByUser User?    @relation("RefundDisbursedBy", fields: [disbursedByUserId], references: [id])
-  company         Company  @relation(fields: [companyId], references: [id])
-  branch          Branch?  @relation(fields: [branchId], references: [id])
+  companyId String
+  branchId  String?
+
+  sale            Sale    @relation(fields: [saleId], references: [id])
+  client          Lead    @relation(fields: [clientId], references: [id])
+  marketer        User    @relation("RefundMarketer", fields: [marketerId], references: [id])
+  branchAdmin     User?   @relation("RefundBranchAdmin", fields: [branchAdminId], references: [id])
+  approvedByMd    User?   @relation("RefundApprovedBy", fields: [approvedByMdId], references: [id])
+  disbursedByUser User?   @relation("RefundDisbursedBy", fields: [disbursedByUserId], references: [id])
+  company         Company @relation(fields: [companyId], references: [id])
+  branch          Branch? @relation(fields: [branchId], references: [id])
 }
 
 model HRSettings {
-  id                    String   @id @default(uuid())
-  branchId              String   @unique
-  companyId             String
-  
+  id        String @id @default(uuid())
+  branchId  String @unique
+  companyId String
+
   // Working Hours & Attendance
-  defaultCheckInTime    String   @default("08:00")
-  defaultCheckOutTime   String   @default("17:00")
-  lateToleranceMinutes  Int      @default(15)
-  
+  defaultCheckInTime   String @default("08:00")
+  defaultCheckOutTime  String @default("17:00")
+  lateToleranceMinutes Int    @default(15)
+
   // Time-Off & Leave Quotas (days per year)
-  annualLeaveDays       Int      @default(20)
-  sickLeaveDays         Int      @default(10)
-  maternityLeaveDays    Int      @default(90)
-  
+  annualLeaveDays    Int @default(20)
+  sickLeaveDays      Int @default(10)
+  maternityLeaveDays Int @default(90)
+
   // Payroll Deduction Baselines
-  lateDeductionFee      Float    @default(0.0) // Flat fee deducted per late day
-  standardPensionRate   Float    @default(0.0) // Percentage
-  standardTaxRate       Float    @default(0.0) // Percentage
+  lateDeductionFee    Float @default(0.0) // Flat fee deducted per late day
+  standardPensionRate Float @default(0.0) // Percentage
+  standardTaxRate     Float @default(0.0) // Percentage
 
   // Onboarding
-  onboardingChecklist   String   @default("Guarantor Form,Valid ID,Passport Photo") // Comma-separated
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  onboardingChecklist String @default("Guarantor Form,Valid ID,Passport Photo") // Comma-separated
 
-  branch                Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch  Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model LeaveRequest {
-  id                 String    @id @default(uuid())
+  id                 String   @id @default(uuid())
   userId             String
   companyId          String
   branchId           String
   startDate          DateTime
   endDate            DateTime
-  type               String    // SICK, ANNUAL, MATERNITY, OTHER
-  status             String    @default("PENDING_HR_APPROVAL") // PENDING_HR_APPROVAL, PENDING_MD_APPROVAL, APPROVED, REJECTED
+  type               String // SICK, ANNUAL, MATERNITY, OTHER
+  status             String   @default("PENDING_HR_APPROVAL") // PENDING_HR_APPROVAL, PENDING_MD_APPROVAL, APPROVED, REJECTED
   reason             String
   hrRemarks          String?
   mdRemarks          String?
   hrApprovedByUserId String?
   mdApprovedByUserId String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  user               User      @relation("LeaveStaff", fields: [userId], references: [id])
-  hrApprovedBy       User?     @relation("LeaveHRApprover", fields: [hrApprovedByUserId], references: [id])
-  mdApprovedBy       User?     @relation("LeaveMDApprover", fields: [mdApprovedByUserId], references: [id])
-  company            Company   @relation(fields: [companyId], references: [id])
-  branch             Branch    @relation(fields: [branchId], references: [id])
+  user         User    @relation("LeaveStaff", fields: [userId], references: [id])
+  hrApprovedBy User?   @relation("LeaveHRApprover", fields: [hrApprovedByUserId], references: [id])
+  mdApprovedBy User?   @relation("LeaveMDApprover", fields: [mdApprovedByUserId], references: [id])
+  company      Company @relation(fields: [companyId], references: [id])
+  branch       Branch  @relation(fields: [branchId], references: [id])
 }
 
 model DisciplinaryQuery {
-  id               String   @id @default(uuid())
-  staffId          String
-  issuerId         String
-  companyId        String
-  branchId         String
-  subject          String
-  description      String
-  severity         String   @default("MEDIUM") // LOW, MEDIUM, HIGH
-  status           String   @default("OPEN") // OPEN, ANSWERED, RESOLVED
-  staffReply       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id          String   @id @default(uuid())
+  staffId     String
+  issuerId    String
+  companyId   String
+  branchId    String
+  subject     String
+  description String
+  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  status      String   @default("OPEN") // OPEN, ANSWERED, RESOLVED
+  staffReply  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  staff            User     @relation("QueryTargetStaff", fields: [staffId], references: [id])
-  issuer           User     @relation("QueryIssuer", fields: [issuerId], references: [id])
-  company          Company  @relation(fields: [companyId], references: [id])
-  branch           Branch   @relation(fields: [branchId], references: [id])
+  staff   User    @relation("QueryTargetStaff", fields: [staffId], references: [id])
+  issuer  User    @relation("QueryIssuer", fields: [issuerId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
 }
 
 model Appraisal {
-  id               String   @id @default(uuid())
-  staffId          String
-  reviewerId       String
-  companyId        String
-  branchId         String
-  period           String   // e.g. "Q1 2026", "Month of April"
-  score            Float    @default(0) // 0-100
-  remarks          String?
-  kpiData          String   // JSON string storing dynamic rubrics
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id         String   @id @default(uuid())
+  staffId    String
+  reviewerId String
+  companyId  String
+  branchId   String
+  period     String // e.g. "Q1 2026", "Month of April"
+  score      Float    @default(0) // 0-100
+  remarks    String?
+  kpiData    String // JSON string storing dynamic rubrics
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  staff            User     @relation("AppraisalStaff", fields: [staffId], references: [id])
-  reviewer         User     @relation("AppraisalReviewer", fields: [reviewerId], references: [id])
-  company          Company  @relation(fields: [companyId], references: [id])
-  branch           Branch   @relation(fields: [branchId], references: [id])
+  staff    User    @relation("AppraisalStaff", fields: [staffId], references: [id])
+  reviewer User    @relation("AppraisalReviewer", fields: [reviewerId], references: [id])
+  company  Company @relation(fields: [companyId], references: [id])
+  branch   Branch  @relation(fields: [branchId], references: [id])
 }
 
 model PerformanceAward {
-  id               String   @id @default(uuid())
-  staffId          String
-  companyId        String
-  branchId         String
-  title            String   // e.g. "Best Staff of the Month"
-  month            Int      // 1-12
-  year             Int      
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id        String   @id @default(uuid())
+  staffId   String
+  companyId String
+  branchId  String
+  title     String // e.g. "Best Staff of the Month"
+  month     Int // 1-12
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  staff            User     @relation(fields: [staffId], references: [id])
-  company          Company  @relation(fields: [companyId], references: [id])
-  branch           Branch   @relation(fields: [branchId], references: [id])
+  staff   User    @relation(fields: [staffId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
 }
 
 model CompanyDocument {
-  id               String   @id @default(uuid())
-  companyId        String
-  branchId         String?  // If null, it's global for the company.
-  createdByUserId  String
-  title            String
-  type             String   // POLICY, MEMO, HANDBOOK
-  fileUrl          String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String   @id @default(uuid())
+  companyId       String
+  branchId        String? // If null, it's global for the company.
+  createdByUserId String
+  title           String
+  type            String // POLICY, MEMO, HANDBOOK
+  fileUrl         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  createdByUser    User     @relation(fields: [createdByUserId], references: [id])
-  company          Company  @relation(fields: [companyId], references: [id])
-  branch           Branch?  @relation(fields: [branchId], references: [id])
+  createdByUser User    @relation(fields: [createdByUserId], references: [id])
+  company       Company @relation(fields: [companyId], references: [id])
+  branch        Branch? @relation(fields: [branchId], references: [id])
 }
 
 model HelpdeskTicket {
@@ -699,52 +703,52 @@ model HelpdeskTicket {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  company     Company  @relation(fields: [companyId], references: [id])
-  branch      Branch?  @relation(fields: [branchId], references: [id])
-  creator     User     @relation("CreatedTickets", fields: [creatorId], references: [id])
-  lead        Lead?    @relation("LeadTickets", fields: [leadId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+  branch  Branch? @relation(fields: [branchId], references: [id])
+  creator User    @relation("CreatedTickets", fields: [creatorId], references: [id])
+  lead    Lead?   @relation("LeadTickets", fields: [leadId], references: [id])
 }
 
 model PayrollRecord {
-  id              String   @id @default(uuid())
-  staffId         String
-  companyId       String
-  branchId        String
-  month           Int      
-  year            Int
-  
-  baseSalary      Float    @default(0)
-  deductions      Float    @default(0)
-  bonuses         Float    @default(0)
-  netPay          Float    @default(0)
-  
-  status          String   @default("PENDING") 
-  paidAt          DateTime?
-  processedById   String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id        String @id @default(uuid())
+  staffId   String
+  companyId String
+  branchId  String
+  month     Int
+  year      Int
 
-  staff           User     @relation("PayrollStaff", fields: [staffId], references: [id])
-  processedBy     User?    @relation("PayrollProcessor", fields: [processedById], references: [id])
-  company         Company  @relation(fields: [companyId], references: [id])
-  branch          Branch   @relation(fields: [branchId], references: [id])
+  baseSalary Float @default(0)
+  deductions Float @default(0)
+  bonuses    Float @default(0)
+  netPay     Float @default(0)
+
+  status        String    @default("PENDING")
+  paidAt        DateTime?
+  processedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff       User    @relation("PayrollStaff", fields: [staffId], references: [id])
+  processedBy User?   @relation("PayrollProcessor", fields: [processedById], references: [id])
+  company     Company @relation(fields: [companyId], references: [id])
+  branch      Branch  @relation(fields: [branchId], references: [id])
 }
 
 model TaxRemittance {
-  id              String   @id @default(uuid())
-  companyId       String
-  branchId        String?
-  taxType         String   
-  amount          Float
-  applicablePeriod String  
-  receiptUrl      String?
-  remittedById    String
-  remittedAt      DateTime @default(now())
+  id               String   @id @default(uuid())
+  companyId        String
+  branchId         String?
+  taxType          String
+  amount           Float
+  applicablePeriod String
+  receiptUrl       String?
+  remittedById     String
+  remittedAt       DateTime @default(now())
 
-  company         Company  @relation(fields: [companyId], references: [id])
-  branch          Branch?  @relation(fields: [branchId], references: [id])
-  remittedBy      User     @relation("TaxRemitter", fields: [remittedById], references: [id])
+  company    Company @relation(fields: [companyId], references: [id])
+  branch     Branch? @relation(fields: [branchId], references: [id])
+  remittedBy User    @relation("TaxRemitter", fields: [remittedById], references: [id])
 }
 
 model ExecutiveMemo {
@@ -759,25 +763,24 @@ model ExecutiveMemo {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  company     Company  @relation(fields: [companyId], references: [id])
-  branch      Branch?  @relation(fields: [branchId], references: [id])
-  sender      User     @relation("MemoSender", fields: [senderId], references: [id])
-  recipient   User     @relation("MemoRecipient", fields: [recipientId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
+  branch    Branch? @relation(fields: [branchId], references: [id])
+  sender    User    @relation("MemoSender", fields: [senderId], references: [id])
+  recipient User    @relation("MemoRecipient", fields: [recipientId], references: [id])
 }
 
 model DashboardBroadcast {
   id           String   @id @default(uuid())
   title        String
   content      String
-  audienceType String   // ALL_STAFF, ALL_MDS, COMPANY, BRANCH
-  targetId     String?  // The specific companyId or branchId if applicable
+  audienceType String // ALL_STAFF, ALL_MDS, COMPANY, BRANCH
+  targetId     String? // The specific companyId or branchId if applicable
   authorId     String
   priority     String   @default("HIGH")
   createdAt    DateTime @default(now())
 
-  author       User     @relation(fields: [authorId], references: [id])
-  readReceipts         NoticeReadReceipt[]
-  
+  author       User                @relation(fields: [authorId], references: [id])
+  readReceipts NoticeReadReceipt[]
 }
 
 model GlobalBroadcastLog {
@@ -792,8 +795,7 @@ model GlobalBroadcastLog {
   failedCount  Int      @default(0)
   createdAt    DateTime @default(now())
 
-  author       User     @relation(fields: [authorId], references: [id])
-  
+  author User @relation(fields: [authorId], references: [id])
 }
 
 model NoticeReadReceipt {
@@ -803,7 +805,48 @@ model NoticeReadReceipt {
   broadcastId    String?
   readAt         DateTime @default(now())
 
-  user           User                 @relation(fields: [userId], references: [id])
-  announcement   Announcement?        @relation(fields: [announcementId], references: [id])
-  broadcast      DashboardBroadcast?  @relation(fields: [broadcastId], references: [id])
+  user         User                @relation(fields: [userId], references: [id])
+  announcement Announcement?       @relation(fields: [announcementId], references: [id])
+  broadcast    DashboardBroadcast? @relation(fields: [broadcastId], references: [id])
+}
+
+model GMDirectMessage {
+  id          String   @id @default(uuid())
+  senderId    String
+  recipientId String
+  message     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender    User @relation("GMSender", fields: [senderId], references: [id])
+  recipient User @relation("GMRecipient", fields: [recipientId], references: [id])
+}
+
+model BranchBroadcast {
+  id           String   @id @default(uuid())
+  branchId     String
+  companyId    String
+  authorId     String
+  title        String
+  content      String
+  targetTeamId String?
+  createdAt    DateTime @default(now())
+
+  author User @relation("BranchBroadcastAuthor", fields: [authorId], references: [id])
+}
+
+model HRRecommendation {
+  id           String   @id @default(uuid())
+  branchId     String
+  companyId    String
+  authorId     String
+  targetUserId String
+  type         String
+  reason       String
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  author     User @relation("HRRecommendationAuthor", fields: [authorId], references: [id])
+  targetUser User @relation("HRRecommendationTarget", fields: [targetUserId], references: [id])
 }
