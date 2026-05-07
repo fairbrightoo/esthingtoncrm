@@ -108,9 +108,11 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{BALANCE_OUTSTANDING}}/g, formatCurrency(balance > 0 ? balance : 0));
         html = html.replace(/{{BALANCE_AMOUNT}}/g, formatCurrency(balance > 0 ? balance : 0));
 
-        const balanceDateStr = sale.nextPaymentDue 
-            ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sale.nextPaymentDue))
-            : '____________________';
+        // Calculate Balance Deadline: 6 months from the date of the first installment (Sale createdAt)
+        const firstInstallmentDate = new Date(sale.createdAt || new Date());
+        const balanceDeadline = new Date(firstInstallmentDate);
+        balanceDeadline.setMonth(balanceDeadline.getMonth() + 6);
+        const balanceDateStr = new Intl.DateTimeFormat('en-US', { month: 'long', day: '2-digit', year: 'numeric' }).format(balanceDeadline);
         html = html.replace(/{{BALANCE_DATE}}/g, balanceDateStr);
 
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
