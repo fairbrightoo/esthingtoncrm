@@ -98,6 +98,12 @@ export const PDFService = {
         html = html.replace(/{{AMOUNT_PAID}}/g, formatCurrency(sale.totalPaid || 0));
         const balance = (sale.agreedPrice || 0) - (sale.totalPaid || 0);
         html = html.replace(/{{BALANCE_OUTSTANDING}}/g, formatCurrency(balance > 0 ? balance : 0));
+        html = html.replace(/{{BALANCE_AMOUNT}}/g, formatCurrency(balance > 0 ? balance : 0));
+        
+        const balanceDateStr = sale.nextPaymentDue 
+            ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sale.nextPaymentDue))
+            : '____________________';
+        html = html.replace(/{{BALANCE_DATE}}/g, balanceDateStr);
 
         // Note: Production API base URL must be set in ENV. Fallback to localhost if missing.
         const baseUrl = process.env.VITE_API_URL || 'http://localhost:3000';

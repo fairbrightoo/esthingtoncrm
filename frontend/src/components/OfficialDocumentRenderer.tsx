@@ -106,6 +106,12 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{AMOUNT_PAID}}/g, formatCurrency(sale.totalPaid));
         const balance = sale.agreedPrice - sale.totalPaid;
         html = html.replace(/{{BALANCE_OUTSTANDING}}/g, formatCurrency(balance > 0 ? balance : 0));
+        html = html.replace(/{{BALANCE_AMOUNT}}/g, formatCurrency(balance > 0 ? balance : 0));
+
+        const balanceDateStr = sale.nextPaymentDue 
+            ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sale.nextPaymentDue))
+            : '____________________';
+        html = html.replace(/{{BALANCE_DATE}}/g, balanceDateStr);
 
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
