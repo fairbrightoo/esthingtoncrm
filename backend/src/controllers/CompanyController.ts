@@ -418,6 +418,129 @@ export const CompanyController = {
     },
 
     /**
+     * Bulk upload Branch Admins via CSV
+     */
+    async bulkCreateAdmins(req: Request, res: Response) {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No CSV file uploaded' });
+        }
+
+        try {
+            const fileBuffer = req.file.buffer;
+            
+            // Dynamic import csv-parse/sync if it's not imported at the top
+            const { parse } = await import('csv-parse/sync');
+
+            const records = parse(fileBuffer, {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true
+            });
+
+            const allCompanies = await prisma.company.findMany({
+                include: { branches: true }
+            });
+
+            let successCount = 0;
+            const failedRows: any[] = [];
+
+            for (const row of records) {
+                const fullName = row['Full Name'];
+                const email = row['Email'];
+                const password = row['Password'];
+                const companyStr = row['Company'];
+                const branchStr = row['Branch'];
+
+                if (!fullName || !email || !password || !companyStr || !branchStr) {
+                    failedRows.push({ row, reason: 'Missing required columns' });
+                    continue;
+                }
+
+                // Fuzzy match company
+                const companyMatch = allCompanies.find(c => 
+                    c.name.toLowerCase().includes(companyStr.toLowerCase())
+                );
+
+                if (!companyMatch) {
+                    failedRows.push({ row, reason: `Company '${companyStr}' not found` });
+                    continue;
+                }
+
+                // Fuzzy match branch
+                const branchMatch = companyMatch.branches.find(b => 
+                    b.name.toLowerCase().includes(branchStr.toLowerCase())
+                );
+
+                if (!branchMatch) {
+                    failedRows.push({ row, reason: `Branch '${branchStr}' not found in company ${companyMatch.name}` });
+                    continue;
+                }
+
+                // Check if user already exists
+                const existingUser = await prisma.user.findUnique({ where: { email } });
+                if (existingUser) {
+                    failedRows.push({ row, reason: `Email '${email}' already exists` });
+                    continue;
+                }
+
+                // Create user
+                const passwordHash = await bcrypt.hash(password, 10);
+                const user = await prisma.user.create({
+                    data: {
+                        fullName,
+                        email,
+                        passwordHash,
+                        role: 'BRANCH_ADMIN',
+                        companyId: companyMatch.id,
+                        branchId: branchMatch.id
+                    }
+                });
+
+                // Send Email
+                try {
+                    const html = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                        <div style="background-color: #2563eb; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                            <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to Esthington CRM</h1>
+                        </div>
+                        <div style="padding: 30px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px;">
+                            <p style="font-size: 16px;">Hello <strong>${fullName}</strong>,</p>
+                            <p style="font-size: 16px;">Your <strong>Branch Admin</strong> account has been created for <strong>${companyMatch.name} (${branchMatch.name})</strong>.</p>
+                            
+                            <div style="background-color: #ffffff; padding: 15px; border-left: 4px solid #2563eb; margin: 25px 0;">
+                                <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280; text-transform: uppercase;">Your Login Credentials</p>
+                                <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                                <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+                            </div>
+                            
+                            <p style="margin-top: 25px;">Please log in through the Company Portal. For your security, we strongly recommend that you navigate to your Settings and change your password immediately after your first login.</p>
+                            
+                            <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>Esthington Systems Administration</p>
+                        </div>
+                    </div>
+                    `;
+                    await EmailService.send(email, 'Welcome to Esthington CRM - Your Account Credentials', html);
+                } catch (emailError) {
+                    console.error("Failed to send welcome email to Bulk Admin:", emailError);
+                }
+
+                successCount++;
+            }
+
+            res.json({
+                success: true,
+                successCount,
+                failedCount: failedRows.length,
+                failedRows
+            });
+
+        } catch (error) {
+            console.error('Error in bulkCreateAdmins:', error);
+            res.status(500).json({ error: 'Failed to process bulk upload' });
+        }
+    },
+
+    /**
      * Create Branch Managing Director (Branch MD)
      */
     async createBranchMD(req: Request, res: Response) {

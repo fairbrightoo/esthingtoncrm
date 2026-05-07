@@ -45,6 +45,9 @@ export const GlobalSettings = () => {
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [showGroupMDModal, setShowGroupMDModal] = useState(false);
     const [showChairmanModal, setShowChairmanModal] = useState(false);
+    const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+    const [bulkUploadFile, setBulkUploadFile] = useState<File | null>(null);
+    const [bulkUploadStatus, setBulkUploadStatus] = useState<{ loading: boolean, results: any } | null>(null);
     const [editingAdmin, setEditingAdmin] = useState<any>(null);
     const [adminFormData, setAdminFormData] = useState({ fullName: '', email: '', password: '', role: 'BRANCH_ADMIN' });
     const [chairmanData, setChairmanData] = useState<any>(null);
@@ -176,6 +179,32 @@ export const GlobalSettings = () => {
                 }
             }
         });
+    };
+
+    const handleBulkUpload = async () => {
+        if (!bulkUploadFile) return;
+
+        setBulkUploadStatus({ loading: true, results: null });
+        try {
+            const data = new FormData();
+            data.append('file', bulkUploadFile);
+
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/bulk-admins`, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            setBulkUploadStatus({ loading: false, results: res.data });
+            if (res.data.successCount > 0) {
+                addToast(`${res.data.successCount} admins created successfully`, 'success');
+                // Refresh data if needed, or wait for user to close modal
+            }
+        } catch (error: any) {
+            setBulkUploadStatus({ loading: false, results: null });
+            addToast(error.response?.data?.error || 'Failed to bulk upload', 'error');
+        }
     };
 
     useEffect(() => {
@@ -378,6 +407,9 @@ export const GlobalSettings = () => {
             {activeTab === 'COMPANIES' ? (
                 <>
                     <div className="flex justify-end mb-4 space-x-3">
+                        <button onClick={() => setShowBulkUploadModal(true)} className="flex items-center space-x-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition shadow-sm">
+                            <span>Bulk Upload Admins</span>
+                        </button>
                         <button onClick={handleManageChairman} className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
                             <span>Manage Global Chairman</span>
                         </button>
@@ -792,6 +824,67 @@ export const GlobalSettings = () => {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Upload Modal */}
+            {showBulkUploadModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold">Bulk Upload Branch Admins</h2>
+                            <button onClick={() => setShowBulkUploadModal(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
+                        </div>
+
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-600 mb-2">
+                                Upload a CSV file containing the following exact columns:
+                            </p>
+                            <code className="text-xs bg-gray-100 p-2 rounded block mb-4">Timestamp, Full Name, Email, Password, Company, Branch</code>
+                            <input 
+                                type="file" 
+                                accept=".csv" 
+                                className="w-full text-sm border border-gray-300 rounded p-2"
+                                onChange={(e) => setBulkUploadFile(e.target.files ? e.target.files[0] : null)}
+                            />
+                        </div>
+
+                        {bulkUploadStatus?.loading && (
+                            <div className="flex items-center space-x-2 text-blue-600 mb-4">
+                                <div className="animate-spin h-4 w-4 border-b-2 border-blue-600 rounded-full"></div>
+                                <span className="text-sm">Processing upload and dispatching emails...</span>
+                            </div>
+                        )}
+
+                        {bulkUploadStatus?.results && (
+                            <div className="mb-4 p-4 bg-gray-50 rounded border">
+                                <p className="text-sm font-semibold text-green-600">Successfully created: {bulkUploadStatus.results.successCount}</p>
+                                <p className="text-sm font-semibold text-red-600">Failed: {bulkUploadStatus.results.failedCount}</p>
+                                
+                                {bulkUploadStatus.results.failedRows && bulkUploadStatus.results.failedRows.length > 0 && (
+                                    <div className="mt-2 max-h-32 overflow-y-auto">
+                                        <p className="text-xs font-bold text-gray-700">Failed Rows Details:</p>
+                                        <ul className="list-disc pl-4 mt-1 text-xs text-red-500">
+                                            {bulkUploadStatus.results.failedRows.map((f: any, idx: number) => (
+                                                <li key={idx}><strong>{f.row['Email'] || 'Unknown'}</strong>: {f.reason}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end space-x-2 mt-4">
+                            <button onClick={() => { setShowBulkUploadModal(false); setBulkUploadStatus(null); setBulkUploadFile(null); }} className="px-3 py-1 text-gray-500 text-sm">Close</button>
+                            <button 
+                                onClick={handleBulkUpload} 
+                                disabled={!bulkUploadFile || bulkUploadStatus?.loading}
+                                className={`px-4 py-2 text-white rounded-lg text-sm ${(!bulkUploadFile || bulkUploadStatus?.loading) ? 'bg-emerald-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                            >
+                                Process & Dispatch
+                            </button>
                         </div>
                     </div>
                 </div>

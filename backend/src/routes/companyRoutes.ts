@@ -12,6 +12,7 @@ router.get('/:id/whatsapp-templates', CompanyController.getWhatsAppTemplates);
 router.get('/:companyId/branches/:branchId/users', CompanyController.getBranchUsers);
 
 // Protected Admin Routes
+router.post('/bulk-admins', authenticateToken, upload.single('file'), CompanyController.bulkCreateAdmins);
 router.post('/', authenticateToken, upload.single('logo'), CompanyController.createCompany);
 router.put('/:id', authenticateToken, upload.single('logo'), CompanyController.updateCompany);
 router.delete('/:id', authenticateToken, CompanyController.deleteCompany);
