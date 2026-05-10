@@ -14,6 +14,7 @@ interface Payment {
     amount: number;
     date: string;
     method: string;
+    accountPaidTo?: string;
     reference?: string;
     proofOfPaymentUrl?: string;
     status: string;
@@ -323,9 +324,10 @@ export const ManagingDirectorDashboard = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-blue-700 text-lg">₦{p.amount.toLocaleString()}</div>
-                                            <div className="text-sm text-gray-500 mt-1 flex flex-col">
+                                            <div className="text-sm text-gray-500 mt-1 flex flex-col space-y-1">
                                                 <span>Method: {p.method}</span>
-                                                <span className="text-xs text-gray-400 mt-0.5">Date: {new Date(p.date).toLocaleDateString()}</span>
+                                                {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
+                                                <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -454,12 +456,13 @@ export const ManagingDirectorDashboard = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="font-bold text-gray-800 text-lg">₦{p.amount.toLocaleString()}</div>
-                                                <div className="text-sm text-gray-500 mt-1 flex flex-col">
-                                                    <span>Method: {p.method}</span>
-                                                    <span className="text-xs text-gray-400 mt-0.5">Date: {new Date(p.date).toLocaleDateString()}</span>
-                                                </div>
-                                            </td>
+                                            <div className="font-bold text-gray-800 text-lg">₦{p.amount.toLocaleString()}</div>
+                                            <div className="text-sm text-gray-500 mt-1 flex flex-col space-y-1">
+                                                <span>Method: {p.method}</span>
+                                                {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
+                                                <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
+                                            </div>
+                                        </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-800">{p.recordedByUser.fullName}</div>
                                                 <div className="text-xs font-bold text-gray-500 uppercase mt-1 px-1.5 py-0.5 bg-gray-100 w-max">{p.recordedByUser.role.replace('_', ' ')}</div>
