@@ -48,6 +48,8 @@ import { HelpdeskTickets } from './pages/HelpdeskTickets';
 import { CommunicationLogs } from './pages/CommunicationLogs';
 import { AccountantPayroll } from './pages/AccountantPayroll';
 import { AccountantTaxCompliance } from './pages/AccountantTaxCompliance';
+import { AccountantSettings } from './pages/AccountantSettings';
+import { ReportsDashboard } from './pages/ReportsDashboard';
 import { BranchBroadcasts } from './pages/BranchBroadcasts';
 import { GMNetwork } from './pages/GMNetwork';
 import { GMAdvisoryQueue } from './pages/GMAdvisoryQueue';
@@ -112,6 +114,9 @@ const SettingsRouter = () => {
   if (user?.role === 'BRANCH_HR') {
     return <HRSettings />;
   }
+  if (user?.role === 'ACCOUNTANT') {
+    return <AccountantSettings />;
+  }
   return <BranchSettings />;
 };
 
@@ -119,6 +124,9 @@ const ReportsRouter = () => {
   const { user } = useAuth();
   if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
+  }
+  if (user?.role === 'ACCOUNTANT' || user?.role === 'BRANCH_ADMIN' || user?.role === 'MANAGING_DIRECTOR') {
+    return <ReportsDashboard />;
   }
   return <BranchReports />;
 };

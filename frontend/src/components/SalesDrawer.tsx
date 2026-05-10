@@ -102,12 +102,26 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [paymentAmount, setPaymentAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
     const [paymentRef, setPaymentRef] = useState('');
+    const [accountPaidTo, setAccountPaidTo] = useState('');
+    const [corporateAccounts, setCorporateAccounts] = useState<any[]>([]);
     const [proofFiles, setProofFiles] = useState<File[]>([]);
 
     useEffect(() => {
         if (viewState === 'LIST') fetchSales();
         if (viewState === 'NEW_SALE' && plots.length === 0) fetchPlots();
+        if (viewState === 'NEW_PAYMENT' && corporateAccounts.length === 0) fetchCorporateAccounts();
     }, [viewState, leadId]);
+
+    const fetchCorporateAccounts = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/corporate-bank-accounts/global`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCorporateAccounts(res.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchSales = async () => {
         try {
@@ -191,7 +205,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     amount: paymentAmount,
                     method: 'EQUITY_WALLET',
                     reference: paymentRef,
-                    userId: user?.id
+                    userId: user?.id,
+                    accountPaidTo: accountPaidTo || undefined
                 }, { 
                     headers: { Authorization: `Bearer ${token}` } 
                 });
@@ -205,6 +220,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 formData.append('method', paymentMethod);
                 formData.append('reference', paymentRef);
                 formData.append('userId', user?.id || '');
+                if (accountPaidTo) formData.append('accountPaidTo', accountPaidTo);
                 proofFiles.forEach(file => {
                     formData.append('proofs', file);
                 });
@@ -504,6 +520,24 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             onChange={(e) => setPaymentRef(e.target.value)}
                         />
                     </div>
+                    {paymentMethod !== 'EQUITY_WALLET' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Account Paid To</label>
+                            <select
+                                required
+                                className="w-full border rounded px-3 py-3"
+                                value={accountPaidTo}
+                                onChange={(e) => setAccountPaidTo(e.target.value)}
+                            >
+                                <option value="" disabled>-- Select Corporate Account --</option>
+                                {corporateAccounts.map((acc, i) => (
+                                    <option key={i} value={`${acc.companyName} - ${acc.bankName} - ${acc.accountNumber}`}>
+                                        {acc.companyName} | {acc.bankName} - {acc.accountNumber}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     {paymentMethod !== 'EQUITY_WALLET' && (
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Proof of Payment (Image/PDF)</label>

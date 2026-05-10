@@ -123,7 +123,7 @@ export const SaleController = {
     recordPayment: async (req: Request, res: Response) => {
         try {
             const { saleId } = req.params;
-            const { amount, method, reference, userId } = req.body;
+            const { amount, method, reference, userId, accountPaidTo } = req.body;
 
             const sale = await prisma.sale.findUnique({
                 where: { id: String(saleId) },
@@ -157,6 +157,7 @@ export const SaleController = {
                             reference: reference || null,
                             status: 'APPROVED',
                             recordedByUserId: userId,
+                            accountPaidTo: accountPaidTo || null,
                             isCommissionPaid: true // User requested no commission on reused equity
                         }
                     });
@@ -209,7 +210,8 @@ export const SaleController = {
                     reference,
                     proofOfPaymentUrl,
                     status: 'PENDING',
-                    recordedByUserId: userId
+                    recordedByUserId: userId,
+                    accountPaidTo: accountPaidTo || null
                 }
             });
 

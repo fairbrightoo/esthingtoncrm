@@ -86,6 +86,7 @@ model Branch {
   payrollRecords    PayrollRecord[]
   taxRemittances    TaxRemittance[]
   executiveMemos    ExecutiveMemo[]
+  corporateBankAccounts CorporateBankAccount[]
 }
 
 model User {
@@ -326,6 +327,7 @@ model Payment {
   status            String   @default("PENDING")
   saleId            String
   recordedByUserId  String
+  accountPaidTo     String?
 
   isCommissionPaid      Boolean   @default(false)
   commissionDisbursedAt DateTime?
@@ -849,4 +851,17 @@ model HRRecommendation {
 
   author     User @relation("HRRecommendationAuthor", fields: [authorId], references: [id])
   targetUser User @relation("HRRecommendationTarget", fields: [targetUserId], references: [id])
+}
+
+model CorporateBankAccount {
+  id            String   @id @default(uuid())
+  bankName      String
+  accountName   String
+  accountNumber String
+  companyName   String
+  branchId      String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  branch        Branch   @relation(fields: [branchId], references: [id])
 }

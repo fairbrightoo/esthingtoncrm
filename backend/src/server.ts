@@ -38,6 +38,8 @@ app.post('/api/dom-dump', (req: Request, res: Response) => {
 import automationRoutes from './routes/automationRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
+import corporateBankAccountRoutes from './routes/corporateBankAccountRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
@@ -49,6 +51,8 @@ import eventRoutes from './routes/eventRoutes.js';
 app.use('/api', automationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
+app.use('/api/corporate-bank-accounts', corporateBankAccountRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/leads', leadRoutes);
 import communicationRoutes from './routes/communicationRoutes.js';
