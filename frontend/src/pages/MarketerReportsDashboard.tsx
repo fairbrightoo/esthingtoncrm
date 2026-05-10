@@ -310,7 +310,7 @@ export const MarketerReportsDashboard = () => {
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                        <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
                                         <Legend />
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
@@ -333,7 +333,7 @@ export const MarketerReportsDashboard = () => {
                                                 <Cell key={`cell-${index}`} fill={COLORS[(index + 3) % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                        <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
                                         <Legend />
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
