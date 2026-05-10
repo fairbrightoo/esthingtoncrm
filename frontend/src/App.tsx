@@ -26,6 +26,7 @@ import { BranchAttendance } from './pages/BranchAttendance';
 import { BranchPayroll } from './pages/BranchPayroll';
 import { BranchRequisitions } from './pages/BranchRequisitions';
 import { MarketerDashboard } from './pages/MarketerDashboard';
+import { MarketerReportsDashboard } from './pages/MarketerReportsDashboard';
 import { CustomerCareDashboard } from './pages/CustomerCareDashboard';
 import { ManagingDirectorDashboard } from './pages/ManagingDirectorDashboard';
 import { MDOverview } from './pages/MDOverview';
@@ -121,6 +122,9 @@ const ReportsRouter = () => {
   const { user } = useAuth();
   if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
+  }
+  if (user?.role === 'MARKETER' || user?.role === 'SALES_MANAGER') {
+    return <MarketerReportsDashboard />;
   }
   return <BranchReports />;
 };

@@ -20,4 +20,8 @@ router.get('/enterprise/marketer-kpi', requireRole(['SUPER_ADMIN', 'GLOBAL_CHAIR
 // Managing Director Intelligence API
 router.get('/reports/md', MDReportController.getMDAnalytics);
 
+// Marketer Intelligence API
+import { MarketerAnalyticsController } from '../controllers/MarketerAnalyticsController.js';
+router.get('/reports/marketer', MarketerAnalyticsController.getMarketerReports);
+
 export default router;
