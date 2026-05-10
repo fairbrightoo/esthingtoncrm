@@ -114,9 +114,6 @@ const SettingsRouter = () => {
   if (user?.role === 'BRANCH_HR') {
     return <HRSettings />;
   }
-  if (user?.role === 'ACCOUNTANT') {
-    return <AccountantSettings />;
-  }
   return <BranchSettings />;
 };
 
@@ -124,9 +121,6 @@ const ReportsRouter = () => {
   const { user } = useAuth();
   if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
-  }
-  if (user?.role === 'ACCOUNTANT' || user?.role === 'BRANCH_ADMIN' || user?.role === 'MANAGING_DIRECTOR') {
-    return <ReportsDashboard />;
   }
   return <BranchReports />;
 };

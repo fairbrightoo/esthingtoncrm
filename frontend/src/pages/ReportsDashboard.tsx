@@ -12,7 +12,11 @@ interface ReportData {
     branchId: string;
 }
 
-export const ReportsDashboard: React.FC = () => {
+interface ReportsDashboardProps {
+    embedded?: boolean;
+}
+
+export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) => {
     const [activeTab, setActiveTab] = useState<'SALES' | 'PAYROLL'>('SALES');
     const [loading, setLoading] = useState(false);
     const [salesData, setSalesData] = useState<any[]>([]);
@@ -222,32 +226,62 @@ export const ReportsDashboard: React.FC = () => {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>
-                
-                <div className="flex space-x-4">
-                    <select 
-                        value={filters.month} 
-                        onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
-                        className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                            <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
-                        ))}
-                    </select>
+        <div className={embedded ? "space-y-6" : "p-6 max-w-7xl mx-auto space-y-6"}>
+            {!embedded && (
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>
                     
-                    <select 
-                        value={filters.year} 
-                        onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-                        className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {[2024, 2025, 2026, 2027].map(y => (
-                            <option key={y} value={y}>{y}</option>
-                        ))}
-                    </select>
+                    <div className="flex space-x-4">
+                        <select 
+                            value={filters.month} 
+                            onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
+                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
+                            ))}
+                        </select>
+                        
+                        <select 
+                            value={filters.year} 
+                            onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Embedded Header Controls */}
+            {embedded && (
+                <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="font-semibold text-gray-800">Report Filters</h2>
+                    <div className="flex space-x-4">
+                        <select 
+                            value={filters.month} 
+                            onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
+                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
+                            ))}
+                        </select>
+                        
+                        <select 
+                            value={filters.year} 
+                            onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            )}
 
             <div className="flex space-x-1 border-b border-gray-200">
                 <button

@@ -4,10 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Building2, MapPin, Save, Shield, Lock, Activity, Bell } from 'lucide-react';
 import { ProfileSettings } from '../components/ProfileSettings';
+import { AccountantSettings } from './AccountantSettings';
 
 export const BranchSettings = () => {
     const { user, token, login } = useAuth();
     const { addToast } = useToast();
+    const [activeMainTab, setActiveMainTab] = useState<'SECURITY' | 'CORPORATE'>('SECURITY');
     const [loading, setLoading] = useState(false);
     
     // Branch Config
@@ -103,6 +105,36 @@ export const BranchSettings = () => {
     const isBranchAdminLevel = ['SUPER_ADMIN', 'BRANCH_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role || '');
 
     if (!isBranchAdminLevel) {
+        if (user?.role === 'ACCOUNTANT') {
+            return (
+                <div className="space-y-6 max-w-7xl mx-auto pb-10">
+                    <div className="flex space-x-1 border-b border-gray-200 mb-6">
+                        <button
+                            onClick={() => setActiveMainTab('SECURITY')}
+                            className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                                activeMainTab === 'SECURITY' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Account & Security
+                        </button>
+                        <button
+                            onClick={() => setActiveMainTab('CORPORATE')}
+                            className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                                activeMainTab === 'CORPORATE' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Corporate Bank Accounts
+                        </button>
+                    </div>
+
+                    {activeMainTab === 'CORPORATE' ? (
+                        <AccountantSettings embedded />
+                    ) : (
+                        <ProfileSettings />
+                    )}
+                </div>
+            );
+        }
         return <ProfileSettings />;
     }
 

@@ -8,9 +8,11 @@ import {
 import { TrendingUp, Banknote, Users, Wallet, Calendar, Download, Activity, PieChart as PieIcon, Calculator, ArrowDownRight } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { CustomerCareReport } from '../components/CustomerCareReport';
+import { ReportsDashboard } from './ReportsDashboard';
 
 export const BranchReports = () => {
     const { user, token } = useAuth();
+    const [activeMainTab, setActiveMainTab] = useState<'BI' | 'FINANCIAL'>('BI');
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState<'ALL' | 'THIS_MONTH' | 'LAST_90_DAYS'>('ALL');
@@ -79,38 +81,64 @@ export const BranchReports = () => {
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <header className="flex flex-col md:flex-row md:justify-between md:items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Business Intelligence Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Branch Reports</h1>
                     <p className="text-gray-500">Financial insights and performance for {user?.branch?.name || 'your branch'}</p>
                 </div>
-                <div className="mt-4 md:mt-0 flex items-center space-x-3">
-                    <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-                        <Calendar size={18} className="text-gray-500 ml-2 mr-2" />
-                        <select
-                            value={dateRange}
-                            onChange={(e) => setDateRange(e.target.value as any)}
-                            className="bg-transparent border-none outline-none text-sm text-gray-700 py-1 pr-6 cursor-pointer"
+                {activeMainTab === 'BI' && (
+                    <div className="mt-4 md:mt-0 flex items-center space-x-3">
+                        <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                            <Calendar size={18} className="text-gray-500 ml-2 mr-2" />
+                            <select
+                                value={dateRange}
+                                onChange={(e) => setDateRange(e.target.value as any)}
+                                className="bg-transparent border-none outline-none text-sm text-gray-700 py-1 pr-6 cursor-pointer"
+                            >
+                                <option value="ALL">All-Time Revenue</option>
+                                <option value="THIS_MONTH">This Month</option>
+                                <option value="LAST_90_DAYS">Last 90 Days</option>
+                            </select>
+                        </div>
+                        <button 
+                            onClick={() => handlePrint()}
+                            className="flex items-center px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white text-sm font-medium rounded-lg shadow-sm transition"
                         >
-                            <option value="ALL">All-Time Revenue</option>
-                            <option value="THIS_MONTH">This Month</option>
-                            <option value="LAST_90_DAYS">Last 90 Days</option>
-                        </select>
+                            <Download size={16} className="mr-2" /> Export PDF
+                        </button>
                     </div>
-                    <button 
-                        onClick={() => handlePrint()}
-                        className="flex items-center px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white text-sm font-medium rounded-lg shadow-sm transition"
-                    >
-                        <Download size={16} className="mr-2" /> Export PDF
-                    </button>
-                </div>
+                )}
             </header>
 
-            <div ref={reportRef} className="space-y-6 print:p-8 print:bg-white print:min-h-screen">
-                {/* Print Context Header */}
-                <div className="hidden print:block border-b-2 border-gray-200 pb-4 mb-6">
-                    <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Esthington CRM</h1>
-                    <h2 className="text-xl font-medium text-gray-600 mt-1">Branch Financial Report: {user?.branch?.name}</h2>
-                    <p className="text-sm text-gray-500">Date Range Filter: {dateRange.replace(/_/g, ' ')}</p>
-                    <p className="text-sm text-gray-500">Report Generated: {new Date().toLocaleString()}</p>
+            {(user?.role === 'ACCOUNTANT' || user?.role === 'BRANCH_ADMIN' || user?.role === 'MANAGING_DIRECTOR') && (
+                <div className="flex space-x-1 border-b border-gray-200 mb-6">
+                    <button
+                        onClick={() => setActiveMainTab('BI')}
+                        className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                            activeMainTab === 'BI' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        Business Intelligence Dashboard
+                    </button>
+                    <button
+                        onClick={() => setActiveMainTab('FINANCIAL')}
+                        className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                            activeMainTab === 'FINANCIAL' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        Detailed Financial Reports
+                    </button>
+                </div>
+            )}
+
+            {activeMainTab === 'FINANCIAL' ? (
+                <ReportsDashboard embedded />
+            ) : (
+                <div ref={reportRef} className="space-y-6 print:p-8 print:bg-white print:min-h-screen">
+                    {/* Print Context Header */}
+                    <div className="hidden print:block border-b-2 border-gray-200 pb-4 mb-6">
+                        <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Esthington CRM</h1>
+                        <h2 className="text-xl font-medium text-gray-600 mt-1">Branch Financial Report: {user?.branch?.name}</h2>
+                        <p className="text-sm text-gray-500">Date Range Filter: {dateRange.replace(/_/g, ' ')}</p>
+                        <p className="text-sm text-gray-500">Report Generated: {new Date().toLocaleString()}</p>
                 </div>
 
                 {/* Main Profit Banner */}
@@ -298,6 +326,7 @@ export const BranchReports = () => {
                     </div>
                 </div>
             </div>
+            )}
         </div>
     );
 };

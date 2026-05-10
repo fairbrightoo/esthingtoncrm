@@ -3,7 +3,11 @@ import axios from 'axios';
 import { Plus, Trash2, Loader, Save } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
-export const AccountantSettings: React.FC = () => {
+interface AccountantSettingsProps {
+    embedded?: boolean;
+}
+
+export const AccountantSettings: React.FC<AccountantSettingsProps> = ({ embedded }) => {
     const [accounts, setAccounts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -67,8 +71,8 @@ export const AccountantSettings: React.FC = () => {
     };
 
     return (
-        <div className="p-6 max-w-5xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold text-gray-800">Accountant Settings</h1>
+        <div className={embedded ? "space-y-6" : "p-6 max-w-5xl mx-auto space-y-6"}>
+            {!embedded && <h1 className="text-2xl font-bold text-gray-800">Accountant Settings</h1>}
             
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Corporate Bank Accounts</h2>
