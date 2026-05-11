@@ -10,7 +10,7 @@ router.use(authenticateToken);
 
 // --- TEAM MANAGEMENT ---
 // Head BDD or Super Admin can view all teams and create teams
-router.get('/', requireRole(['HEAD_BDD', 'SUPER_ADMIN', 'BDM']), TeamController.getTeams);
+router.get('/', requireRole(['HEAD_BDD', 'SUPER_ADMIN', 'BDM', 'TEAM_LEAD']), TeamController.getTeams);
 router.post('/', requireRole(['HEAD_BDD', 'SUPER_ADMIN']), TeamController.createTeam);
 
 // Head BDD, Super Admin can update team (change leader/BDM). Team Leads can also maybe add members (but we keep it restricted for now)

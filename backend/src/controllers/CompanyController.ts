@@ -142,7 +142,8 @@ export const CompanyController = {
                     accountNumber: true,
                     passportUrl: true,
                     cvUrl: true,
-                    agreementUrl: true
+                    agreementUrl: true,
+                    teamId: true
                 }
             });
             res.json(users);
