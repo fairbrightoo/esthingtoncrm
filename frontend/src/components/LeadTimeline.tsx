@@ -126,6 +126,19 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
         }
     };
 
+    const handleToggleTask = async (taskId: string, currentStatus: boolean) => {
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${taskId}`, {
+                isCompleted: !currentStatus
+            }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            fetchTasks(); // Refresh tasks
+        } catch (error) {
+            console.error("Failed to update task", error);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -272,7 +285,10 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
                         {tasks.length === 0 && <div className="text-gray-400 text-center py-8">No tasks scheduled for this lead.</div>}
                         {tasks.map(task => (
                             <div key={task.id} className="bg-white border rounded p-3 flex items-start">
-                                <div className={`mt-1 mr-3 w-4 h-4 rounded-full border-2 ${task.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}></div>
+                                <div 
+                                    onClick={() => handleToggleTask(task.id, task.isCompleted)}
+                                    className={`mt-1 mr-3 w-4 h-4 flex-shrink-0 rounded-full border-2 cursor-pointer transition-colors ${task.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-green-400'}`}
+                                ></div>
                                 <div>
                                     <p className={`text-sm font-medium ${task.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</p>
                                     {task.dueDate && <p className="text-xs text-gray-500 mt-1">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
