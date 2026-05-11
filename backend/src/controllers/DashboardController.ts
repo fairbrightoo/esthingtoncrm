@@ -7,7 +7,7 @@ export const DashboardController = {
             // @ts-ignore
             const { companyId, branchId, role, userId } = req.user;
 
-            const { startDate, endDate } = req.query;
+            const { startDate, endDate, scope } = req.query;
 
             // Define Scope Filters
             const whereClause: any = {};
@@ -21,6 +21,25 @@ export const DashboardController = {
 
             if (role === 'MARKETER') {
                 whereClause.assignedToUserId = userId;
+            } else if (role === 'TEAM_LEAD') {
+                if (scope === 'TEAM') {
+                    whereClause.assignedToUser = { team: { teamLeadId: userId } };
+                } else {
+                    whereClause.assignedToUserId = userId;
+                }
+            } else if (role === 'BDM') {
+                if (scope === 'TEAM') {
+                    whereClause.assignedToUser = { team: { bdmId: userId } };
+                } else {
+                    whereClause.assignedToUserId = userId;
+                }
+            } else if (role === 'HEAD_BDD') {
+                if (scope === 'DEPARTMENT') {
+                    // Entire department logic - all marketers in this branch
+                    whereClause.assignedToUser = { role: { in: ['MARKETER', 'TEAM_LEAD', 'BDM'] } };
+                } else {
+                    whereClause.assignedToUserId = userId;
+                }
             }
 
             const dateFilter: any = {};

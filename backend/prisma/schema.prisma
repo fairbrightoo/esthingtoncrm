@@ -54,39 +54,41 @@ model Company {
   payrollRecords       PayrollRecord[]
   taxRemittances       TaxRemittance[]
   executiveMemos       ExecutiveMemo[]
+  teams                Team[]
 }
 
 model Branch {
-  id                String              @id @default(uuid())
-  companyId         String
-  name              String
-  address           String?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  email             String?
-  phone             String?
-  managerName       String?
-  signatureUrl      String?
-  attendances       Attendance[]
-  company           Company             @relation(fields: [companyId], references: [id])
-  leads             Lead[]
-  users             User[]
-  estates           Estate[]
-  discountCodes     DiscountCode[]
-  requisitions      Requisition[]
-  branchBudgets     BranchBudget[]
-  refundRequests    RefundRequest[]
-  hrSettings        HRSettings?
-  leaveRequests     LeaveRequest[]
-  queries           DisciplinaryQuery[]
-  appraisals        Appraisal[]
-  performanceAwards PerformanceAward[]
-  companyDocuments  CompanyDocument[]
-  helpdeskTickets   HelpdeskTicket[]
-  payrollRecords    PayrollRecord[]
-  taxRemittances    TaxRemittance[]
-  executiveMemos    ExecutiveMemo[]
+  id                    String                 @id @default(uuid())
+  companyId             String
+  name                  String
+  address               String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  email                 String?
+  phone                 String?
+  managerName           String?
+  signatureUrl          String?
+  attendances           Attendance[]
+  company               Company                @relation(fields: [companyId], references: [id])
+  leads                 Lead[]
+  users                 User[]
+  estates               Estate[]
+  discountCodes         DiscountCode[]
+  requisitions          Requisition[]
+  branchBudgets         BranchBudget[]
+  refundRequests        RefundRequest[]
+  hrSettings            HRSettings?
+  leaveRequests         LeaveRequest[]
+  queries               DisciplinaryQuery[]
+  appraisals            Appraisal[]
+  performanceAwards     PerformanceAward[]
+  companyDocuments      CompanyDocument[]
+  helpdeskTickets       HelpdeskTicket[]
+  payrollRecords        PayrollRecord[]
+  taxRemittances        TaxRemittance[]
+  executiveMemos        ExecutiveMemo[]
   corporateBankAccounts CorporateBankAccount[]
+  teams                 Team[]
 }
 
 model User {
@@ -156,6 +158,11 @@ model User {
   branchBroadcasts       BranchBroadcast[]    @relation("BranchBroadcastAuthor")
   authoredHrRecs         HRRecommendation[]   @relation("HRRecommendationAuthor")
   targetedHrRecs         HRRecommendation[]   @relation("HRRecommendationTarget")
+  teamId                 String?
+  team                   Team?                @relation("TeamMembers", fields: [teamId], references: [id])
+  ledTeam                Team?                @relation("TeamLead")
+  managedTeams           Team[]               @relation("TeamBdm")
+  teamMessagesSent       TeamMessage[]        @relation("MessageSender")
 }
 
 model Attendance {
@@ -864,4 +871,33 @@ model CorporateBankAccount {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   branch        Branch   @relation(fields: [branchId], references: [id])
+}
+
+model Team {
+  id         String   @id @default(uuid())
+  name       String
+  branchId   String
+  companyId  String
+  teamLeadId String?  @unique
+  bdmId      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  branch   Branch        @relation(fields: [branchId], references: [id])
+  company  Company       @relation(fields: [companyId], references: [id])
+  teamLead User?         @relation("TeamLead", fields: [teamLeadId], references: [id])
+  bdm      User?         @relation("TeamBdm", fields: [bdmId], references: [id])
+  members  User[]        @relation("TeamMembers")
+  messages TeamMessage[]
+}
+
+model TeamMessage {
+  id        String   @id @default(uuid())
+  teamId    String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  team   Team @relation(fields: [teamId], references: [id])
+  sender User @relation("MessageSender", fields: [senderId], references: [id])
 }

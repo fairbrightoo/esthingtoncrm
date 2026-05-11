@@ -619,7 +619,7 @@ export const CompanyController = {
         // Accept password from body if provided, otherwise we'll generate one
         let password = req.body.password;
 
-        if (!['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER'].includes(role)) {
+        if (!['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
             return res.status(400).json({ error: 'Invalid role for branch staff' });
         }
 
@@ -690,10 +690,20 @@ export const CompanyController = {
      */
     async updateUser(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { fullName, email, phone, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber } = req.body;
+        const { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber } = req.body;
 
         try {
+            const userBefore = await prisma.user.findUnique({ where: { id } });
+
             const data: any = { fullName, email, phone };
+            
+            if (role && userBefore && role !== userBefore.role) {
+                const validRoles = ['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'];
+                if (validRoles.includes(role)) {
+                    data.role = role;
+                }
+            }
+
             if (dateOfBirth !== undefined) {
                 data.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
             }
@@ -720,6 +730,41 @@ export const CompanyController = {
                 where: { id },
                 data
             });
+
+            // If user was promoted to a leadership role
+            if (data.role && userBefore && data.role !== userBefore.role && ['TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(data.role)) {
+                try {
+                    const company = await prisma.company.findUnique({ where: { id: user.companyId || '' } });
+                    const companyName = company?.name || 'Esthington CRM';
+                    const roleName = data.role.replace('_', ' ');
+                    
+                    const html = `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                        <div style="background-color: #1e3a8a; padding: 20px; text-align: center; color: white;">
+                            <h2 style="margin: 0;">Congratulations on Your Promotion!</h2>
+                        </div>
+                        <div style="padding: 30px;">
+                            <p>Dear <strong>${user.fullName}</strong>,</p>
+                            <p>We are thrilled to officially inform you that you have been promoted to the role of <strong>${roleName}</strong> within the organization.</p>
+                            
+                            <div style="background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0 0 10px 0;"><strong>Your New Role Access:</strong></p>
+                                <p style="margin: 5px 0;">Your dashboard has automatically been upgraded with new management features. Please log in to explore your new tools.</p>
+                            </div>
+                            
+                            <p style="margin-top: 25px;">The Management Team recognizes your dedication and hard work. We are confident you will continue to excel in this new leadership position.</p>
+                            
+                            <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>${companyName} Management</p>
+                        </div>
+                    </div>
+                    `;
+                    const { EmailService } = await import('../services/EmailService.js');
+                    await EmailService.send(user.email, 'Official Notice: Promotion to ' + roleName, html);
+                } catch (emailError) {
+                    console.error("Failed to send promotion email:", emailError);
+                }
+            }
+
             res.json(user);
         } catch (error) {
             console.error('Error updating user:', error);
@@ -795,9 +840,9 @@ export const CompanyController = {
 
                     // Strict role check
                     const role = row.role?.toUpperCase();
-                    if (role && !['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER'].includes(role)) {
+                    if (role && !['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
                         results.failed++;
-                        results.errors.push({ row, error: 'Invalid role. Must be MARKETER, CUSTOMER_CARE, BRANCH_HR, ACCOUNTANT, or GENERAL_MANAGER' });
+                        results.errors.push({ row, error: 'Invalid role. Must be MARKETER, CUSTOMER_CARE, BRANCH_HR, ACCOUNTANT, GENERAL_MANAGER, TEAM_LEAD, BDM, or HEAD_BDD' });
                         continue;
                     }
 

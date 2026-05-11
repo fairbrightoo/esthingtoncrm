@@ -27,6 +27,10 @@ import { BranchPayroll } from './pages/BranchPayroll';
 import { BranchRequisitions } from './pages/BranchRequisitions';
 import { MarketerDashboard } from './pages/MarketerDashboard';
 import { MarketerReportsDashboard } from './pages/MarketerReportsDashboard';
+import { TeamManagement } from './pages/TeamManagement';
+import { TeamComms } from './pages/TeamComms';
+import { BDMCommandCenter } from './pages/BDMCommandCenter';
+import { DepartmentBuilder } from './pages/DepartmentBuilder';
 import { CustomerCareDashboard } from './pages/CustomerCareDashboard';
 import { ManagingDirectorDashboard } from './pages/ManagingDirectorDashboard';
 import { MDOverview } from './pages/MDOverview';
@@ -91,7 +95,7 @@ const BranchDashboardRouter = () => {
     return <GMDashboard />;
   }
 
-  if (user?.role === 'MARKETER') {
+  if (user?.role === 'MARKETER' || user?.role === 'TEAM_LEAD' || user?.role === 'BDM' || user?.role === 'HEAD_BDD') {
     return <MarketerDashboard />;
   }
 
@@ -123,7 +127,7 @@ const ReportsRouter = () => {
   if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
   }
-  if (user?.role === 'MARKETER' || user?.role === 'SALES_MANAGER') {
+  if (['MARKETER', 'SALES_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user?.role || '')) {
     return <MarketerReportsDashboard />;
   }
   return <BranchReports />;
@@ -218,6 +222,10 @@ function App() {
             <Route path="/dashboard/:branchName/disbursements" element={<DashboardLayout><AccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/reports" element={<DashboardLayout><ReportsRouter /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/scripts" element={<DashboardLayout><CallScripts /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/team" element={<DashboardLayout><TeamManagement /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/team-comms" element={<DashboardLayout><TeamComms /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/command-center" element={<DashboardLayout><BDMCommandCenter /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/department" element={<DashboardLayout><DepartmentBuilder /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/templates" element={<DashboardLayout><CommunicationTemplates /></DashboardLayout>} />

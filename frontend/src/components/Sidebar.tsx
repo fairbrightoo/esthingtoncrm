@@ -153,6 +153,43 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     </>
                 )}
 
+                {user?.role === 'TEAM_LEAD' && (
+                    <>
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/team`} icon={<Users size={20} />} label="Team Management" />
+                        <NavItem to={`${basePath}/team-comms`} icon={<MessageCircle size={20} />} label="Team Comms" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
+                        
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
+                    </>
+                )}
+
+                {user?.role === 'BDM' && (
+                    <>
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/command-center`} icon={<Globe size={20} />} label="BDM Command Center" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
+                        
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
+                    </>
+                )}
+
+                {user?.role === 'HEAD_BDD' && (
+                    <>
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/department`} icon={<LayoutDashboard size={20} />} label="Department Builder" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
+                        
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
+                    </>
+                )}
+
                 {user?.role === 'MANAGING_DIRECTOR' && (
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
