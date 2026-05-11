@@ -213,31 +213,43 @@ export const TeamManagement = () => {
                                 <div className="flex justify-center p-8"><span className="animate-spin h-6 w-6 border-2 border-indigo-600 border-t-transparent rounded-full"></span></div>
                             ) : pulseData ? (
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
-                                            <p className="text-sm text-gray-500 font-medium mb-1">Calls Made</p>
-                                            <p className="text-2xl font-bold text-gray-800">{pulseData.callsMade}</p>
+                                            <p className="text-xs text-gray-500 font-medium mb-1">Leads Generated</p>
+                                            <p className="text-2xl font-bold text-gray-800">{pulseData.metrics?.leadsGeneratedToday || 0}</p>
                                         </div>
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
-                                            <p className="text-sm text-gray-500 font-medium mb-1">Meetings Held</p>
-                                            <p className="text-2xl font-bold text-gray-800">{pulseData.meetingsHeld}</p>
+                                            <p className="text-xs text-gray-500 font-medium mb-1">Follow-ups</p>
+                                            <p className="text-2xl font-bold text-gray-800">{pulseData.metrics?.followUpsCompletedToday || 0}</p>
+                                        </div>
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                                            <p className="text-xs text-gray-500 font-medium mb-1">Inspections</p>
+                                            <p className="text-2xl font-bold text-gray-800">{pulseData.metrics?.inspectionsToday || 0}</p>
                                         </div>
                                     </div>
                                     
-                                    <div>
-                                        <h4 className="font-semibold text-gray-800 mb-3 text-sm">Today's Notes & Updates</h4>
-                                        {pulseData.notes?.length > 0 ? (
-                                            <ul className="space-y-3">
-                                                {pulseData.notes.map((note: any, idx: number) => (
-                                                    <li key={idx} className="bg-white border border-gray-100 rounded-lg p-3 text-sm text-gray-700 shadow-sm relative pl-10">
-                                                        <div className="absolute left-4 top-4 w-2 h-2 rounded-full bg-indigo-400"></div>
-                                                        {note.content}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg text-center">No notes recorded today.</p>
-                                        )}
+                                    <div className="bg-indigo-50 rounded-xl p-5 border border-indigo-100">
+                                        <h4 className="font-semibold text-indigo-900 mb-4 text-sm">
+                                            Pipeline Health
+                                        </h4>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-center">
+                                                <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider mb-1">Active Leads</p>
+                                                <p className="text-xl font-bold text-indigo-900">{pulseData.health?.activeLeads || 0}</p>
+                                            </div>
+                                            <div className="h-10 border-l border-indigo-200"></div>
+                                            <div className="text-center">
+                                                <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider mb-1">Cold Leads</p>
+                                                <p className="text-xl font-bold text-indigo-900">{pulseData.health?.coldLeads || 0}</p>
+                                            </div>
+                                            <div className="h-10 border-l border-indigo-200"></div>
+                                            <div className="text-center">
+                                                <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider mb-1">Health Score</p>
+                                                <p className={`text-xl font-bold ${pulseData.health?.pipelineHealthScore >= 70 ? 'text-green-600' : pulseData.health?.pipelineHealthScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                                                    {pulseData.health?.pipelineHealthScore || 0}%
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
