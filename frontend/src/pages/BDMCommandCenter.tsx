@@ -100,7 +100,7 @@ export const BDMCommandCenter = () => {
                             <Trophy size={20} className="mr-2" />
                             <span className="font-semibold text-sm">Total Downline Sales</span>
                         </div>
-                        <p className="text-3xl font-bold text-emerald-900 relative z-10">{formatCurrency(stats.sales.totalAmount)}</p>
+                        <p className="text-3xl font-bold text-emerald-900 relative z-10">{formatCurrency(stats.financial?.totalRevenue || 0)}</p>
                     </div>
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-2xl border border-blue-200 shadow-sm relative overflow-hidden">
                         <div className="absolute -right-4 -bottom-4 opacity-10 text-blue-500"><Target size={100} /></div>
@@ -108,7 +108,7 @@ export const BDMCommandCenter = () => {
                             <Activity size={20} className="mr-2" />
                             <span className="font-semibold text-sm">Active Downline Prospects</span>
                         </div>
-                        <p className="text-3xl font-bold text-blue-900 relative z-10">{stats.pipeline.activeProspects}</p>
+                        <p className="text-3xl font-bold text-blue-900 relative z-10">{(stats.financial?.totalLeads || 0) - (stats.financial?.clientLeads || 0)}</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-2xl border border-purple-200 shadow-sm relative overflow-hidden">
                          <div className="absolute -right-4 -bottom-4 opacity-10 text-purple-500"><Activity size={100} /></div>
@@ -116,7 +116,7 @@ export const BDMCommandCenter = () => {
                             <Users size={20} className="mr-2" />
                             <span className="font-semibold text-sm">Total Converted Clients</span>
                         </div>
-                        <p className="text-3xl font-bold text-purple-900 relative z-10">{stats.pipeline.clients}</p>
+                        <p className="text-3xl font-bold text-purple-900 relative z-10">{stats.financial?.clientLeads || 0}</p>
                     </div>
                 </div>
             )}

@@ -108,21 +108,21 @@ export const TeamManagement = () => {
                             <DollarSign size={20} className="mr-2" />
                             <span className="font-semibold text-sm">Team Sales (This Month)</span>
                         </div>
-                        <p className="text-3xl font-bold text-emerald-900">{formatCurrency(stats.sales.totalAmount)}</p>
+                        <p className="text-3xl font-bold text-emerald-900">{formatCurrency(stats.financial?.totalRevenue || 0)}</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-2xl border border-purple-200">
                         <div className="flex items-center text-purple-800 mb-2">
                             <TrendingUp size={20} className="mr-2" />
                             <span className="font-semibold text-sm">Active Prospects</span>
                         </div>
-                        <p className="text-3xl font-bold text-purple-900">{stats.pipeline.activeProspects}</p>
+                        <p className="text-3xl font-bold text-purple-900">{(stats.financial?.totalLeads || 0) - (stats.financial?.clientLeads || 0)}</p>
                     </div>
                     <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-5 rounded-2xl border border-amber-200">
                         <div className="flex items-center text-amber-800 mb-2">
                             <Calendar size={20} className="mr-2" />
                             <span className="font-semibold text-sm">Follow-ups Today</span>
                         </div>
-                        <p className="text-3xl font-bold text-amber-900">{stats.pipeline.followUpsToday}</p>
+                        <p className="text-3xl font-bold text-amber-900">{stats.pipeline?.followUpsToday || 0}</p>
                     </div>
                 </div>
             )}
