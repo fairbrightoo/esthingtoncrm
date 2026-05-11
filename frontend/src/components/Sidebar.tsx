@@ -145,6 +145,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'MARKETER' && (
                     <>
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/team-comms`} icon={<MessageCircle size={20} />} label="Team Comms" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         

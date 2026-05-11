@@ -19,6 +19,10 @@ export const TeamController = {
             if (role === 'TEAM_LEAD') {
                 filter.teamLeadId = userId;
             }
+            // If MARKETER, return the team they are a member of
+            if (role === 'MARKETER') {
+                filter.members = { some: { id: userId } };
+            }
 
             const teams = await prisma.team.findMany({
                 where: filter,
