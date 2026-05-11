@@ -105,6 +105,7 @@ export const BranchUsers = () => {
                     fullName: formData.fullName,
                     email: formData.email,
                     phone: formData.phone,
+                    role: formData.role,
                     dateOfBirth: formData.dateOfBirth || undefined,
                     monthlySalary: formData.monthlySalary,
                     commissionRate: formData.commissionRate,

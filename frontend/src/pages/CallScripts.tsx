@@ -13,6 +13,7 @@ interface Script {
 
 export const CallScripts = () => {
     const { user } = useAuth();
+    const { addToast } = useToast();
     const [scripts, setScripts] = useState<Script[]>([]);
     const [selectedScript, setSelectedScript] = useState<Script | null>(null);
     const [isEditing, setIsEditing] = useState(false);
