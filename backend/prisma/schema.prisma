@@ -238,6 +238,7 @@ model Task {
   description      String?
   dueDate          DateTime?
   isCompleted      Boolean   @default(false)
+  type             String    @default("GENERAL")
   leadId           String?
   assignedToUserId String
   createdAt        DateTime  @default(now())

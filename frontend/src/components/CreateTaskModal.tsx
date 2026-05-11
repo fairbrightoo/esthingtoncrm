@@ -13,6 +13,7 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, preselectedLea
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [dueDate, setDueDate] = useState('');
+    const [type, setType] = useState('GENERAL');
     const [leadId, setLeadId] = useState(preselectedLeadId || '');
     const [leads, setLeads] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +44,7 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, preselectedLea
                 title,
                 description,
                 dueDate,
+                type,
                 leadId: leadId || undefined
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -53,6 +55,7 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, preselectedLea
             setTitle('');
             setDescription('');
             setDueDate('');
+            setType('GENERAL');
             setLeadId('');
         } catch (error) {
             console.error("Failed to create task", error);
@@ -115,6 +118,21 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, preselectedLea
                         </div>
 
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                                Task Type
+                            </label>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="GENERAL">General Task</option>
+                                <option value="FOLLOW_UP">Follow-up</option>
+                                <option value="INSPECTION">Site Inspection</option>
+                            </select>
+                        </div>
+                        
+                        <div className="col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                                 <User size={14} className="mr-1" /> Related Lead
                             </label>

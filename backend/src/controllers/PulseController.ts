@@ -26,21 +26,17 @@ export const PulseController = {
                 where: { 
                     assignedToUserId: id, 
                     isCompleted: true, 
+                    type: 'FOLLOW_UP',
                     updatedAt: dateFilter // Assuming it was marked complete today
                 }
             });
 
-            // 3. Site Inspections Today
-            // Since we don't have an explicit Inspection model, we look for Tasks that have 'Inspection' in the title or description that were completed today.
             const inspectionsToday = await prisma.task.count({
                 where: {
                     assignedToUserId: id,
                     isCompleted: true,
-                    updatedAt: dateFilter,
-                    OR: [
-                        { title: { contains: 'Inspection', mode: 'insensitive' } },
-                        { description: { contains: 'Inspection', mode: 'insensitive' } }
-                    ]
+                    type: 'INSPECTION',
+                    updatedAt: dateFilter
                 }
             });
 

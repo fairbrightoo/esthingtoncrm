@@ -9,6 +9,7 @@ interface Task {
     title: string;
     description?: string;
     dueDate?: string;
+    type?: string;
     isCompleted: boolean;
     lead?: {
         id: string;
@@ -90,9 +91,14 @@ export const TaskWidget = () => {
                                     {task.isCompleted && <CheckCircle size={12} fill="white" />}
                                 </button>
                                 <div className="flex-1">
-                                    <p className={`text-sm font-medium ${task.isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-                                        {task.title}
-                                    </p>
+                                    <div className="flex items-center space-x-2">
+                                        <p className={`text-sm font-medium ${task.isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                                            {task.title}
+                                        </p>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${task.type === 'FOLLOW_UP' ? 'bg-blue-100 text-blue-700' : task.type === 'INSPECTION' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            {task.type ? task.type.replace('_', ' ') : 'GENERAL'}
+                                        </span>
+                                    </div>
                                     {task.description && (
                                         <p className="text-xs text-gray-500 mt-1 line-clamp-1">{task.description}</p>
                                     )}

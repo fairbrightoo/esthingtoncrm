@@ -20,7 +20,7 @@ export const TaskController = {
     // Create a new task (optionally linked to a lead)
     async createTask(req: Request, res: Response) {
         const user = (req as any).user;
-        const { title, description, dueDate, leadId } = req.body;
+        const { title, description, dueDate, leadId, type } = req.body;
 
         try {
             const task = await prisma.task.create({
@@ -28,6 +28,7 @@ export const TaskController = {
                     title,
                     description,
                     dueDate: dueDate ? new Date(dueDate) : null,
+                    type: type || 'GENERAL',
                     assignedToUserId: String(user.userId),
                     leadId: leadId ? String(leadId) : null
                 }
@@ -42,7 +43,7 @@ export const TaskController = {
     // Update task (e.g. mark as completed)
     async updateTask(req: Request, res: Response) {
         const { id } = req.params;
-        const { isCompleted, title, description, dueDate } = req.body;
+        const { isCompleted, title, description, dueDate, type } = req.body;
 
         try {
             const data: any = {};
@@ -50,6 +51,7 @@ export const TaskController = {
             if (title) data.title = title;
             if (description) data.description = description;
             if (dueDate) data.dueDate = new Date(dueDate);
+            if (type) data.type = type;
 
             const task = await prisma.task.update({
                 where: { id: String(id) },

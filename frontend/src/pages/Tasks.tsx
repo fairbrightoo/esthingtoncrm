@@ -9,6 +9,7 @@ interface Task {
     title: string;
     description?: string;
     dueDate?: string;
+    type?: string;
     isCompleted: boolean;
     lead?: {
         id: string;
@@ -133,7 +134,12 @@ export const Tasks = () => {
                                     {task.isCompleted && <CheckCircle size={14} fill="white" />}
                                 </button>
                                 <div className="flex-1">
-                                    <h3 className={`font-medium text-lg ${task.isCompleted ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{task.title}</h3>
+                                    <div className="flex items-center space-x-3">
+                                        <h3 className={`font-medium text-lg ${task.isCompleted ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{task.title}</h3>
+                                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${task.type === 'FOLLOW_UP' ? 'bg-blue-100 text-blue-700' : task.type === 'INSPECTION' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            {task.type ? task.type.replace('_', ' ') : 'GENERAL'}
+                                        </span>
+                                    </div>
                                     {task.description && <p className="text-gray-500 mt-1">{task.description}</p>}
 
                                     <div className="flex items-center space-x-4 mt-3">

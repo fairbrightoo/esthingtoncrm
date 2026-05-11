@@ -45,6 +45,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
     const [tasks, setTasks] = useState<any[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskDate, setNewTaskDate] = useState('');
+    const [newTaskType, setNewTaskType] = useState('GENERAL');
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false); // Modal state
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [deleteConfirmModal, setDeleteConfirmModal] = useState<string | null>(null);
@@ -114,12 +115,14 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks`, {
                 title: newTaskTitle,
                 dueDate: newTaskDate || undefined,
+                type: newTaskType,
                 leadId
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setNewTaskTitle('');
             setNewTaskDate('');
+            setNewTaskType('GENERAL');
             fetchTasks(); // Refresh
         } catch (error) {
             console.error("Failed to create task", error);
@@ -290,7 +293,12 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
                                     className={`mt-1 mr-3 w-4 h-4 flex-shrink-0 rounded-full border-2 cursor-pointer transition-colors ${task.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-green-400'}`}
                                 ></div>
                                 <div>
-                                    <p className={`text-sm font-medium ${task.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</p>
+                                    <div className="flex items-center space-x-2">
+                                        <p className={`text-sm font-medium ${task.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</p>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${task.type === 'FOLLOW_UP' ? 'bg-blue-100 text-blue-700' : task.type === 'INSPECTION' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            {task.type ? task.type.replace('_', ' ') : 'GENERAL'}
+                                        </span>
+                                    </div>
                                     {task.dueDate && <p className="text-xs text-gray-500 mt-1">Due: {new Date(task.dueDate).toLocaleDateString()}</p>}
                                 </div>
                             </div>
@@ -348,6 +356,15 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
                             required
                         />
                         <div className="flex space-x-2">
+                            <select 
+                                value={newTaskType}
+                                onChange={(e) => setNewTaskType(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            >
+                                <option value="GENERAL">General Task</option>
+                                <option value="FOLLOW_UP">Follow-up</option>
+                                <option value="INSPECTION">Site Inspection</option>
+                            </select>
                             <input
                                 type="date"
                                 value={newTaskDate}
