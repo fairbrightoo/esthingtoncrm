@@ -23,7 +23,7 @@ export const CallScripts = () => {
     const [formContent, setFormContent] = useState('');
     const [formCategory, setFormCategory] = useState('Introduction');
 
-    const canManageScripts = ['SUPER_ADMIN', 'BRANCH_ADMIN', 'CUSTOMER_CARE', 'MARKETER'].includes(user?.role || '');
+    const canManageScripts = ['SUPER_ADMIN', 'BRANCH_ADMIN', 'CUSTOMER_CARE', 'MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user?.role || '');
 
     useEffect(() => {
         fetchScripts();

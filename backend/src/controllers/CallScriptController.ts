@@ -30,11 +30,6 @@ export const CallScriptController = {
         const { title, content, category } = req.body;
 
         try {
-            // Verify Admin Role (Middleware does this usually, but good to check)
-            if (user.role !== 'BRANCH_ADMIN' && user.role !== 'SUPER_ADMIN') {
-                return res.status(403).json({ error: 'Only Admins can create scripts' });
-            }
-
             const dbUser = await prisma.user.findUnique({ where: { id: user.userId } });
             if (!dbUser?.companyId) return res.status(400).json({ error: "User not attached to company" });
 
