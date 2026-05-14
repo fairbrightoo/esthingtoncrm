@@ -6,6 +6,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { uploadFile } from '../services/StorageService.js';
 import { EmailService } from '../services/EmailService.js';
+import { generateEmployeeId } from '../utils/EmployeeIdGenerator.js';
 import prisma from '../config/prisma.js';
 
 
@@ -307,9 +308,12 @@ export const CompanyController = {
             }
 
             const passwordHash = await bcrypt.hash(password, 10);
+            
+            const employeeId = await generateEmployeeId(id, null, 'GROUP_MANAGING_DIRECTOR');
 
             const user = await prisma.user.create({
                 data: {
+                    employeeId,
                     fullName,
                     email,
                     passwordHash,
@@ -370,9 +374,11 @@ export const CompanyController = {
             }
 
             const passwordHash = await bcrypt.hash(password, 10);
+            const employeeId = await generateEmployeeId(companyId, branchId, 'BRANCH_ADMIN');
 
             const user = await prisma.user.create({
                 data: {
+                    employeeId,
                     fullName,
                     email,
                     passwordHash,
@@ -486,8 +492,10 @@ export const CompanyController = {
 
                 // Create user
                 const passwordHash = await bcrypt.hash(password, 10);
+                const employeeId = await generateEmployeeId(companyMatch.id, branchMatch.id, 'BRANCH_ADMIN');
                 const user = await prisma.user.create({
                     data: {
+                        employeeId,
                         fullName,
                         email,
                         passwordHash,
@@ -562,9 +570,11 @@ export const CompanyController = {
             }
 
             const passwordHash = await bcrypt.hash(password, 10);
+            const employeeId = await generateEmployeeId(companyId, branchId, 'MANAGING_DIRECTOR');
 
             const user = await prisma.user.create({
                 data: {
+                    employeeId,
                     fullName,
                     email,
                     passwordHash,
@@ -635,9 +645,11 @@ export const CompanyController = {
             }
 
             const passwordHash = await bcrypt.hash(password, 10);
+            const employeeId = await generateEmployeeId(companyId, branchId, role);
 
             const user = await prisma.user.create({
                 data: {
+                    employeeId,
                     fullName,
                     email,
                     phone,
@@ -863,15 +875,19 @@ export const CompanyController = {
                         defaultPassword = crypto.randomBytes(4).toString('hex');
                     }
                     const passwordHash = await bcrypt.hash(defaultPassword, 10);
+                    
+                    const roleVal = role || 'MARKETER';
+                    const employeeId = await generateEmployeeId(companyId, branchId, roleVal);
 
                     // Create
                     await prisma.user.create({
                         data: {
+                            employeeId,
                             fullName: row.full_name,
                             email: row.email,
                             phone: row.phone || null,
                             passwordHash,
-                            role: role || 'MARKETER', // Default to MARKETER
+                            role: roleVal, // Default to MARKETER
                             dateOfBirth: row.date_of_birth ? new Date(row.date_of_birth) : null,
                             companyId,
                             branchId

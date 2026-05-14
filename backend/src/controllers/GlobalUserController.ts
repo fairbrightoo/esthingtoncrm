@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
+import { generateEmployeeId } from '../utils/EmployeeIdGenerator.js';
 
 
 export const GlobalUserController = {
@@ -248,8 +249,10 @@ export const GlobalUserController = {
                 
                 if (!passwordHash) return res.status(400).json({ error: 'Password is required for new Chairman' });
 
+                const employeeId = await generateEmployeeId(hqCompany.id, null, 'GLOBAL_CHAIRMAN');
                 chairman = await prisma.user.create({
                     data: {
+                        employeeId,
                         fullName,
                         email,
                         role: 'GLOBAL_CHAIRMAN',

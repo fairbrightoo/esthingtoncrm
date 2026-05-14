@@ -28,6 +28,10 @@ model Company {
   aiAssistantId        String?
   leadAssistantId      String?
   aiVectorStoreId      String?
+  abbreviation         String?
+  employeeCounter      Int                 @default(2)
+  idCardFrontTemplate  String?
+  idCardBackTemplate   String?
   attendances          Attendance[]
   automationRules      AutomationRule[]
   branches             Branch[]
@@ -68,6 +72,10 @@ model Branch {
   phone                 String?
   managerName           String?
   signatureUrl          String?
+  abbreviation          String?
+  employeeCounter       Int                    @default(2)
+  idCardFrontTemplate   String?
+  idCardBackTemplate    String?
   attendances           Attendance[]
   company               Company                @relation(fields: [companyId], references: [id])
   leads                 Lead[]
@@ -116,6 +124,7 @@ model User {
   accountName            String?
   accountNumber          String?
   aiThreadId             String?
+  employeeId             String?              @unique
   activities             Activity[]
   attendances            Attendance[]
   communicationLogs      CommunicationLog[]

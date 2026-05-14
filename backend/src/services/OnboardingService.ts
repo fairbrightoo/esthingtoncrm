@@ -2,6 +2,7 @@ import { parse } from 'csv-parse/sync';
 import bcrypt from 'bcryptjs';
 import { AutomationService } from './AutomationService.js';
 import prisma from '../config/prisma.js';
+import { generateEmployeeId } from '../utils/EmployeeIdGenerator.js';
 
 
 interface OnboardingRow {
@@ -68,8 +69,10 @@ export const OnboardingService = {
                 const commissionRate = row.commission_rate ? parseFloat(row.commission_rate) : 5.0;
 
                 // Create User
+                const employeeId = await generateEmployeeId(companyId, branchId, roleValue);
                 const newUser = await prisma.user.create({
                     data: {
+                        employeeId,
                         fullName: row.full_name,
                         email: row.email,
                         phone: row.phone_number,

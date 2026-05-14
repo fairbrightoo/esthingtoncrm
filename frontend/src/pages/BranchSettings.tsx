@@ -17,6 +17,9 @@ export const BranchSettings = () => {
     const [address, setAddress] = useState('');
     const [managerName, setManagerName] = useState('');
     const [signatureFile, setSignatureFile] = useState<File | null>(null);
+    const [abbreviation, setAbbreviation] = useState('');
+    const [idCardFrontTemplate, setIdCardFrontTemplate] = useState('');
+    const [idCardBackTemplate, setIdCardBackTemplate] = useState('');
 
     // Operational Prefs
     const [oooDelegation, setOooDelegation] = useState(false);
@@ -33,6 +36,9 @@ export const BranchSettings = () => {
             setBranchName(user.branch.name);
             setAddress(user.branch.address || '');
             setManagerName((user.branch as any).managerName || '');
+            setAbbreviation((user.branch as any).abbreviation || '');
+            setIdCardFrontTemplate((user.branch as any).idCardFrontTemplate || '');
+            setIdCardBackTemplate((user.branch as any).idCardBackTemplate || '');
         }
     }, [user]);
 
@@ -44,6 +50,9 @@ export const BranchSettings = () => {
             formData.append('name', branchName);
             formData.append('address', address);
             formData.append('managerName', managerName);
+            formData.append('abbreviation', abbreviation);
+            formData.append('idCardFrontTemplate', idCardFrontTemplate);
+            formData.append('idCardBackTemplate', idCardBackTemplate);
             if (signatureFile) {
                 formData.append('signature', signatureFile);
             }
@@ -183,6 +192,20 @@ export const BranchSettings = () => {
                                     <Building2 size={18} className="absolute left-3 top-3 text-gray-400" />
                                 </div>
                             </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Branch Abbreviation</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        maxLength={4}
+                                        value={abbreviation}
+                                        onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
+                                        className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition uppercase"
+                                        placeholder="E.g., UTK"
+                                    />
+                                </div>
+                            </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Address / Location</label>
@@ -233,6 +256,20 @@ export const BranchSettings = () => {
                                                 />
                                             </div>
                                         )}
+                                    </div>
+
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <h4 className="text-sm font-semibold text-gray-800 mb-2">Branch ID Card Templates</h4>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Front Page HTML</label>
+                                                <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={idCardFrontTemplate} onChange={e => setIdCardFrontTemplate(e.target.value)} placeholder="<div>Front of ID Card</div>"></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Back Page HTML</label>
+                                                <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={idCardBackTemplate} onChange={e => setIdCardBackTemplate(e.target.value)} placeholder="<div>Back of ID Card</div>"></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}

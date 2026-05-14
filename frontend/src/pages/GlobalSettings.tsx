@@ -33,7 +33,10 @@ export const GlobalSettings = () => {
         waToken: '',
         email: '',
         website: '',
-        phone: ''
+        phone: '',
+        abbreviation: '',
+        idCardFrontTemplate: '',
+        idCardBackTemplate: ''
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -244,6 +247,9 @@ export const GlobalSettings = () => {
             data.append('waToken', formData.waToken);
             data.append('email', formData.email);
             data.append('website', formData.website);
+            data.append('abbreviation', formData.abbreviation);
+            data.append('idCardFrontTemplate', formData.idCardFrontTemplate);
+            data.append('idCardBackTemplate', formData.idCardBackTemplate);
             if (logoFile) data.append('logo', logoFile);
 
             if (editingCompany) {
@@ -280,7 +286,15 @@ export const GlobalSettings = () => {
     const handleSaveBranch = async () => {
         if (!selectedCompanyId) return;
         try {
-            const payload = { name: formData.name, address: formData.address, phone: formData.phone, email: formData.email };
+            const payload = { 
+                name: formData.name, 
+                address: formData.address, 
+                phone: formData.phone, 
+                email: formData.email,
+                abbreviation: formData.abbreviation,
+                idCardFrontTemplate: formData.idCardFrontTemplate,
+                idCardBackTemplate: formData.idCardBackTemplate
+            };
             if (editingBranch) {
                 await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branches/${editingBranch.id}`, payload,
                     { headers: { Authorization: `Bearer ${token}` } }
@@ -313,7 +327,7 @@ export const GlobalSettings = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', themeColor: '#000000', address: '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: '', website: '', phone: '' });
+        setFormData({ name: '', themeColor: '#000000', address: '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: '', website: '', phone: '', abbreviation: '', idCardFrontTemplate: '', idCardBackTemplate: '' });
         setLogoFile(null);
         setLogoPreview(null);
         setEditingCompany(null);
@@ -339,7 +353,10 @@ export const GlobalSettings = () => {
             waToken: company.waToken || '',
             email: company.email || '',
             website: company.website || '',
-            phone: ''
+            phone: '',
+            abbreviation: company.abbreviation || '',
+            idCardFrontTemplate: company.idCardFrontTemplate || '',
+            idCardBackTemplate: company.idCardBackTemplate || ''
         });
         setLogoPreview(company.logoUrl ? (company.logoUrl.startsWith('http') ? company.logoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.logoUrl}`) : null);
         setShowCompanyModal(true);
@@ -355,7 +372,7 @@ export const GlobalSettings = () => {
         resetForm();
         setEditingBranch(branch);
         setSelectedCompanyId(companyId);
-        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '' });
+        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '', abbreviation: branch.abbreviation || '', idCardFrontTemplate: branch.idCardFrontTemplate || '', idCardBackTemplate: branch.idCardBackTemplate || '' });
         setShowBranchModal(true);
     };
 
@@ -485,15 +502,28 @@ export const GlobalSettings = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="e.g. Esthington Links Ltd"
-                                />
+                            <div className="flex space-x-4">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder={showCompanyModal ? "e.g. Double King Estate Ltd" : "e.g. Utako Branch"}
+                                    />
+                                </div>
+                                <div className="w-1/3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Abbreviation</label>
+                                    <input
+                                        type="text"
+                                        maxLength={4}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase"
+                                        value={formData.abbreviation}
+                                        onChange={e => setFormData({ ...formData, abbreviation: e.target.value.toUpperCase() })}
+                                        placeholder={showCompanyModal ? "DKEL" : "UTK"}
+                                    />
+                                </div>
                             </div>
 
                             {showCompanyModal && (
@@ -553,6 +583,19 @@ export const GlobalSettings = () => {
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="pt-4 border-t">
+                                        <h4 className="text-sm font-semibold text-gray-800 mb-2">Head Office ID Card Templates (GMDs & Super Admins)</h4>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Front Page HTML</label>
+                                                <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={formData.idCardFrontTemplate} onChange={e => setFormData({ ...formData, idCardFrontTemplate: e.target.value })} placeholder="<div>Front of ID Card</div>"></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Back Page HTML</label>
+                                                <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={formData.idCardBackTemplate} onChange={e => setFormData({ ...formData, idCardBackTemplate: e.target.value })} placeholder="<div>Back of ID Card</div>"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </>
                             )}
 
@@ -570,6 +613,19 @@ export const GlobalSettings = () => {
                                         <div className="flex-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Branch Email</label>
                                             <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="branch@company.com" />
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t">
+                                        <h4 className="text-sm font-semibold text-gray-800 mb-2">Branch ID Card Templates</h4>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Front Page HTML</label>
+                                                <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={formData.idCardFrontTemplate} onChange={e => setFormData({ ...formData, idCardFrontTemplate: e.target.value })} placeholder="<div>Front of ID Card</div>"></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Back Page HTML</label>
+                                                <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={formData.idCardBackTemplate} onChange={e => setFormData({ ...formData, idCardBackTemplate: e.target.value })} placeholder="<div>Back of ID Card</div>"></textarea>
+                                            </div>
                                         </div>
                                     </div>
                                 </>
