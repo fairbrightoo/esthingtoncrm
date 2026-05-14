@@ -11,6 +11,15 @@ export const ProfileSettings = () => {
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     
+    const resolveUrl = (url?: string) => {
+        const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+        if (!url) return EMPTY_IMAGE;
+        if (url.startsWith('/')) {
+            return `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
+        }
+        return url;
+    };
+
     // Passwords
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -351,7 +360,7 @@ export const ProfileSettings = () => {
                                         <h3 className="font-semibold text-gray-800 mb-3">Your Official Signature</h3>
                                         {idCardData.signatureUrl ? (
                                             <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center">
-                                                <img src={idCardData.signatureUrl} alt="Signature" className="h-16 object-contain mb-3 bg-white p-2 border rounded-lg" />
+                                                <img src={resolveUrl(idCardData.signatureUrl)} alt="Signature" className="h-16 object-contain mb-3 bg-white p-2 border rounded-lg" />
                                                 <p className="text-xs text-gray-500 mb-3">This signature will appear on your ID Card and Official Documents.</p>
                                                 <div className="flex w-full items-center space-x-2">
                                                     <input 
@@ -407,10 +416,10 @@ export const ProfileSettings = () => {
                                                     .replace(/{{employeeId}}/g, idCardData.employeeId || 'N/A')
                                                     .replace(/{{branchName}}/g, idCardData.branch?.name || 'Head Office')
                                                     .replace(/{{companyName}}/g, idCardData.company?.name || 'Esthington CRM')
-                                                    .replace(/{{staffSignature}}/g, idCardData.signatureUrl || '')
-                                                    .replace(/{{authorizedSignature}}/g, idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl || '')
-                                                    .replace(/{{passportUrl}}/g, idCardData.passportUrl || '')
-                                                    .replace(/{{companyLogo}}/g, idCardData.company?.logoUrl || '')
+                                                    .replace(/{{staffSignature}}/g, resolveUrl(idCardData.signatureUrl) || '')
+                                                    .replace(/{{authorizedSignature}}/g, resolveUrl(idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl) || '')
+                                                    .replace(/{{passportUrl}}/g, resolveUrl(idCardData.passportUrl) || '')
+                                                    .replace(/{{companyLogo}}/g, resolveUrl(idCardData.company?.logoUrl) || '')
                                             }} />
                                         ) : (
                                             <div className="h-full w-full flex flex-col relative bg-gradient-to-b from-blue-600 to-blue-900 text-white">
@@ -446,15 +455,15 @@ export const ProfileSettings = () => {
                                                     .replace(/{{officeEmail}}/g, idCardData.branch?.email || idCardData.company?.email || '')
                                                     .replace(/{{officePhone}}/g, idCardData.branch?.phone || idCardData.company?.phone || '')
                                                     .replace(/{{officeWebsite}}/g, idCardData.company?.website || '')
-                                                    .replace(/{{companyLogo}}/g, idCardData.company?.logoUrl || '')
-                                                    .replace(/{{authorizedSignature}}/g, idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl || '')
+                                                    .replace(/{{companyLogo}}/g, resolveUrl(idCardData.company?.logoUrl) || '')
+                                                    .replace(/{{authorizedSignature}}/g, resolveUrl(idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl) || '')
                                             }} />
                                         ) : (
                                             <div className="h-full w-full flex flex-col items-center justify-center bg-gray-100 p-4 text-center">
                                                 <h3 className="text-sm font-bold text-gray-800 mb-2">If found, please return to:</h3>
                                                 <p className="text-xs text-gray-600 mb-4">{idCardData.branch?.address || idCardData.company?.address || 'Company HQ'}</p>
                                                 {idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl ? (
-                                                    <img src={idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl} alt="Authorized" className="h-10 opacity-80" />
+                                                    <img src={resolveUrl(idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl)} alt="Authorized" className="h-10 opacity-80" />
                                                 ) : <div className="h-10"></div>}
                                                 <div className="text-[8px] font-bold mt-1 uppercase tracking-widest text-gray-400">Authorized Signature</div>
                                             </div>
