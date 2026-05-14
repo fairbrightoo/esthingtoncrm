@@ -66,7 +66,7 @@ export const MarketerDashboard = () => {
             }
         };
         fetchStats();
-    }, [token, dateFilter]);
+    }, [token, dateFilter, viewScope]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
