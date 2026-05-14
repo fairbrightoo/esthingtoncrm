@@ -40,7 +40,7 @@ export const GlobalUserController = {
                 // Assuming you have uploadFile logic, let's use it
                 // Need to import uploadFile if not imported
                 // I will add import uploadFile from '../services/StorageService.js'; if missing
-                const fileUrl = await uploadFile(req.file);
+                const fileUrl = await uploadFile(req.file.buffer, req.file.originalname, 'signature');
                 updateData.signatureUrl = fileUrl;
             }
 
