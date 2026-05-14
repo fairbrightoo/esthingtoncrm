@@ -4,7 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { User, Lock, Save, ShieldCheck, Smartphone, Bell, Mail, CreditCard, Download, Printer } from 'lucide-react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 export const ProfileSettings = () => {
     const { user, token } = useAuth();
@@ -262,16 +262,20 @@ export const ProfileSettings = () => {
                                         onClick={() => {
                                             const idCardElement = document.getElementById('id-card-preview');
                                             if (idCardElement) {
-                                                html2canvas(idCardElement, { scale: 2 }).then(canvas => {
-                                                    const imgData = canvas.toDataURL('image/png');
-                                                    const pdf = new jsPDF({
-                                                        orientation: 'portrait',
-                                                        unit: 'mm',
-                                                        format: [86, 54] // Standard ID card size (portrait)
+                                                toPng(idCardElement, { pixelRatio: 2 })
+                                                    .then(function (dataUrl) {
+                                                        const pdf = new jsPDF({
+                                                            orientation: 'portrait',
+                                                            unit: 'mm',
+                                                            format: [86, 54] // Standard ID card size (portrait)
+                                                        });
+                                                        pdf.addImage(dataUrl, 'PNG', 0, 0, 54, 86);
+                                                        pdf.save(`${idCardData.employeeId || 'ID'}_Card.pdf`);
+                                                    })
+                                                    .catch(function (error) {
+                                                        console.error('Oops, something went wrong!', error);
+                                                        addToast("Failed to generate PDF. Check console.", "error");
                                                     });
-                                                    pdf.addImage(imgData, 'PNG', 0, 0, 54, 86);
-                                                    pdf.save(`${idCardData.employeeId || 'ID'}_Card.pdf`);
-                                                });
                                             }
                                         }}
                                         className="flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition"
