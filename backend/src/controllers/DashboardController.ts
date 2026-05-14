@@ -62,9 +62,9 @@ export const DashboardController = {
 
             console.log('Analytics Scope:', whereClause, 'Date Filter:', dateFilter);
 
-            // Fetch user commission rate if marketer
+            // Fetch user commission rate if marketer or manager
             let commissionRate = 0;
-            if (role === 'MARKETER' || role === 'CUSTOMER_CARE') {
+            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
                 const userObj = await prisma.user.findUnique({ where: { id: userId } });
                 commissionRate = userObj?.commissionRate || 0;
             }
@@ -89,11 +89,11 @@ export const DashboardController = {
             let pendingCommissions = 0;
             let totalSalesGenerated = 0;
 
-            if (role === 'MARKETER' || role === 'CUSTOMER_CARE') {
-                const personalPaymentWhereClause: any = { sale: { lead: { ...whereClause, assignedToUserId: userId } } };
+            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+                const personalPaymentWhereClause: any = { sale: { lead: { ...whereClause } } };
                 if (Object.keys(dateFilter).length > 0) personalPaymentWhereClause.date = dateFilter;
 
-                // Calculate total confirmed sales for Marketer
+                // Calculate total confirmed sales for Scope
                 const approvedPayments = await prisma.payment.findMany({
                     where: { ...personalPaymentWhereClause, status: 'APPROVED' },
                     select: { amount: true, isCommissionPaid: true }
@@ -105,7 +105,7 @@ export const DashboardController = {
                 const sumOfActuallyPaid = actuallyPaidPayments.reduce((sum, p) => sum + p.amount, 0);
                 paidCommissions = sumOfActuallyPaid * (commissionRate / 100);
 
-                const personalSaleWhereClause: any = { lead: { ...whereClause, assignedToUserId: userId } };
+                const personalSaleWhereClause: any = { lead: { ...whereClause } };
                 if (Object.keys(dateFilter).length > 0) personalSaleWhereClause.createdAt = dateFilter;
 
                 const personalSales = await prisma.sale.findMany({
@@ -182,7 +182,7 @@ export const DashboardController = {
             let detailedDueCommissions: any[] = [];
             let detailedPaidCommissions: any[] = [];
 
-            if (role === 'MARKETER' || role === 'CUSTOMER_CARE') {
+            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
                 const prospects = await prisma.lead.findMany({
                     where: { ...leadWhereClause, status: 'PROSPECT' },
                     take: 5,
