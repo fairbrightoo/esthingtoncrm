@@ -15,7 +15,8 @@ router.get('/global/chairman', requireRole(['SUPER_ADMIN']), GlobalUserControlle
 router.post('/global/chairman', requireRole(['SUPER_ADMIN']), GlobalUserController.saveGlobalChairman);
 router.delete('/global/chairman', requireRole(['SUPER_ADMIN']), GlobalUserController.deleteGlobalChairman);
 
-// Personal Security
+// Personal Profile & Security
+router.get('/profile/:id', GlobalUserController.getProfile);
 router.post('/change-password', GlobalUserController.changePassword);
 
 // Impersonation (Super Admin only)

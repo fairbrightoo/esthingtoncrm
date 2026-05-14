@@ -6,6 +6,27 @@ import { generateEmployeeId } from '../utils/EmployeeIdGenerator.js';
 
 
 export const GlobalUserController = {
+    // Fetch a user's full profile
+    getProfile: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const user = await prisma.user.findUnique({
+                where: { id },
+                include: {
+                    company: true,
+                    branch: true
+                }
+            });
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json(user);
+        } catch (error) {
+            console.error('Failed to get user profile:', error);
+            res.status(500).json({ error: 'Failed to fetch user profile' });
+        }
+    },
+
     // 1. Fetch all users systematically for the Global Table
     getAllUsers: async (req: Request, res: Response) => {
         try {
