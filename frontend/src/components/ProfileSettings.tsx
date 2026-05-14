@@ -362,39 +362,49 @@ export const ProfileSettings = () => {
                                             <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center">
                                                 <img src={resolveUrl(idCardData.signatureUrl)} alt="Signature" className="h-16 object-contain mb-3 bg-white p-2 border rounded-lg" />
                                                 <p className="text-xs text-gray-500 mb-3">This signature will appear on your ID Card and Official Documents.</p>
-                                                <div className="flex w-full items-center space-x-2">
-                                                    <input 
-                                                        type="file" 
-                                                        accept="image/*, .svg"
-                                                        onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
-                                                        className="text-xs w-full"
-                                                    />
-                                                    <button 
-                                                        onClick={handleSignatureUpload}
-                                                        disabled={!signatureFile || uploadingSignature}
-                                                        className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold disabled:opacity-50 whitespace-nowrap"
-                                                    >
-                                                        {uploadingSignature ? 'Saving...' : 'Update'}
-                                                    </button>
+                                                <div className="flex flex-col w-full space-y-3">
+                                                    <div className="flex w-full items-center space-x-2">
+                                                        <label className="flex-1 cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 hover:border-gray-400 transition text-center shadow-sm">
+                                                            {signatureFile ? signatureFile.name : 'Select Signature Image'}
+                                                            <input 
+                                                                type="file" 
+                                                                accept="image/*, .svg"
+                                                                onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
+                                                                className="hidden"
+                                                            />
+                                                        </label>
+                                                        <button 
+                                                            onClick={handleSignatureUpload}
+                                                            disabled={!signatureFile || uploadingSignature}
+                                                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition shadow-sm"
+                                                        >
+                                                            {uploadingSignature ? 'Saving...' : 'Update'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
                                                 <p className="text-xs text-orange-800 mb-3">You haven't uploaded your signature yet. It is required for your ID Card.</p>
-                                                <div className="flex items-center space-x-2">
-                                                    <input 
-                                                        type="file" 
-                                                        accept="image/*, .svg"
-                                                        onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
-                                                        className="text-xs w-full"
-                                                    />
-                                                    <button 
-                                                        onClick={handleSignatureUpload}
-                                                        disabled={!signatureFile || uploadingSignature}
-                                                        className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold disabled:opacity-50"
-                                                    >
-                                                        {uploadingSignature ? 'Saving...' : 'Upload'}
-                                                    </button>
+                                                <div className="flex flex-col w-full space-y-3">
+                                                    <div className="flex items-center space-x-2 w-full">
+                                                        <label className="flex-1 cursor-pointer bg-white border border-orange-300 text-orange-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-orange-50 hover:border-orange-400 transition text-center shadow-sm">
+                                                            {signatureFile ? signatureFile.name : 'Select Signature Image'}
+                                                            <input 
+                                                                type="file" 
+                                                                accept="image/*, .svg"
+                                                                onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
+                                                                className="hidden"
+                                                            />
+                                                        </label>
+                                                        <button 
+                                                            onClick={handleSignatureUpload}
+                                                            disabled={!signatureFile || uploadingSignature}
+                                                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition shadow-sm"
+                                                        >
+                                                            {uploadingSignature ? 'Saving...' : 'Upload'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

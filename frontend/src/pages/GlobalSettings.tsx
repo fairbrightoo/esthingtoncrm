@@ -546,12 +546,15 @@ export const GlobalSettings = () => {
                                                     <img src={logoPreview} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
                                                 </div>
                                             )}
-                                            <input type="file" accept=".svg,image/svg+xml" className="w-full" onChange={e => {
-                                                if (e.target.files && e.target.files[0]) {
-                                                    setLogoFile(e.target.files[0]);
-                                                    setLogoPreview(URL.createObjectURL(e.target.files[0]));
-                                                }
-                                            }} />
+                                            <label className="flex-1 cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition text-center shadow-sm">
+                                                {logoFile ? logoFile.name : 'Select SVG Logo'}
+                                                <input type="file" accept=".svg,image/svg+xml" className="hidden" onChange={e => {
+                                                    if (e.target.files && e.target.files[0]) {
+                                                        setLogoFile(e.target.files[0]);
+                                                        setLogoPreview(URL.createObjectURL(e.target.files[0]));
+                                                    }
+                                                }} />
+                                            </label>
                                         </div>
                                     </div>
                                     <div className="flex space-x-4">
@@ -899,12 +902,15 @@ export const GlobalSettings = () => {
                                 Upload a CSV file containing the following exact columns:
                             </p>
                             <code className="text-xs bg-gray-100 p-2 rounded block mb-4">Timestamp, Full Name, Email, Password, Company, Branch</code>
-                            <input 
-                                type="file" 
-                                accept=".csv" 
-                                className="w-full text-sm border border-gray-300 rounded p-2"
-                                onChange={(e) => setBulkUploadFile(e.target.files ? e.target.files[0] : null)}
-                            />
+                            <label className="flex items-center justify-center cursor-pointer w-full bg-white border-2 border-dashed border-gray-300 text-gray-700 px-4 py-6 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition text-center">
+                                {bulkUploadFile ? bulkUploadFile.name : 'Click here to choose CSV file'}
+                                <input 
+                                    type="file" 
+                                    accept=".csv" 
+                                    className="hidden"
+                                    onChange={(e) => setBulkUploadFile(e.target.files ? e.target.files[0] : null)}
+                                />
+                            </label>
                         </div>
 
                         {bulkUploadStatus?.loading && (

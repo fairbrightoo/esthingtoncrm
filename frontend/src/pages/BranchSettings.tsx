@@ -236,12 +236,17 @@ export const BranchSettings = () => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Manager Signature (Image)</label>
-                                        <input
-                                            type="file"
-                                            accept="image/*, .svg"
-                                            onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
-                                            className="w-full px-4 py-1.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition bg-white"
-                                        />
+                                        <div className="flex items-center space-x-2 mt-2 w-full">
+                                            <label className="flex-1 cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 hover:border-gray-400 transition text-center shadow-sm">
+                                                {signatureFile ? signatureFile.name : 'Select Signature Image'}
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*, .svg"
+                                                    onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
                                         <p className="text-xs text-gray-500 mt-1">Upload a clear signature for Official Documents.</p>
                                         
                                         {((user.branch as any)?.signatureUrl) && !signatureFile && (
