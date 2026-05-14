@@ -34,7 +34,10 @@ export const CompanyController = {
                     address: true,
                     phone: true,
                     signatureUrl: true,
-                    managingDirectorName: true
+                    managingDirectorName: true,
+                    idCardFrontTemplate: true,
+                    idCardBackTemplate: true,
+                    abbreviation: true
                 }
             });
             res.json(companies);
@@ -78,7 +81,10 @@ export const CompanyController = {
                     phone: true,
                     email: true,
                     signatureUrl: true,
-                    managerName: true
+                    managerName: true,
+                    abbreviation: true,
+                    idCardFrontTemplate: true,
+                    idCardBackTemplate: true
                 }
             });
             res.json(branches);
