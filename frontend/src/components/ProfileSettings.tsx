@@ -428,7 +428,7 @@ export const ProfileSettings = () => {
                                         style={{ width: '2.125in', height: '3.375in' }}
                                     >
                                         {idCardData.branch?.idCardFrontTemplate || idCardData.company?.idCardFrontTemplate ? (
-                                            <div dangerouslySetInnerHTML={{ 
+                                            <div className="h-full w-full" dangerouslySetInnerHTML={{ 
                                                 __html: (idCardData.branch?.idCardFrontTemplate || idCardData.company?.idCardFrontTemplate || '')
                                                     .replace(/{{fullName}}/g, idCardData.fullName)
                                                     .replace(/{{role}}/g, idCardData.role?.replace(/_/g, ' '))
@@ -468,7 +468,7 @@ export const ProfileSettings = () => {
                                         style={{ width: '2.125in', height: '3.375in' }}
                                     >
                                         {idCardData.branch?.idCardBackTemplate || idCardData.company?.idCardBackTemplate ? (
-                                            <div dangerouslySetInnerHTML={{ 
+                                            <div className="h-full w-full" dangerouslySetInnerHTML={{ 
                                                 __html: (idCardData.branch?.idCardBackTemplate || idCardData.company?.idCardBackTemplate || '')
                                                     .replace(/{{officeAddress}}/g, idCardData.branch?.address || idCardData.company?.address || 'Head Office')
                                                     .replace(/{{officeEmail}}/g, idCardData.branch?.email || idCardData.company?.email || '')
