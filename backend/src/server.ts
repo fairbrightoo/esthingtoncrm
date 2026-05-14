@@ -35,6 +35,33 @@ app.post('/api/dom-dump', (req: Request, res: Response) => {
     }
 });
 
+app.get('/api/proxy-image', async (req: Request, res: Response) => {
+    try {
+        const imageUrl = req.query.url as string;
+        if (!imageUrl) return res.status(400).send('URL required');
+        
+        // Fetch the image from the remote server
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error('Failed to fetch image');
+        
+        // Get content type
+        const contentType = response.headers.get('content-type') || 'application/octet-stream';
+        
+        // Convert to array buffer then buffer
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        
+        // Send back to client
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.send(buffer);
+    } catch (error) {
+        console.error('Proxy image error:', error);
+        res.status(500).send('Proxy error');
+    }
+});
+
 import automationRoutes from './routes/automationRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';

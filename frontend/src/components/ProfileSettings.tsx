@@ -14,9 +14,18 @@ export const ProfileSettings = () => {
     const resolveUrl = (url?: string) => {
         const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
         if (!url) return EMPTY_IMAGE;
+        
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        
         if (url.startsWith('/')) {
-            return `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
+            return `${apiUrl}${url}`;
         }
+        
+        // Proxy external URLs (like Cloudflare R2) through backend to prevent CORS issues with html-to-image
+        if (url.startsWith('http')) {
+            return `${apiUrl}/api/proxy-image?url=${encodeURIComponent(url)}`;
+        }
+        
         return url;
     };
 
