@@ -159,7 +159,7 @@ export const CompanyController = {
      */
     async updateCompany(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website } = req.body;
+        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate } = req.body;
         let logoUrl: string | undefined = undefined;
 
         try {
@@ -178,6 +178,8 @@ export const CompanyController = {
                     waToken,
                     email,
                     website,
+                    ...(idCardFrontTemplate !== undefined && { idCardFrontTemplate }),
+                    ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
                     ...(logoUrl && { logoUrl }) 
                 }
             });
@@ -230,7 +232,7 @@ export const CompanyController = {
      */
     async updateBranch(req: Request, res: Response) {
         const { id } = req.params as any; // Branch ID
-        const { name, address, phone, email, managerName } = req.body;
+        const { name, address, phone, email, managerName, abbreviation, idCardFrontTemplate, idCardBackTemplate } = req.body;
         let signatureUrl: string | undefined = undefined;
 
         try {
@@ -246,6 +248,9 @@ export const CompanyController = {
                     phone, 
                     email,
                     ...(managerName && { managerName }),
+                    ...(abbreviation && { abbreviation }),
+                    ...(idCardFrontTemplate !== undefined && { idCardFrontTemplate }),
+                    ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
                     ...(signatureUrl && { signatureUrl })
                 }
             });
