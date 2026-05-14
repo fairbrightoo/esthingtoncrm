@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
+import { uploadFile } from '../services/StorageService.js';
 import { generateEmployeeId } from '../utils/EmployeeIdGenerator.js';
 
 
@@ -24,6 +25,42 @@ export const GlobalUserController = {
         } catch (error) {
             console.error('Failed to get user profile:', error);
             res.status(500).json({ error: 'Failed to fetch user profile' });
+        }
+    },
+
+    // Update a user's profile (specifically for signature currently)
+    updateProfile: async (req: Request, res: Response) => {
+        try {
+            const id = req.params.id as string;
+            
+            // Allow user to update their own profile
+            const updateData: any = {};
+            
+            if (req.file) {
+                // Assuming you have uploadFile logic, let's use it
+                // Need to import uploadFile if not imported
+                // I will add import uploadFile from '../services/StorageService.js'; if missing
+                const fileUrl = await uploadFile(req.file);
+                updateData.signatureUrl = fileUrl;
+            }
+
+            if (Object.keys(updateData).length === 0) {
+                return res.status(400).json({ error: 'No data provided to update' });
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { id },
+                data: updateData,
+                include: {
+                    company: true,
+                    branch: true
+                }
+            });
+
+            res.json(updatedUser);
+        } catch (error) {
+            console.error('Failed to update user profile:', error);
+            res.status(500).json({ error: 'Failed to update user profile' });
         }
     },
 

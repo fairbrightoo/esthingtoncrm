@@ -117,6 +117,7 @@ model User {
   agreementUrl           String?
   cvUrl                  String?
   passportUrl            String?
+  signatureUrl           String?
   monthlySalary          Float?               @default(0)
   commissionRate         Float?               @default(5.0)
   dateOfBirth            DateTime?

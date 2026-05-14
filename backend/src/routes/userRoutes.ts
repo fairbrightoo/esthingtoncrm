@@ -1,6 +1,7 @@
 import express from 'express';
 import { GlobalUserController } from '../controllers/GlobalUserController.js';
 import { authenticateToken, requireRole } from '../middleware/authMiddleware.js';
+import { upload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.delete('/global/chairman', requireRole(['SUPER_ADMIN']), GlobalUserContro
 
 // Personal Profile & Security
 router.get('/profile/:id', GlobalUserController.getProfile);
+router.put('/profile/:id', upload.single('signature'), GlobalUserController.updateProfile);
 router.post('/change-password', GlobalUserController.changePassword);
 
 // Impersonation (Super Admin only)

@@ -70,6 +70,33 @@ export const ProfileSettings = () => {
         }
     };
 
+    // Signature Upload
+    const [signatureFile, setSignatureFile] = useState<File | null>(null);
+    const [uploadingSignature, setUploadingSignature] = useState(false);
+
+    const handleSignatureUpload = async () => {
+        if (!signatureFile || !user) return;
+        setUploadingSignature(true);
+        try {
+            const formData = new FormData();
+            formData.append('signature', signatureFile);
+            const res = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile/${user.id}`, formData, {
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setIdCardData(res.data);
+            setSignatureFile(null);
+            addToast("Signature uploaded successfully!", "success");
+        } catch (error) {
+            console.error("Signature upload failed", error);
+            addToast("Failed to upload signature", "error");
+        } finally {
+            setUploadingSignature(false);
+        }
+    };
+
     // Dummy toggles for UI
     const [twoFactor, setTwoFactor] = useState(false);
     const [emailNotifs, setEmailNotifs] = useState(true);
@@ -259,23 +286,32 @@ export const ProfileSettings = () => {
                                 </div>
                                 <div className="flex space-x-3">
                                     <button 
-                                        onClick={() => {
-                                            const idCardElement = document.getElementById('id-card-preview');
-                                            if (idCardElement) {
-                                                toPng(idCardElement, { pixelRatio: 2 })
-                                                    .then(function (dataUrl) {
-                                                        const pdf = new jsPDF({
-                                                            orientation: 'portrait',
-                                                            unit: 'mm',
-                                                            format: [86, 54] // Standard ID card size (portrait)
-                                                        });
-                                                        pdf.addImage(dataUrl, 'PNG', 0, 0, 54, 86);
-                                                        pdf.save(`${idCardData.employeeId || 'ID'}_Card.pdf`);
-                                                    })
-                                                    .catch(function (error) {
-                                                        console.error('Oops, something went wrong!', error);
-                                                        addToast("Failed to generate PDF. Check console.", "error");
+                                        onClick={async () => {
+                                            const frontEl = document.getElementById('id-card-preview-front');
+                                            const backEl = document.getElementById('id-card-preview-back');
+                                            
+                                            if (frontEl && backEl) {
+                                                try {
+                                                    const frontDataUrl = await toPng(frontEl, { pixelRatio: 3, cacheBust: true });
+                                                    const backDataUrl = await toPng(backEl, { pixelRatio: 3, cacheBust: true });
+                                                    
+                                                    const pdf = new jsPDF({
+                                                        orientation: 'portrait',
+                                                        unit: 'mm',
+                                                        format: [86, 54] 
                                                     });
+                                                    
+                                                    // Page 1
+                                                    pdf.addImage(frontDataUrl, 'PNG', 0, 0, 54, 86);
+                                                    // Page 2
+                                                    pdf.addPage();
+                                                    pdf.addImage(backDataUrl, 'PNG', 0, 0, 54, 86);
+                                                    
+                                                    pdf.save(`${idCardData.employeeId || 'ID'}_Card.pdf`);
+                                                } catch (error) {
+                                                    console.error('Oops, something went wrong!', error);
+                                                    addToast("Failed to generate PDF. Check console.", "error");
+                                                }
                                             }
                                         }}
                                         className="flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition"
@@ -310,21 +346,59 @@ export const ProfileSettings = () => {
                                     <p className="text-xs text-gray-500 italic mt-4">
                                         Note: If any information here is incorrect, please contact your Branch Admin or HR to update it. Profile details are locked from direct editing to maintain data integrity.
                                     </p>
+                                    
+                                    <div className="mt-6 border-t border-gray-100 pt-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">Your Official Signature</h3>
+                                        {idCardData.signatureUrl ? (
+                                            <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center">
+                                                <img src={idCardData.signatureUrl} alt="Signature" className="h-16 object-contain mb-3 bg-white p-2 border rounded-lg" />
+                                                <p className="text-xs text-gray-500 mb-3">This signature will appear on your ID Card and Official Documents.</p>
+                                                <div className="flex w-full items-center space-x-2">
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*, .svg"
+                                                        onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
+                                                        className="text-xs w-full"
+                                                    />
+                                                    <button 
+                                                        onClick={handleSignatureUpload}
+                                                        disabled={!signatureFile || uploadingSignature}
+                                                        className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold disabled:opacity-50 whitespace-nowrap"
+                                                    >
+                                                        {uploadingSignature ? 'Saving...' : 'Update'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                                                <p className="text-xs text-orange-800 mb-3">You haven't uploaded your signature yet. It is required for your ID Card.</p>
+                                                <div className="flex items-center space-x-2">
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*, .svg"
+                                                        onChange={(e) => setSignatureFile(e.target.files ? e.target.files[0] : null)}
+                                                        className="text-xs w-full"
+                                                    />
+                                                    <button 
+                                                        onClick={handleSignatureUpload}
+                                                        disabled={!signatureFile || uploadingSignature}
+                                                        className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold disabled:opacity-50"
+                                                    >
+                                                        {uploadingSignature ? 'Saving...' : 'Upload'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="flex justify-center items-center bg-gray-50 rounded-xl p-6 border border-dashed border-gray-200">
-                                    {/* ID Card Render Area */}
+                                <div className="flex flex-col items-center space-y-6 bg-gray-50 rounded-xl p-6 border border-dashed border-gray-200">
+                                    {/* Front of ID Card Render Area */}
                                     <div 
-                                        id="id-card-preview" 
+                                        id="id-card-preview-front" 
                                         className="bg-white shadow-xl overflow-hidden relative"
-                                        style={{ 
-                                            width: '2.125in', 
-                                            height: '3.375in', 
-                                            // 86x54mm is standard CR80. Portrait means 54mm width, 86mm height.
-                                            // That's roughly 2.125 inches by 3.375 inches.
-                                        }}
+                                        style={{ width: '2.125in', height: '3.375in' }}
                                     >
-                                        {/* This is a placeholder default template. The real one will be injected from HTML template in the DB */}
                                         {idCardData.branch?.idCardFrontTemplate || idCardData.company?.idCardFrontTemplate ? (
                                             <div dangerouslySetInnerHTML={{ 
                                                 __html: (idCardData.branch?.idCardFrontTemplate || idCardData.company?.idCardFrontTemplate || '')
@@ -333,6 +407,10 @@ export const ProfileSettings = () => {
                                                     .replace(/{{employeeId}}/g, idCardData.employeeId || 'N/A')
                                                     .replace(/{{branchName}}/g, idCardData.branch?.name || 'Head Office')
                                                     .replace(/{{companyName}}/g, idCardData.company?.name || 'Esthington CRM')
+                                                    .replace(/{{staffSignature}}/g, idCardData.signatureUrl || '')
+                                                    .replace(/{{authorizedSignature}}/g, idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl || '')
+                                                    .replace(/{{passportUrl}}/g, idCardData.passportUrl || '')
+                                                    .replace(/{{companyLogo}}/g, idCardData.company?.logoUrl || '')
                                             }} />
                                         ) : (
                                             <div className="h-full w-full flex flex-col relative bg-gradient-to-b from-blue-600 to-blue-900 text-white">
@@ -351,6 +429,34 @@ export const ProfileSettings = () => {
                                                     <div className="text-[8px] text-blue-200 uppercase mb-0.5">Employee ID</div>
                                                     <div className="font-mono text-sm font-bold tracking-wider">{idCardData.employeeId || 'PENDING'}</div>
                                                 </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Back of ID Card Render Area */}
+                                    <div 
+                                        id="id-card-preview-back" 
+                                        className="bg-white shadow-xl overflow-hidden relative"
+                                        style={{ width: '2.125in', height: '3.375in' }}
+                                    >
+                                        {idCardData.branch?.idCardBackTemplate || idCardData.company?.idCardBackTemplate ? (
+                                            <div dangerouslySetInnerHTML={{ 
+                                                __html: (idCardData.branch?.idCardBackTemplate || idCardData.company?.idCardBackTemplate || '')
+                                                    .replace(/{{officeAddress}}/g, idCardData.branch?.address || idCardData.company?.address || 'Head Office')
+                                                    .replace(/{{officeEmail}}/g, idCardData.branch?.email || idCardData.company?.email || '')
+                                                    .replace(/{{officePhone}}/g, idCardData.branch?.phone || idCardData.company?.phone || '')
+                                                    .replace(/{{officeWebsite}}/g, idCardData.company?.website || '')
+                                                    .replace(/{{companyLogo}}/g, idCardData.company?.logoUrl || '')
+                                                    .replace(/{{authorizedSignature}}/g, idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl || '')
+                                            }} />
+                                        ) : (
+                                            <div className="h-full w-full flex flex-col items-center justify-center bg-gray-100 p-4 text-center">
+                                                <h3 className="text-sm font-bold text-gray-800 mb-2">If found, please return to:</h3>
+                                                <p className="text-xs text-gray-600 mb-4">{idCardData.branch?.address || idCardData.company?.address || 'Company HQ'}</p>
+                                                {idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl ? (
+                                                    <img src={idCardData.branch?.signatureUrl || idCardData.company?.signatureUrl} alt="Authorized" className="h-10 opacity-80" />
+                                                ) : <div className="h-10"></div>}
+                                                <div className="text-[8px] font-bold mt-1 uppercase tracking-widest text-gray-400">Authorized Signature</div>
                                             </div>
                                         )}
                                     </div>
