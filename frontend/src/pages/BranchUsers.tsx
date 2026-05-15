@@ -221,6 +221,11 @@ export const BranchUsers = () => {
 
     const filteredUsers = users.filter(u => u.role !== 'BRANCH_ADMIN');
 
+    const getFileUrl = (url: string) => {
+        if (!url) return '';
+        return url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
+    };
+
     return (
         <div className="space-y-6">
             <header className="flex justify-between items-center">
@@ -360,7 +365,7 @@ export const BranchUsers = () => {
                                 <div>
                                     {selectedStaffDocs.passportUrl ? (
                                         <div className="flex items-center space-x-3">
-                                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedStaffDocs.passportUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            <a href={getFileUrl(selectedStaffDocs.passportUrl)} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 <ExternalLink size={16} className="mr-1" /> View
                                             </a>
                                             <label className="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium transition">
@@ -397,7 +402,7 @@ export const BranchUsers = () => {
                                 <div>
                                     {selectedStaffDocs.cvUrl ? (
                                         <div className="flex items-center space-x-3">
-                                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedStaffDocs.cvUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            <a href={getFileUrl(selectedStaffDocs.cvUrl)} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 <ExternalLink size={16} className="mr-1" /> View
                                             </a>
                                             <label className="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium transition">
@@ -434,7 +439,7 @@ export const BranchUsers = () => {
                                 <div>
                                     {selectedStaffDocs.agreementUrl ? (
                                         <div className="flex items-center space-x-3">
-                                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedStaffDocs.agreementUrl}`} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            <a href={getFileUrl(selectedStaffDocs.agreementUrl)} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 <ExternalLink size={16} className="mr-1" /> View
                                             </a>
                                             <label className="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium transition">
