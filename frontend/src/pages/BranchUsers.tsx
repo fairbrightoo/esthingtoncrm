@@ -44,7 +44,9 @@ export const BranchUsers = () => {
         bankName: '',
         accountName: '',
         accountNumber: '',
-        confirmAccountNumber: ''
+        confirmAccountNumber: '',
+        nextOfKinName: '',
+        nextOfKinPhone: ''
     });
 
     const branchName = user?.branch?.name || 'Branch';
@@ -84,7 +86,7 @@ export const BranchUsers = () => {
             );
             setIsModalOpen(false);
             setCreatedUserCreds({ ...formData, role: formData.role, password: res.data.tempPassword }); // Show creds with auto-generated password
-            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '' });
+            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
             fetchUsers();
             addToast('Staff member created successfully', 'success');
         } catch (error: any) {
@@ -112,12 +114,14 @@ export const BranchUsers = () => {
                     bankName: formData.bankName,
                     accountName: formData.accountName,
                     accountNumber: formData.accountNumber,
+                    nextOfKinName: formData.nextOfKinName,
+                    nextOfKinPhone: formData.nextOfKinPhone,
                     password: formData.password || undefined // Only send if changed
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setEditingUser(null);
-            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '' });
+            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
             fetchUsers();
             addToast('Staff updated successfully', 'success');
         } catch (error: any) {
@@ -186,6 +190,8 @@ export const BranchUsers = () => {
             accountName: u.accountName || '',
             accountNumber: u.accountNumber || '',
             confirmAccountNumber: u.accountNumber || '',
+            nextOfKinName: u.nextOfKinName || '',
+            nextOfKinPhone: u.nextOfKinPhone || '',
             role: u.role
         });
     };
@@ -197,7 +203,7 @@ export const BranchUsers = () => {
         setSelectedStaffDocs(null);
         setBulkFile(null);
         setBulkReport(null);
-        setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '' });
+        setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
     };
 
     const handleDeleteUser = async () => {
@@ -536,6 +542,23 @@ export const BranchUsers = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
                                     <input type="text" className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                                         value={formData.accountName} onChange={e => setFormData({ ...formData, accountName: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <hr className="my-4 border-gray-100" />
+                            <h4 className="text-sm font-bold text-gray-800 mb-2">Next of Kin Details</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Next of Kin Name</label>
+                                    <input type="text" className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={formData.nextOfKinName} onChange={e => setFormData({ ...formData, nextOfKinName: e.target.value })} 
+                                        placeholder="e.g. John Doe" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Next of Kin Phone</label>
+                                    <input type="text" className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={formData.nextOfKinPhone} onChange={e => setFormData({ ...formData, nextOfKinPhone: e.target.value })} 
+                                        placeholder="e.g. 08012345678" />
                                 </div>
                             </div>
                             <div>

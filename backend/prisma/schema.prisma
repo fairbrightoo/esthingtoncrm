@@ -126,6 +126,8 @@ model User {
   accountNumber          String?
   aiThreadId             String?
   employeeId             String?              @unique
+  nextOfKinName          String?
+  nextOfKinPhone         String?
   activities             Activity[]
   attendances            Attendance[]
   communicationLogs      CommunicationLog[]

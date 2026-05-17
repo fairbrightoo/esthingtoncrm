@@ -165,7 +165,7 @@ export const CompanyController = {
      */
     async updateCompany(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate } = req.body;
+        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate, abbreviation } = req.body;
         let logoUrl: string | undefined = undefined;
 
         try {
@@ -186,6 +186,7 @@ export const CompanyController = {
                     website,
                     ...(idCardFrontTemplate !== undefined && { idCardFrontTemplate }),
                     ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
+                    ...(abbreviation !== undefined && { abbreviation }),
                     ...(logoUrl && { logoUrl }) 
                 }
             });
@@ -636,7 +637,7 @@ export const CompanyController = {
      */
     async createBranchStaff(req: Request, res: Response) {
         const { companyId, branchId } = req.params as any;
-        const { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber } = req.body;
+        const { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone } = req.body;
         
         // Accept password from body if provided, otherwise we'll generate one
         let password = req.body.password;
@@ -672,6 +673,8 @@ export const CompanyController = {
                     bankName,
                     accountName,
                     accountNumber,
+                    nextOfKinName,
+                    nextOfKinPhone,
                     companyId,
                     branchId
                 }
@@ -714,7 +717,7 @@ export const CompanyController = {
      */
     async updateUser(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber } = req.body;
+        const { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone } = req.body;
 
         try {
             const userBefore = await prisma.user.findUnique({ where: { id } });
@@ -739,6 +742,12 @@ export const CompanyController = {
             }
             if (accountNumber !== undefined) {
                 data.accountNumber = accountNumber;
+            }
+            if (nextOfKinName !== undefined) {
+                data.nextOfKinName = nextOfKinName;
+            }
+            if (nextOfKinPhone !== undefined) {
+                data.nextOfKinPhone = nextOfKinPhone;
             }
             if (monthlySalary !== undefined) {
                 data.monthlySalary = parseFloat(monthlySalary) || 0;
