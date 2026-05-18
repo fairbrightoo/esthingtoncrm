@@ -26,6 +26,8 @@ interface Payment {
         lead: { fullName: string; phone: string };
     };
     recordedByUser: { fullName: string; email: string; role: string };
+    notes?: string;
+    rejectionReason?: string;
 }
 
 export const ManagingDirectorDashboard = () => {
@@ -35,7 +37,7 @@ export const ManagingDirectorDashboard = () => {
     const [processedPayments, setProcessedPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, paymentId: string, status: 'APPROVED' | 'REJECTED' | null }>({ isOpen: false, paymentId: '', status: null });
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, paymentId: string, status: 'APPROVED' | 'REJECTED' | null, rejectionReason?: string }>({ isOpen: false, paymentId: '', status: null, rejectionReason: '' });
     const [receiptModal, setReceiptModal] = useState<{ isOpen: boolean, url: string | null }>({ isOpen: false, url: null });
 
     const [activeTab, setActiveTab] = useState<'APPROVALS' | 'HISTORY' | 'DISCOUNTS' | 'FUNDS_REQUEST' | 'BUDGETS' | 'REFUNDS'>('APPROVALS');
@@ -113,17 +115,20 @@ export const ManagingDirectorDashboard = () => {
     }, []);
 
     const handleUpdateStatus = (paymentId: string, status: 'APPROVED' | 'REJECTED') => {
-        setConfirmModal({ isOpen: true, paymentId, status });
+        setConfirmModal({ isOpen: true, paymentId, status, rejectionReason: '' });
     };
 
     const executeStatusUpdate = async () => {
-        const { paymentId, status } = confirmModal;
+        const { paymentId, status, rejectionReason } = confirmModal;
         if (!paymentId || !status) return;
 
-        setConfirmModal({ isOpen: false, paymentId: '', status: null });
+        setConfirmModal({ isOpen: false, paymentId: '', status: null, rejectionReason: '' });
 
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/${paymentId}/status`, { status }, {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/${paymentId}/status`, { 
+                status, 
+                rejectionReason: status === 'REJECTED' ? rejectionReason : undefined 
+            }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast(`Payment marked as ${status}`, "success");
@@ -328,6 +333,12 @@ export const ManagingDirectorDashboard = () => {
                                                 <span>Method: {p.method}</span>
                                                 {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
                                                 <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
+                                                {p.notes && (
+                                                    <div className="mt-2 bg-yellow-50 border border-yellow-100 p-2 rounded-lg text-sm text-yellow-800">
+                                                        <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 text-yellow-600">Marketer's Note:</span>
+                                                        {p.notes}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -461,6 +472,18 @@ export const ManagingDirectorDashboard = () => {
                                                 <span>Method: {p.method}</span>
                                                 {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
                                                 <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
+                                                {p.notes && (
+                                                    <div className="mt-2 bg-yellow-50 border border-yellow-100 p-2 rounded-lg text-sm text-yellow-800">
+                                                        <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 text-yellow-600">Marketer's Note:</span>
+                                                        {p.notes}
+                                                    </div>
+                                                )}
+                                                {p.rejectionReason && (
+                                                    <div className="mt-2 bg-red-50 border border-red-100 p-2 rounded-lg text-sm text-red-800">
+                                                        <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 text-red-600">MD's Rejection Note:</span>
+                                                        {p.rejectionReason}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                             <td className="px-6 py-4">
@@ -616,6 +639,18 @@ export const ManagingDirectorDashboard = () => {
                                 Are you sure you want to mark this payment as <strong className={confirmModal.status === 'APPROVED' ? 'text-green-700' : 'text-red-700'}>{confirmModal.status}</strong>? 
                                 {confirmModal.status === 'APPROVED' ? ' This will instantly update the client\'s balance and generate an official receipt.' : ' The marketer will be alerted that the payment was not received.'}
                             </p>
+                            {confirmModal.status === 'REJECTED' && (
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Rejection Reason (Optional)</label>
+                                    <textarea 
+                                        value={confirmModal.rejectionReason} 
+                                        onChange={(e) => setConfirmModal({ ...confirmModal, rejectionReason: e.target.value })} 
+                                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none"
+                                        placeholder="Explain why this payment was rejected..."
+                                        rows={3}
+                                    />
+                                </div>
+                            )}
                             <div className="mt-8 flex justify-end space-x-3">
                                 <button
                                     onClick={() => setConfirmModal({ isOpen: false, paymentId: '', status: null })}

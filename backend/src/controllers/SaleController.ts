@@ -137,7 +137,7 @@ export const SaleController = {
     recordPayment: async (req: Request, res: Response) => {
         try {
             const { saleId } = req.params;
-            const { amount, method, reference, userId, accountPaidTo } = req.body;
+            const { amount, method, reference, userId, accountPaidTo, notes } = req.body;
 
             const sale = await prisma.sale.findUnique({
                 where: { id: String(saleId) },
@@ -172,6 +172,7 @@ export const SaleController = {
                             status: 'APPROVED',
                             recordedByUserId: userId,
                             accountPaidTo: accountPaidTo || null,
+                            notes: notes || null,
                             isCommissionPaid: true // User requested no commission on reused equity
                         }
                     });
@@ -225,7 +226,8 @@ export const SaleController = {
                     proofOfPaymentUrl,
                     status: 'PENDING',
                     recordedByUserId: userId,
-                    accountPaidTo: accountPaidTo || null
+                    accountPaidTo: accountPaidTo || null,
+                    notes: notes || null
                 }
             });
 
@@ -349,7 +351,7 @@ export const SaleController = {
     updatePaymentStatus: async (req: Request, res: Response) => {
         try {
             const { paymentId } = req.params as { paymentId: string };
-            const { status } = req.body; // 'APPROVED' or 'REJECTED'
+            const { status, rejectionReason } = req.body; // 'APPROVED' or 'REJECTED'
 
             if (!['APPROVED', 'REJECTED'].includes(status)) {
                 res.status(400).json({ error: "Invalid status update" });
@@ -358,7 +360,10 @@ export const SaleController = {
 
             const payment = await prisma.payment.update({
                 where: { id: paymentId },
-                data: { status: String(status) }
+                data: { 
+                    status: String(status),
+                    rejectionReason: status === 'REJECTED' ? (rejectionReason || null) : null
+                }
             });
 
             // If approved, update the sale totals

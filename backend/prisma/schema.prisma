@@ -345,6 +345,8 @@ model Payment {
   reference         String?
   proofOfPaymentUrl String?
   status            String   @default("PENDING")
+  notes             String?  @db.Text
+  rejectionReason   String?  @db.Text
   saleId            String
   recordedByUserId  String
   accountPaidTo     String?

@@ -35,6 +35,7 @@ interface Payment {
     reference?: string;
     status: string;
     proofOfPaymentUrl?: string;
+    rejectionReason?: string;
 }
 
 import { useRef } from 'react';
@@ -103,6 +104,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
     const [paymentRef, setPaymentRef] = useState('');
     const [accountPaidTo, setAccountPaidTo] = useState('');
+    const [paymentNotes, setPaymentNotes] = useState('');
     const [corporateAccounts, setCorporateAccounts] = useState<any[]>([]);
     const [proofFiles, setProofFiles] = useState<File[]>([]);
 
@@ -206,7 +208,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     method: 'EQUITY_WALLET',
                     reference: paymentRef,
                     userId: user?.id,
-                    accountPaidTo: accountPaidTo || undefined
+                    accountPaidTo: accountPaidTo || undefined,
+                    notes: paymentNotes || undefined
                 }, { 
                     headers: { Authorization: `Bearer ${token}` } 
                 });
@@ -221,6 +224,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 formData.append('reference', paymentRef);
                 formData.append('userId', user?.id || '');
                 if (accountPaidTo) formData.append('accountPaidTo', accountPaidTo);
+                if (paymentNotes) formData.append('notes', paymentNotes);
                 proofFiles.forEach(file => {
                     formData.append('proofs', file);
                 });
@@ -253,6 +257,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         setDiscountCode('');
         setPaymentAmount('');
         setPaymentRef('');
+        setPaymentNotes('');
         setProofFiles([]);
         setSelectedSaleId(null);
     };
@@ -699,6 +704,11 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                         <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${p.status === 'APPROVED' ? 'bg-green-100 text-green-700' : p.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                                             {p.status || 'PENDING'}
                                                         </span>
+                                                        {p.status === 'REJECTED' && p.rejectionReason && (
+                                                            <div className="mt-1 text-xs text-red-600 bg-red-50 p-1.5 rounded border border-red-100">
+                                                                <strong>MD Note:</strong> {p.rejectionReason}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="flex flex-col items-end">
                                                         <span className="text-gray-400">{new Date(p.date).toLocaleDateString()}</span>
