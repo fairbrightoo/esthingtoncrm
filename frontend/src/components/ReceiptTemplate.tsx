@@ -13,6 +13,7 @@ interface ReceiptProps {
         website?: string;
         signatureUrl?: string;
         managingDirectorName?: string;
+        signatureRole?: string;
     };
 }
 
@@ -94,7 +95,7 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>((p
                         )}
                     </div>
                     <p style={{ textAlign: 'center', margin: '0', fontWeight: 'bold' }}>{branding.managingDirectorName || 'Managing Director'}</p>
-                    <p style={{ textAlign: 'center', margin: '0', color: '#666', fontSize: '12px' }}>Authorized Signature</p>
+                    <p style={{ textAlign: 'center', margin: '0', color: '#666', fontSize: '12px' }}>{branding.signatureRole || 'Authorized Signature'}</p>
                 </div>
                 <div style={{ width: '45%', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>

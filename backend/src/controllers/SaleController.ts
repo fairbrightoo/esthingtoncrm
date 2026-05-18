@@ -106,7 +106,21 @@ export const SaleController = {
                 where: { leadId: String(leadId) },
                 include: {
                     plot: {
-                        include: { estate: true }
+                        include: { 
+                            estate: {
+                                include: {
+                                    company: true,
+                                    branch: {
+                                        include: {
+                                            users: {
+                                                where: { role: 'ACCOUNTANT', isActive: true },
+                                                take: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            } 
+                        }
                     },
                     lead: { include: { branch: true } },
                     payments: { orderBy: { date: 'desc' } }
@@ -243,7 +257,23 @@ export const SaleController = {
                 include: {
                     sale: {
                         include: {
-                            plot: { include: { estate: true } },
+                            plot: { 
+                                include: { 
+                                    estate: {
+                                        include: {
+                                            company: true,
+                                            branch: {
+                                                include: {
+                                                    users: {
+                                                        where: { role: 'ACCOUNTANT', isActive: true },
+                                                        take: 1
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } 
+                                } 
+                            },
                             lead: true
                         }
                     },
@@ -281,7 +311,23 @@ export const SaleController = {
                 include: {
                     sale: {
                         include: {
-                            plot: { include: { estate: true } },
+                            plot: { 
+                                include: { 
+                                    estate: {
+                                        include: {
+                                            company: true,
+                                            branch: {
+                                                include: {
+                                                    users: {
+                                                        where: { role: 'ACCOUNTANT', isActive: true },
+                                                        take: 1
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } 
+                                } 
+                            },
                             lead: true
                         }
                     },

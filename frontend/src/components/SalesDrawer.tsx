@@ -726,15 +726,34 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
             {/* Hidden Receipt Template */}
             <div style={{ display: 'none' }}>
-                {selectedPaymentForReceipt && (
-                    <ReceiptTemplate
-                        ref={receiptRef}
-                        sale={selectedPaymentForReceipt.sale}
-                        payment={selectedPaymentForReceipt}
-                        lead={selectedPaymentForReceipt.sale.lead}
-                        branding={user?.company || { name: 'Esthington CRM' }}
-                    />
-                )}
+                {selectedPaymentForReceipt && (() => {
+                    const estate = selectedPaymentForReceipt.sale.plot?.estate;
+                    const managingCompany = estate?.company || user?.company;
+                    const managingBranch = estate?.branch;
+                    const accountant = managingBranch?.users?.[0];
+                    
+                    const resolvedBranding = {
+                        name: managingCompany?.name || 'Esthington CRM',
+                        address: managingCompany?.address,
+                        logoUrl: managingCompany?.logoUrl,
+                        phone: managingCompany?.phone,
+                        email: managingCompany?.email,
+                        website: managingCompany?.website,
+                        signatureUrl: accountant?.signatureUrl || managingBranch?.signatureUrl || managingCompany?.signatureUrl,
+                        managingDirectorName: accountant?.fullName || managingBranch?.managerName || managingCompany?.managingDirectorName,
+                        signatureRole: accountant ? 'Accountant' : 'Authorized Signature'
+                    };
+
+                    return (
+                        <ReceiptTemplate
+                            ref={receiptRef}
+                            sale={selectedPaymentForReceipt.sale}
+                            payment={selectedPaymentForReceipt}
+                            lead={selectedPaymentForReceipt.sale.lead}
+                            branding={resolvedBranding}
+                        />
+                    );
+                })()}
             </div>
 
             <PlotExchangeModal

@@ -69,7 +69,7 @@ export const PDFService = {
     /**
      * Process Template Variables (Identical to Frontend Logic)
      */
-    processTemplate(template: string, sale: any, companyInfo: any, branchInfo: any): string {
+    processTemplate(template: string, sale: any, companyInfo: any, branchInfo: any, accountantInfo?: any): string {
         const formatCurrency = (amount: number) => {
             return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
         };
@@ -124,6 +124,16 @@ export const PDFService = {
         // Branch manager name takes precedence if it exists
         const managerName = branchInfo?.managerName || companyInfo?.managingDirectorName || 'Managing Director';
         html = html.replace(/{{MD_NAME}}/g, managerName);
+
+        // Receipt Specific Signatures (Accountant -> MD)
+        const receiptSignerName = accountantInfo?.fullName || managerName;
+        const receiptSignerRole = accountantInfo ? 'Accountant' : 'Authorized Signature';
+        const receiptSigUrl = accountantInfo?.signatureUrl || signatureUrl;
+        const resolvedReceiptSigUrl = receiptSigUrl ? (receiptSigUrl.startsWith('http') ? receiptSigUrl : `${baseUrl}${receiptSigUrl}`) : '';
+        const receiptSigHtml = resolvedReceiptSigUrl ? `<img src="${resolvedReceiptSigUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
+        html = html.replace(/{{RECEIPT_SIGNATURE}}/g, receiptSigHtml);
+        html = html.replace(/{{RECEIPT_NAME}}/g, receiptSignerName);
+        html = html.replace(/{{RECEIPT_ROLE}}/g, receiptSignerRole);
         html = html.replace(/{{COMPANY_NAME}}/g, companyInfo?.name || 'Company Name');
         html = html.replace(/{{COMPANY_WEBSITE}}/g, companyInfo?.website || 'www.company.com');
         html = html.replace(/{{COMPANY_EMAIL}}/g, companyInfo?.email || 'info@company.com');
@@ -185,10 +195,10 @@ export const PDFService = {
                 <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end;">
                     <div style="width: 40%;">
                         <div style="border-top: 1px solid #333; margin-top: 40px; margin-bottom: 5px; text-align: center;">
-                            {{COMPANY_SIGNATURE}}
+                            {{RECEIPT_SIGNATURE}}
                         </div>
-                        <p style="text-align: center; margin: 0; font-weight: bold;">{{MD_NAME}}</p>
-                        <p style="text-align: center; margin: 0; color: #666; font-size: 12px;">Authorized Signature</p>
+                        <p style="text-align: center; margin: 0; font-weight: bold;">{{RECEIPT_NAME}}</p>
+                        <p style="text-align: center; margin: 0; color: #666; font-size: 12px;">{{RECEIPT_ROLE}}</p>
                     </div>
                     <div style="width: 45%; background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
