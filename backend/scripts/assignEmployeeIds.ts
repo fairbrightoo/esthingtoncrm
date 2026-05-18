@@ -12,7 +12,7 @@ async function main() {
         });
         
         let companyCounter = 2; // starting counter for others
-        const companyAbbr = company.abbreviation || 'DKEL';
+        const companyAbbr = company.abbreviation || 'COMP';
 
         let gmdCount = 1;
 
