@@ -270,6 +270,8 @@ export const AccountantDashboard = () => {
                                     <table className="w-full text-left text-sm whitespace-nowrap">
                                         <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-semibold">
                                             <tr>
+                                                <th className="px-6 py-4">Date</th>
+                                                <th className="px-6 py-4">Client</th>
                                                 <th className="px-6 py-4">Marketer</th>
                                                 <th className="px-6 py-4">Plot / Estate</th>
                                                 <th className="px-6 py-4">Verified Payment (NGN)</th>
@@ -279,14 +281,25 @@ export const AccountantDashboard = () => {
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {commissions.length === 0 ? (
-                                                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No pending commissions.</td></tr>
+                                                <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">No pending commissions.</td></tr>
                                             ) : commissions.map(payment => {
-                                                const rate = payment.sale?.lead?.assignedToUser?.commissionRate || 5; // Default 5%
+                                                const rate = payment.sale?.marketer?.commissionRate || 5; // Default 5%
                                                 const commissionAmount = ((payment.amount * rate) / 100) - (payment.virtualLoanAmount || 0);
                                                 return (
                                                 <tr key={payment.id} className="hover:bg-gray-50/50">
+                                                    <td className="px-6 py-4 text-gray-500">
+                                                        {new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-gray-800">{payment.sale?.lead?.fullName || 'N/A'}</div>
+                                                        {payment.sale?.lead?.company && (
+                                                            <div className="text-[10px] text-gray-400 mt-1 flex items-center">
+                                                                Origin: {payment.sale.lead.company.abbreviation} - {payment.sale.lead.branch?.name}
+                                                            </div>
+                                                        )}
+                                                    </td>
                                                     <td className="px-6 py-4 font-medium text-gray-800">
-                                                        {payment.sale?.lead?.assignedToUser?.fullName || 'N/A'}
+                                                        {payment.sale?.marketer?.fullName || 'N/A'}
                                                         <div className="text-xs text-blue-600 mt-1">{rate}% Rate</div>
                                                     </td>
                                                     <td className="px-6 py-4">

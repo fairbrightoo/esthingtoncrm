@@ -54,8 +54,13 @@ export const DashboardController = {
             const leadWhereClause: any = { ...whereClause };
 
             if (role !== 'SUPER_ADMIN') {
-                saleWhereClause.lead = { companyId: companyId };
-                if (branchId) saleWhereClause.lead.branchId = branchId;
+                if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+                    // Marketers are scoped below
+                } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(role) && branchId) {
+                    saleWhereClause.marketer = { branchId: branchId };
+                } else if (role === 'MANAGING_DIRECTOR') {
+                    saleWhereClause.marketer = { companyId: companyId };
+                }
             }
 
             if (role === 'MARKETER') {
@@ -64,6 +69,8 @@ export const DashboardController = {
                     { assignedToUserId: userId },
                     { sales: { some: { marketerId: userId } } }
                 ];
+                delete leadWhereClause.companyId;
+                delete leadWhereClause.branchId;
                 delete leadWhereClause.assignedToUserId;
             } else if (role === 'TEAM_LEAD') {
                 if (scope === 'TEAM') {
@@ -71,18 +78,36 @@ export const DashboardController = {
                 } else {
                     saleWhereClause.marketerId = userId;
                 }
+                leadWhereClause.OR = [
+                    { assignedToUserId: userId },
+                    { sales: { some: { marketerId: userId } } }
+                ];
+                delete leadWhereClause.companyId;
+                delete leadWhereClause.branchId;
             } else if (role === 'BDM') {
                 if (scope === 'TEAM') {
                     saleWhereClause.marketer = { team: { bdmId: userId } };
                 } else {
                     saleWhereClause.marketerId = userId;
                 }
+                leadWhereClause.OR = [
+                    { assignedToUserId: userId },
+                    { sales: { some: { marketerId: userId } } }
+                ];
+                delete leadWhereClause.companyId;
+                delete leadWhereClause.branchId;
             } else if (role === 'HEAD_BDD') {
                 if (scope === 'DEPARTMENT') {
                     saleWhereClause.marketer = { role: { in: ['MARKETER', 'TEAM_LEAD', 'BDM'] } };
                 } else {
                     saleWhereClause.marketerId = userId;
                 }
+                leadWhereClause.OR = [
+                    { assignedToUserId: userId },
+                    { sales: { some: { marketerId: userId } } }
+                ];
+                delete leadWhereClause.companyId;
+                delete leadWhereClause.branchId;
             }
 
             const paymentWhereClause: any = { sale: saleWhereClause };

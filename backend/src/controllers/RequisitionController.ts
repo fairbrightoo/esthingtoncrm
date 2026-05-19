@@ -231,9 +231,11 @@ export const RequisitionController = {
 
             const whereClause: any = { status: "APPROVED", isCommissionPaid: false };
             if (role !== "SUPER_ADMIN") {
-                const saleFilter: any = { plot: { estate: { companyId } } };
+                const saleFilter: any = {};
                 if (role === "ACCOUNTANT" && branchId) {
-                    saleFilter.lead = { branchId };
+                    saleFilter.marketer = { branchId };
+                } else if (role === "MANAGING_DIRECTOR") {
+                    saleFilter.marketer = { companyId };
                 }
                 whereClause.sale = saleFilter;
             }
@@ -241,7 +243,7 @@ export const RequisitionController = {
             const payments = await prisma.payment.findMany({
                 where: whereClause,
                 include: {
-                    sale: { include: { lead: { include: { assignedToUser: { select: { id: true, fullName: true, email: true, commissionRate: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } } } },
+                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true } } } },
                 },
                 orderBy: { date: 'asc' }
             });
