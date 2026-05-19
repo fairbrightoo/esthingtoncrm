@@ -48,14 +48,17 @@ export const GlobalAnalyticsController = {
                 },
                 include: {
                     sale: {
-                        include: { lead: { select: { id: true, companyId: true, branchId: true } } }
+                        include: { 
+                            lead: { select: { id: true, companyId: true, branchId: true } },
+                            marketer: { select: { companyId: true, branchId: true } }
+                        }
                     }
                 }
             });
 
             payments.forEach(p => {
-                const cid = p.sale.lead.companyId;
-                const bid = p.sale.lead.branchId;
+                const cid = p.sale.marketer?.companyId || p.sale.lead.companyId;
+                const bid = p.sale.marketer?.branchId || p.sale.lead.branchId;
                 const leadId = p.sale.lead.id;
 
                 if (companyMap.has(cid)) {

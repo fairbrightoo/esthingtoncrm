@@ -278,10 +278,10 @@ export const SaleController = {
 
             // Respect Cross-Company & Branch boundaries
             if (user?.role !== 'SUPER_ADMIN') {
-                const saleFilter: any = { plot: { estate: { companyId: user?.companyId } } };
+                const saleFilter: any = { marketer: { companyId: user?.companyId } };
                 // If Accountant, restrict to Branch (MD sees full company)
                 if (user?.role === 'ACCOUNTANT' && user?.branchId) {
-                    saleFilter.lead = { branchId: user?.branchId };
+                    saleFilter.marketer = { branchId: user?.branchId };
                 }
                 whereClause.sale = saleFilter;
             }
@@ -333,10 +333,10 @@ export const SaleController = {
 
             // Respect Cross-Company & Branch boundaries
             if (user?.role !== 'SUPER_ADMIN') {
-                const saleFilter: any = { plot: { estate: { companyId: user?.companyId } } };
+                const saleFilter: any = { marketer: { companyId: user?.companyId } };
                 // If Accountant, restrict to Branch (MD sees full company)
                 if (user?.role === 'ACCOUNTANT' && user?.branchId) {
-                    saleFilter.lead = { branchId: user?.branchId };
+                    saleFilter.marketer = { branchId: user?.branchId };
                 }
                 whereClause.sale = saleFilter;
             }

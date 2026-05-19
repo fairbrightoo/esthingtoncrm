@@ -20,10 +20,8 @@ export const TaxController = {
       const payments = await prisma.payment.findMany({
         where: {
           sale: {
-            plot: {
-                estate: {
-                    managingBranchId: branchId
-                }
+            marketer: {
+                branchId: branchId
             }
           },
           status: { in: ['VERIFIED', 'APPROVED'] },

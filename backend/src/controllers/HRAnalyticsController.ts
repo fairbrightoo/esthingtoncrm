@@ -87,7 +87,7 @@ export const HRAnalyticsController = {
                 where: {
                     status: 'APPROVED',
                     date: { gte: currentMonthStart, lt: currentMonthEnd },
-                    sale: { lead: { branchId } }
+                    sale: { marketer: { branchId } }
                 },
                 select: {
                     amount: true,

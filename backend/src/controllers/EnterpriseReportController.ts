@@ -21,10 +21,10 @@ export const EnterpriseReportController = {
             if (status && status !== 'ALL') whereClause.status = status;
             
             if (companyId && companyId !== 'ALL') {
-                whereClause.sale = { lead: { companyId } };
+                whereClause.sale = { marketer: { companyId } };
             }
             if (branchId && branchId !== 'ALL') {
-                whereClause.sale = { ...whereClause.sale, lead: { ...whereClause.sale?.lead, branchId } };
+                whereClause.sale = { ...whereClause.sale, marketer: { ...whereClause.sale?.marketer, branchId } };
             }
 
             const payments = await prisma.payment.findMany({
