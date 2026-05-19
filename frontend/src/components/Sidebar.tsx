@@ -101,6 +101,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance" />
                         <NavItem to={`${basePath}/leads`} icon={<FileText size={20} />} label="All Branch Leads" />
+                        <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                     </>
@@ -130,6 +131,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions" />
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Leads" />
+                        <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/templates`} icon={<BookOpen size={20} />} label="Templates" />

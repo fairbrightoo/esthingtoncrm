@@ -217,6 +217,7 @@ function App() {
 
             <Route path="/dashboard/:branchName/leads" element={<DashboardLayout><MyLeads /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/cross-sales" element={<DashboardLayout><MyLeads scope="cross-sales" /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/users" element={<DashboardLayout><BranchUsers /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/disbursements" element={<DashboardLayout><AccountantDashboard /></DashboardLayout>} />

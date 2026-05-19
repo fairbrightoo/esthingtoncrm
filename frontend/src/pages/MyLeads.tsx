@@ -22,7 +22,7 @@ interface Lead {
     whatsappOptIn: boolean;
 }
 
-export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
+export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => {
     const { user } = useAuth();
     const { addToast } = useToast();
     const [leads, setLeads] = useState<Lead[]>([]);
@@ -56,7 +56,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
     const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
     const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
 
-    const isMarketer = user?.role === 'MARKETER';
+    const isMarketer = ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user?.role || '');
 
     useEffect(() => {
         fetchLeads();
@@ -293,7 +293,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">
-                        {scope === 'my' || isMarketer ? 'My Leads' : 'All Branch Leads'}
+                        {scope === 'cross-sales' ? 'Cross-Branch Clients' : (scope === 'my' || isMarketer ? 'My Leads' : 'All Branch Leads')}
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">
                         {filteredLeads.length} active leads found
