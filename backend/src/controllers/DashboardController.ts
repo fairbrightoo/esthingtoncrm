@@ -96,14 +96,13 @@ export const DashboardController = {
                 // Calculate total confirmed sales for Scope
                 const approvedPayments = await prisma.payment.findMany({
                     where: { ...personalPaymentWhereClause, status: 'APPROVED' },
-                    select: { amount: true, isCommissionPaid: true }
+                    select: { amount: true, isCommissionPaid: true, virtualLoanAmount: true }
                 });
                 totalSalesGenerated = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
 
                 // Paid Commissions should only be derived from payments explicitly marked paid by Accountant
                 const actuallyPaidPayments = approvedPayments.filter(p => p.isCommissionPaid === true);
-                const sumOfActuallyPaid = actuallyPaidPayments.reduce((sum, p) => sum + p.amount, 0);
-                paidCommissions = sumOfActuallyPaid * (commissionRate / 100);
+                paidCommissions = actuallyPaidPayments.reduce((sum, p) => sum + ((p.amount * (commissionRate / 100)) - (p.virtualLoanAmount || 0)), 0);
 
                 const personalSaleWhereClause: any = { lead: { ...whereClause } };
                 if (Object.keys(dateFilter).length > 0) personalSaleWhereClause.createdAt = dateFilter;
@@ -229,7 +228,7 @@ export const DashboardController = {
                 detailedDueCommissions = dueCommsMatch.map((p: any) => ({
                     id: p.id,
                     amount: p.amount,
-                    commission: (p.amount * commissionRate) / 100,
+                    commission: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0),
                     date: p.date,
                     clientName: p.sale.lead.fullName,
                     product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`
@@ -243,7 +242,7 @@ export const DashboardController = {
                 detailedPaidCommissions = paidCommsMatch.map((p: any) => ({
                     id: p.id,
                     amount: p.amount,
-                    commission: (p.amount * commissionRate) / 100,
+                    commission: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0),
                     date: p.commissionDisbursedAt || p.date,
                     clientName: p.sale.lead.fullName,
                     product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`

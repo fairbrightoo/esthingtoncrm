@@ -282,7 +282,7 @@ export const AccountantDashboard = () => {
                                                 <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No pending commissions.</td></tr>
                                             ) : commissions.map(payment => {
                                                 const rate = payment.sale?.lead?.assignedToUser?.commissionRate || 5; // Default 5%
-                                                const commissionAmount = (payment.amount * rate) / 100;
+                                                const commissionAmount = ((payment.amount * rate) / 100) - (payment.virtualLoanAmount || 0);
                                                 return (
                                                 <tr key={payment.id} className="hover:bg-gray-50/50">
                                                     <td className="px-6 py-4 font-medium text-gray-800">

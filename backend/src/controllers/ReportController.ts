@@ -90,7 +90,7 @@ export const ReportController = {
 
         // Commission Accrued (Using Lead's assigned user commission rate or 5%)
         const commissionRate = sale.lead.assignedToUser?.commissionRate || 5.0;
-        const commissionAccrued = payment.amount * (commissionRate / 100);
+        const commissionAccrued = (payment.amount * (commissionRate / 100)) - (payment.virtualLoanAmount || 0);
 
         return {
           sn: index + 1,

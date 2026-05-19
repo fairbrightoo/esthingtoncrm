@@ -101,6 +101,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     // Form: New Payment
     const [paymentAmount, setPaymentAmount] = useState('');
+    const [virtualLoanAmount, setVirtualLoanAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
     const [paymentRef, setPaymentRef] = useState('');
     const [accountPaidTo, setAccountPaidTo] = useState('');
@@ -209,7 +210,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     reference: paymentRef,
                     userId: user?.id,
                     accountPaidTo: accountPaidTo || undefined,
-                    notes: paymentNotes || undefined
+                    notes: paymentNotes || undefined,
+                    virtualLoanAmount: virtualLoanAmount || undefined
                 }, { 
                     headers: { Authorization: `Bearer ${token}` } 
                 });
@@ -225,6 +227,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 formData.append('userId', user?.id || '');
                 if (accountPaidTo) formData.append('accountPaidTo', accountPaidTo);
                 if (paymentNotes) formData.append('notes', paymentNotes);
+                if (virtualLoanAmount) formData.append('virtualLoanAmount', virtualLoanAmount);
                 proofFiles.forEach(file => {
                     formData.append('proofs', file);
                 });
@@ -256,6 +259,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         setTermsAccepted(false);
         setDiscountCode('');
         setPaymentAmount('');
+        setPaymentMethod('TRANSFER');
+        setVirtualLoanAmount('');
         setPaymentRef('');
         setPaymentNotes('');
         setProofFiles([]);
@@ -502,6 +507,28 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                         />
                         <p className="text-xs text-gray-500 mt-1">Enter amount being paid now.</p>
                     </div>
+                    {paymentMethod !== 'EQUITY_WALLET' && (
+                        <div className="bg-orange-50 border border-orange-100 p-3 rounded-lg">
+                            <label className="block text-sm font-medium text-orange-800 mb-1 flex items-center justify-between">
+                                Marketer Virtual Loan (₦)
+                                <span className="text-xs bg-orange-200 text-orange-900 px-2 py-0.5 rounded-full font-bold">
+                                    Max: ₦{((Number(paymentAmount) || 0) * ((user?.commissionRate || 5) / 100)).toLocaleString()}
+                                </span>
+                            </label>
+                            <input
+                                type="number"
+                                max={(Number(paymentAmount) || 0) * ((user?.commissionRate || 5) / 100)}
+                                className="w-full border border-orange-200 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                placeholder="Sacrifice commission to top-up"
+                                value={virtualLoanAmount}
+                                onChange={(e) => setVirtualLoanAmount(e.target.value)}
+                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                            />
+                            <p className="text-[10px] text-orange-600 mt-1 font-medium leading-tight">
+                                This amount will be credited to the property but deducted directly from your net commission.
+                            </p>
+                        </div>
+                    )}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
                         <select
@@ -699,6 +726,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                 <div key={p.id} className="flex justify-between text-xs border-b border-gray-100 pb-1 last:border-0 last:pb-0 items-center">
                                                     <div>
                                                         <span className="font-medium text-gray-700">₦{p.amount.toLocaleString()}</span>
+                                                        {p.virtualLoanAmount > 0 && (
+                                                            <span className="text-[10px] text-orange-600 ml-1 font-bold bg-orange-100 px-1 rounded-sm">+ ₦{p.virtualLoanAmount.toLocaleString()} VL</span>
+                                                        )}
                                                         <span className="text-gray-400 mx-1">•</span>
                                                         <span className="text-gray-500">{p.method}</span>
                                                         <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${p.status === 'APPROVED' ? 'bg-green-100 text-green-700' : p.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>

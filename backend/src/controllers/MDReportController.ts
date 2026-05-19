@@ -101,7 +101,7 @@ export const MDReportController = {
                 // Commission calculation (e.g., 5% or 10% based on their rate, assuming standard 5% if not set)
                 // If standard CRM model: marketer.commissionRate exists, default 5%
                 const commRate = (marketer as any)?.commissionRate || 5; 
-                const commissionEarned = p.amount * (commRate / 100);
+                const commissionEarned = (p.amount * (commRate / 100)) - (p.virtualLoanAmount || 0);
 
                 totalCommissionsCleared += commissionEarned;
 

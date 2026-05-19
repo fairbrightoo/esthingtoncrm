@@ -40,7 +40,7 @@ export const MarketerAnalyticsController = {
             const commissionRate = user?.commissionRate || 0;
             const paymentsWithCommission = payments.map(p => ({
                 ...p,
-                commissionAccrued: (p.amount * commissionRate) / 100
+                commissionAccrued: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0)
             }));
 
             // 2. Lead Funnel

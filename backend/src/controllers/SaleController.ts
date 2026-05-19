@@ -137,20 +137,31 @@ export const SaleController = {
     recordPayment: async (req: Request, res: Response) => {
         try {
             const { saleId } = req.params;
-            const { amount, method, reference, userId, accountPaidTo, notes } = req.body;
+            const { amount, method, reference, userId, accountPaidTo, notes, virtualLoanAmount } = req.body;
 
             const sale = await prisma.sale.findUnique({
                 where: { id: String(saleId) },
-                include: { lead: true }
+                include: { lead: { include: { assignedToUser: true } } }
             });
             if (!sale) {
                 res.status(404).json({ error: "Sale not found" });
                 return;
             }
 
+            // --- VIRTUAL LOAN VALIDATION ---
+            const numericAmount = Number(amount);
+            const loanAmount = Number(virtualLoanAmount) || 0;
+            
+            if (loanAmount > 0) {
+                const commissionRate = sale.lead.assignedToUser?.commissionRate || 5.0;
+                const maxLoan = (numericAmount * commissionRate) / 100;
+                if (loanAmount > maxLoan) {
+                    return res.status(400).json({ error: `Virtual loan exceeds maximum eligible amount of ₦${maxLoan.toLocaleString()}` });
+                }
+            }
+
             // --- EQUITY WALLET LOGIC ---
             if (method === 'EQUITY_WALLET') {
-                const numericAmount = Number(amount);
                 if (sale.lead.equityWalletBalance < numericAmount) {
                     return res.status(400).json({ error: "Insufficient equity wallet balance." });
                 }
@@ -173,12 +184,13 @@ export const SaleController = {
                             recordedByUserId: userId,
                             accountPaidTo: accountPaidTo || null,
                             notes: notes || null,
+                            virtualLoanAmount: loanAmount,
                             isCommissionPaid: true // User requested no commission on reused equity
                         }
                     });
 
-                    // Instantly Apply to Sale
-                    const newTotal = sale.totalPaid + numericAmount;
+                    // Instantly Apply to Sale (Cash + Virtual Loan)
+                    const newTotal = sale.totalPaid + numericAmount + loanAmount;
                     const isCompleted = newTotal >= sale.agreedPrice;
 
                     await tx.sale.update({
@@ -227,7 +239,8 @@ export const SaleController = {
                     status: 'PENDING',
                     recordedByUserId: userId,
                     accountPaidTo: accountPaidTo || null,
-                    notes: notes || null
+                    notes: notes || null,
+                    virtualLoanAmount: loanAmount
                 }
             });
 
@@ -374,7 +387,7 @@ export const SaleController = {
                 });
 
                 if (sale) {
-                    const newTotal = sale.totalPaid + payment.amount;
+                    const newTotal = sale.totalPaid + payment.amount + (payment.virtualLoanAmount || 0);
                     const isCompleted = newTotal >= sale.agreedPrice;
 
                     await prisma.sale.update({

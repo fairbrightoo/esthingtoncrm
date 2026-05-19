@@ -328,7 +328,14 @@ export const ManagingDirectorDashboard = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-blue-700 text-lg">₦{p.amount.toLocaleString()}</div>
+                                            <div className="font-bold text-blue-700 text-lg flex items-center gap-2">
+                                                ₦{p.amount.toLocaleString()}
+                                                {p.virtualLoanAmount > 0 && (
+                                                    <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-sm uppercase border border-orange-200">
+                                                        + ₦{p.virtualLoanAmount.toLocaleString()} VL
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="text-sm text-gray-500 mt-1 flex flex-col space-y-1">
                                                 <span>Method: {p.method}</span>
                                                 {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
@@ -467,7 +474,14 @@ export const ManagingDirectorDashboard = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                            <div className="font-bold text-gray-800 text-lg">₦{p.amount.toLocaleString()}</div>
+                                            <div className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                                ₦{p.amount.toLocaleString()}
+                                                {p.virtualLoanAmount > 0 && (
+                                                    <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-sm uppercase border border-orange-200">
+                                                        + ₦{p.virtualLoanAmount.toLocaleString()} VL
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="text-sm text-gray-500 mt-1 flex flex-col space-y-1">
                                                 <span>Method: {p.method}</span>
                                                 {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}

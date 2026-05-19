@@ -350,6 +350,7 @@ model Payment {
   saleId            String
   recordedByUserId  String
   accountPaidTo     String?
+  virtualLoanAmount Float    @default(0)
 
   isCommissionPaid      Boolean   @default(false)
   commissionDisbursedAt DateTime?
