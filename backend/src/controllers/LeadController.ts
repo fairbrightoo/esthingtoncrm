@@ -154,6 +154,8 @@ export const LeadController = {
                     assignedToUser: {
                         select: { id: true, fullName: true, email: true }
                     },
+                    branch: { select: { name: true } },
+                    company: { select: { abbreviation: true, name: true } },
                     activities: {
                         take: 1,
                         orderBy: { timestamp: 'desc' }

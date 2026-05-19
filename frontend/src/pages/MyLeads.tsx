@@ -20,6 +20,8 @@ interface Lead {
     };
     isVerified: boolean;
     whatsappOptIn: boolean;
+    branch?: { name: string };
+    company?: { abbreviation: string; name: string };
 }
 
 export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => {
@@ -416,6 +418,12 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                                         </span>
                                                     )}
                                                 </div>
+                                                {lead.branch && lead.company && (
+                                                    <div className="text-[10px] font-medium text-gray-500 mt-1 flex items-center">
+                                                        <Globe size={10} className="mr-1" />
+                                                        Origin: {lead.company.abbreviation} - {lead.branch.name}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </td>
