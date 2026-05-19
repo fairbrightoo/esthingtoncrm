@@ -20,7 +20,7 @@ export const MarketerAnalyticsController = {
             });
 
             // 1. Sales & Commissions Log
-            const paymentsFilter: any = { recordedByUserId: userId, status: 'APPROVED' };
+            const paymentsFilter: any = { sale: { marketerId: userId }, status: 'APPROVED' };
             if (Object.keys(dateFilter).length > 0) paymentsFilter.date = dateFilter;
             
             const payments = await prisma.payment.findMany({
@@ -44,7 +44,12 @@ export const MarketerAnalyticsController = {
             }));
 
             // 2. Lead Funnel
-            const leadsFilter: any = { assignedToUserId: userId };
+            const leadsFilter: any = { 
+                OR: [
+                    { assignedToUserId: userId },
+                    { sales: { some: { marketerId: userId } } }
+                ]
+            };
             if (Object.keys(dateFilter).length > 0) leadsFilter.createdAt = dateFilter;
 
             const allLeads = await prisma.lead.findMany({
@@ -99,7 +104,13 @@ export const MarketerAnalyticsController = {
             // Average Time to Close
             // Find leads that became clients
             const closedLeads = await prisma.lead.findMany({
-                where: { assignedToUserId: userId, status: 'CLIENT' },
+                where: { 
+                    OR: [
+                        { assignedToUserId: userId },
+                        { sales: { some: { marketerId: userId } } }
+                    ], 
+                    status: 'CLIENT' 
+                },
                 select: { createdAt: true, updatedAt: true } // Assuming updatedAt is roughly when they became a client
             });
 

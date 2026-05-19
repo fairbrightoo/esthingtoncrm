@@ -60,6 +60,7 @@ export const ReportController = {
               lead: {
                 include: { assignedToUser: true }
               },
+              marketer: true,
               payments: {
                 orderBy: { date: 'asc' }
               }
@@ -88,8 +89,8 @@ export const ReportController = {
           }
         }
 
-        // Commission Accrued (Using Lead's assigned user commission rate or 5%)
-        const commissionRate = sale.lead.assignedToUser?.commissionRate || 5.0;
+        // Commission Accrued (Using Sale's marketer commission rate or 5%)
+        const commissionRate = sale.marketer?.commissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
         const commissionAccrued = (payment.amount * (commissionRate / 100)) - (payment.virtualLoanAmount || 0);
 
         return {
@@ -102,7 +103,7 @@ export const ReportController = {
           estateName: sale.plot.estate.name,
           plotSize: sale.plot.size,
           isCornerPiece: sale.isCornerPiece ? 'Yes' : 'No',
-          marketerName: sale.lead.assignedToUser?.fullName || 'Unassigned',
+          marketerName: sale.marketer?.fullName || sale.lead.assignedToUser?.fullName || 'Unassigned',
           accountPaidTo: payment.accountPaidTo || 'N/A'
         };
       });

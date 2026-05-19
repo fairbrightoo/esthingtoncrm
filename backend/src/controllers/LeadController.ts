@@ -99,7 +99,15 @@ export const LeadController = {
 
             // Role-Based Filters
             if (scope === 'my' || user.role === 'MARKETER') {
-                whereClause.assignedToUserId = user.id;
+                whereClause.AND = [
+                    ...(whereClause.AND || []),
+                    {
+                        OR: [
+                            { assignedToUserId: user.id },
+                            { sales: { some: { marketerId: user.id } } }
+                        ]
+                    }
+                ];
             } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE' || user.role === 'BRANCH_HR' || user.role === 'ACCOUNTANT') {
                 if (user.branchId) {
                     whereClause.branchId = user.branchId;
@@ -114,10 +122,15 @@ export const LeadController = {
 
             // Search (Name, Email, Phone)
             if (search) {
-                whereClause.OR = [
-                    { fullName: { contains: String(search) } }, // SQLite contains is case-sensitive, might need handling
-                    { email: { contains: String(search) } },
-                    { phone: { contains: String(search) } }
+                whereClause.AND = [
+                    ...(whereClause.AND || []),
+                    {
+                        OR: [
+                            { fullName: { contains: String(search) } },
+                            { email: { contains: String(search) } },
+                            { phone: { contains: String(search) } }
+                        ]
+                    }
                 ];
             }
 
@@ -143,6 +156,39 @@ export const LeadController = {
         } catch (error) {
             console.error('Get Leads Error:', error);
             res.status(500).json({ error: 'Failed to fetch leads' });
+        }
+    },
+
+    // Global Search for Branch Admins / GMs to facilitate cross-selling
+    async globalSearchByPhone(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const tokenUser = req.user;
+            const { phone } = req.query;
+
+            const user = await prisma.user.findUnique({ where: { id: tokenUser.userId } });
+            if (!user || !['BRANCH_ADMIN', 'GENERAL_MANAGER', 'MANAGING_DIRECTOR', 'SUPER_ADMIN'].includes(user.role)) {
+                return res.status(403).json({ error: 'Access denied. Only branch administrators can perform global searches.' });
+            }
+
+            if (!phone || String(phone).length < 5) {
+                return res.status(400).json({ error: 'Please provide a valid phone number.' });
+            }
+
+            const leads = await prisma.lead.findMany({
+                where: { phone: { contains: String(phone) } },
+                include: {
+                    assignedToUser: { select: { id: true, fullName: true, email: true } },
+                    company: { select: { name: true } },
+                    branch: { select: { name: true } }
+                },
+                take: 10
+            });
+
+            res.json(leads);
+        } catch (error) {
+            console.error('Global Search Error:', error);
+            res.status(500).json({ error: 'Failed to search leads globally' });
         }
     },
 

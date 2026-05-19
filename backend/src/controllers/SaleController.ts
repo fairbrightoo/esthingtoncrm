@@ -18,7 +18,8 @@ export const SaleController = {
                 phoneOnDocument, 
                 addressOnDocument, 
                 termsAccepted,
-                discountCode  // Optional code
+                discountCode,  // Optional code
+                marketerId     // For cross-selling attribution
             } = req.body as any;
 
             const plot = await prisma.plot.findUnique({ where: { id: String(plotId) } });
@@ -27,6 +28,11 @@ export const SaleController = {
             if (plot.status !== 'AVAILABLE') {
                 return res.status(400).json({ error: `Cannot sell plot. It is currently ${plot.status}.` });
             }
+
+            const lead = await prisma.lead.findUnique({ where: { id: String(leadId) } });
+            if (!lead) return res.status(404).json({ error: "Lead not found" });
+
+            const resolvedMarketerId = marketerId || lead.assignedToUserId;
 
             // Pricing Logic
             let finalPrice = plot.price;
@@ -63,6 +69,7 @@ export const SaleController = {
             const sale = await prisma.sale.create({
                 data: {
                     leadId: String(leadId),
+                    marketerId: resolvedMarketerId,
                     plotId: String(plotId),
                     isCornerPiece: Boolean(isCornerPiece),
                     agreedPrice: finalPrice,
@@ -75,6 +82,18 @@ export const SaleController = {
                     discountCodeId: activeDiscountId
                 }
             });
+
+            // Notification for Cross-Selling
+            if (marketerId && marketerId !== lead.assignedToUserId) {
+                await prisma.activity.create({
+                    data: {
+                        leadId: lead.id,
+                        type: 'NOTE',
+                        direction: 'INBOUND',
+                        notes: `[SYSTEM] CROSS-SALE RECORDED: This new sale was attributed to a different marketer.`,
+                    }
+                });
+            }
 
             // Status Update: As long as payment is ongoing, mark Plot as RESERVED
             await prisma.plot.update({

@@ -79,21 +79,20 @@ export const MDReportController = {
             // So marketers get credit when the money lands (approved).
             const marketerMap: Record<string, { id: string, name: string, role: string, collected: number, commissionEstimate: number }> = {};
             
-            // Note: We need the Marketer associated with the LEAD who made the sale to calculate commissions,
-            // or the User who recorded the payment? The marketer is the one who closed the lead.
-            // Let's fetch payments with related sale -> lead -> assignedToUser
+            // Note: We need the Marketer associated with the SALE to calculate commissions,
+            // The marketer is the one who closed the sale.
             const paymentsWithMarketer = await prisma.payment.findMany({
                 where: paymentWhere,
                 include: {
-                    sale: { include: { lead: { include: { assignedToUser: true } } } }
+                    sale: { include: { marketer: true } }
                 }
             });
 
             let totalCommissionsCleared = 0;
 
             paymentsWithMarketer.forEach(p => {
-                // The marketer who owns the lead gets the credit & commission
-                const marketer = p.sale.lead?.assignedToUser;
+                // The marketer who owns the sale gets the credit & commission
+                const marketer = p.sale.marketer;
                 const marketerId = marketer?.id || 'unassigned';
                 const marketerName = marketer?.fullName || 'Unassigned Marketer';
                 const role = marketer?.role || 'N/A';

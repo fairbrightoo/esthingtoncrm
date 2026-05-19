@@ -50,9 +50,42 @@ export const DashboardController = {
                 dateFilter.lte = new Date(endDate);
             }
 
-            const saleWhereClause: any = { lead: whereClause };
-            const paymentWhereClause: any = { sale: { lead: whereClause } };
+            const saleWhereClause: any = {};
             const leadWhereClause: any = { ...whereClause };
+
+            if (role !== 'SUPER_ADMIN') {
+                saleWhereClause.lead = { companyId: companyId };
+                if (branchId) saleWhereClause.lead.branchId = branchId;
+            }
+
+            if (role === 'MARKETER') {
+                saleWhereClause.marketerId = userId;
+                leadWhereClause.OR = [
+                    { assignedToUserId: userId },
+                    { sales: { some: { marketerId: userId } } }
+                ];
+                delete leadWhereClause.assignedToUserId;
+            } else if (role === 'TEAM_LEAD') {
+                if (scope === 'TEAM') {
+                    saleWhereClause.marketer = { team: { teamLeadId: userId } };
+                } else {
+                    saleWhereClause.marketerId = userId;
+                }
+            } else if (role === 'BDM') {
+                if (scope === 'TEAM') {
+                    saleWhereClause.marketer = { team: { bdmId: userId } };
+                } else {
+                    saleWhereClause.marketerId = userId;
+                }
+            } else if (role === 'HEAD_BDD') {
+                if (scope === 'DEPARTMENT') {
+                    saleWhereClause.marketer = { role: { in: ['MARKETER', 'TEAM_LEAD', 'BDM'] } };
+                } else {
+                    saleWhereClause.marketerId = userId;
+                }
+            }
+
+            const paymentWhereClause: any = { sale: saleWhereClause };
 
             if (Object.keys(dateFilter).length > 0) {
                 saleWhereClause.createdAt = dateFilter;
@@ -90,7 +123,7 @@ export const DashboardController = {
             let totalSalesGenerated = 0;
 
             if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
-                const personalPaymentWhereClause: any = { sale: { lead: { ...whereClause } } };
+                const personalPaymentWhereClause: any = { ...paymentWhereClause };
                 if (Object.keys(dateFilter).length > 0) personalPaymentWhereClause.date = dateFilter;
 
                 // Calculate total confirmed sales for Scope
@@ -104,7 +137,7 @@ export const DashboardController = {
                 const actuallyPaidPayments = approvedPayments.filter(p => p.isCommissionPaid === true);
                 paidCommissions = actuallyPaidPayments.reduce((sum, p) => sum + ((p.amount * (commissionRate / 100)) - (p.virtualLoanAmount || 0)), 0);
 
-                const personalSaleWhereClause: any = { lead: { ...whereClause } };
+                const personalSaleWhereClause: any = { ...saleWhereClause };
                 if (Object.keys(dateFilter).length > 0) personalSaleWhereClause.createdAt = dateFilter;
 
                 const personalSales = await prisma.sale.findMany({

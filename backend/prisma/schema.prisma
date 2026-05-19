@@ -132,6 +132,7 @@ model User {
   attendances            Attendance[]
   communicationLogs      CommunicationLog[]
   leads                  Lead[]               @relation("AssignedLeads")
+  sales                  Sale[]               @relation("SaleMarketer")
   Payment                Payment[]
   tasks                  Task[]
   branch                 Branch?              @relation(fields: [branchId], references: [id])
@@ -315,6 +316,7 @@ model PlotPriceHistory {
 model Sale {
   id                String          @id @default(uuid())
   leadId            String
+  marketerId        String?
   plotId            String
   isCornerPiece     Boolean         @default(false)
   agreedPrice       Float
@@ -333,6 +335,7 @@ model Sale {
   payments          Payment[]
   plot              Plot            @relation(fields: [plotId], references: [id])
   lead              Lead            @relation(fields: [leadId], references: [id])
+  marketer          User?           @relation("SaleMarketer", fields: [marketerId], references: [id])
   discountCode      DiscountCode?   @relation(fields: [discountCodeId], references: [id])
   refundRequests    RefundRequest[]
 }

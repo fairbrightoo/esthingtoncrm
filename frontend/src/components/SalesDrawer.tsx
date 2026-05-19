@@ -88,6 +88,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     // Form: New Sale
     const [selectedPlotId, setSelectedPlotId] = useState('');
+    const [marketerId, setMarketerId] = useState('');
+    const [branchUsers, setBranchUsers] = useState<any[]>([]);
     const [plotSearchQuery, setPlotSearchQuery] = useState('');
     const [isPlotDropdownOpen, setIsPlotDropdownOpen] = useState(false);
     const [isCornerPiece, setIsCornerPiece] = useState(false);
@@ -111,9 +113,28 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     useEffect(() => {
         if (viewState === 'LIST') fetchSales();
-        if (viewState === 'NEW_SALE' && plots.length === 0) fetchPlots();
+        if (viewState === 'NEW_SALE' && plots.length === 0) {
+            fetchPlots();
+            if (user?.role !== 'MARKETER') {
+                fetchBranchUsers();
+            }
+        }
         if (viewState === 'NEW_PAYMENT' && corporateAccounts.length === 0) fetchCorporateAccounts();
     }, [viewState, leadId]);
+
+    const fetchBranchUsers = async () => {
+        try {
+            const effectiveCompanyId = user?.companyId || user?.company?.id;
+            const effectiveBranchId = user?.branchId || user?.branch?.id;
+            if (!effectiveCompanyId || !effectiveBranchId) return;
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches/${effectiveBranchId}/users`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setBranchUsers(res.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchCorporateAccounts = async () => {
         try {
@@ -164,7 +185,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 phoneOnDocument,
                 addressOnDocument,
                 termsAccepted,
-                discountCode
+                discountCode,
+                marketerId
             }, { headers: { Authorization: `Bearer ${token}` } });
 
             addToast("Purchase recorded successfully!", "success");
@@ -258,6 +280,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         setAddressOnDocument('');
         setTermsAccepted(false);
         setDiscountCode('');
+        setMarketerId('');
         setPaymentAmount('');
         setPaymentMethod('TRANSFER');
         setVirtualLoanAmount('');
@@ -404,6 +427,23 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             </div>
                         </div>
                     </div>
+
+                    {user?.role !== 'MARKETER' && (
+                        <div className="pt-2 border-t border-gray-100">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-1">Credit Commission To:</h4>
+                            <p className="text-xs text-gray-500 mb-2">Leave blank to use the lead's default owner.</p>
+                            <select
+                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                value={marketerId}
+                                onChange={(e) => setMarketerId(e.target.value)}
+                            >
+                                <option value="">-- Lead's Default Owner --</option>
+                                {branchUsers.map(u => (
+                                    <option key={u.id} value={u.id}>{u.fullName} ({u.role})</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="pt-2 border-t border-gray-100 mb-4">
                         <div className="flex items-start space-x-3 p-3 border border-orange-200 bg-orange-50 rounded">

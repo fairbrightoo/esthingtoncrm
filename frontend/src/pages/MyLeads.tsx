@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Filter, Phone, Mail, User, Calendar, Upload } from 'lucide-react';
+import { Search, Filter, Phone, Mail, User, Calendar, Upload, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LeadTimeline } from '../components/LeadTimeline';
 import { BulkLeadUploadModal } from '../components/BulkLeadUploadModal';
@@ -49,6 +49,12 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
     // Add Lead Logic
     const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
     const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
+    
+    // Global Search Logic
+    const [isGlobalSearchModalOpen, setIsGlobalSearchModalOpen] = useState(false);
+    const [globalSearchPhone, setGlobalSearchPhone] = useState('');
+    const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
+    const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
 
     const isMarketer = user?.role === 'MARKETER';
 
@@ -114,6 +120,30 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
         } catch (error) {
             console.error("Verification failed", error);
             addToast("Failed to change verification status", 'error');
+        }
+    };
+
+    const handleGlobalSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (globalSearchPhone.length < 5) {
+            addToast("Please enter at least 5 digits", 'error');
+            return;
+        }
+        setIsSearchingGlobal(true);
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/global-search`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                params: { phone: globalSearchPhone }
+            });
+            setGlobalSearchResults(res.data);
+            if (res.data.length === 0) {
+                addToast("No clients found across branches", 'info');
+            }
+        } catch (error: any) {
+            console.error("Global search failed", error);
+            addToast(error.response?.data?.error || "Failed to search", 'error');
+        } finally {
+            setIsSearchingGlobal(false);
         }
     };
 
@@ -285,6 +315,15 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
                         <User size={16} className="mr-2" />
                         Add Lead
                     </button>
+                    {!isMarketer && (
+                        <button
+                            onClick={() => setIsGlobalSearchModalOpen(true)}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm"
+                        >
+                            <Globe size={16} className="mr-2" />
+                            Global Search
+                        </button>
+                    )}
                     <div className="h-8 w-px bg-gray-300 mx-2"></div>
 
                     <div className="flex space-x-3">
@@ -713,6 +752,73 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' }) => {
                                 initialTab={timelineTab}
                                 onLeadUpdate={fetchLeads}
                             />
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Global Search Modal */}
+            {
+                isGlobalSearchModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-[500px] shadow-xl">
+                            <h2 className="text-lg font-bold mb-2">Cross-Branch Client Search</h2>
+                            <p className="text-sm text-gray-500 mb-4">Search for an existing client in the Esthington network to initiate a cross-sale.</p>
+                            
+                            <form onSubmit={handleGlobalSearch} className="flex space-x-2 mb-6">
+                                <input
+                                    type="text"
+                                    placeholder="Enter full or partial phone number..."
+                                    value={globalSearchPhone}
+                                    onChange={(e) => setGlobalSearchPhone(e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded p-2 focus:ring-2 focus:ring-purple-500 outline-none"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isSearchingGlobal}
+                                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+                                >
+                                    {isSearchingGlobal ? 'Searching...' : 'Search'}
+                                </button>
+                            </form>
+
+                            <div className="max-h-64 overflow-y-auto">
+                                {globalSearchResults.length > 0 && (
+                                    <div className="space-y-3">
+                                        {globalSearchResults.map(client => (
+                                            <div key={client.id} className="border border-gray-200 rounded p-3 flex justify-between items-center bg-gray-50">
+                                                <div>
+                                                    <p className="font-semibold text-gray-800">{client.fullName}</p>
+                                                    <p className="text-sm text-gray-500">{client.phone} • {client.email}</p>
+                                                    <p className="text-xs text-gray-400 mt-1">Homed at: {client.company?.name} ({client.branch?.name})</p>
+                                                    <p className="text-xs text-gray-400">Current Marketer: {client.assignedToUser?.fullName || 'None'}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedLead(client);
+                                                        setTimelineTab('SALES');
+                                                        setIsGlobalSearchModalOpen(false);
+                                                        setGlobalSearchResults([]);
+                                                        setGlobalSearchPhone('');
+                                                    }}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium"
+                                                >
+                                                    Start New Sale
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end mt-4">
+                                <button
+                                    onClick={() => { setIsGlobalSearchModalOpen(false); setGlobalSearchResults([]); setGlobalSearchPhone(''); }}
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )
