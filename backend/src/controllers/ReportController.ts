@@ -42,7 +42,7 @@ export const ReportController = {
       if (role !== 'SUPER_ADMIN' && role !== 'MANAGING_DIRECTOR' && role !== 'GLOBAL_CHAIRMAN') {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.sale = {
-          lead: {
+          marketer: {
             branchId: branchId
           }
         };
