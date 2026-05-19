@@ -308,7 +308,8 @@ export const SaleController = {
                                     } 
                                 } 
                             },
-                            lead: true
+                            lead: true,
+                            marketer: { select: { fullName: true, role: true } }
                         }
                     },
                     recordedByUser: {
@@ -362,7 +363,8 @@ export const SaleController = {
                                     } 
                                 } 
                             },
-                            lead: true
+                            lead: true,
+                            marketer: { select: { fullName: true, role: true } }
                         }
                     },
                     recordedByUser: {

@@ -351,6 +351,10 @@ export const ManagingDirectorDashboard = () => {
                                         <td className="px-6 py-4">
                                             <div className="text-sm font-medium text-gray-800">{p.recordedByUser.fullName}</div>
                                             <div className="text-xs font-bold text-gray-500 uppercase mt-1 px-1.5 py-0.5 bg-gray-100 w-max">{p.recordedByUser.role.replace('_', ' ')}</div>
+                                            <div className="mt-2 border-t border-gray-100 pt-2">
+                                                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-0.5">Sale Owner</span>
+                                                <div className="text-xs font-medium text-gray-700">{p.sale.marketer?.fullName || 'Unassigned'}</div>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             {p.proofOfPaymentUrl ? (
@@ -503,6 +507,10 @@ export const ManagingDirectorDashboard = () => {
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-800">{p.recordedByUser.fullName}</div>
                                                 <div className="text-xs font-bold text-gray-500 uppercase mt-1 px-1.5 py-0.5 bg-gray-100 w-max">{p.recordedByUser.role.replace('_', ' ')}</div>
+                                                <div className="mt-2 border-t border-gray-100 pt-2">
+                                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-0.5">Sale Owner</span>
+                                                    <div className="text-xs font-medium text-gray-700">{p.sale.marketer?.fullName || 'Unassigned'}</div>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 {p.proofOfPaymentUrl ? (

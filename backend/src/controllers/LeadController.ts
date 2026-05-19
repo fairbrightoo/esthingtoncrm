@@ -98,7 +98,7 @@ export const LeadController = {
             };
 
             // Role-Based Filters
-            if (scope === 'my' || user.role === 'MARKETER') {
+            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user.role)) {
                 whereClause.AND = [
                     ...(whereClause.AND || []),
                     {
