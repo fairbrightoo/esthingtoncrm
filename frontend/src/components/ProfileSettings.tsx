@@ -35,10 +35,15 @@ export const ProfileSettings = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     
     // Tabs
-    const [activeTab, setActiveTab] = useState<'SECURITY' | 'ID_CARD'>('ID_CARD');
+    const [activeTab, setActiveTab] = useState<'SECURITY' | 'ID_CARD' | 'REFERRAL'>('ID_CARD');
     const [idCardData, setIdCardData] = useState<any>(null);
 
-    React.useEffect(() => {
+    // Referrals State
+    const [referralCodes, setReferralCodes] = useState<any[]>([]);
+    const [networkData, setNetworkData] = useState<{ referrals: any[], totalReferralEarnings: number } | null>(null);
+    const [generatingCode, setGeneratingCode] = useState(false);
+    const [newCodePercentage, setNewCodePercentage] = useState(3.0);
+
         if (activeTab === 'ID_CARD' && !idCardData && user) {
             // Fetch full profile to get templates and employeeId
             axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile/${user.id}`, {
@@ -49,7 +54,42 @@ export const ProfileSettings = () => {
                 console.error("Failed to load profile for ID card", err);
             });
         }
+        if (activeTab === 'REFERRAL' && user && !user.referralCodeId) {
+            fetchReferralCodes();
+        }
     }, [activeTab, user, token, idCardData]);
+
+    const fetchReferralCodes = async () => {
+        try {
+            const [codesRes, networkRes] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/referrals/my-codes`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/referrals/my-network`, { headers: { Authorization: `Bearer ${token}` } })
+            ]);
+            setReferralCodes(codesRes.data);
+            setNetworkData(networkRes.data);
+        } catch (error) {
+            console.error("Failed to load referral data", error);
+        }
+    };
+
+    const handleGenerateCode = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setGeneratingCode(true);
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/referrals/generate`, 
+                { percentage: newCodePercentage },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            addToast("Referral Code generated successfully!", "success");
+            fetchReferralCodes();
+            setNewCodePercentage(3.0);
+        } catch (error: any) {
+            console.error("Failed to generate referral code", error);
+            addToast(error.response?.data?.error || "Failed to generate referral code", "error");
+        } finally {
+            setGeneratingCode(false);
+        }
+    };
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -145,6 +185,17 @@ export const ProfileSettings = () => {
                             <span>Security</span>
                         </div>
                     </button>
+                    {!user?.referralCodeId && (
+                        <button
+                            onClick={() => setActiveTab('REFERRAL')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'REFERRAL' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            <div className="flex items-center space-x-2">
+                                <User size={18} />
+                                <span>Referrals</span>
+                            </div>
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -489,6 +540,123 @@ export const ProfileSettings = () => {
                                         )}
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'REFERRAL' && !user?.referralCodeId && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-100">
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">My Referral Network</h2>
+                                    <p className="text-sm text-gray-500">Generate codes to onboard external marketers to your downline.</p>
+                                </div>
+                            </div>
+                            
+                            <form onSubmit={handleGenerateCode} className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-xl">
+                                <h3 className="font-semibold text-blue-900 mb-2">Generate New Referral Code</h3>
+                                <p className="text-sm text-blue-800 mb-4">Set the commission percentage that the external marketer will receive for their sales. You will receive the remaining portion of your base commission ({user?.commissionRate || 10}%).</p>
+                                
+                                <div className="flex flex-col sm:flex-row items-start sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
+                                    <div className="w-full sm:flex-1">
+                                        <label className="block text-sm font-semibold text-blue-900 mb-1">Downliner's Commission (%)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max={(user?.commissionRate || 10) - 0.01}
+                                            required
+                                            value={newCodePercentage}
+                                            onChange={(e) => setNewCodePercentage(parseFloat(e.target.value) || 0)}
+                                            className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={generatingCode}
+                                        className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-sm hover:bg-blue-700 transition disabled:opacity-70 h-[42px]"
+                                    >
+                                        {generatingCode ? 'Generating...' : 'Generate Code'}
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                <div className="bg-emerald-50 rounded-xl border border-emerald-100 p-5">
+                                    <h3 className="text-emerald-800 font-bold mb-1">Total Referral Earnings</h3>
+                                    <p className="text-3xl font-black text-emerald-600">₦{(networkData?.totalReferralEarnings || 0).toLocaleString()}</p>
+                                    <p className="text-xs text-emerald-700 mt-2">Earned from downlines' closed sales</p>
+                                </div>
+                                <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-5">
+                                    <h3 className="text-indigo-800 font-bold mb-1">Active Downlines</h3>
+                                    <p className="text-3xl font-black text-indigo-600">{networkData?.referrals?.length || 0}</p>
+                                    <p className="text-xs text-indigo-700 mt-2">Marketers in your network</p>
+                                </div>
+                            </div>
+
+                            <div className="mb-8">
+                                <h3 className="font-bold text-gray-800 mb-4">Your Active Codes</h3>
+                                {referralCodes.length === 0 ? (
+                                    <div className="text-center p-6 border-2 border-dashed border-gray-200 rounded-xl text-gray-500">
+                                        You haven't generated any referral codes yet.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {referralCodes.map(code => (
+                                            <div key={code.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-blue-50 transition group">
+                                                <div>
+                                                    <div className="flex items-center space-x-3 mb-1">
+                                                        <span className="font-mono font-bold text-lg text-gray-900">{code.code}</span>
+                                                        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-bold">{code.percentage}% Comm.</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">
+                                                        Created on {new Date(code.createdAt).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-sm font-bold text-gray-800">{code._count?.users || 0} Recruits</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className="font-bold text-gray-800 mb-4">Network Activity</h3>
+                                {!networkData?.referrals || networkData.referrals.length === 0 ? (
+                                    <div className="text-center p-6 border-2 border-dashed border-gray-200 rounded-xl text-gray-500">
+                                        No marketers have joined your network yet.
+                                    </div>
+                                ) : (
+                                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead className="bg-gray-50 text-gray-500 font-medium text-xs">
+                                                <tr>
+                                                    <th className="px-4 py-3 border-b border-gray-100">Downline Name</th>
+                                                    <th className="px-4 py-3 border-b border-gray-100">Assigned Comm. Rate</th>
+                                                    <th className="px-4 py-3 border-b border-gray-100">Join Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 text-sm">
+                                                {networkData.referrals.map(referral => (
+                                                    <tr key={referral.id} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3">
+                                                            <div className="font-semibold text-gray-900">{referral.fullName}</div>
+                                                            <div className="text-gray-500 text-xs">{referral.email}</div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold">{referral.commissionRate}%</span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-600 text-xs">
+                                                            {new Date(referral.createdAt).toLocaleDateString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

@@ -260,7 +260,7 @@ export const RequisitionController = {
             const payments = await prisma.payment.findMany({
                 where: whereClause,
                 include: {
-                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true } } } },
+                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true } }, referrer: { select: { id: true, fullName: true } } } },
                 },
                 orderBy: { date: 'asc' }
             });
@@ -281,9 +281,18 @@ export const RequisitionController = {
             }
 
             const paymentId = req.params.paymentId as string;
+            const { type } = req.body; // 'DIRECT' or 'REFERRAL'
+
+            let dataUpdate: any = {};
+            if (type === 'REFERRAL') {
+                dataUpdate = { isReferralCommissionPaid: true, referralCommissionDisbursedAt: new Date() };
+            } else {
+                dataUpdate = { isCommissionPaid: true, commissionDisbursedAt: new Date() };
+            }
+
             const updated = await prisma.payment.update({
                 where: { id: paymentId },
-                data: { isCommissionPaid: true, commissionDisbursedAt: new Date() }
+                data: dataUpdate
             });
 
             res.status(200).json({ message: "Commission successfully marked as disbursed.", payment: updated });

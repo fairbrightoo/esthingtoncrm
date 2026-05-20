@@ -137,6 +137,12 @@ model User {
   tasks                  Task[]
   branch                 Branch?              @relation(fields: [branchId], references: [id])
   company                Company?             @relation(fields: [companyId], references: [id])
+  referralCodeId         String?
+  usedReferralCode       ReferralCode?        @relation("UsedReferralCode", fields: [referralCodeId], references: [id])
+  referredById           String?
+  referrer               User?                @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals              User[]               @relation("UserReferrals")
+  createdReferralCodes   ReferralCode[]       @relation("CreatedReferralCodes")
   announcements          Announcement[]
   discountCodes          DiscountCode[]
   requestedRequisitions  Requisition[]        @relation("RequisitionRequested")
@@ -332,6 +338,9 @@ model Sale {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   discountCodeId    String?
+  marketerCommissionRate Float?
+  referrerId             String?
+  referrerCommissionRate Float?
   payments          Payment[]
   plot              Plot            @relation(fields: [plotId], references: [id])
   lead              Lead            @relation(fields: [leadId], references: [id])
@@ -920,4 +929,16 @@ model TeamMessage {
 
   team   Team @relation(fields: [teamId], references: [id])
   sender User @relation("MessageSender", fields: [senderId], references: [id])
+}
+
+
+model ReferralCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  creatorId   String
+  creator     User     @relation("CreatedReferralCodes", fields: [creatorId], references: [id])
+  percentage  Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  users       User[]   @relation("UsedReferralCode")
 }

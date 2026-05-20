@@ -637,7 +637,7 @@ export const CompanyController = {
      */
     async createBranchStaff(req: Request, res: Response) {
         const { companyId, branchId } = req.params as any;
-        const { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone } = req.body;
+        const { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone, referralCode } = req.body;
         
         // Accept password from body if provided, otherwise we'll generate one
         let password = req.body.password;
@@ -659,6 +659,22 @@ export const CompanyController = {
             const passwordHash = await bcrypt.hash(password, 10);
             const employeeId = await generateEmployeeId(companyId, branchId, role);
 
+            let finalCommissionRate = commissionRate ? parseFloat(commissionRate) : 5.0;
+            let referralCodeId = null;
+            let referredById = null;
+
+            if (referralCode) {
+                const activeCode = await prisma.referralCode.findUnique({
+                    where: { code: referralCode.trim().toUpperCase() }
+                });
+                if (!activeCode || !activeCode.isActive) {
+                    return res.status(400).json({ error: "Invalid or inactive referral code." });
+                }
+                finalCommissionRate = activeCode.percentage;
+                referralCodeId = activeCode.id;
+                referredById = activeCode.creatorId;
+            }
+
             const user = await prisma.user.create({
                 data: {
                     employeeId,
@@ -668,7 +684,7 @@ export const CompanyController = {
                     passwordHash,
                     role, 
                     monthlySalary: monthlySalary ? parseFloat(monthlySalary) : 0,
-                    commissionRate: commissionRate ? parseFloat(commissionRate) : 5.0,
+                    commissionRate: finalCommissionRate,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
                     bankName,
                     accountName,
@@ -676,7 +692,9 @@ export const CompanyController = {
                     nextOfKinName,
                     nextOfKinPhone,
                     companyId,
-                    branchId
+                    branchId,
+                    referralCodeId,
+                    referredById
                 }
             });
 

@@ -46,8 +46,13 @@ export const BranchUsers = () => {
         accountNumber: '',
         confirmAccountNumber: '',
         nextOfKinName: '',
-        nextOfKinPhone: ''
+        nextOfKinPhone: '',
+        referralCode: ''
     });
+
+    const [hasReferralCode, setHasReferralCode] = useState(false);
+    const [referralInfo, setReferralInfo] = useState<{ percentage: number; referrerName: string } | null>(null);
+    const [referralError, setReferralError] = useState('');
 
     const branchName = user?.branch?.name || 'Branch';
     const effectiveCompanyId = user?.companyId || user?.company?.id;
@@ -192,8 +197,12 @@ export const BranchUsers = () => {
             confirmAccountNumber: u.accountNumber || '',
             nextOfKinName: u.nextOfKinName || '',
             nextOfKinPhone: u.nextOfKinPhone || '',
-            role: u.role
+            role: u.role,
+            referralCode: ''
         });
+        setHasReferralCode(false);
+        setReferralInfo(null);
+        setReferralError('');
     };
 
     const closeModals = () => {
@@ -203,7 +212,10 @@ export const BranchUsers = () => {
         setSelectedStaffDocs(null);
         setBulkFile(null);
         setBulkReport(null);
-        setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
+        setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '', referralCode: '' });
+        setHasReferralCode(false);
+        setReferralInfo(null);
+        setReferralError('');
     };
 
     const handleDeleteUser = async () => {
@@ -517,6 +529,81 @@ export const BranchUsers = () => {
                                         value={formData.commissionRate} onChange={e => setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })} />
                                 </div>
                             </div>
+
+                            {/* Referral Code Field (Only for new staff) */}
+                            {!editingUser && formData.role === 'MARKETER' && (
+                                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                    <div className="flex items-center mb-3">
+                                        <input 
+                                            type="checkbox" 
+                                            id="hasReferral" 
+                                            checked={hasReferralCode} 
+                                            onChange={(e) => {
+                                                setHasReferralCode(e.target.checked);
+                                                if (!e.target.checked) {
+                                                    setFormData({ ...formData, referralCode: '' });
+                                                    setReferralInfo(null);
+                                                    setReferralError('');
+                                                }
+                                            }}
+                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <label htmlFor="hasReferral" className="ml-2 text-sm font-semibold text-gray-800">
+                                            Registered via Referral?
+                                        </label>
+                                    </div>
+                                    
+                                    {hasReferralCode && (
+                                        <div className="space-y-3 pl-6">
+                                            <div>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Paste Referral Code (e.g. REF-ABCDEF)"
+                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 uppercase font-mono text-sm"
+                                                    value={formData.referralCode} 
+                                                    onChange={async (e) => {
+                                                        const code = e.target.value.toUpperCase();
+                                                        setFormData({ ...formData, referralCode: code });
+                                                        if (code.length > 5) {
+                                                            try {
+                                                                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/referrals/validate/${code}`, {
+                                                                    headers: { Authorization: `Bearer ${token}` }
+                                                                });
+                                                                setReferralInfo(res.data);
+                                                                setReferralError('');
+                                                                // Set commission rate automatically
+                                                                setFormData(prev => ({ ...prev, referralCode: code, commissionRate: res.data.percentage }));
+                                                            } catch (err: any) {
+                                                                setReferralInfo(null);
+                                                                setReferralError(err.response?.data?.error || 'Invalid code');
+                                                            }
+                                                        } else {
+                                                            setReferralInfo(null);
+                                                            setReferralError('');
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                            {referralInfo && (
+                                                <div className="bg-white p-3 rounded border border-green-200 text-sm flex items-start space-x-2">
+                                                    <CheckCircle size={16} className="text-green-500 mt-0.5 shrink-0" />
+                                                    <div>
+                                                        <span className="block font-semibold text-green-800">Valid Referral Code</span>
+                                                        <span className="block text-green-700">Referred by: <strong>{referralInfo.referrerName}</strong></span>
+                                                        <span className="block text-green-700">Agreed Commission: <strong>{referralInfo.percentage}%</strong></span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {referralError && (
+                                                <div className="text-red-500 text-xs font-semibold flex items-center">
+                                                    <AlertCircle size={14} className="mr-1" /> {referralError}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <hr className="my-4 border-gray-100" />
                             <h4 className="text-sm font-bold text-gray-800 mb-2">Bank Account Details</h4>
                             <div className="space-y-4">

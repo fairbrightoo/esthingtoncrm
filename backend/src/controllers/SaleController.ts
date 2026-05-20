@@ -66,6 +66,27 @@ export const SaleController = {
                 }
             }
 
+
+            let marketerCommissionRate = 5.0;
+            let referrerId = null;
+            let referrerCommissionRate = null;
+
+            if (resolvedMarketerId) {
+                const marketerInfo = await prisma.user.findUnique({
+                    where: { id: resolvedMarketerId },
+                    include: { referrer: true }
+                });
+
+                if (marketerInfo) {
+                    marketerCommissionRate = marketerInfo.commissionRate || 5.0;
+                    
+                    if (marketerInfo.referrer) {
+                        referrerId = marketerInfo.referrer.id;
+                        referrerCommissionRate = Math.max(0, (marketerInfo.referrer.commissionRate || 10.0) - marketerCommissionRate);
+                    }
+                }
+            }
+
             const sale = await prisma.sale.create({
                 data: {
                     leadId: String(leadId),
@@ -79,7 +100,10 @@ export const SaleController = {
                     addressOnDocument: addressOnDocument ? String(addressOnDocument) : null,
                     termsAccepted: Boolean(termsAccepted),
                     termsAcceptedAt: termsAccepted ? new Date() : null,
-                    discountCodeId: activeDiscountId
+                    discountCodeId: activeDiscountId,
+                    marketerCommissionRate,
+                    referrerId,
+                    referrerCommissionRate
                 }
             });
 
