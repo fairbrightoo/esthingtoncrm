@@ -75,6 +75,7 @@ export const AuthController = {
                     email: user.email,
                     fullName: user.fullName,
                     role: user.role,
+                    commissionRate: user.commissionRate,
                     companyId: user.companyId,
                     branchId: user.branchId,
                     company: user.company,
