@@ -90,7 +90,7 @@ export const Campaigns = () => {
 
     const fetchEstates = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/inventory/estates`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setEstates(res.data);
