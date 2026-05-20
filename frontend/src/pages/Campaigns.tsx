@@ -74,6 +74,7 @@ export const Campaigns = () => {
         fetchCampaigns();
         fetchTemplates();
         fetchWhatsAppTemplates();
+        fetchEstates();
     }, []);
 
     const fetchWhatsAppTemplates = async () => {
