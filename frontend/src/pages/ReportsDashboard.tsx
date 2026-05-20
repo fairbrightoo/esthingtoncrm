@@ -247,11 +247,10 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
 
     return (
         <div className={embedded ? "space-y-6" : "p-6 max-w-7xl mx-auto space-y-6"}>
-            {!embedded && (
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>
-                    
-                    <div className="flex space-x-4 items-center">
+            <div className={`flex items-center ${embedded ? "justify-end mb-4" : "justify-between"}`}>
+                {!embedded && <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>}
+                
+                <div className="flex space-x-4 items-center">
                         {activeTab === 'SALES' && (
                             <select
                                 value={filterMode}
@@ -301,9 +300,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                 />
                             </>
                         )}
-                    </div>
                 </div>
-            )}
+            </div>
 
             <div className="flex space-x-1 border-b border-gray-200">
                 <button

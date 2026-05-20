@@ -2,11 +2,26 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { BudgetManager } from '../components/BudgetManager';
-import { DollarSign, Wallet, AlertTriangle, ArrowRightLeft , Eye, FileText, AlertCircle} from 'lucide-react';
+import { DollarSign, Wallet, AlertTriangle, ArrowRightLeft , Eye, FileText, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
 
+
+export const getPaymentTypeLabel = (payment: any) => {
+    if (!payment.sale || !payment.sale.plot) return { text: 'N/A', bg: 'bg-gray-100', textCol: 'text-gray-600', border: 'border-gray-200' };
+    const price = payment.sale.agreedPrice || 0;
+    const isOutright = payment.amount >= price;
+    if (isOutright) return { text: 'New Sale (Outright)', bg: 'bg-green-100', textCol: 'text-green-700', border: 'border-green-300' };
+    
+    // Check if it's the first payment for this sale
+    // We would ideally need to check if there are prior payments, but assuming for now:
+    // If amount is small, and there's a virtual loan or it's just continuous
+    if (payment.amount < price) return { text: 'New Sale (Installment)', bg: 'bg-purple-100', textCol: 'text-purple-700', border: 'border-purple-300' };
+    
+    return { text: 'Continuous Payment', bg: 'bg-blue-100', textCol: 'text-blue-700', border: 'border-blue-300' };
+};
+
 export const AccountantDashboard = () => {
-    const [activeTab, setActiveTab] = useState<'DISBURSEMENTS' | 'BUDGETS' | 'REFUNDS'>('DISBURSEMENTS');
+    const [activeTab, setActiveTab] = useState<'DISBURSEMENTS' | 'BUDGETS' | 'REFUNDS' | 'PAYMENTS_COMMISSIONS' | 'HISTORY'>('DISBURSEMENTS');
     const [disbursements, setDisbursements] = useState<any[]>([]);
     const [commissions, setCommissions] = useState<any[]>([]);
     const [pendingPayments, setPendingPayments] = useState<any[]>([]);
@@ -148,9 +163,9 @@ export const AccountantDashboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
-                                            {disbursements.length === 0 ? (
+                                            {disbursements.filter(req => req.status !== 'DISBURSED').length === 0 ? (
                                                 <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No pending disbursements.</td></tr>
-                                            ) : disbursements.map(req => {
+                                            ) : disbursements.filter(req => req.status !== 'DISBURSED').map(req => {
                                                 const calcTotal = req.items?.reduce((s: number, i: any) => s + (i.qty * i.unitPrice), 0) || req.amountApproved || 0;
                                                 return (
                                                 <React.Fragment key={req.id}>
