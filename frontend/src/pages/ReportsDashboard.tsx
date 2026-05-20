@@ -22,6 +22,11 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
     const [salesData, setSalesData] = useState<any[]>([]);
     const [payrollData, setPayrollData] = useState<any[]>([]);
     
+    const [filterMode, setFilterMode] = useState<'MONTHLY' | 'CUSTOM'>('MONTHLY');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [exactDateRange, setExactDateRange] = useState<{start: string, end: string} | null>(null);
+    
     const [filters, setFilters] = useState<ReportData>({
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
@@ -47,16 +52,31 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 fetchPayrollReport();
             }
         }
-    }, [activeTab, filters.month, filters.year, filters.branchId]);
+    }, [activeTab, filters.month, filters.year, filters.branchId, filterMode, startDate, endDate]);
 
     const fetchSalesReport = async () => {
+        if (filterMode === 'CUSTOM' && (!startDate || !endDate)) return;
         setLoading(true);
         try {
+            const params: any = { branchId: filters.branchId };
+            if (filterMode === 'MONTHLY') {
+                params.month = filters.month;
+                params.year = filters.year;
+            } else {
+                params.startDate = startDate;
+                params.endDate = endDate;
+            }
+            
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/sales`, {
-                params: { month: filters.month, year: filters.year, branchId: filters.branchId },
+                params,
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setSalesData(res.data);
+            setSalesData(res.data.data || res.data);
+            if (res.data.exactStartDate && res.data.exactEndDate) {
+                setExactDateRange({ start: res.data.exactStartDate, end: res.data.exactEndDate });
+            } else {
+                setExactDateRange(null);
+            }
         } catch (error: any) {
             addToast(error.response?.data?.error || 'Failed to fetch sales report', 'error');
         } finally {
@@ -231,54 +251,56 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>
                     
-                    <div className="flex space-x-4">
-                        <select 
-                            value={filters.month} 
-                            onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
-                            ))}
-                        </select>
-                        
-                        <select 
-                            value={filters.year} 
-                            onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            )}
-
-            {/* Embedded Header Controls */}
-            {embedded && (
-                <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="font-semibold text-gray-800">Report Filters</h2>
-                    <div className="flex space-x-4">
-                        <select 
-                            value={filters.month} 
-                            onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        >
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
-                            ))}
-                        </select>
-                        
-                        <select 
-                            value={filters.year} 
-                            onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
+                    <div className="flex space-x-4 items-center">
+                        {activeTab === 'SALES' && (
+                            <select
+                                value={filterMode}
+                                onChange={(e) => setFilterMode(e.target.value as any)}
+                                className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                            >
+                                <option value="MONTHLY">Monthly Cycle</option>
+                                <option value="CUSTOM">Custom Date</option>
+                            </select>
+                        )}
+                        {filterMode === 'MONTHLY' || activeTab === 'PAYROLL' ? (
+                            <>
+                                <select 
+                                    value={filters.month} 
+                                    onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
+                                    className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                >
+                                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                        <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
+                                    ))}
+                                </select>
+                                
+                                <select 
+                                    value={filters.year} 
+                                    onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                                    className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                >
+                                    {[2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                            </>
+                        ) : (
+                            <>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                />
+                                <span className="text-gray-500 text-sm">to</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -310,9 +332,16 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     {/* Header Actions */}
                     <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                        <h3 className="font-semibold text-gray-700">
-                            {activeTab === 'SALES' ? 'Sales Report Data' : 'Payroll Report Data'}
-                        </h3>
+                        <div className="flex flex-col">
+                            <h3 className="font-semibold text-gray-700 flex items-center">
+                                {activeTab === 'SALES' ? 'Sales Report Data' : 'Payroll Report Data'}
+                            </h3>
+                            {activeTab === 'SALES' && exactDateRange && (
+                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 w-max mt-1">
+                                    ({new Date(exactDateRange.start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(exactDateRange.end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })})
+                                </span>
+                            )}
+                        </div>
                         <div className="flex space-x-3">
                             <button 
                                 onClick={activeTab === 'SALES' ? exportSalesCSV : exportPayrollCSV}

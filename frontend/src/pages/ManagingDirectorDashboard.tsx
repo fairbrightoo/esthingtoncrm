@@ -337,6 +337,17 @@ export const ManagingDirectorDashboard = () => {
                                                 )}
                                             </div>
                                             <div className="text-sm text-gray-500 mt-1 flex flex-col space-y-1">
+                                                <div className="flex gap-2 items-center flex-wrap">
+                                                    <span className="text-xs font-semibold text-gray-700">Plot Price: ₦{(p.sale.agreedPrice || 0).toLocaleString()}</span>
+                                                    {(() => {
+                                                        const label = getPaymentTypeLabel(p);
+                                                        return (
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${label.bg} ${label.textCol} ${label.border}`}>
+                                                                {label.text}
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </div>
                                                 <span>Method: {p.method}</span>
                                                 {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
                                                 <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>

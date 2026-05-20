@@ -7,30 +7,40 @@ export const ReportController = {
     try {
       const branchId = req.user?.branchId;
       const role = req.user?.role;
-      const { month, year } = req.query;
+      const { month, year, startDate: customStartDate, endDate: customEndDate } = req.query;
 
-      if (!month || !year) {
-        return res.status(400).json({ error: "Missing required parameters (month, year)" });
-      }
+      let startDate: Date;
+      let endDate: Date;
 
-      const m = parseInt(month as string);
-      const y = parseInt(year as string);
+      if (customStartDate && customEndDate) {
+        startDate = new Date(customStartDate as string);
+        endDate = new Date(customEndDate as string);
+      } else if (month && year) {
+        const m = parseInt(month as string);
+        const y = parseInt(year as string);
 
-      // Cycle ends on the 25th.
-      // E.g., Report for April (m=4): March 26th (m-1, 26) to April 25th (m, 25).
-      let startDateStr;
-      let endDateStr;
-      
-      if (m === 1) {
-        startDateStr = `${y - 1}-12-26T00:00:00.000Z`;
+        let startDateStr;
+        let endDateStr;
+        
+        if (m === 1) {
+          startDateStr = `${y - 1}-12-26T00:00:00.000Z`;
+        } else {
+          startDateStr = `${y}-${(m - 1).toString().padStart(2, '0')}-26T00:00:00.000Z`;
+        }
+        
+        endDateStr = `${y}-${m.toString().padStart(2, '0')}-25T23:59:59.999Z`;
+
+        startDate = new Date(startDateStr);
+        endDate = new Date(endDateStr);
+
+        // Cap the endDate at the current date if the cycle is ongoing
+        const now = new Date();
+        if (endDate > now) {
+          endDate = now;
+        }
       } else {
-        startDateStr = `${y}-${(m - 1).toString().padStart(2, '0')}-26T00:00:00.000Z`;
+        return res.status(400).json({ error: "Missing required parameters (month/year OR startDate/endDate)" });
       }
-      
-      endDateStr = `${y}-${m.toString().padStart(2, '0')}-25T23:59:59.999Z`;
-
-      const startDate = new Date(startDateStr);
-      const endDate = new Date(endDateStr);
 
       const whereClause: any = {
         date: {
@@ -108,7 +118,11 @@ export const ReportController = {
         };
       });
 
-      res.json(reportData);
+      res.json({
+        data: reportData,
+        exactStartDate: startDate.toISOString(),
+        exactEndDate: endDate.toISOString()
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to generate sales report." });

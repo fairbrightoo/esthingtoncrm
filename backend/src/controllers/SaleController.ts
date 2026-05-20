@@ -329,7 +329,15 @@ export const SaleController = {
     getProcessedPayments: async (req: Request, res: Response) => {
         try {
             const user = (req as any).user;
+            const { startDate, endDate } = req.query;
             const whereClause: any = { status: { in: ['APPROVED', 'REJECTED'] } };
+
+            if (startDate && endDate) {
+                whereClause.date = {
+                    gte: new Date(startDate as string),
+                    lte: new Date(endDate as string)
+                };
+            }
 
             // Respect Cross-Company & Branch boundaries
             if (user?.role !== 'SUPER_ADMIN') {
@@ -372,7 +380,7 @@ export const SaleController = {
                     }
                 },
                 orderBy: { createdAt: 'desc' },
-                take: 100 // Limit history for performance
+                ...(startDate && endDate ? {} : { take: 100 }) // Limit history for performance unless filtering
             });
             res.json(payments);
         } catch (error) {

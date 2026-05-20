@@ -83,9 +83,16 @@ export const RequisitionController = {
     async getRequisitions(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { companyId, branchId, role, userId } = req.user!;
+            const { startDate, endDate } = req.query;
             
             // Allow Super Admin to view global, otherwise restrict to company
             const whereClause: any = {};
+            if (startDate && endDate) {
+                whereClause.requestDate = {
+                    gte: new Date(startDate as string),
+                    lte: new Date(endDate as string)
+                };
+            }
             if (role !== "SUPER_ADMIN" && companyId) {
                 whereClause.companyId = companyId;
             }
@@ -225,11 +232,21 @@ export const RequisitionController = {
     async getPendingCommissions(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { companyId, branchId, role } = req.user!;
+            const { isPaid, startDate, endDate } = req.query;
+
             if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR") {
                 res.status(403).json({ error: "Forbidden." }); return;
             }
 
-            const whereClause: any = { status: "APPROVED", isCommissionPaid: false };
+            const whereClause: any = { status: "APPROVED", isCommissionPaid: isPaid === 'true' };
+            
+            if (startDate && endDate) {
+                whereClause.commissionDisbursedAt = {
+                    gte: new Date(startDate as string),
+                    lte: new Date(endDate as string)
+                };
+            }
+
             if (role !== "SUPER_ADMIN") {
                 const saleFilter: any = {};
                 if (role === "ACCOUNTANT" && branchId) {
