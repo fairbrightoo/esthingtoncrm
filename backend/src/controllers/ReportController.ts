@@ -49,13 +49,12 @@ export const ReportController = {
         }
       };
 
-      if (role !== 'SUPER_ADMIN' && role !== 'MANAGING_DIRECTOR' && role !== 'GLOBAL_CHAIRMAN') {
+      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
-        whereClause.sale = {
-          marketer: {
-            branchId: branchId
-          }
-        };
+        whereClause.OR = [
+          { sale: { marketer: { branchId: branchId } } },
+          { sale: { plot: { estate: { managingBranchId: branchId } } } }
+        ];
       }
 
       const payments = await prisma.payment.findMany({
@@ -65,12 +64,12 @@ export const ReportController = {
           sale: {
             include: {
               plot: {
-                include: { estate: true }
+                include: { estate: { include: { branch: true } } }
               },
               lead: {
                 include: { assignedToUser: true }
               },
-              marketer: true,
+              marketer: { include: { branch: true } },
               payments: {
                 orderBy: { date: 'asc' }
               }
@@ -100,6 +99,14 @@ export const ReportController = {
         }
 
         // Commission Accrued (Using Sale's marketer commission rate or 5%)
+        let saleType = 'Direct Sale';
+        if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && branchId) {
+            const mBranchId = sale.marketer?.branchId;
+            const estBranchId = sale.plot.estate.managingBranchId;
+            if (mBranchId === branchId && estBranchId !== branchId) saleType = 'Outbound Cross-Sale';
+            if (mBranchId !== branchId && estBranchId === branchId) saleType = 'Inbound Cross-Sale';
+        }
+
         const commissionRate = sale.marketer?.commissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
         const commissionAccrued = (payment.amount * (commissionRate / 100)) - (payment.virtualLoanAmount || 0);
 
@@ -114,7 +121,9 @@ export const ReportController = {
           plotSize: sale.plot.size,
           isCornerPiece: sale.isCornerPiece ? 'Yes' : 'No',
           marketerName: sale.marketer?.fullName || sale.lead.assignedToUser?.fullName || 'Unassigned',
-          accountPaidTo: payment.accountPaidTo || 'N/A'
+          accountPaidTo: payment.accountPaidTo || 'N/A',
+          saleType: saleType,
+          managingBranchName: sale.plot.estate.branch?.name || 'Head Office'
         };
       });
 

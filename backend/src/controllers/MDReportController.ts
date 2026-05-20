@@ -28,7 +28,10 @@ export const MDReportController = {
             if (startDate || endDate) paymentWhere.date = dateFilter;
 
             const saleWhere: any = {
-                marketer: { branchId: branchId as string }
+                OR: [
+                    { marketer: { branchId: branchId as string } },
+                    { plot: { estate: { managingBranchId: branchId as string } } }
+                ]
             };
             // Note: For Outstanding balances, we only look at Ongoing sales, regardless of when they were created... 
             // but if we are filtering, maybe we only look at sales created in that period, or all ongoing ones?
@@ -42,11 +45,49 @@ export const MDReportController = {
             const payments = await prisma.payment.findMany({
                 where: paymentWhere,
                 include: {
-                    recordedByUser: true
+                    recordedByUser: true,
+                    sale: {
+                        include: {
+                            marketer: { include: { branch: true } },
+                            plot: { include: { estate: { include: { branch: true } } } },
+                            lead: true
+                        }
+                    }
                 }
             });
 
-            const grossRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+            let directBranchRevenue = 0;
+            let crossBranchGenerated = 0;
+            let totalStaffSalesVolume = 0;
+            const detailedSalesData: any[] = [];
+
+            payments.forEach(p => {
+                const s = p.sale;
+                const mBranchId = s.marketer?.branchId;
+                const estBranchId = s.plot?.estate?.managingBranchId;
+                
+                let saleType = 'Direct Sale';
+                if (mBranchId === branchId && estBranchId !== branchId) saleType = 'Outbound Cross-Sale';
+                if (mBranchId !== branchId && estBranchId === branchId) saleType = 'Inbound Cross-Sale';
+
+                detailedSalesData.push({
+                    paymentId: p.id,
+                    amount: p.amount,
+                    date: p.date,
+                    clientName: s.lead?.fullName || 'Unknown',
+                    marketerName: s.marketer?.fullName || 'Unknown',
+                    estateName: s.plot?.estate?.name || 'Unknown',
+                    plotNumber: s.plot?.plotNumber || 'Unknown',
+                    managingBranchName: s.plot?.estate?.branch?.name || 'Head Office',
+                    saleType
+                });
+
+                if (estBranchId === branchId) directBranchRevenue += p.amount;
+                if (mBranchId === branchId && estBranchId !== branchId) crossBranchGenerated += p.amount;
+                if (mBranchId === branchId) totalStaffSalesVolume += p.amount;
+            });
+            
+            const grossRevenue = directBranchRevenue;
 
             // Fetch ALL ongoing sales for Total Debt (ignores date filter because old debt is still debt)
             const allOngoingSales = await prisma.sale.findMany({
@@ -185,6 +226,9 @@ export const MDReportController = {
             res.json({
                 kpis: {
                     grossRevenue,
+                    directBranchRevenue,
+                    crossBranchGenerated,
+                    totalStaffSalesVolume,
                     outstandingDebt,
                     totalCommissionsCleared,
                     salesCount: periodSales.length,
@@ -197,7 +241,8 @@ export const MDReportController = {
                     estateDistribution,
                     cashflowTrend
                 },
-                leaderboard
+                leaderboard,
+                detailedSalesData
             });
 
         } catch (error) {

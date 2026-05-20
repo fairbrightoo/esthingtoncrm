@@ -112,7 +112,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         const doc = new jsPDF('landscape');
         doc.text(`Sales Report - ${filters.month}/${filters.year}`, 14, 15);
         
-        const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Comm Paid", "Estate", "Marketer", "Acct Paid To"];
+        const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Comm Paid", "Estate", "Marketer", "Acct Paid To", "Sale Type", "Managing Branch"];
         const tableRows: any[] = [];
 
         salesData.forEach(sale => {
@@ -127,7 +127,9 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 formatCurrency(sale.commissionAccrued),
                 sale.estateName,
                 sale.marketerName,
-                sale.accountPaidTo
+                sale.accountPaidTo,
+                sale.saleType || 'Direct Sale',
+                sale.managingBranchName || 'Head Office'
             ];
             tableRows.push(rowData);
         });
@@ -156,7 +158,9 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             "Comm Paid (N)": sale.commissionAccrued,
             "Estate": sale.estateName,
             "Marketer": sale.marketerName,
-            "Acct Paid To": sale.accountPaidTo
+            "Acct Paid To": sale.accountPaidTo,
+            "Sale Type": sale.saleType || 'Direct Sale',
+            "Managing Branch": sale.managingBranchName || 'Head Office'
         }));
         const csv = Papa.unparse(csvData);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -375,11 +379,13 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                         <th className="p-3">Estate</th>
                                         <th className="p-3">Marketer</th>
                                         <th className="p-3">Acct Paid To</th>
+                                        <th className="p-3">Sale Type</th>
+                                        <th className="p-3">Managing Branch</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {salesData.length === 0 ? (
-                                        <tr><td colSpan={11} className="p-6 text-center text-gray-500">No sales records found for this period.</td></tr>
+                                        <tr><td colSpan={13} className="p-6 text-center text-gray-500">No sales records found for this period.</td></tr>
                                     ) : (
                                         salesData.map((sale, i) => (
                                             <tr key={i} className="hover:bg-gray-50">
@@ -394,6 +400,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <td className="p-3">{sale.estateName}</td>
                                                 <td className="p-3 text-gray-600">{sale.marketerName}</td>
                                                 <td className="p-3 text-indigo-600 font-medium">{sale.accountPaidTo}</td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
+                                                        sale.saleType === 'Inbound Cross-Sale' ? 'bg-purple-100 text-purple-700' : 
+                                                        sale.saleType === 'Outbound Cross-Sale' ? 'bg-orange-100 text-orange-700' : 
+                                                        'bg-blue-100 text-blue-700'
+                                                    }`}>{sale.saleType || 'Direct Sale'}</span>
+                                                </td>
+                                                <td className="p-3 font-semibold text-gray-700">{sale.managingBranchName || 'Head Office'}</td>
                                             </tr>
                                         ))
                                     )}
