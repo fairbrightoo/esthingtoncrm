@@ -103,6 +103,10 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
     };
 
+    const formatCurrencyForExport = (amount: number) => {
+        return `NGN ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString();
     };
@@ -115,7 +119,12 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Comm Paid", "Estate", "Marketer", "Acct Paid To", "Sale Type", "Managing Branch"];
         const tableRows: any[] = [];
 
+        let totalAmount = 0;
+        let totalComm = 0;
+
         salesData.forEach(sale => {
+            totalAmount += sale.amountPaid;
+            totalComm += sale.commissionAccrued;
             const rowData = [
                 sale.sn,
                 formatDate(sale.date),
@@ -123,8 +132,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 sale.description,
                 sale.plotSize,
                 sale.isCornerPiece,
-                formatCurrency(sale.amountPaid),
-                formatCurrency(sale.commissionAccrued),
+                formatCurrencyForExport(sale.amountPaid),
+                formatCurrencyForExport(sale.commissionAccrued),
                 sale.estateName,
                 sale.marketerName,
                 sale.accountPaidTo,
@@ -133,6 +142,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             ];
             tableRows.push(rowData);
         });
+
+        tableRows.push(["", "", "", "", "", "GRAND TOTAL", formatCurrencyForExport(totalAmount), formatCurrencyForExport(totalComm), "", "", "", "", ""]);
 
         autoTable(doc, {
             head: [tableColumn],
@@ -162,6 +173,26 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             "Sale Type": sale.saleType || 'Direct Sale',
             "Managing Branch": sale.managingBranchName || 'Head Office'
         }));
+        
+        const totalAmount = salesData.reduce((sum, s) => sum + s.amountPaid, 0);
+        const totalComm = salesData.reduce((sum, s) => sum + s.commissionAccrued, 0);
+        
+        csvData.push({
+            "S/N": "" as any,
+            "Trans Date": "",
+            "Clients": "",
+            "Description": "",
+            "Plot In Sqm": "",
+            "Corner Piece": "GRAND TOTAL",
+            "Amount Paid (N)": totalAmount,
+            "Comm Paid (N)": totalComm,
+            "Estate": "",
+            "Marketer": "",
+            "Acct Paid To": "",
+            "Sale Type": "",
+            "Managing Branch": ""
+        });
+
         const csv = Papa.unparse(csvData);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
@@ -192,14 +223,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 pay.staffRole,
                 pay.staff?.bankName || 'N/A',
                 pay.staff?.accountNumber || 'N/A',
-                formatCurrency(pay.baseSalary),
-                formatCurrency(pay.deductions),
-                formatCurrency(pay.netPay)
+                formatCurrencyForExport(pay.baseSalary),
+                formatCurrencyForExport(pay.deductions),
+                formatCurrencyForExport(pay.netPay)
             ];
             tableRows.push(rowData);
         });
 
-        tableRows.push(["", "", "", "", "", "", "GRAND TOTAL", formatCurrency(totalNet)]);
+        tableRows.push(["", "", "", "", "", "", "GRAND TOTAL", formatCurrencyForExport(totalNet)]);
 
         autoTable(doc, {
             head: [tableColumn],
@@ -344,21 +375,28 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                 </span>
                             )}
                         </div>
-                        <div className="flex space-x-3">
-                            <button 
-                                onClick={activeTab === 'SALES' ? exportSalesCSV : exportPayrollCSV}
-                                className="flex items-center space-x-2 px-3 py-1.5 bg-green-50 text-green-700 rounded hover:bg-green-100 transition border border-green-200"
-                            >
-                                <FileSpreadsheet size={16} />
-                                <span className="text-sm font-medium">Export CSV</span>
-                            </button>
-                            <button 
-                                onClick={activeTab === 'SALES' ? exportSalesPDF : exportPayrollPDF}
-                                className="flex items-center space-x-2 px-3 py-1.5 bg-red-50 text-red-700 rounded hover:bg-red-100 transition border border-red-200"
-                            >
-                                <FileText size={16} />
-                                <span className="text-sm font-medium">Export PDF</span>
-                            </button>
+                        <div className="flex space-x-4 items-center">
+                            {activeTab === 'SALES' && (
+                                <div className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-sm flex items-center">
+                                    Total Sales: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
+                                </div>
+                            )}
+                            <div className="flex space-x-3">
+                                <button 
+                                    onClick={activeTab === 'SALES' ? exportSalesCSV : exportPayrollCSV}
+                                    className="flex items-center space-x-2 px-3 py-1.5 bg-green-50 text-green-700 rounded hover:bg-green-100 transition border border-green-200"
+                                >
+                                    <FileSpreadsheet size={16} />
+                                    <span className="text-sm font-medium">Export CSV</span>
+                                </button>
+                                <button 
+                                    onClick={activeTab === 'SALES' ? exportSalesPDF : exportPayrollPDF}
+                                    className="flex items-center space-x-2 px-3 py-1.5 bg-red-50 text-red-700 rounded hover:bg-red-100 transition border border-red-200"
+                                >
+                                    <FileText size={16} />
+                                    <span className="text-sm font-medium">Export PDF</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -410,6 +448,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <td className="p-3 font-semibold text-gray-700">{sale.managingBranchName || 'Head Office'}</td>
                                             </tr>
                                         ))
+                                    )}
+                                    {salesData.length > 0 && (
+                                        <tr className="bg-gray-50 border-t-2">
+                                            <td colSpan={6} className="p-3 text-right font-bold text-gray-800">GRAND TOTAL:</td>
+                                            <td className="p-3 font-bold text-emerald-700">{formatCurrency(salesData.reduce((sum, s) => sum + s.amountPaid, 0))}</td>
+                                            <td className="p-3 font-bold text-gray-600">{formatCurrency(salesData.reduce((sum, s) => sum + s.commissionAccrued, 0))}</td>
+                                            <td colSpan={5}></td>
+                                        </tr>
                                     )}
                                 </tbody>
                             </table>
