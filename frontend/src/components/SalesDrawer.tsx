@@ -552,12 +552,12 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             <label className="block text-sm font-medium text-orange-800 mb-1 flex items-center justify-between">
                                 Marketer Virtual Loan (₦)
                                 <span className="text-xs bg-orange-200 text-orange-900 px-2 py-0.5 rounded-full font-bold">
-                                    Max: ₦{((Number(paymentAmount) || 0) * ((user?.commissionRate || 5) / 100)).toLocaleString()}
+                                    Max: ₦{((Number(paymentAmount) || 0) * ((sale?.marketerCommissionRate || sale?.marketer?.commissionRate || 5) / 100)).toLocaleString()}
                                 </span>
                             </label>
                             <input
                                 type="number"
-                                max={(Number(paymentAmount) || 0) * ((user?.commissionRate || 5) / 100)}
+                                max={(Number(paymentAmount) || 0) * ((sale?.marketerCommissionRate || sale?.marketer?.commissionRate || 5) / 100)}
                                 className="w-full border border-orange-200 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                                 placeholder="Sacrifice commission to top-up"
                                 value={virtualLoanAmount}
