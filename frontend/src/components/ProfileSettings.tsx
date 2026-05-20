@@ -44,6 +44,7 @@ export const ProfileSettings = () => {
     const [generatingCode, setGeneratingCode] = useState(false);
     const [newCodePercentage, setNewCodePercentage] = useState(3.0);
 
+    React.useEffect(() => {
         if (activeTab === 'ID_CARD' && !idCardData && user) {
             // Fetch full profile to get templates and employeeId
             axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile/${user.id}`, {
