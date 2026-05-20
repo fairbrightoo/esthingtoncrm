@@ -592,6 +592,16 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             onChange={(e) => setPaymentRef(e.target.value)}
                         />
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Notes (Optional)</label>
+                        <textarea
+                            className="w-full border rounded px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="E.g. This N50m receipt covers 5 separate N10m deposits for plots 1-5"
+                            value={paymentNotes}
+                            onChange={(e) => setPaymentNotes(e.target.value)}
+                            rows={2}
+                        />
+                    </div>
                     {paymentMethod !== 'EQUITY_WALLET' && (
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Account Paid To</label>
