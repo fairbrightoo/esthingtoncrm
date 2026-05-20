@@ -13,6 +13,7 @@ router.post('/widget', LeadController.receiveWidgetLead);
 router.use(authenticateToken);
 
 router.get('/', LeadController.getLeads);
+router.get('/global-clients', LeadController.getGlobalClients); // New Route for Super Admin
 router.get('/global-search', LeadController.globalSearchByPhone); // New Route for MD cross-selling
 router.get('/:id', LeadController.getLeadById); // New Route
 router.post('/bulk', upload.single('file'), LeadController.bulkCreate);
