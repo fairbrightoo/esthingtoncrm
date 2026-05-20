@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma.js';
+import { uploadFile } from '../services/StorageService.js';
 
 export const HelpdeskTicketController = {
     // 1. Create a new ticket
@@ -8,6 +9,10 @@ export const HelpdeskTicketController = {
             // @ts-ignore
             const tokenUser = req.user;
             const { title, description, priority, category, leadId } = req.body;
+            let attachmentUrl = null;
+            if (req.file) {
+                attachmentUrl = await uploadFile(req.file.buffer, req.file.originalname, 'helpdesk');
+            }
 
             const user = await prisma.user.findUnique({ where: { id: tokenUser.userId } });
             if (!user || !user.companyId || !user.branchId) {
@@ -20,6 +25,7 @@ export const HelpdeskTicketController = {
                     description,
                     priority: priority || 'MEDIUM',
                     category: category || 'GENERAL',
+                    attachmentUrl,
                     status: 'OPEN',
                     creatorId: user.id,
                     companyId: user.companyId,

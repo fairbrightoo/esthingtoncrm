@@ -724,6 +724,7 @@ model HelpdeskTicket {
   status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
   priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
   category    String   @default("GENERAL") // GENERAL, TECHNICAL, BILLING, SALES
+  attachmentUrl String?
   companyId   String
   branchId    String?
   creatorId   String // Internal User ID who logged the ticket
