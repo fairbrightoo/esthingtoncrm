@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Loader2, Users, DollarSign, Clock, Send, CreditCard, ChevronRight, Calendar, TrendingUp } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
+import { Pagination, getPaginatedData } from '../components/Pagination';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
@@ -24,6 +25,13 @@ export const MarketerDashboard = () => {
 
     // Quick Message State
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+    
+    // Pagination States
+    const [leadsPage, setLeadsPage] = useState(1);
+    const [leadsRowsPerPage, setLeadsRowsPerPage] = useState(10);
+    const [salesPage, setSalesPage] = useState(1);
+    const [salesRowsPerPage, setSalesRowsPerPage] = useState(10);
+
     const [selectedClient, setSelectedClient] = useState<any>(null);
     const [messageType, setMessageType] = useState<'SMS' | 'EMAIL'>('SMS');
     const [messageContent, setMessageContent] = useState('');
@@ -254,7 +262,7 @@ export const MarketerDashboard = () => {
                         </div>
 
                         <div className="divide-y divide-gray-50">
-                            {(activeTab === 'clients' ? mData.recentClients : mData.recentProspects).map((item: any) => (
+                            {getPaginatedData((activeTab === 'clients' ? mData.recentClients : mData.recentProspects), leadsPage, leadsRowsPerPage).map((item: any) => (
                                 <div key={item.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
                                     <div className="flex items-center space-x-4">
                                         <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
@@ -279,6 +287,13 @@ export const MarketerDashboard = () => {
                                 </div>
                             )}
                         </div>
+                        <Pagination 
+                            dataLength={(activeTab === 'clients' ? mData.recentClients : mData.recentProspects).length} 
+                            currentPage={leadsPage} 
+                            rowsPerPage={leadsRowsPerPage} 
+                            setPage={setLeadsPage} 
+                            setRowsPerPage={setLeadsRowsPerPage} 
+                        />
                     </div>
                 </div>
 
@@ -293,7 +308,7 @@ export const MarketerDashboard = () => {
                                 <div className="p-6 text-center text-gray-500">No recent payments</div>
                             ) : (
                                 <div className="space-y-1">
-                                    {mData.recentPayments.map((p: any) => (
+                                    {getPaginatedData(mData.recentPayments, salesPage, salesRowsPerPage).map((p: any) => (
                                         <div key={p.id} className="p-4 flex items-center justify-between hover:bg-gray-50 rounded-xl transition-colors">
                                             <div className="flex items-center space-x-3">
                                                 <div className="p-2 bg-green-50 text-green-600 rounded-lg">
@@ -313,6 +328,13 @@ export const MarketerDashboard = () => {
                                 </div>
                             )}
                         </div>
+                        <Pagination 
+                            dataLength={mData.recentPayments.length} 
+                            currentPage={salesPage} 
+                            rowsPerPage={salesRowsPerPage} 
+                            setPage={setSalesPage} 
+                            setRowsPerPage={setSalesRowsPerPage} 
+                        />
                     </div>
                 </div>
             </div>

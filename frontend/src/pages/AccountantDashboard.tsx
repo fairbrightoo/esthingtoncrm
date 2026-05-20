@@ -28,6 +28,14 @@ export const AccountantDashboard = () => {
     const [pendingPayments, setPendingPayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    
+    // Pagination States for Active Tabs
+    const [disbPage, setDisbPage] = useState(1);
+    const [disbRows, setDisbRows] = useState(10);
+    const [payPage, setPayPage] = useState(1);
+    const [payRows, setPayRows] = useState(10);
+    const [commPage, setCommPage] = useState(1);
+    const [commRows, setCommRows] = useState(10);
     const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, type: 'fund'|'commission', id: string, title: string, message: string}>({isOpen: false, type: 'fund', id: '', title: '', message: ''});
     
     // History State
@@ -251,7 +259,7 @@ export const AccountantDashboard = () => {
                                         <tbody className="divide-y divide-gray-100">
                                             {disbursements.filter(req => req.status !== 'DISBURSED').length === 0 ? (
                                                 <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No pending disbursements.</td></tr>
-                                            ) : disbursements.filter(req => req.status !== 'DISBURSED').map(req => {
+                                            ) : getPaginatedData(disbursements.filter(req => req.status !== 'DISBURSED'), disbPage, disbRows).map(req => {
                                                 const calcTotal = req.items?.reduce((s: number, i: any) => s + (i.qty * i.unitPrice), 0) || req.amountApproved || 0;
                                                 return (
                                                 <React.Fragment key={req.id}>
@@ -309,12 +317,12 @@ export const AccountantDashboard = () => {
                                         </tbody>
                                     </table>
                                 </div>
+                                {disbursements.filter(req => req.status !== 'DISBURSED').length > 0 && <Pagination dataLength={disbursements.filter(req => req.status !== 'DISBURSED').length} currentPage={disbPage} rowsPerPage={disbRows} setPage={setDisbPage} setRowsPerPage={setDisbRows} />}
                             </div>
-
-                                                                </>
-                                )}
-                            </>
-                        )}
+                        </>
+                    )}
+                </>
+            )}
                         
                         {activeTab === 'PAYMENTS_COMMISSIONS' && (
                             <>
@@ -348,7 +356,7 @@ export const AccountantDashboard = () => {
                                                     <tbody className="divide-y divide-gray-50">
                                                         {pendingPayments.length === 0 ? (
                                                             <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No staff-reported payments awaiting approval.</td></tr>
-                                                        ) : pendingPayments.map(p => (
+                                                        ) : getPaginatedData(pendingPayments, payPage, payRows).map(p => (
                                                             <tr key={p.id} className="hover:bg-indigo-50/30">
                                                                 <td className="px-6 py-4">
                                                                     <div className="font-medium text-gray-900">{p.sale?.lead?.fullName || 'Unknown Client'}</div>

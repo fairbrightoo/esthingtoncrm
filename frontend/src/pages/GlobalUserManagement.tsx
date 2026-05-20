@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network, Eye } from 'lucide-react';
+import { Pagination, getPaginatedData } from '../components/Pagination';
 
 export const GlobalUserManagement = () => {
     const { token, impersonate, user: currentUser } = useAuth();
@@ -16,6 +17,8 @@ export const GlobalUserManagement = () => {
     const [users, setUsers] = useState<any[]>([]);
     const [companies, setCompanies] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [rows, setRows] = useState(10);
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +43,7 @@ export const GlobalUserManagement = () => {
     useEffect(() => {
         fetchMetadata();
         fetchUsers();
+        setPage(1);
     }, [selectedCompany, selectedRole]);
 
     const fetchMetadata = async () => {
@@ -154,7 +158,7 @@ export const GlobalUserManagement = () => {
                         type="text" 
                         placeholder="Search by name or email..." 
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                         className="w-full pl-10 pr-4 py-2.5 border-gray-200 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 transition-all placeholder-gray-400"
                     />
                 </div>
@@ -208,7 +212,7 @@ export const GlobalUserManagement = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {filteredUsers.map((user) => (
+                                {getPaginatedData(filteredUsers, page, rows).map((user) => (
                                     <tr key={user.id} className={`transition-colors hover:bg-gray-50 ${!user.isActive ? 'bg-red-50/40 opacity-70' : ''}`}>
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-gray-800 flex items-center">
@@ -270,6 +274,7 @@ export const GlobalUserManagement = () => {
                             </tbody>
                         </table>
                     </div>
+                    {filteredUsers.length > 0 && <Pagination dataLength={filteredUsers.length} currentPage={page} rowsPerPage={rows} setPage={setPage} setRowsPerPage={setRows} />}
                 </div>
             )}
 

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, Search, Filter } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { Pagination, getPaginatedData } from '../components/Pagination';
 
 export const GMAdvisoryQueue = () => {
     const { token } = useAuth();
@@ -11,6 +12,8 @@ export const GMAdvisoryQueue = () => {
     const { branchName } = useParams();
     const [requisitions, setRequisitions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [rows, setRows] = useState(10);
 
     useEffect(() => {
         fetchRequisitions();
@@ -87,7 +90,7 @@ export const GMAdvisoryQueue = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                requisitions.map((req) => {
+                                getPaginatedData(requisitions, page, rows).map((req) => {
                                     const totalAmount = req.items?.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0) || 0;
                                     
                                     return (
@@ -145,6 +148,7 @@ export const GMAdvisoryQueue = () => {
                         </tbody>
                     </table>
                 </div>
+                {requisitions.length > 0 && <Pagination dataLength={requisitions.length} currentPage={page} rowsPerPage={rows} setPage={setPage} setRowsPerPage={setRows} />}
             </div>
         </div>
     );

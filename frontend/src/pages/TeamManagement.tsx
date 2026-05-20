@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Users, TrendingUp, DollarSign, Calendar, Activity, ChevronRight, X, Phone, Mail } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { Pagination, getPaginatedData } from '../components/Pagination';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
@@ -16,6 +17,8 @@ export const TeamManagement = () => {
     const [stats, setStats] = useState<any>(null);
     const [members, setMembers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [rows, setRows] = useState(10);
 
     // Pulse Modal State
     const [pulseUser, setPulseUser] = useState<any>(null);
@@ -145,7 +148,7 @@ export const TeamManagement = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {members.map(m => (
+                        {getPaginatedData(members, page, rows).map(m => (
                             <tr key={m.id} className="hover:bg-gray-50 transition">
                                 <td className="px-6 py-4">
                                     <div className="font-medium text-gray-800">{m.fullName}</div>
@@ -189,6 +192,7 @@ export const TeamManagement = () => {
                         )}
                     </tbody>
                 </table>
+                {members.length > 0 && <Pagination dataLength={members.length} currentPage={page} rowsPerPage={rows} setPage={setPage} setRowsPerPage={setRows} />}
             </div>
 
             {/* Daily Pulse Modal */}

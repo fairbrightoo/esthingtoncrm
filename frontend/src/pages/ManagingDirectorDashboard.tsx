@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List } from 'lucide-react';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
+import { Pagination, getPaginatedData } from '../components/Pagination';
 import { MDDiscountManager } from '../components/MDDiscountManager';
 import { MDBudgetReview } from '../components/MDBudgetReview';
 import { Calculator } from 'lucide-react';
@@ -41,6 +42,16 @@ export const ManagingDirectorDashboard = () => {
     const [receiptModal, setReceiptModal] = useState<{ isOpen: boolean, url: string | null }>({ isOpen: false, url: null });
 
     const [activeTab, setActiveTab] = useState<'APPROVALS' | 'HISTORY' | 'DISCOUNTS' | 'FUNDS_REQUEST' | 'BUDGETS' | 'REFUNDS'>('APPROVALS');
+
+    // Pagination States
+    const [reqPage, setReqPage] = useState(1);
+    const [reqRows, setReqRows] = useState(10);
+    const [payPage, setPayPage] = useState(1);
+    const [payRows, setPayRows] = useState(10);
+    const [procPayPage, setProcPayPage] = useState(1);
+    const [procPayRows, setProcPayRows] = useState(10);
+    const [procReqPage, setProcReqPage] = useState(1);
+    const [procReqRows, setProcReqRows] = useState(10);
 
     const fetchPendingPayments = async () => {
         setLoading(true);
@@ -222,7 +233,7 @@ export const ManagingDirectorDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {requisitions.map((req: any) => {
+                                {getPaginatedData(requisitions, reqPage, reqRows).map((req: any) => {
                                     const calcTotal = req.items?.reduce((s: number, i: any) => s + (i.qty * i.unitPrice), 0) || req.amountApproved || 0;
                                     return (
                                     <React.Fragment key={req.id}>
@@ -287,6 +298,7 @@ export const ManagingDirectorDashboard = () => {
                             </tbody>
                         </table>
                     )}
+                    {requisitions.length > 0 && <Pagination dataLength={requisitions.length} currentPage={reqPage} rowsPerPage={reqRows} setPage={setReqPage} setRowsPerPage={setReqRows} />}
                 </div>
             )}
 
@@ -318,7 +330,7 @@ export const ManagingDirectorDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {payments.map((p) => (
+                                {getPaginatedData(payments, payPage, payRows).map((p) => (
                                     <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-gray-900">{p.sale.lead?.fullName || 'Unknown Client'}</div>
@@ -437,6 +449,7 @@ export const ManagingDirectorDashboard = () => {
                             </tbody>
                         </table>
                     </div>
+                    {payments.length > 0 && <Pagination dataLength={payments.length} currentPage={payPage} rowsPerPage={payRows} setPage={setPayPage} setRowsPerPage={setPayRows} />}
                 </div>
             )}
             </>
@@ -460,6 +473,7 @@ export const ManagingDirectorDashboard = () => {
                     </div>
 
                     {historyView === 'PAYMENTS' ? (
+                        <>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-gray-50 border-b text-xs uppercase text-gray-500 font-bold tracking-wider">
@@ -479,7 +493,7 @@ export const ManagingDirectorDashboard = () => {
                                             </td>
                                         </tr>
                                     ) : (
-                                    processedPayments.map((p) => (
+                                    getPaginatedData(processedPayments, procPayPage, procPayRows).map((p) => (
                                         <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900">{p.sale.lead?.fullName || 'Unknown Client'}</div>
@@ -580,8 +594,10 @@ export const ManagingDirectorDashboard = () => {
                                     ))
                                 )}
                             </tbody>
-                        </table>
-                    </div>
+                            </table>
+                        </div>
+                        {processedPayments.length > 0 && <Pagination dataLength={processedPayments.length} currentPage={procPayPage} rowsPerPage={procPayRows} setPage={setProcPayPage} setRowsPerPage={setProcPayRows} />}
+                        </>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
