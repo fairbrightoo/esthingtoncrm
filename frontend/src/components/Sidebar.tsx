@@ -70,6 +70,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to="/admin/onboarding" icon={<Upload size={20} />} label="Bulk Onboarding" />
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Global User Mgmt" />
+                        <NavItem to="/admin/global-clients" icon={<Globe size={20} />} label="Global Clients" />
                         <NavItem to="/admin/inventory" icon={<Home size={20} />} label="Inventory" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
                     </>

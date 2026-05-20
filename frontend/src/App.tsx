@@ -42,6 +42,7 @@ import { HRSettings } from './pages/HRSettings';
 import { HRReports } from './pages/HRReports';
 import { EnterpriseReports } from './pages/EnterpriseReports';
 import { GlobalUserManagement } from './pages/GlobalUserManagement';
+import { GlobalClientsDatabase } from './pages/GlobalClientsDatabase';
 import AIKnowledgeBase from './pages/AIKnowledgeBase';
 import { HRLeaveManagement } from './pages/HRLeaveManagement';
 import { HRDisciplinary } from './pages/HRDisciplinary';
@@ -179,6 +180,7 @@ function App() {
             <Route path="/admin" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
             <Route path="/admin/onboarding" element={<DashboardLayout><BulkOnboarding /></DashboardLayout>} />
             <Route path="/admin/users" element={<DashboardLayout><GlobalUserManagement /></DashboardLayout>} />
+            <Route path="/admin/global-clients" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
             <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
             <Route path="/admin/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
