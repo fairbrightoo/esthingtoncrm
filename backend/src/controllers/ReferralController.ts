@@ -96,7 +96,7 @@ export const ReferralController = {
     // Validate code (Used by HR during registration)
     validateCode: async (req: Request, res: Response) => {
         try {
-            const { code } = req.params;
+            const code = req.params.code as string;
             const referralCode = await prisma.referralCode.findUnique({
                 where: { code: code.trim().toUpperCase() },
                 include: { creator: { select: { fullName: true, commissionRate: true } } }
