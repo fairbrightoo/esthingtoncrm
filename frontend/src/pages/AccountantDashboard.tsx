@@ -126,6 +126,18 @@ export const AccountantDashboard = () => {
                 >
                     <ArrowRightLeft size={16} /> Client Refunds
                 </button>
+                <button
+                    onClick={() => setActiveTab('PAYMENTS_COMMISSIONS')}
+                    className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'PAYMENTS_COMMISSIONS' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                    <CreditCard size={16} /> Payments & Commissions
+                </button>
+                <button
+                    onClick={() => setActiveTab('HISTORY')}
+                    className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'HISTORY' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                    <Clock size={16} /> History
+                </button>
             </div>
             
             <main className="space-y-8">
