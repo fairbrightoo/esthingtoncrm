@@ -1,0 +1,32 @@
+# Esthington CRM: Sales Types Definitions
+
+This document explains the three different types of sales recorded in the system and how they impact financial reporting and commission payouts.
+
+---
+
+### 1. Direct Sale
+A **Direct Sale** happens when a Marketer belonging to your branch sells a property that is also managed by your branch.
+*   **Cash Flow:** The money goes directly into your branch's bank account.
+*   **Commission:** Your branch is responsible for paying the commission to your own marketer.
+*   **Example:** A Garki Marketer sells a plot in Double King Estate (managed by Garki). 
+
+---
+
+### 2. Inbound Cross-Sale
+An **Inbound Cross-Sale** happens when a Marketer from *another branch* sells a property that is managed by *your branch*.
+*   **Cash Flow:** The money flows **INTO** your branch's bank accounts because you own/manage the property being sold.
+*   **Commission:** Because your branch holds the cash from the sale, your branch's Accountant is responsible for paying the commission to the marketer (even though they belong to a different branch). 
+*   **Example:** A Wuse Marketer sells a plot in Double King Estate (managed by Garki). To Garki, this is considered an Inbound Cross-Sale.
+
+---
+
+### 3. Outbound Cross-Sale
+An **Outbound Cross-Sale** happens when a Marketer from *your branch* sells a property that is managed by *another branch*.
+*   **Cash Flow:** The money flows **OUT** to the other branch's bank accounts because they manage the property.
+*   **Commission:** Even though your staff member made the sale, the *other branch* holds the cash and is responsible for paying your marketer's commission. The "Cross-Branch Value" card on your Business Intelligence dashboard tracks how much revenue your staff has generated for other branches this way.
+*   **Example:** A Garki Marketer sells a plot in Treasure Gate (managed by Wuse). To Garki, this is considered an Outbound Cross-Sale. 
+
+---
+
+### Summary for Accountants
+Accountants only need to look at **Direct Sales** and **Inbound Cross-Sales** when calculating how much cash their branch received, and when determining which commissions they need to pay out. They **do not** pay out commissions for **Outbound Cross-Sales**, as the receiving branch handles those payouts.

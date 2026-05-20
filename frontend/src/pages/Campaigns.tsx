@@ -55,6 +55,8 @@ export const Campaigns = () => {
     const [genderFilter, setGenderFilter] = useState('All');
     const [statusFilter, setStatusFilter] = useState('All');
     const [sourceFilter, setSourceFilter] = useState('');
+    const [estateFilter, setEstateFilter] = useState('All');
+    const [estates, setEstates] = useState<any[]>([]);
 
     const [isSending, setIsSending] = useState(false);
     const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -82,6 +84,17 @@ export const Campaigns = () => {
             setWaTemplates(res.data);
         } catch (error) {
             console.error("Failed to load WA templates", error);
+        }
+    };
+
+    const fetchEstates = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/inventory/estates`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setEstates(res.data);
+        } catch (error) {
+            console.error("Failed to load estates", error);
         }
     };
 
@@ -181,6 +194,11 @@ export const Campaigns = () => {
 
             // 3. Create Campaign Draft
             const filters: any = { gender: genderFilter, status: statusFilter, source: sourceFilter };
+            if (statusFilter === 'CLIENT' && estateFilter !== 'All') {
+                filters.estateId = estateFilter;
+                const est = estates.find(e => e.id === estateFilter);
+                if (est) filters.estateName = est.name;
+            }
             if (waMediaId && waMediaType) {
                 filters.waMediaId = waMediaId;
                 filters.waMediaType = waMediaType;
@@ -210,6 +228,7 @@ export const Campaigns = () => {
             setGenderFilter('All');
             setStatusFilter('All');
             setSourceFilter('');
+            setEstateFilter('All');
             setSaveAsTemplate(false);
             setSelectedTemplateId('');
             setMediaFile(null);
@@ -301,6 +320,7 @@ export const Campaigns = () => {
                                             if (f.gender !== 'All') parts.push(f.gender);
                                             if (f.status !== 'All') parts.push(f.status);
                                             if (f.source) parts.push(`Source: ${f.source}`);
+                                            if (f.estateName) parts.push(`Estate: ${f.estateName}`);
                                             return parts.length > 0 ? parts.join(', ') : 'All Leads';
                                         } catch { return 'Invalid Filters'; }
                                     })()}
@@ -363,7 +383,7 @@ export const Campaigns = () => {
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                                     <Filter size={16} className="mr-2" /> Target Audience
                                 </h3>
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Gender</label>
                                         <select
@@ -378,7 +398,10 @@ export const Campaigns = () => {
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Lead Status</label>
                                         <select
-                                            value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                                            value={statusFilter} onChange={e => {
+                                                setStatusFilter(e.target.value);
+                                                if (e.target.value !== 'CLIENT') setEstateFilter('All');
+                                            }}
                                             className="w-full text-sm border rounded p-1.5"
                                         >
                                             <option value="All">All Statuses</option>
@@ -395,6 +418,20 @@ export const Campaigns = () => {
                                             placeholder="e.g. Facebook"
                                         />
                                     </div>
+                                    {statusFilter === 'CLIENT' && (
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Subscribed Estate</label>
+                                            <select
+                                                value={estateFilter} onChange={e => setEstateFilter(e.target.value)}
+                                                className="w-full text-sm border rounded p-1.5"
+                                            >
+                                                <option value="All">All Estates</option>
+                                                {estates.map(e => (
+                                                    <option key={e.id} value={e.id}>{e.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

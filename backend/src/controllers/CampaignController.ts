@@ -102,6 +102,15 @@ export const CampaignController = {
             if (filters.source && typeof filters.source === 'string' && filters.source.trim() !== '') {
                 whereClause.source = { contains: filters.source };
             }
+            if (filters.estateId) {
+                whereClause.sales = {
+                    some: {
+                        plot: {
+                            estateId: filters.estateId
+                        }
+                    }
+                };
+            }
 
             // 2. Fetch Audience
             const leads = await prisma.lead.findMany({ where: whereClause });
