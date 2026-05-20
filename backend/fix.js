@@ -10,4 +10,3 @@ c = c.replace(
 );
 
 fs.writeFileSync('src/controllers/MDReportController.ts', c);
-console.log("Done ACTUAL replacement");
