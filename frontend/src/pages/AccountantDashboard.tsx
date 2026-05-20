@@ -36,7 +36,45 @@ export const AccountantDashboard = () => {
     const [historyData, setHistoryData] = useState<{payments: any[], commissions: any[], requisitions: any[]}>({payments: [], commissions: [], requisitions: []});
     const [historyLoading, setHistoryLoading] = useState(false);
 
+
+    const [historyRowsPerPage, setHistoryRowsPerPage] = useState<number>(10);
+    const [historyPaymentsPage, setHistoryPaymentsPage] = useState<number>(1);
+    const [historyCommissionsPage, setHistoryCommissionsPage] = useState<number>(1);
+    const [historyRequisitionsPage, setHistoryRequisitionsPage] = useState<number>(1);
+    
+    // Pagination helpers
+    const getPaginatedData = (data: any[], page: number, rows: number) => {
+        const start = (page - 1) * rows;
+        return data.slice(start, start + rows);
+    };
+    
+    const renderPagination = (dataLength: number, currentPage: number, setPage: (p: number) => void) => {
+        const totalPages = Math.ceil(dataLength / historyRowsPerPage);
+        if (dataLength === 0) return null;
+        return (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50/30">
+                <span className="text-xs text-gray-500">
+                    Showing {((currentPage - 1) * historyRowsPerPage) + 1} to {Math.min(currentPage * historyRowsPerPage, dataLength)} of {dataLength} entries
+                </span>
+                <div className="flex items-center gap-1">
+                    <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setPage(currentPage - 1)}
+                        className="px-2 py-1 border border-gray-200 rounded text-xs text-gray-600 disabled:opacity-50 hover:bg-gray-100"
+                    >Prev</button>
+                    <span className="text-xs font-medium px-2 py-1">{currentPage} / {totalPages}</span>
+                    <button 
+                        disabled={currentPage === totalPages}
+                        onClick={() => setPage(currentPage + 1)}
+                        className="px-2 py-1 border border-gray-200 rounded text-xs text-gray-600 disabled:opacity-50 hover:bg-gray-100"
+                    >Next</button>
+                </div>
+            </div>
+        );
+    };
+
     const token = localStorage.getItem('token');
+
 
 
 
@@ -514,6 +552,23 @@ export const AccountantDashboard = () => {
                                                 className="px-3 py-1.5 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             />
                                         </div>
+                                        <div className="ml-auto flex items-center gap-2 border-l border-gray-100 pl-3">
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Rows per page</label>
+                                            <select 
+                                                value={historyRowsPerPage}
+                                                onChange={(e) => {
+                                                    setHistoryRowsPerPage(Number(e.target.value));
+                                                    setHistoryPaymentsPage(1);
+                                                    setHistoryCommissionsPage(1);
+                                                    setHistoryRequisitionsPage(1);
+                                                }}
+                                                className="px-2 py-1.5 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                                            >
+                                                <option value={10}>10</option>
+                                                <option value={20}>20</option>
+                                                <option value={50}>50</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -534,6 +589,7 @@ export const AccountantDashboard = () => {
                                                     <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-semibold">
                                                         <tr>
                                                             <th className="px-6 py-4">Date</th>
+                                                            <th className="px-6 py-4">Marketer</th>
                                                             <th className="px-6 py-4">Client</th>
                                                             <th className="px-6 py-4">Amount</th>
                                                             <th className="px-6 py-4">Status</th>
@@ -541,10 +597,11 @@ export const AccountantDashboard = () => {
                                                     </thead>
                                                     <tbody className="divide-y divide-gray-50">
                                                         {historyData.payments.length === 0 ? (
-                                                            <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-400">No records found.</td></tr>
-                                                        ) : historyData.payments.map((p, i) => (
+                                                            <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No records found.</td></tr>
+                                                        ) : getPaginatedData(historyData.payments, historyPaymentsPage, historyRowsPerPage).map((p: any, i: number) => (
                                                             <tr key={i} className="hover:bg-gray-50/50">
                                                                 <td className="px-6 py-3 text-gray-500">{new Date(p.date).toLocaleDateString()}</td>
+                                                                <td className="px-6 py-3 font-medium">{p.sale?.marketer?.fullName || '-'}</td>
                                                                 <td className="px-6 py-3 font-medium">{p.sale?.lead?.fullName}</td>
                                                                 <td className="px-6 py-3 font-mono">₦{p.amount.toLocaleString()}</td>
                                                                 <td className="px-6 py-3">
@@ -557,6 +614,7 @@ export const AccountantDashboard = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            {renderPagination(historyData.payments.length, historyPaymentsPage, setHistoryPaymentsPage)}
                                         </div>
 
                                         {/* Paid Commissions */}
@@ -578,7 +636,7 @@ export const AccountantDashboard = () => {
                                                     <tbody className="divide-y divide-gray-50">
                                                         {historyData.commissions.length === 0 ? (
                                                             <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-400">No records found.</td></tr>
-                                                        ) : historyData.commissions.map((p, i) => {
+                                                        ) : getPaginatedData(historyData.commissions, historyCommissionsPage, historyRowsPerPage).map((p: any, i: number) => {
                                                             const rate = p.sale?.marketer?.commissionRate || 5;
                                                             const commissionAmount = ((p.amount * rate) / 100) - (p.virtualLoanAmount || 0);
                                                             return (
@@ -592,6 +650,7 @@ export const AccountantDashboard = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            {renderPagination(historyData.commissions.length, historyCommissionsPage, setHistoryCommissionsPage)}
                                         </div>
 
                                         {/* Disbursed Requisitions */}
@@ -613,7 +672,7 @@ export const AccountantDashboard = () => {
                                                     <tbody className="divide-y divide-gray-50">
                                                         {historyData.requisitions.length === 0 ? (
                                                             <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-400">No records found.</td></tr>
-                                                        ) : historyData.requisitions.map((r, i) => (
+                                                        ) : getPaginatedData(historyData.requisitions, historyRequisitionsPage, historyRowsPerPage).map((r: any, i: number) => (
                                                             <tr key={i} className="hover:bg-gray-50/50">
                                                                 <td className="px-6 py-3 text-gray-500">{new Date(r.requestDate).toLocaleDateString()}</td>
                                                                 <td className="px-6 py-3 font-medium">{r.title}</td>
@@ -624,6 +683,7 @@ export const AccountantDashboard = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            {renderPagination(historyData.requisitions.length, historyRequisitionsPage, setHistoryRequisitionsPage)}
                                         </div>
                                     </div>
                                 )}
