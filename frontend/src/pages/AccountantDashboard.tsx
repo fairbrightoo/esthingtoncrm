@@ -44,12 +44,11 @@ export const AccountantDashboard = () => {
         try {
             setHistoryLoading(true);
             const [reqRes, commRes, payRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions?startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions?isPaid=true&startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/processed?startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             
-            // Just map existing data for history until backend routes are built
             setHistoryData({
                 payments: payRes.data,
                 commissions: commRes.data,
