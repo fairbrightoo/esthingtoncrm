@@ -9,6 +9,7 @@ import { MDDiscountManager } from '../components/MDDiscountManager';
 import { MDBudgetReview } from '../components/MDBudgetReview';
 import { Calculator } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
+import { getPaymentTypeLabel } from './AccountantDashboard';
 
 interface Payment {
     id: string;
