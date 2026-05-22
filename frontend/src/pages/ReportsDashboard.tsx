@@ -116,7 +116,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         const doc = new jsPDF('landscape');
         doc.text(`Sales Report - ${filters.month}/${filters.year}`, 14, 15);
         
-        const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Comm Paid", "Estate", "Marketer", "Acct Paid To", "Sale Type", "Managing Branch"];
+        const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Comm Paid", "Referrer", "Ref Comm", "Estate", "Marketer", "Acct Paid To", "Sale Type", "Managing Branch"];
         const tableRows: any[] = [];
 
         let totalAmount = 0;
@@ -124,7 +124,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
 
         salesData.forEach(sale => {
             totalAmount += sale.amountPaid;
-            totalComm += sale.commissionAccrued;
+            totalComm += sale.commissionAccrued + (sale.referralCommissionAccrued || 0);
             const rowData = [
                 sale.sn,
                 formatDate(sale.date),
@@ -134,6 +134,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 sale.isCornerPiece,
                 formatCurrencyForExport(sale.amountPaid),
                 formatCurrencyForExport(sale.commissionAccrued),
+                sale.referrerName && sale.referrerName !== 'N/A' ? sale.referrerName : 'N/A',
+                formatCurrencyForExport(sale.referralCommissionAccrued || 0),
                 sale.estateName,
                 sale.marketerName,
                 sale.accountPaidTo,
@@ -143,7 +145,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             tableRows.push(rowData);
         });
 
-        tableRows.push(["", "", "", "", "", "GRAND TOTAL", formatCurrencyForExport(totalAmount), formatCurrencyForExport(totalComm), "", "", "", "", ""]);
+        tableRows.push(["", "", "", "", "", "GRAND TOTAL", formatCurrencyForExport(totalAmount), formatCurrencyForExport(totalComm), "", "", "", "", "", "", ""]);
 
         autoTable(doc, {
             head: [tableColumn],
@@ -167,6 +169,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             "Corner Piece": sale.isCornerPiece,
             "Amount Paid (N)": sale.amountPaid,
             "Comm Paid (N)": sale.commissionAccrued,
+            "Referrer": sale.referrerName && sale.referrerName !== 'N/A' ? sale.referrerName : 'N/A',
+            "Ref Comm (N)": sale.referralCommissionAccrued || 0,
             "Estate": sale.estateName,
             "Marketer": sale.marketerName,
             "Acct Paid To": sale.accountPaidTo,
@@ -175,22 +179,16 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         }));
         
         const totalAmount = salesData.reduce((sum, s) => sum + s.amountPaid, 0);
-        const totalComm = salesData.reduce((sum, s) => sum + s.commissionAccrued, 0);
+        const totalComm = salesData.reduce((sum, s) => sum + s.commissionAccrued + (s.referralCommissionAccrued || 0), 0);
         
         csvData.push({
-            "S/N": "" as any,
-            "Trans Date": "",
-            "Clients": "",
-            "Description": "",
-            "Plot In Sqm": "",
-            "Corner Piece": "GRAND TOTAL",
-            "Amount Paid (N)": totalAmount,
-            "Comm Paid (N)": totalComm,
-            "Estate": "",
-            "Marketer": "",
-            "Acct Paid To": "",
-            "Sale Type": "",
-            "Managing Branch": ""
+            "S/N": "" as any, "Trans Date": "", "Clients": "", "Description": "", "Plot In Sqm": "", 
+            "Corner Piece": "GRAND TOTAL", 
+            "Amount Paid (N)": totalAmount as any, 
+            "Comm Paid (N)": totalComm as any, 
+            "Referrer": "",
+            "Ref Comm (N)": "",
+            "Estate": "", "Marketer": "", "Acct Paid To": "", "Sale Type": "", "Managing Branch": ""
         });
 
         const csv = Papa.unparse(csvData);
@@ -463,7 +461,13 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                             <td colSpan={6} className="p-3 text-right font-bold text-gray-800">GRAND TOTAL:</td>
                                             <td className="p-3 font-bold text-emerald-700">{formatCurrency(salesData.reduce((sum, s) => sum + s.amountPaid, 0))}</td>
                                             <td className="p-3 font-bold text-gray-600">{formatCurrency(salesData.reduce((sum, s) => sum + s.commissionAccrued, 0))}</td>
-                                            <td colSpan={5}></td>
+                                            <td></td>
+                                            <td className="p-3 font-bold text-indigo-600">{formatCurrency(salesData.reduce((sum, s) => sum + (s.referralCommissionAccrued || 0), 0))}</td>
+                                            <td colSpan={5} className="text-right p-3">
+                                                <span className="font-bold text-indigo-800 bg-indigo-100 px-3 py-1 rounded-lg">
+                                                    Total All Commissions: {formatCurrency(salesData.reduce((sum, s) => sum + (s.commissionAccrued || 0) + (s.referralCommissionAccrued || 0), 0))}
+                                                </span>
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
