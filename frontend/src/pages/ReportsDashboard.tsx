@@ -377,8 +377,13 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                         </div>
                         <div className="flex space-x-4 items-center">
                             {activeTab === 'SALES' && (
-                                <div className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-sm flex items-center">
-                                    Total Sales: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
+                                <div className="flex gap-4">
+                                    <div className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-sm flex items-center">
+                                        Total Sales: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
+                                    </div>
+                                    <div className="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 shadow-sm flex items-center">
+                                        Total Comm: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + (sale.commissionAccrued || 0) + (sale.referralCommissionAccrued || 0), 0))}</span>
+                                    </div>
                                 </div>
                             )}
                             <div className="flex space-x-3">
@@ -414,6 +419,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                         <th className="p-3 text-center">Corner</th>
                                         <th className="p-3">Amount Paid</th>
                                         <th className="p-3">Comm. Accrued</th>
+                                        <th className="p-3 text-indigo-600 bg-indigo-50/50">Referrer</th>
+                                        <th className="p-3 text-indigo-600 bg-indigo-50/50">Ref. Comm.</th>
                                         <th className="p-3">Estate</th>
                                         <th className="p-3">Marketer</th>
                                         <th className="p-3">Acct Paid To</th>
@@ -435,6 +442,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <td className="p-3 text-center">{sale.isCornerPiece}</td>
                                                 <td className="p-3 font-semibold text-emerald-600">{formatCurrency(sale.amountPaid)}</td>
                                                 <td className="p-3 text-gray-600">{formatCurrency(sale.commissionAccrued)}</td>
+                                                <td className="p-3 text-indigo-600 bg-indigo-50/10 font-medium">{sale.referrerName && sale.referrerName !== 'N/A' ? sale.referrerName : <span className="text-gray-400 font-normal">N/A</span>}</td>
+                                                <td className="p-3 text-indigo-600 bg-indigo-50/10 font-bold">{sale.referralCommissionAccrued > 0 ? formatCurrency(sale.referralCommissionAccrued) : <span className="text-gray-400 font-normal">₦0</span>}</td>
                                                 <td className="p-3">{sale.estateName}</td>
                                                 <td className="p-3 text-gray-600">{sale.marketerName}</td>
                                                 <td className="p-3 text-indigo-600 font-medium">{sale.accountPaidTo}</td>

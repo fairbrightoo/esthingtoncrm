@@ -140,8 +140,8 @@ export const AccountantDashboard = () => {
         return () => clearInterval(intv);
     }, []);
 
-    const openDisburseFundModal = (reqId: string) => {
-        setConfirmModal({ isOpen: true, type: 'fund', id: reqId, title: 'Disburse Funds', message: 'Have you transferred the funds and are ready to close this requisition?' });
+    const openDisburseCommissionModal = (paymentId: string, commissionType: 'DIRECT' | 'REFERRAL' = 'DIRECT') => {
+        setConfirmModal({ isOpen: true, type: 'commission', id: paymentId, commissionType, title: 'Confirm Commission Payout', message: `Mark this ${commissionType.toLowerCase()} commission as successfully disbursed?` });
     };
 
     const handleDisburseFund = async (reqId: string) => {
@@ -154,10 +154,6 @@ export const AccountantDashboard = () => {
         } finally {
             setActionLoading(false);
         }
-    };
-
-    const openDisburseCommissionModal = (paymentId: string, commissionType: 'DIRECT' | 'REFERRAL' = 'DIRECT') => {
-        setConfirmModal({ isOpen: true, type: 'commission', id: paymentId, commissionType, title: 'Confirm Commission Payout', message: `Mark this ${commissionType.toLowerCase()} commission as successfully disbursed?` });
     };
 
     const handleDisburseCommission = async (paymentId: string, commissionType: 'DIRECT' | 'REFERRAL') => {
@@ -491,40 +487,85 @@ export const AccountantDashboard = () => {
                                                     <tbody className="divide-y divide-emerald-50">
                                                         {commissions.length === 0 ? (
                                                             <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">No pending commissions.</td></tr>
-                                                        ) : commissions.map(payment => {
-                                                            const rate = payment.sale?.marketer?.commissionRate || 5;
-                                                            const commissionAmount = ((payment.amount * rate) / 100) - (payment.virtualLoanAmount || 0);
-                                                            return (
-                                                            <tr key={payment.id} className="hover:bg-emerald-50/30">
-                                                                <td className="px-6 py-4 text-gray-500">
-                                                                    {new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <div className="font-medium text-gray-800">{payment.sale?.lead?.fullName || 'N/A'}</div>
-                                                                    {payment.sale?.lead?.company && (
-                                                                        <div className="text-[10px] text-gray-400 mt-1 flex items-center">
-                                                                            Origin: {payment.sale.lead.company.abbreviation} - {payment.sale.lead.branch?.name}
-                                                                        </div>
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-6 py-4 font-medium text-gray-800">
-                                                                    {payment.sale?.marketer?.fullName || 'N/A'}
-                                                                    <div className="text-xs text-blue-600 mt-1">{rate}% Rate</div>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    Plot {payment.sale?.plot?.plotNumber} <br/>
-                                                                    <span className="text-xs text-gray-500">{payment.sale?.plot?.estate?.name}</span>
-                                                                </td>
-                                                                <td className="px-6 py-4 font-mono text-gray-600">₦{payment.amount.toLocaleString()}</td>
-                                                                <td className="px-6 py-4 font-bold text-emerald-600 font-mono text-lg">₦{commissionAmount.toLocaleString()}</td>
-                                                                <td className="px-6 py-4">
-                                                                    <button disabled={actionLoading} onClick={() => openDisburseCommissionModal(payment.id)}
-                                                                        className="px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
-                                                                        Mark Paid
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        )})}
+                                                        ) : commissions.flatMap(payment => {
+                                                            const rows = [];
+                                                            
+                                                            // 1. Direct Commission
+                                                            if (payment.isCommissionPaid === false) {
+                                                                const rate = payment.sale?.marketer?.commissionRate || 5;
+                                                                const commissionAmount = ((payment.amount * rate) / 100) - (payment.virtualLoanAmount || 0);
+                                                                rows.push(
+                                                                    <tr key={`${payment.id}-direct`} className="hover:bg-emerald-50/30">
+                                                                        <td className="px-6 py-4 text-gray-500">
+                                                                            {new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        </td>
+                                                                        <td className="px-6 py-4">
+                                                                            <div className="font-medium text-gray-800">{payment.sale?.lead?.fullName || 'N/A'}</div>
+                                                                            {payment.sale?.lead?.company && (
+                                                                                <div className="text-[10px] text-gray-400 mt-1 flex items-center">
+                                                                                    Origin: {payment.sale.lead.company.abbreviation} - {payment.sale.lead.branch?.name}
+                                                                                </div>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="px-6 py-4 font-medium text-gray-800">
+                                                                            {payment.sale?.marketer?.fullName || 'N/A'}
+                                                                            <div className="text-xs text-blue-600 mt-1">{rate}% Rate</div>
+                                                                        </td>
+                                                                        <td className="px-6 py-4">
+                                                                            Plot {payment.sale?.plot?.plotNumber} <br/>
+                                                                            <span className="text-xs text-gray-500">{payment.sale?.plot?.estate?.name}</span>
+                                                                        </td>
+                                                                        <td className="px-6 py-4 font-mono text-gray-600">₦{payment.amount.toLocaleString()}</td>
+                                                                        <td className="px-6 py-4 font-bold text-emerald-600 font-mono text-lg">₦{commissionAmount.toLocaleString()}</td>
+                                                                        <td className="px-6 py-4">
+                                                                            <button disabled={actionLoading} onClick={() => openDisburseCommissionModal(payment.id, 'DIRECT')}
+                                                                                className="px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
+                                                                                Mark Paid
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            }
+
+                                                            // 2. Referral Commission
+                                                            if (payment.sale?.referrerId && payment.isReferralCommissionPaid === false) {
+                                                                const rate = payment.sale?.marketer?.referrerCommissionRate || payment.sale?.referrerCommissionRate || 6;
+                                                                const commissionAmount = (payment.amount * rate) / 100;
+                                                                rows.push(
+                                                                    <tr key={`${payment.id}-referral`} className="hover:bg-indigo-50/30 bg-indigo-50/10">
+                                                                        <td className="px-6 py-4 text-gray-500">
+                                                                            {new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        </td>
+                                                                        <td className="px-6 py-4">
+                                                                            <div className="font-medium text-gray-800">{payment.sale?.lead?.fullName || 'N/A'}</div>
+                                                                            {payment.sale?.lead?.company && (
+                                                                                <div className="text-[10px] text-gray-400 mt-1 flex items-center">
+                                                                                    Origin: {payment.sale.lead.company.abbreviation} - {payment.sale.lead.branch?.name}
+                                                                                </div>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="px-6 py-4 font-medium text-gray-800">
+                                                                            {payment.sale?.referrer?.fullName || 'N/A'} <span className="px-2 py-0.5 ml-2 text-[10px] font-bold bg-indigo-100 text-indigo-700 rounded-full">REFERRER</span>
+                                                                            <div className="text-xs text-indigo-600 mt-1">{rate}% Rate</div>
+                                                                        </td>
+                                                                        <td className="px-6 py-4">
+                                                                            Plot {payment.sale?.plot?.plotNumber} <br/>
+                                                                            <span className="text-xs text-gray-500">{payment.sale?.plot?.estate?.name}</span>
+                                                                        </td>
+                                                                        <td className="px-6 py-4 font-mono text-gray-600">₦{payment.amount.toLocaleString()}</td>
+                                                                        <td className="px-6 py-4 font-bold text-indigo-600 font-mono text-lg">₦{commissionAmount.toLocaleString()}</td>
+                                                                        <td className="px-6 py-4">
+                                                                            <button disabled={actionLoading} onClick={() => openDisburseCommissionModal(payment.id, 'REFERRAL')}
+                                                                                className="px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                                                                                Mark Paid
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            }
+
+                                                            return rows;
+                                                        })}
                                                     </tbody>
                                                 </table>
                                             </div>
