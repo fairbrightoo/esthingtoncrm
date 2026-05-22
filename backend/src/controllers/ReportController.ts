@@ -70,6 +70,7 @@ export const ReportController = {
                 include: { assignedToUser: true }
               },
               marketer: { include: { branch: true } },
+              referrer: { select: { id: true, fullName: true, email: true } },
               payments: {
                 orderBy: { date: 'asc' }
               }
@@ -110,6 +111,15 @@ export const ReportController = {
         const commissionRate = sale.marketer?.commissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
         const commissionAccrued = (payment.amount * (commissionRate / 100)) - (payment.virtualLoanAmount || 0);
 
+        let referrerName = 'N/A';
+        let referralCommissionAccrued = 0;
+        
+        if (sale.referrer) {
+            referrerName = sale.referrer.fullName;
+            const refRate = sale.referrerCommissionRate || 6.0;
+            referralCommissionAccrued = (payment.amount * refRate) / 100;
+        }
+
         return {
           sn: index + 1,
           date: payment.date,
@@ -117,6 +127,8 @@ export const ReportController = {
           description: description,
           amountPaid: payment.amount,
           commissionAccrued: commissionAccrued,
+          referrerName: referrerName,
+          referralCommissionAccrued: referralCommissionAccrued,
           estateName: sale.plot.estate.name,
           plotSize: sale.plot.size,
           isCornerPiece: sale.isCornerPiece ? 'Yes' : 'No',
