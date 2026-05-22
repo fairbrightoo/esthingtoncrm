@@ -423,7 +423,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {salesData.length === 0 ? (
-                                        <tr><td colSpan={13} className="p-6 text-center text-gray-500">No sales records found for this period.</td></tr>
+                                        <tr><td colSpan={15} className="p-6 text-center text-gray-500">No sales records found for this period.</td></tr>
                                     ) : (
                                         salesData.map((sale, i) => (
                                             <tr key={i} className="hover:bg-gray-50">

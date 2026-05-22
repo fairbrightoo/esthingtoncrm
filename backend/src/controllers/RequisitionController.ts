@@ -238,13 +238,20 @@ export const RequisitionController = {
                 res.status(403).json({ error: "Forbidden." }); return;
             }
 
-            const whereClause: any = { status: "APPROVED", isCommissionPaid: isPaid === 'true' };
+            const isPaidBool = isPaid === 'true';
+            const whereClause: any = { 
+                status: "APPROVED",
+                OR: [
+                    { isCommissionPaid: isPaidBool },
+                    { isReferralCommissionPaid: isPaidBool, sale: { referrerId: { not: null } } }
+                ]
+            };
             
             if (startDate && endDate) {
-                whereClause.commissionDisbursedAt = {
-                    gte: new Date(startDate as string),
-                    lte: new Date(endDate as string)
-                };
+                whereClause.OR = [
+                    { isCommissionPaid: isPaidBool, commissionDisbursedAt: { gte: new Date(startDate as string), lte: new Date(endDate as string) } },
+                    { isReferralCommissionPaid: isPaidBool, sale: { referrerId: { not: null } }, referralCommissionDisbursedAt: { gte: new Date(startDate as string), lte: new Date(endDate as string) } }
+                ];
             }
 
             if (role !== "SUPER_ADMIN") {
@@ -254,13 +261,13 @@ export const RequisitionController = {
                 } else if (role === "MANAGING_DIRECTOR") {
                     saleFilter.marketer = { companyId };
                 }
-                whereClause.sale = saleFilter;
+                whereClause.sale = { ...whereClause.sale, ...saleFilter };
             }
 
             const payments = await prisma.payment.findMany({
                 where: whereClause,
                 include: {
-                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true } } } },
+                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true } }, referrer: { select: { id: true, fullName: true, email: true } } } },
                 },
                 orderBy: { date: 'asc' }
             });

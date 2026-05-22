@@ -132,7 +132,8 @@ model User {
   attendances            Attendance[]
   communicationLogs      CommunicationLog[]
   leads                  Lead[]               @relation("AssignedLeads")
-  sales                  Sale[]               @relation("SaleMarketer")
+  salesMarketer          Sale[]               @relation("SaleMarketer")
+  salesReferred          Sale[]               @relation("SaleReferrer")
   Payment                Payment[]
   tasks                  Task[]
   branch                 Branch?              @relation(fields: [branchId], references: [id])
@@ -345,6 +346,7 @@ model Sale {
   plot              Plot            @relation(fields: [plotId], references: [id])
   lead              Lead            @relation(fields: [leadId], references: [id])
   marketer          User?           @relation("SaleMarketer", fields: [marketerId], references: [id])
+  referrer          User?           @relation("SaleReferrer", fields: [referrerId], references: [id])
   discountCode      DiscountCode?   @relation(fields: [discountCodeId], references: [id])
   refundRequests    RefundRequest[]
 }

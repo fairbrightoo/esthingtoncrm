@@ -36,7 +36,7 @@ export const AccountantDashboard = () => {
     const [payRows, setPayRows] = useState(10);
     const [commPage, setCommPage] = useState(1);
     const [commRows, setCommRows] = useState(10);
-    const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, type: 'fund'|'commission', id: string, title: string, message: string}>({isOpen: false, type: 'fund', id: '', title: '', message: ''});
+    const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, type: 'fund'|'commission', id: string, title: string, message: string, commissionType?: 'DIRECT' | 'REFERRAL'}>({isOpen: false, type: 'fund', id: '', title: '', message: ''});
     
     // History State
     const [historyStartDate, setHistoryStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
@@ -156,14 +156,14 @@ export const AccountantDashboard = () => {
         }
     };
 
-    const openDisburseCommissionModal = (paymentId: string) => {
-        setConfirmModal({ isOpen: true, type: 'commission', id: paymentId, title: 'Confirm Commission Payout', message: 'Mark this commission as successfully disbursed to the marketer?' });
+    const openDisburseCommissionModal = (paymentId: string, commissionType: 'DIRECT' | 'REFERRAL' = 'DIRECT') => {
+        setConfirmModal({ isOpen: true, type: 'commission', id: paymentId, commissionType, title: 'Confirm Commission Payout', message: `Mark this ${commissionType.toLowerCase()} commission as successfully disbursed?` });
     };
 
-    const handleDisburseCommission = async (paymentId: string) => {
+    const handleDisburseCommission = async (paymentId: string, commissionType: 'DIRECT' | 'REFERRAL') => {
         try {
             setActionLoading(true);
-            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pay-commission/${paymentId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pay-commission/${paymentId}`, { type: commissionType }, { headers: { Authorization: `Bearer ${token}` } });
             await fetchData();
         } catch (error) {
             alert('Failed to disburse commission.');
@@ -177,7 +177,7 @@ export const AccountantDashboard = () => {
         if (confirmModal.type === 'fund') {
             await handleDisburseFund(confirmModal.id);
         } else {
-            await handleDisburseCommission(confirmModal.id);
+            await handleDisburseCommission(confirmModal.id, confirmModal.commissionType || 'DIRECT');
         }
     };
 
