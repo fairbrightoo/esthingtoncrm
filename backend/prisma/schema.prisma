@@ -366,6 +366,8 @@ model Payment {
 
   isCommissionPaid      Boolean   @default(false)
   commissionDisbursedAt DateTime?
+  isReferralCommissionPaid Boolean @default(false)
+  referralCommissionDisbursedAt DateTime?
 
   createdAt      DateTime @default(now())
   recordedByUser User     @relation(fields: [recordedByUserId], references: [id])

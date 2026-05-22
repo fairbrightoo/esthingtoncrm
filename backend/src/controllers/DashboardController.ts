@@ -238,6 +238,10 @@ export const DashboardController = {
             let recentPayments: any[] = [];
             let detailedDueCommissions: any[] = [];
             let detailedPaidCommissions: any[] = [];
+            let detailedDueReferralCommissions: any[] = [];
+            let detailedPaidReferralCommissions: any[] = [];
+            let paidReferralCommissions = 0;
+            let pendingReferralCommissions = 0;
 
             if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
                 const prospects = await prisma.lead.findMany({
@@ -305,6 +309,53 @@ export const DashboardController = {
                     clientName: p.sale.lead.fullName,
                     product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`
                 }));
+
+                // Referral Commissions Tracking
+                const referralPaymentWhereClause: any = { 
+                    sale: { referrerId: userId },
+                    status: 'APPROVED'
+                };
+                if (Object.keys(dateFilter).length > 0) referralPaymentWhereClause.date = dateFilter;
+
+                const dueReferralCommsMatch = await prisma.payment.findMany({
+                    where: { ...referralPaymentWhereClause, isReferralCommissionPaid: false },
+                    orderBy: { date: 'desc' },
+                    include: { sale: { include: { lead: true, plot: { include: { estate: true } }, marketer: true } } }
+                });
+
+                detailedDueReferralCommissions = dueReferralCommsMatch.map((p: any) => {
+                    const refComm = (p.amount * (p.sale.referrerCommissionRate || 0)) / 100;
+                    pendingReferralCommissions += refComm;
+                    return {
+                        id: p.id,
+                        amount: p.amount,
+                        commission: refComm,
+                        date: p.date,
+                        clientName: p.sale.lead.fullName,
+                        marketerName: p.sale.marketer?.fullName || 'Unknown',
+                        product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`
+                    };
+                });
+
+                const paidReferralCommsMatch = await prisma.payment.findMany({
+                    where: { ...referralPaymentWhereClause, isReferralCommissionPaid: true },
+                    orderBy: { date: 'desc' },
+                    include: { sale: { include: { lead: true, plot: { include: { estate: true } }, marketer: true } } }
+                });
+
+                detailedPaidReferralCommissions = paidReferralCommsMatch.map((p: any) => {
+                    const refComm = (p.amount * (p.sale.referrerCommissionRate || 0)) / 100;
+                    paidReferralCommissions += refComm;
+                    return {
+                        id: p.id,
+                        amount: p.amount,
+                        commission: refComm,
+                        date: p.referralCommissionDisbursedAt || p.date,
+                        clientName: p.sale.lead.fullName,
+                        marketerName: p.sale.marketer?.fullName || 'Unknown',
+                        product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`
+                    };
+                });
             }
 
             res.json({
@@ -318,7 +369,9 @@ export const DashboardController = {
                     paidCommissions,
                     pendingCommissions,
                     totalSalesGenerated,
-                    commissionRate
+                    commissionRate,
+                    paidReferralCommissions,
+                    pendingReferralCommissions
                 },
                 charts: {
                     revenue: monthlyRevenue.map(({ name, value }) => ({ name, value }))
@@ -336,7 +389,9 @@ export const DashboardController = {
                     recentClients,
                     recentPayments,
                     detailedDueCommissions,
-                    detailedPaidCommissions
+                    detailedPaidCommissions,
+                    detailedDueReferralCommissions,
+                    detailedPaidReferralCommissions
                 }
             });
 

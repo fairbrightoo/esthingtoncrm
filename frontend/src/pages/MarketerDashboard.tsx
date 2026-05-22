@@ -188,7 +188,7 @@ export const MarketerDashboard = () => {
             <AnnouncementWidget />
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center space-x-4">
                     <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                         <Users size={24} />
@@ -338,6 +338,67 @@ export const MarketerDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Referral Commissions Tracking Panels */}
+            {((stats?.financial?.paidReferralCommissions > 0 || stats?.financial?.pendingReferralCommissions > 0) || mData.detailedDueReferralCommissions?.length > 0 || mData.detailedPaidReferralCommissions?.length > 0) && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                    {/* Due Referral Commissions */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden">
+                        <div className="px-6 py-5 border-b border-indigo-100 bg-indigo-50/50">
+                            <h2 className="text-lg font-bold text-indigo-800">Due Referral Commissions</h2>
+                            <p className="text-xs text-indigo-600/70">From Downline Sales • Awaiting Disbursement</p>
+                        </div>
+                        <div className="p-2">
+                            {mData.detailedDueReferralCommissions?.length === 0 ? (
+                                <div className="p-6 text-center text-gray-500 text-sm">No referral commissions due</div>
+                            ) : (
+                                <div className="space-y-1">
+                                    {mData.detailedDueReferralCommissions?.map((c: any) => (
+                                        <div key={c.id} className="p-4 flex items-center justify-between hover:bg-indigo-50/30 rounded-xl transition-colors">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900">{c.marketerName}</p>
+                                                <p className="text-xs text-gray-500">Sold to: {c.clientName}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-bold text-indigo-600">{formatCurrency(c.commission)}</p>
+                                                <p className="text-[10px] uppercase font-bold text-indigo-600/50 bg-indigo-100 px-2 py-0.5 rounded-full inline-block mt-0.5">Pending</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Paid Referral Commissions */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
+                        <div className="px-6 py-5 border-b border-blue-100 bg-blue-50/50">
+                            <h2 className="text-lg font-bold text-blue-800">Paid Referral Commissions</h2>
+                            <p className="text-xs text-blue-600/70">From Downline Sales • Disbursed</p>
+                        </div>
+                        <div className="p-2">
+                            {mData.detailedPaidReferralCommissions?.length === 0 ? (
+                                <div className="p-6 text-center text-gray-500 text-sm">No paid referral commissions</div>
+                            ) : (
+                                <div className="space-y-1">
+                                    {mData.detailedPaidReferralCommissions?.map((c: any) => (
+                                        <div key={c.id} className="p-4 flex items-center justify-between hover:bg-blue-50/30 rounded-xl transition-colors">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900">{c.marketerName}</p>
+                                                <p className="text-xs text-gray-500">Sold to: {c.clientName}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-bold text-blue-600">{formatCurrency(c.commission)}</p>
+                                                <p className="text-[10px] uppercase font-bold text-blue-600/50 bg-blue-100 px-2 py-0.5 rounded-full inline-block mt-0.5">Paid {formatDate(c.date)}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Commissions Tracking Panels */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
