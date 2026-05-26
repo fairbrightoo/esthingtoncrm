@@ -314,7 +314,7 @@ export const CompanyController = {
                 return res.status(400).json({ error: 'A Group Managing Director already exists for this company. You can only have one at a time.' });
             }
 
-            const existingUser = await prisma.user.findUnique({ where: { email } });
+            const existingUser = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
             if (existingUser) {
                 return res.status(400).json({ error: 'User with this email already exists' });
             }
@@ -380,7 +380,7 @@ export const CompanyController = {
 
         try {
             // Check if user exists
-            const existingUser = await prisma.user.findUnique({ where: { email } });
+            const existingUser = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
             if (existingUser) {
                 return res.status(400).json({ error: 'User with this email already exists' });
             }
@@ -496,7 +496,7 @@ export const CompanyController = {
                 }
 
                 // Check if user already exists
-                const existingUser = await prisma.user.findUnique({ where: { email } });
+                const existingUser = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
                 if (existingUser) {
                     failedRows.push({ row, reason: `Email '${email}' already exists` });
                     continue;
@@ -576,7 +576,7 @@ export const CompanyController = {
                 return res.status(400).json({ error: 'A Managing Director already exists for this branch. You can only have one at a time.' });
             }
 
-            const existingUser = await prisma.user.findUnique({ where: { email } });
+            const existingUser = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
             if (existingUser) {
                 return res.status(400).json({ error: 'User with this email already exists' });
             }
@@ -647,7 +647,7 @@ export const CompanyController = {
         }
 
         try {
-            const existingUser = await prisma.user.findUnique({ where: { email } });
+            const existingUser = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
             if (existingUser) {
                 return res.status(400).json({ error: 'User with this email already exists' });
             }
@@ -899,7 +899,7 @@ export const CompanyController = {
 
                     // Check Duplicates
                     const existing = await prisma.user.findFirst({
-                        where: { email: row.email }
+                        where: { email: { equals: row.email, mode: 'insensitive' } }
                     });
 
                     if (existing) {

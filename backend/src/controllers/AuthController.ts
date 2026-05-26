@@ -12,8 +12,8 @@ export const AuthController = {
             console.log('Login attempt:', req.body);
             const { email, password } = req.body;
 
-            const user = await prisma.user.findUnique({
-                where: { email },
+            const user = await prisma.user.findFirst({
+                where: { email: { equals: email, mode: 'insensitive' } },
                 include: {
                     company: true,
                     branch: true
