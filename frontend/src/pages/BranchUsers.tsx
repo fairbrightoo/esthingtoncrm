@@ -324,7 +324,9 @@ export const BranchUsers = () => {
                                                 u.role === 'BDM' ? 'bg-indigo-100 text-indigo-700' :
                                                     u.role === 'TEAM_LEAD' ? 'bg-teal-100 text-teal-700' :
                                                         u.role === 'CUSTOMER_CARE' ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-blue-100 text-blue-700'}`}>
+                                                            u.role === 'SITE_EXPERT' ? 'bg-emerald-100 text-emerald-700' :
+                                                                u.role === 'ICT_ORACLE' ? 'bg-cyan-100 text-cyan-700' :
+                                                                    'bg-blue-100 text-blue-700'}`}>
                                         {u.role.replace('_', ' ')}
                                     </span>
                                 </td>
@@ -662,6 +664,8 @@ export const BranchUsers = () => {
                                 <select className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
                                     <option value="MARKETER">Marketer</option>
+                                    <option value="SITE_EXPERT">Site Expert</option>
+                                    <option value="ICT_ORACLE">ICT Oracle</option>
                                     <option value="TEAM_LEAD">Team Lead</option>
                                     <option value="BDM">Business Development Manager</option>
                                     <option value="HEAD_BDD">Head of Business Development</option>

@@ -80,8 +80,8 @@ export const AnnouncementController = {
             const companyId = user.companyId;
             const { title, content, priority } = req.body;
 
-            // Only HR or Admin can create
-            if (user.role !== 'BRANCH_HR' && user.role !== 'SUPER_ADMIN' && user.role !== 'BRANCH_ADMIN') {
+            // Only HR, Admin, or Site Expert can create
+            if (user.role !== 'BRANCH_HR' && user.role !== 'SUPER_ADMIN' && user.role !== 'BRANCH_ADMIN' && user.role !== 'SITE_EXPERT') {
                 return res.status(403).json({ error: 'You do not have permission to create announcements' });
             }
 

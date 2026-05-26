@@ -17,6 +17,31 @@ export const TaskController = {
         }
     },
 
+    // Get all inspections for a branch
+    async getBranchInspections(req: Request, res: Response) {
+        const { branchId, companyId } = req.params;
+        try {
+            const tasks = await prisma.task.findMany({
+                where: {
+                    type: 'INSPECTION',
+                    assignedToUser: {
+                        branchId: branchId !== 'null' ? branchId : undefined,
+                        companyId: companyId !== 'null' ? companyId : undefined
+                    }
+                },
+                include: {
+                    lead: { select: { id: true, fullName: true, phone: true } },
+                    assignedToUser: { select: { id: true, fullName: true, role: true } }
+                },
+                orderBy: { dueDate: 'desc' }
+            });
+            res.json(tasks);
+        } catch (error) {
+            console.error('Get Branch Inspections Error:', error);
+            res.status(500).json({ error: 'Failed to fetch inspections' });
+        }
+    },
+
     // Create a new task (optionally linked to a lead)
     async createTask(req: Request, res: Response) {
         const user = (req as any).user;

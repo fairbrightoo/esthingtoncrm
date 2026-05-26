@@ -59,6 +59,9 @@ model Company {
   taxRemittances       TaxRemittance[]
   executiveMemos       ExecutiveMemo[]
   teams                Team[]
+  marketingAssets      MarketingAsset[]
+  productionScripts    ProductionScript[]
+  socialReports        SocialMediaReport[]
 }
 
 model Branch {
@@ -97,6 +100,9 @@ model Branch {
   executiveMemos        ExecutiveMemo[]
   corporateBankAccounts CorporateBankAccount[]
   teams                 Team[]
+  marketingAssets       MarketingAsset[]
+  productionScripts     ProductionScript[]
+  socialReports         SocialMediaReport[]
 }
 
 model User {
@@ -183,6 +189,11 @@ model User {
   ledTeam                Team?                @relation("TeamLead")
   managedTeams           Team[]               @relation("TeamBdm")
   teamMessagesSent       TeamMessage[]        @relation("MessageSender")
+
+  uploadedMarketingAssets MarketingAsset[]    @relation("OracleAssets")
+  authoredScripts         ProductionScript[]  @relation("ScriptAuthor")
+  assignedScripts         ProductionScript[]  @relation("ScriptCast")
+  oracleSocialReports     SocialMediaReport[] @relation("OracleReports")
 }
 
 model Attendance {
@@ -945,4 +956,63 @@ model ReferralCode {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   users       User[]   @relation("UsedReferralCode")
+}
+
+model MarketingAsset {
+  id                 String   @id @default(uuid())
+  title              String
+  description        String?
+  type               String   // IMAGE, VIDEO_LINK, FLYER
+  fileUrl            String   // R2 URL or external video link
+  uploadedByOracleId String
+  companyId          String
+  branchId           String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  uploadedByOracle   User     @relation("OracleAssets", fields: [uploadedByOracleId], references: [id])
+  company            Company  @relation(fields: [companyId], references: [id])
+  branch             Branch?  @relation(fields: [branchId], references: [id])
+  socialReports      SocialMediaReport[]
+}
+
+model ProductionScript {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   @db.Text // Rich text
+  authorId    String
+  companyId   String
+  branchId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author       User     @relation("ScriptAuthor", fields: [authorId], references: [id])
+  assignedCast User[]   @relation("ScriptCast")
+  company      Company  @relation(fields: [companyId], references: [id])
+  branch       Branch?  @relation(fields: [branchId], references: [id])
+}
+
+model SocialMediaReport {
+  id             String         @id @default(uuid())
+  platform       String         // e.g., YOUTUBE, INSTAGRAM, TIKTOK, FACEBOOK
+  views          Int            @default(0)
+  likes          Int            @default(0)
+  comments       Int            @default(0)
+  shares         Int            @default(0)
+  reportDate     DateTime       @default(now())
+  
+  assetId        String?
+  asset          MarketingAsset? @relation(fields: [assetId], references: [id])
+  
+  reporterId     String
+  reporter       User           @relation("OracleReports", fields: [reporterId], references: [id])
+  
+  companyId      String
+  company        Company        @relation(fields: [companyId], references: [id])
+  
+  branchId       String?
+  branch         Branch?        @relation(fields: [branchId], references: [id])
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }

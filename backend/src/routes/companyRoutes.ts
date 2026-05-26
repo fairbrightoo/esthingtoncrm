@@ -2,8 +2,9 @@ import express from 'express';
 import multer from 'multer';
 import { CompanyController } from '../controllers/CompanyController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
-import { AttendanceController } from '../controllers/AttendanceController.js';
 import { upload } from '../middleware/uploadMiddleware.js';
+import { ICTController } from '../controllers/ICTController.js';
+import { TaskController } from '../controllers/TaskController.js';
 const router = express.Router();
 
 router.get('/', CompanyController.getAllCompanies);
@@ -37,5 +38,19 @@ router.post('/users/:id/documents', authenticateToken, upload.single('file'), Co
 router.delete('/users/:id/documents/:documentType', authenticateToken, CompanyController.deleteStaffDocument);
 router.put('/users/:id', authenticateToken, CompanyController.updateUser);
 router.delete('/users/:id', authenticateToken, CompanyController.deleteUser);
+
+// ICT Oracle & Site Expert Routes
+router.get('/:companyId/branches/:branchId/assets', authenticateToken, ICTController.getAssets);
+router.post('/:companyId/branches/:branchId/assets', authenticateToken, upload.single('file'), ICTController.createAsset);
+router.delete('/:companyId/branches/:branchId/assets/:assetId', authenticateToken, ICTController.deleteAsset);
+
+router.get('/:companyId/branches/:branchId/scripts', authenticateToken, ICTController.getScripts);
+router.post('/:companyId/branches/:branchId/scripts', authenticateToken, ICTController.createScript);
+router.delete('/:companyId/branches/:branchId/scripts/:scriptId', authenticateToken, ICTController.deleteScript);
+
+router.get('/:companyId/branches/:branchId/social-reports', authenticateToken, ICTController.getSocialReports);
+router.post('/:companyId/branches/:branchId/social-reports', authenticateToken, ICTController.createSocialReport);
+
+router.get('/:companyId/branches/:branchId/tasks/inspections', authenticateToken, TaskController.getBranchInspections);
 
 export default router;

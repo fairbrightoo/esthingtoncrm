@@ -63,6 +63,13 @@ import { HRRecommendations } from './pages/HRRecommendations';
 import { GMDashboard } from './pages/GMDashboard';
 import { GMDDashboard } from './pages/GMDDashboard';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
+import { SiteExpertDashboard } from './pages/SiteExpertDashboard';
+import { SiteInspectionTracking } from './pages/SiteInspectionTracking';
+import { ICTOracleDashboard } from './pages/ICTOracleDashboard';
+import { MarketingMediaHub } from './pages/MarketingMediaHub';
+import { ProductionScriptSharing } from './pages/ProductionScriptSharing';
+import { StaffTrainingHub } from './pages/StaffTrainingHub';
+import { SocialMediaAnalytics } from './pages/SocialMediaAnalytics';
 
 import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { ChairmanExpenses } from './pages/ChairmanExpenses';
@@ -110,6 +117,14 @@ const BranchDashboardRouter = () => {
 
   if (user?.role === 'ACCOUNTANT') {
     return <AccountantOverview />;
+  }
+
+  if (user?.role === 'SITE_EXPERT') {
+    return <SiteExpertDashboard />;
+  }
+
+  if (user?.role === 'ICT_ORACLE') {
+    return <ICTOracleDashboard />;
   }
 
   return <BranchDashboard />;
@@ -247,6 +262,13 @@ function App() {
             <Route path="/dashboard/:branchName/policies" element={<DashboardLayout><CompanyPolicies /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/my-hr" element={<DashboardLayout><StaffSelfService /></DashboardLayout>} />
             
+            <Route path="/dashboard/:branchName/inspection-tracking" element={<DashboardLayout><SiteInspectionTracking /></DashboardLayout>} />
+            
+            <Route path="/dashboard/:branchName/media-hub" element={<DashboardLayout><MarketingMediaHub /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/production-scripts" element={<DashboardLayout><ProductionScriptSharing /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/training-hub" element={<DashboardLayout><StaffTrainingHub /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/social-analytics" element={<DashboardLayout><SocialMediaAnalytics /></DashboardLayout>} />
+
             <Route path="/dashboard/:branchName/settings" element={<DashboardLayout><SettingsRouter /></DashboardLayout>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

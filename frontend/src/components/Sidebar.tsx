@@ -223,6 +223,27 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />
                     </>
                 )}
+
+                {user?.role === 'SITE_EXPERT' && (
+                    <>
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/inspection-tracking`} icon={<CheckCircle size={20} />} label="Inspection Hub" />
+                        <NavItem to={`${basePath}/announcements`} icon={<Megaphone size={20} />} label="Announcements" />
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
+                    </>
+                )}
+
+                {user?.role === 'ICT_ORACLE' && (
+                    <>
+                        <NavItem to={`${basePath}/media-hub`} icon={<Home size={20} />} label="Marketing Media Hub" />
+                        <NavItem to={`${basePath}/production-scripts`} icon={<FileText size={20} />} label="Production Scripts" />
+                        <NavItem to={`${basePath}/social-analytics`} icon={<LayoutDashboard size={20} />} label="Social Analytics" />
+                        <NavItem to={`${basePath}/training-hub`} icon={<BookOpen size={20} />} label="Staff Training Hub" />
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
+                    </>
+                )}
                 
                 {user?.role !== 'GROUP_MANAGING_DIRECTOR' && (
                     <>
