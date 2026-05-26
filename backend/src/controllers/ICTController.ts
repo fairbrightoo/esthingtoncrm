@@ -5,7 +5,8 @@ export const ICTController = {
     // Marketing Assets
     async getAssets(req: Request, res: Response) {
         try {
-            const { companyId, branchId } = req.params;
+            const companyId = req.params.companyId as string;
+            const branchId = req.params.branchId as string;
             const assets = await prisma.marketingAsset.findMany({
                 where: { companyId, branchId: branchId !== 'null' ? branchId : null },
                 orderBy: { createdAt: 'desc' }
@@ -21,7 +22,8 @@ export const ICTController = {
         try {
             // @ts-ignore
             const user = req.user;
-            const { companyId, branchId } = req.params;
+            const companyId = req.params.companyId as string;
+            const branchId = req.params.branchId as string;
             const { title, description, type, fileUrl } = req.body;
             // if file was uploaded via multer, use req.file.path (which is the R2 URL set by middleware)
             const finalFileUrl = req.file ? (req.file as any).location : fileUrl;
@@ -46,7 +48,7 @@ export const ICTController = {
 
     async deleteAsset(req: Request, res: Response) {
         try {
-            const { assetId } = req.params;
+            const assetId = req.params.assetId as string;
             await prisma.marketingAsset.delete({ where: { id: assetId } });
             res.json({ success: true });
         } catch (error) {
@@ -58,7 +60,8 @@ export const ICTController = {
     // Production Scripts
     async getScripts(req: Request, res: Response) {
         try {
-            const { companyId, branchId } = req.params;
+            const companyId = req.params.companyId as string;
+            const branchId = req.params.branchId as string;
             const scripts = await prisma.productionScript.findMany({
                 where: { companyId, branchId: branchId !== 'null' ? branchId : null },
                 include: { assignedCast: true },
@@ -75,7 +78,8 @@ export const ICTController = {
         try {
             // @ts-ignore
             const user = req.user;
-            const { companyId, branchId } = req.params;
+            const companyId = req.params.companyId as string;
+            const branchId = req.params.branchId as string;
             const { title, content } = req.body;
 
             const script = await prisma.productionScript.create({
@@ -96,7 +100,7 @@ export const ICTController = {
 
     async deleteScript(req: Request, res: Response) {
         try {
-            const { scriptId } = req.params;
+            const scriptId = req.params.scriptId as string;
             await prisma.productionScript.delete({ where: { id: scriptId } });
             res.json({ success: true });
         } catch (error) {
@@ -108,7 +112,8 @@ export const ICTController = {
     // Social Media Reports
     async getSocialReports(req: Request, res: Response) {
         try {
-            const { companyId, branchId } = req.params;
+            const companyId = req.params.companyId as string;
+            const branchId = req.params.branchId as string;
             const reports = await prisma.socialMediaReport.findMany({
                 where: { companyId, branchId: branchId !== 'null' ? branchId : null },
                 include: { asset: true },
@@ -125,7 +130,8 @@ export const ICTController = {
         try {
             // @ts-ignore
             const user = req.user;
-            const { companyId, branchId } = req.params;
+            const companyId = req.params.companyId as string;
+            const branchId = req.params.branchId as string;
             const { platform, views, likes, comments, shares, assetId } = req.body;
 
             const report = await prisma.socialMediaReport.create({

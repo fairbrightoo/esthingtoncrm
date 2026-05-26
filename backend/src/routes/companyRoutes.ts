@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { CompanyController } from '../controllers/CompanyController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+import { AttendanceController } from '../controllers/AttendanceController.js';
 import { upload } from '../middleware/uploadMiddleware.js';
 import { ICTController } from '../controllers/ICTController.js';
 import { TaskController } from '../controllers/TaskController.js';

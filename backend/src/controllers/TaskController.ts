@@ -19,7 +19,8 @@ export const TaskController = {
 
     // Get all inspections for a branch
     async getBranchInspections(req: Request, res: Response) {
-        const { branchId, companyId } = req.params;
+        const branchId = req.params.branchId as string;
+        const companyId = req.params.companyId as string;
         try {
             const tasks = await prisma.task.findMany({
                 where: {
