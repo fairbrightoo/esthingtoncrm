@@ -642,7 +642,7 @@ export const CompanyController = {
         // Accept password from body if provided, otherwise we'll generate one
         let password = req.body.password;
 
-        if (!['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+        if (!['MARKETER', 'SITE_EXPERT', 'ICT_ORACLE', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
             return res.status(400).json({ error: 'Invalid role for branch staff' });
         }
 
@@ -743,7 +743,7 @@ export const CompanyController = {
             const data: any = { fullName, email, phone };
             
             if (role && userBefore && role !== userBefore.role) {
-                const validRoles = ['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'];
+                const validRoles = ['MARKETER', 'SITE_EXPERT', 'ICT_ORACLE', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'];
                 if (validRoles.includes(role)) {
                     data.role = role;
                 }
@@ -891,9 +891,9 @@ export const CompanyController = {
 
                     // Strict role check
                     const role = row.role?.toUpperCase();
-                    if (role && !['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+                    if (role && !['MARKETER', 'SITE_EXPERT', 'ICT_ORACLE', 'CUSTOMER_CARE', 'BRANCH_HR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
                         results.failed++;
-                        results.errors.push({ row, error: 'Invalid role. Must be MARKETER, CUSTOMER_CARE, BRANCH_HR, ACCOUNTANT, GENERAL_MANAGER, TEAM_LEAD, BDM, or HEAD_BDD' });
+                        results.errors.push({ row, error: 'Invalid role. Must be MARKETER, SITE_EXPERT, ICT_ORACLE, CUSTOMER_CARE, BRANCH_HR, ACCOUNTANT, GENERAL_MANAGER, TEAM_LEAD, BDM, or HEAD_BDD' });
                         continue;
                     }
 
