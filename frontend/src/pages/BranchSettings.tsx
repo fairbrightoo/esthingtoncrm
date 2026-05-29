@@ -10,6 +10,7 @@ export const BranchSettings = () => {
     const { user, token, login } = useAuth();
     const { addToast } = useToast();
     const [activeMainTab, setActiveMainTab] = useState<'SECURITY' | 'CORPORATE'>('SECURITY');
+    const [activeAdminTab, setActiveAdminTab] = useState<'BRANCH_CONFIG' | 'PROFILE'>('BRANCH_CONFIG');
     const [loading, setLoading] = useState(false);
     
     // Branch Config
@@ -148,8 +149,31 @@ export const BranchSettings = () => {
     }
 
     return (
-        <div className="space-y-6 max-w-4xl pb-10">
-            <header>
+        <div className="space-y-6 max-w-7xl mx-auto pb-10">
+            <div className="flex space-x-1 border-b border-gray-200 mb-6">
+                <button
+                    onClick={() => setActiveAdminTab('BRANCH_CONFIG')}
+                    className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                        activeAdminTab === 'BRANCH_CONFIG' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Branch Configuration
+                </button>
+                <button
+                    onClick={() => setActiveAdminTab('PROFILE')}
+                    className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                        activeAdminTab === 'PROFILE' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Profile & ID Card
+                </button>
+            </div>
+
+            {activeAdminTab === 'PROFILE' ? (
+                <ProfileSettings />
+            ) : (
+                <div className="space-y-6 max-w-4xl pb-10">
+                    <header>
                 <h1 className="text-2xl font-bold text-gray-800">Branch Configuration</h1>
                 <p className="text-gray-500">Manage branch details, operational alerts, and security.</p>
             </header>
@@ -413,6 +437,8 @@ export const BranchSettings = () => {
                 </div>
 
             </div>
+        </div>
+            )}
         </div>
     );
 };

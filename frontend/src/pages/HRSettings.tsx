@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Settings, Clock, CalendarDays, Wallet, FileCheck, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ProfileSettings } from '../components/ProfileSettings';
 
 export const HRSettings = () => {
     const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState<'HR_POLICIES' | 'PROFILE'>('HR_POLICIES');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -65,6 +67,29 @@ export const HRSettings = () => {
     }
 
     return (
+        <div className="space-y-6 max-w-7xl mx-auto pb-10">
+            <div className="flex space-x-1 border-b border-gray-200 mb-6 mx-8 mt-8">
+                <button
+                    onClick={() => setActiveTab('HR_POLICIES')}
+                    className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                        activeTab === 'HR_POLICIES' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    HR Policies
+                </button>
+                <button
+                    onClick={() => setActiveTab('PROFILE')}
+                    className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                        activeTab === 'PROFILE' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Profile & ID Card
+                </button>
+            </div>
+
+            {activeTab === 'PROFILE' ? (
+                <ProfileSettings />
+            ) : (
         <div className="p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
             <div>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center">
@@ -178,6 +203,8 @@ export const HRSettings = () => {
                 </button>
             </div>
             
+        </div>
+            )}
         </div>
     );
 };
