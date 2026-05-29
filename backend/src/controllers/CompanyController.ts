@@ -304,7 +304,8 @@ export const CompanyController = {
      */
     async createGroupMD(req: Request, res: Response) {
         const { id } = req.params as any; // companyId
-        const { fullName, email, password } = req.body;
+        let { fullName, email, password } = req.body;
+        if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
         try {
             const existingGMD = await prisma.user.findFirst({
@@ -376,7 +377,8 @@ export const CompanyController = {
      */
     async createBranchAdmin(req: Request, res: Response) {
         const { companyId, branchId } = req.params as any;
-        const { fullName, email, password } = req.body;
+        let { fullName, email, password } = req.body;
+        if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
         try {
             // Check if user exists
@@ -566,7 +568,8 @@ export const CompanyController = {
      */
     async createBranchMD(req: Request, res: Response) {
         const { companyId, branchId } = req.params as any;
-        const { fullName, email, password } = req.body;
+        let { fullName, email, password } = req.body;
+        if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
         try {
             const existingBranchMD = await prisma.user.findFirst({
@@ -637,7 +640,8 @@ export const CompanyController = {
      */
     async createBranchStaff(req: Request, res: Response) {
         const { companyId, branchId } = req.params as any;
-        const { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone, referralCode } = req.body;
+        let { fullName, email, phone, role, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone, referralCode } = req.body;
+        if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
         
         // Accept password from body if provided, otherwise we'll generate one
         let password = req.body.password;
@@ -735,7 +739,8 @@ export const CompanyController = {
      */
     async updateUser(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone } = req.body;
+        let { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone } = req.body;
+        if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
         try {
             const userBefore = await prisma.user.findUnique({ where: { id } });

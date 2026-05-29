@@ -10,7 +10,8 @@ export const AuthController = {
     async login(req: Request, res: Response) {
         try {
             console.log('Login attempt:', req.body);
-            const { email, password } = req.body;
+            let { email, password } = req.body;
+            if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
             const user = await prisma.user.findFirst({
                 where: { email: { equals: email, mode: 'insensitive' } },
