@@ -300,7 +300,7 @@ export const LeadController = {
 
             // Integrity Check: Email/Phone Uniqueness Global
             const existing = await prisma.lead.findFirst({
-                where: { OR: [{ email }, { phone }] }
+                where: { OR: [{ email: { equals: email, mode: 'insensitive' } }, { phone }] }
             });
 
             if (existing) {
@@ -418,7 +418,7 @@ export const LeadController = {
                 where: {
                     id: { not: id },
                     OR: [
-                        ...(email ? [{ email }] : []),
+                        ...(email ? [{ email: { equals: email, mode: 'insensitive' as const } }] : []),
                         ...(phone ? [{ phone }] : [])
                     ]
                 }
@@ -597,7 +597,7 @@ export const LeadController = {
                     const existing = await prisma.lead.findFirst({
                         where: {
                             OR: [
-                                ...(row.email ? [{ email: row.email }] : []),
+                                ...(row.email ? [{ email: { equals: row.email, mode: 'insensitive' as const } }] : []),
                                 ...(row.phone ? [{ phone: row.phone }] : [])
                             ]
                         }

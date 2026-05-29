@@ -483,7 +483,7 @@ export const ProfileSettings = () => {
                                             <div className="h-full w-full" dangerouslySetInnerHTML={{ 
                                                 __html: (idCardData.branch?.idCardFrontTemplate || idCardData.company?.idCardFrontTemplate || '')
                                                     .replace(/{{fullName}}/g, idCardData.fullName)
-                                                    .replace(/{{role}}/g, idCardData.role?.replace(/_/g, ' '))
+                                                    .replace(/{{role}}/g, idCardData.role === 'MARKETER' ? 'BUSINESS DEVELOPMENT EXECUTIVE' : idCardData.role?.replace(/_/g, ' '))
                                                     .replace(/{{employeeId}}/g, idCardData.employeeId || 'N/A')
                                                     .replace(/{{branchName}}/g, idCardData.branch?.name || 'Head Office')
                                                     .replace(/{{companyName}}/g, idCardData.company?.name || 'Esthington CRM')
@@ -503,7 +503,7 @@ export const ProfileSettings = () => {
                                                         <User size={48} className="text-white/80" />
                                                     </div>
                                                     <h2 className="text-lg font-bold leading-tight px-2 text-center text-white">{idCardData.fullName}</h2>
-                                                    <div className="text-[10px] text-blue-200 font-medium uppercase tracking-wide mt-1 bg-black/20 px-2 py-0.5 rounded">{idCardData.role?.replace(/_/g, ' ')}</div>
+                                                    <div className={`text-blue-200 font-medium uppercase tracking-wide mt-1 bg-black/20 px-2 py-0.5 rounded text-center whitespace-nowrap ${idCardData.role === 'MARKETER' ? 'text-[7px]' : 'text-[10px]'}`}>{idCardData.role === 'MARKETER' ? 'BUSINESS DEVELOPMENT EXECUTIVE' : idCardData.role?.replace(/_/g, ' ')}</div>
                                                 </div>
                                                 <div className="p-4 flex flex-col items-center border-t border-white/10 mt-auto bg-black/10">
                                                     <div className="text-[8px] text-blue-200 uppercase mb-0.5">Employee ID</div>

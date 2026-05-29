@@ -545,9 +545,9 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
                                     <input
-                                        name="email" type="email" required
+                                        name="email" type="email"
                                         className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     />
                                 </div>
@@ -632,9 +632,9 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
                                     <input
-                                        name="email" type="email" required defaultValue={leadToEdit.email}
+                                        name="email" type="email" defaultValue={leadToEdit.email}
                                         className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     />
                                 </div>
