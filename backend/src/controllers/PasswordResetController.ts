@@ -31,12 +31,14 @@ export const PasswordResetController = {
                 data: { resetToken, resetTokenExpiry }
             });
 
-            // Send email
-            const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
-            // Render frontend URL if deployed
-            const actualFrontendUrl = frontendUrl.includes('localhost') && process.env.NODE_ENV === 'production' 
-                ? 'https://esthington-os-frontend.onrender.com' 
-                : frontendUrl;
+            // Use origin header to construct the frontend URL dynamically
+            const requestOrigin = req.headers.origin;
+            let actualFrontendUrl = requestOrigin || process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+            
+            // Fallback for deployed environments if origin isn't available and env var is not set
+            if (actualFrontendUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
+                actualFrontendUrl = 'https://esthington-os-frontend.onrender.com';
+            }
 
             let resetLink = `${actualFrontendUrl}/reset-password?token=${resetToken}`;
             if (user.companyId) resetLink += `&companyId=${user.companyId}`;
