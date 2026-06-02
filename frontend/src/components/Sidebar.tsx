@@ -111,6 +111,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'BRANCH_HR' && (
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance Tracking" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Payroll Report" />
