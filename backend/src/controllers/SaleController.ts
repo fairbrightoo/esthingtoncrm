@@ -733,7 +733,7 @@ export const SaleController = {
                                 data: {
                                     saleId: sale.id,
                                     amount: numericAmountPaid,
-                                    method: 'BANK_TRANSFER',
+                                    method: 'TRANSFER',
                                     status: 'APPROVED',
                                     reference: `LEGACY-${Date.now()}-${i}`,
                                     notes: 'Legacy system migration import',
