@@ -8,15 +8,28 @@ import { RefundQueue } from '../components/RefundQueue';
 
 export const getPaymentTypeLabel = (payment: any) => {
     if (!payment.sale || !payment.sale.plot) return { text: 'N/A', bg: 'bg-gray-100', textCol: 'text-gray-600', border: 'border-gray-200' };
+    
     const price = payment.sale.agreedPrice || 0;
-    const isOutright = payment.amount >= price;
-    if (isOutright) return { text: 'New Sale (Outright)', bg: 'bg-green-100', textCol: 'text-green-700', border: 'border-green-300' };
+    const amountPaidSoFar = payment.sale.totalPaid || 0;
+    const currentPaymentTotal = payment.amount + (payment.virtualLoanAmount || 0);
     
-    // Check if it's the first payment for this sale
-    // We would ideally need to check if there are prior payments, but assuming for now:
-    // If amount is small, and there's a virtual loan or it's just continuous
-    if (payment.amount < price) return { text: 'New Sale (Installment)', bg: 'bg-purple-100', textCol: 'text-purple-700', border: 'border-purple-300' };
+    // Is it outright (paid in full on the first go)?
+    if (amountPaidSoFar === 0 && currentPaymentTotal >= price) {
+        return { text: 'New Sale (Outright)', bg: 'bg-green-100', textCol: 'text-green-700', border: 'border-green-300' };
+    }
     
+    // Is it the very first payment, but not enough to cover the price?
+    if (amountPaidSoFar === 0) {
+        return { text: 'New Sale (Installment)', bg: 'bg-purple-100', textCol: 'text-purple-700', border: 'border-purple-300' };
+    }
+    
+    // If we're here, amountPaidSoFar > 0, meaning it's a subsequent payment.
+    // Check if this payment completes the purchase
+    if (amountPaidSoFar + currentPaymentTotal >= price) {
+        return { text: 'Final Installment', bg: 'bg-yellow-100', textCol: 'text-yellow-700', border: 'border-yellow-300' };
+    }
+    
+    // Otherwise, it's just a regular continuous payment
     return { text: 'Continuous Payment', bg: 'bg-blue-100', textCol: 'text-blue-700', border: 'border-blue-300' };
 };
 
