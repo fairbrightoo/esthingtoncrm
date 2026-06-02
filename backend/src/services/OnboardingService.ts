@@ -70,7 +70,7 @@ export const OnboardingService = {
                 // I will add branchId as an argument to processBulkUpload, and pass it from OnboardingController.
 
                 // Default role and mapping logic
-                const roleValue = row.role ? row.role.toUpperCase() : 'MARKETER';
+                const roleValue = row.role ? row.role.toUpperCase().replace(/\s+/g, '_') : 'MARKETER';
                 const monthlySalary = row.monthly_salary ? parseFloat(row.monthly_salary) : 0;
                 const commissionRate = row.commission_rate ? parseFloat(row.commission_rate) : 10.0;
 
