@@ -38,7 +38,7 @@ export const BranchUsers = () => {
         phone: '',
         password: '',
         monthlySalary: 0,
-        commissionRate: 5.0,
+        commissionRate: 10.0,
         role: 'MARKETER',
         dateOfBirth: '',
         bankName: '',
@@ -91,7 +91,7 @@ export const BranchUsers = () => {
             );
             setIsModalOpen(false);
             setCreatedUserCreds({ ...formData, role: formData.role, password: res.data.tempPassword }); // Show creds with auto-generated password
-            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
+            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 10.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
             fetchUsers();
             addToast('Staff member created successfully', 'success');
         } catch (error: any) {
@@ -126,7 +126,7 @@ export const BranchUsers = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setEditingUser(null);
-            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
+            setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 10.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '' });
             fetchUsers();
             addToast('Staff updated successfully', 'success');
         } catch (error: any) {
@@ -715,7 +715,7 @@ export const BranchUsers = () => {
                                     <button 
                                         type="button"
                                         onClick={() => {
-                                            const headers = "full_name,email,phone,date_of_birth,bank_name,account_number,account_name,next_of_kin_name,next_of_kin_phone,monthly_salary,commission_rate,role,registered_via_referral\nJohn Doe,john@example.com,0800000000,1990-05-24,Zenith Bank,1234567890,John Doe,Jane Doe,08123456789,150000,5.0,MARKETER,false\n";
+                                            const headers = "full_name,email,phone,date_of_birth,bank_name,account_number,account_name,next_of_kin_name,next_of_kin_phone,monthly_salary,commission_rate,role,registered_via_referral\nJohn Doe,john@example.com,0800000000,1990-05-24,Zenith Bank,1234567890,John Doe,Jane Doe,08123456789,150000,10.0,MARKETER,false\n";
                                             const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
                                             const link = document.createElement("a");
                                             link.href = URL.createObjectURL(blob);

@@ -72,7 +72,7 @@ export const OnboardingService = {
                 // Default role and mapping logic
                 const roleValue = row.role ? row.role.toUpperCase() : 'MARKETER';
                 const monthlySalary = row.monthly_salary ? parseFloat(row.monthly_salary) : 0;
-                const commissionRate = row.commission_rate ? parseFloat(row.commission_rate) : 5.0;
+                const commissionRate = row.commission_rate ? parseFloat(row.commission_rate) : 10.0;
 
                 // Create User
                 const employeeId = await generateEmployeeId(companyId, targetBranchId, roleValue);
