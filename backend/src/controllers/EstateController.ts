@@ -98,7 +98,7 @@ export const EstateController = {
                     company: { select: { name: true, themeColor: true } },
                     branch: { select: { name: true } },
                     plots: {
-                        select: { status: true, prototype: true } // Fetch status and prototype for breakdown
+                        select: { status: true, prototype: true, size: true } // Fetch status, prototype, and size for breakdown
                     }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -112,7 +112,10 @@ export const EstateController = {
                 
                 const breakdownMap: Record<string, number> = {};
                 availablePlotsList.forEach(p => {
-                    const type = p.prototype || 'Unknown Size';
+                    let type = p.prototype || 'Unknown Type';
+                    if (p.size) {
+                        type += ` (${p.size}sqm)`;
+                    }
                     breakdownMap[type] = (breakdownMap[type] || 0) + 1;
                 });
                 const plotBreakdown = Object.entries(breakdownMap).map(([size, count]) => ({ size, count }));
