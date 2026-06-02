@@ -29,7 +29,11 @@ export const OnboardingController = {
         }
 
         try {
-            const results = await OnboardingService.processBulkUpload(req.file.buffer, targetCompanyId, targetBranchId);
+            // Dynamically determine the frontend URL based on the request origin
+            // This ensures it works seamlessly across staging, production, and localhost
+            const frontendUrl = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+            
+            const results = await OnboardingService.processBulkUpload(req.file.buffer, targetCompanyId, targetBranchId, frontendUrl);
             res.json(results);
         } catch (error) {
             console.error('Values upload error:', error);

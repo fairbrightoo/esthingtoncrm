@@ -24,7 +24,7 @@ interface OnboardingRow {
 import { EmailService } from './EmailService.js';
 
 export const OnboardingService = {
-    async processBulkUpload(fileBuffer: Buffer, companyId: string, targetBranchId: string | null) {
+    async processBulkUpload(fileBuffer: Buffer, companyId: string, targetBranchId: string | null, frontendUrl: string) {
         const rows = parse(fileBuffer, {
             columns: true,
             skip_empty_lines: true,
@@ -103,7 +103,7 @@ export const OnboardingService = {
                 const companyName = company?.name || 'Esthington CRM';
 
                 // Construct Login URL
-                const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?companyId=${companyId}${targetBranchId ? `&branchId=${targetBranchId}` : ''}`;
+                const loginUrl = `${frontendUrl}/login?companyId=${companyId}${targetBranchId ? `&branchId=${targetBranchId}` : ''}`;
 
                 // Send Welcome Email
                 await EmailService.sendWelcomeEmail(
