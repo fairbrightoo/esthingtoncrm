@@ -20,6 +20,7 @@ interface Estate {
     documentSearchNumber?: string;
     searchDocumentUrl?: string;
     siteLayoutUrl?: string;
+    plotBreakdown?: { size: string; count: number }[];
 }
 
 interface Plot {
@@ -514,6 +515,19 @@ export const InventoryManager = () => {
                                             <p className="text-lg font-bold text-green-700">{estate.availablePlots}</p>
                                         </div>
                                     </div>
+
+                                    {estate.plotBreakdown && estate.plotBreakdown.length > 0 && (
+                                        <div className="mb-6">
+                                            <p className="text-xs text-gray-400 font-medium uppercase mb-2">Available Plot Sizes</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {estate.plotBreakdown.map((pb, idx) => (
+                                                    <span key={idx} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-600 text-[11px] font-semibold rounded-md shadow-sm">
+                                                        {pb.size}: <span className="text-green-600 ml-1">{pb.count}</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 {canManageEstate(estate) && (
                                     <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex justify-end">

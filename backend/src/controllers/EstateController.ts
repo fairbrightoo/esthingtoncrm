@@ -98,7 +98,7 @@ export const EstateController = {
                     company: { select: { name: true, themeColor: true } },
                     branch: { select: { name: true } },
                     plots: {
-                        select: { status: true } // Fetch just statuses for available unit badge
+                        select: { status: true, prototype: true } // Fetch status and prototype for breakdown
                     }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -107,7 +107,15 @@ export const EstateController = {
             // Calculate aggregations dynamically for the frontend
             const formattedEstates = estates.map(estate => {
                 const totalPlots = estate.plots.length;
-                const availablePlots = estate.plots.filter(p => p.status === 'AVAILABLE').length;
+                const availablePlotsList = estate.plots.filter(p => p.status === 'AVAILABLE');
+                const availablePlots = availablePlotsList.length;
+                
+                const breakdownMap: Record<string, number> = {};
+                availablePlotsList.forEach(p => {
+                    const type = p.prototype || 'Unknown Size';
+                    breakdownMap[type] = (breakdownMap[type] || 0) + 1;
+                });
+                const plotBreakdown = Object.entries(breakdownMap).map(([size, count]) => ({ size, count }));
 
                 return {
                     id: estate.id,
@@ -123,7 +131,8 @@ export const EstateController = {
                     siteLayoutUrl: estate.siteLayoutUrl,
                     createdAt: estate.createdAt,
                     totalPlots,
-                    availablePlots
+                    availablePlots,
+                    plotBreakdown
                 };
             });
 
