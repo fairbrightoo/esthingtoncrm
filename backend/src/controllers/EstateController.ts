@@ -113,6 +113,8 @@ export const EstateController = {
                     id: estate.id,
                     name: estate.name,
                     location: estate.location,
+                    companyId: estate.companyId,
+                    managingBranchId: estate.managingBranchId,
                     managingCompany: estate.company.name,
                     companyTheme: estate.company.themeColor,
                     managingBranch: estate.branch.name,

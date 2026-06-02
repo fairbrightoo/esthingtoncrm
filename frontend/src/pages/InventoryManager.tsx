@@ -11,6 +11,8 @@ interface Estate {
     id: string;
     name: string;
     location: string;
+    companyId?: string;
+    managingBranchId?: string;
     managingCompany: string;
     managingBranch: string;
     totalPlots: number;
@@ -108,6 +110,16 @@ export const InventoryManager = () => {
     const { addToast } = useToast();
     const [estates, setEstates] = useState<Estate[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const canManageEstate = (estate: Estate | null) => {
+        if (!user || !estate) return false;
+        if (user.role === 'SUPER_ADMIN' || user.role === 'GLOBAL_CHAIRMAN') return true;
+        if (user.companyId === estate.companyId) {
+            if (user.role === 'MANAGING_DIRECTOR') return true;
+            if (user.role === 'BRANCH_ADMIN' && user.branchId === estate.managingBranchId) return true;
+        }
+        return false;
+    };
     
     // View States
     const [viewMode, setViewMode] = useState<'LIST' | 'DETAIL'>('LIST');
@@ -503,14 +515,16 @@ export const InventoryManager = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex justify-end">
-                                    <button 
-                                        onClick={() => { setSelectedEstate(estate); setViewMode('DETAIL'); }}
-                                        className="text-indigo-600 font-medium text-sm flex items-center hover:text-indigo-700 group-hover:translate-x-1 transition-transform"
-                                    >
-                                        Manage Plots →
-                                    </button>
-                                </div>
+                                {canManageEstate(estate) && (
+                                    <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex justify-end">
+                                        <button 
+                                            onClick={() => { setSelectedEstate(estate); setViewMode('DETAIL'); }}
+                                            className="text-indigo-600 font-medium text-sm flex items-center hover:text-indigo-700 group-hover:translate-x-1 transition-transform"
+                                        >
+                                            Manage Plots →
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
@@ -608,7 +622,7 @@ export const InventoryManager = () => {
                             )}
                         </div>
                     </div>
-                    {['SUPER_ADMIN', 'BRANCH_ADMIN'].includes(user?.role || '') && (
+                    {canManageEstate(selectedEstate) && (
                         <div className="flex space-x-3">
                             <button 
                                 onClick={() => {
@@ -628,7 +642,7 @@ export const InventoryManager = () => {
                 </header>
 
                 {/* Addition Section */}
-                {['SUPER_ADMIN', 'BRANCH_ADMIN'].includes(user?.role || '') && (
+                {canManageEstate(selectedEstate) && (
                     <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                             <Activity size={120} />
