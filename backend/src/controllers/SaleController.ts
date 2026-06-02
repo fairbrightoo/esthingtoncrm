@@ -608,5 +608,135 @@ export const SaleController = {
             console.error("Exchange Plot Error:", error);
             res.status(500).json({ error: "Failed to exchange plot" });
         }
+    },
+
+    // 10. Legacy Sales Onboarding (Single & Bulk)
+    onboardLegacySales: async (req: Request, res: Response) => {
+        try {
+            const { salesData, companyId, branchId } = req.body;
+            // @ts-ignore
+            const recordedByUserId = req.user?.id || req.user?.userId;
+
+            if (!Array.isArray(salesData)) {
+                return res.status(400).json({ error: "salesData must be an array" });
+            }
+
+            let successfulImports = 0;
+            let errors = [];
+
+            for (let i = 0; i < salesData.length; i++) {
+                const data = salesData[i];
+                try {
+                    await prisma.$transaction(async (tx) => {
+                        // 1. Verify/Create Lead
+                        let lead = await tx.lead.findFirst({
+                            where: { phone: data.clientPhone, companyId }
+                        });
+                        
+                        const saleDate = data.dateOfSale ? new Date(data.dateOfSale) : new Date();
+
+                        if (!lead) {
+                            lead = await tx.lead.create({
+                                data: {
+                                    fullName: data.clientName,
+                                    phone: data.clientPhone,
+                                    email: data.clientEmail || null,
+                                    companyId,
+                                    branchId: branchId || null,
+                                    status: 'CLIENT',
+                                    assignedToUserId: data.marketerId || null,
+                                    createdAt: saleDate
+                                }
+                            });
+                        } else if (lead.status !== 'CLIENT') {
+                            await tx.lead.update({
+                                where: { id: lead.id },
+                                data: { status: 'CLIENT' }
+                            });
+                        }
+
+                        // 2. Plot Assignment / Dynamic Creation
+                        let plot = await tx.plot.findUnique({
+                            where: { plotNumber: data.plotNumber }
+                        });
+
+                        if (!plot) {
+                            plot = await tx.plot.create({
+                                data: {
+                                    estateId: data.estateId,
+                                    plotNumber: data.plotNumber,
+                                    prototype: data.prototype || 'Legacy Plot',
+                                    size: Number(data.size) || 0,
+                                    price: Number(data.agreedPrice), 
+                                    status: 'AVAILABLE',
+                                    createdAt: saleDate
+                                }
+                            });
+                        }
+
+                        // Safety Check
+                        if (plot.status === 'SOLD' || plot.status === 'RESERVED') {
+                            const existingSale = await tx.sale.findFirst({
+                                where: { plotId: plot.id, leadId: lead.id }
+                            });
+                            if (existingSale) {
+                                throw new Error(`Plot ${plot.plotNumber} is already sold to this client.`);
+                            } else {
+                                throw new Error(`Plot ${plot.plotNumber} is already taken by someone else.`);
+                            }
+                        }
+
+                        const numericAmountPaid = Number(data.amountPaidSoFar) || 0;
+                        const numericAgreedPrice = Number(data.agreedPrice) || plot.price;
+                        const isCompleted = numericAmountPaid >= numericAgreedPrice;
+
+                        // 3. Sale Creation
+                        const sale = await tx.sale.create({
+                            data: {
+                                leadId: lead.id,
+                                plotId: plot.id,
+                                agreedPrice: numericAgreedPrice,
+                                totalPaid: numericAmountPaid,
+                                status: isCompleted ? 'COMPLETED' : 'ONGOING',
+                                marketerId: data.marketerId || lead.assignedToUserId || null,
+                                createdAt: saleDate
+                            }
+                        });
+
+                        // 4. Historical Payment Injection
+                        if (numericAmountPaid > 0) {
+                            await tx.payment.create({
+                                data: {
+                                    saleId: sale.id,
+                                    amount: numericAmountPaid,
+                                    method: 'BANK_TRANSFER',
+                                    status: 'APPROVED',
+                                    reference: `LEGACY-${Date.now()}-${i}`,
+                                    notes: 'Legacy system migration import',
+                                    recordedByUserId: recordedByUserId,
+                                    date: saleDate,
+                                    isCommissionPaid: true,
+                                    createdAt: new Date()
+                                }
+                            });
+                        }
+
+                        // 5. Plot Status Update
+                        await tx.plot.update({
+                            where: { id: plot.id },
+                            data: { status: isCompleted ? 'SOLD' : 'RESERVED' }
+                        });
+                    });
+                    successfulImports++;
+                } catch (err: any) {
+                    errors.push(`Row for ${data.clientName || 'Unknown'} failed: ${err.message}`);
+                }
+            }
+
+            res.json({ message: `Successfully imported ${successfulImports} legacy sales.`, successfulImports, errors });
+        } catch (error) {
+            console.error("Legacy Onboarding Error:", error);
+            res.status(500).json({ error: "Failed to onboard legacy sales" });
+        }
     }
 };

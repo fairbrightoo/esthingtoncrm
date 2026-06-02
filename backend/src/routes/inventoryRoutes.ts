@@ -27,6 +27,7 @@ router.put('/estates/:estateId/plots/bulk-price', authenticateToken, PlotControl
 
 // --- SALES & PAYMENTS ROUTES ---
 router.post('/sales', authenticateToken, SaleController.createSale);
+router.post('/sales/legacy-onboard', authenticateToken, SaleController.onboardLegacySales);
 router.get('/leads/:leadId/sales', authenticateToken, SaleController.getLeadSales);
 router.post('/sales/:saleId/payments', authenticateToken, upload.array('proofs', 10), SaleController.recordPayment);
 router.get('/payments/pending', authenticateToken, SaleController.getPendingPayments);

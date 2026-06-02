@@ -144,9 +144,19 @@ export const InventoryManager = () => {
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Legacy Imports & Edits
-    const [plotCreationMode, setPlotCreationMode] = useState<'AUTO' | 'LEGACY'>('AUTO');
+    const [plotCreationMode, setPlotCreationMode] = useState<'AUTO' | 'LEGACY' | 'LEGACY_SALES'>('AUTO');
     const [legacyTab, setLegacyTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
     const [legacyPlotForm, setLegacyPlotForm] = useState({ plotNumber: '', prototype: '', size: '', price: '', isCornerPiece: false });
+    
+    // Legacy Sales Onboarding
+    const [legacySaleTab, setLegacySaleTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
+    const [legacySaleForm, setLegacySaleForm] = useState({
+        clientName: '', clientPhone: '', clientEmail: '',
+        plotNumber: '', prototype: '', size: '', agreedPrice: '',
+        amountPaidSoFar: '', dateOfSale: ''
+    });
+    const [legacySaleCsvText, setLegacySaleCsvText] = useState('');
+    const [isLegacySaleLoading, setIsLegacySaleLoading] = useState(false);
     const [csvText, setCsvText] = useState('');
     const [isLegacyLoading, setIsLegacyLoading] = useState(false);
 
@@ -392,6 +402,81 @@ export const InventoryManager = () => {
             addToast(error.response?.data?.error || "Failed to bulk import plots", "error");
         } finally {
             setIsLegacyLoading(false);
+        }
+    };
+
+    const handleAddLegacySale = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEstate) return;
+        setIsLegacySaleLoading(true);
+        try {
+            const saleData = [{
+                ...legacySaleForm,
+                estateId: selectedEstate.id
+            }];
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/legacy-onboard`, 
+                { salesData: saleData, companyId: user?.companyId, branchId: user?.branchId }, 
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            addToast(res.data.message, "success");
+            setLegacySaleForm({
+                clientName: '', clientPhone: '', clientEmail: '',
+                plotNumber: '', prototype: '', size: '', agreedPrice: '',
+                amountPaidSoFar: '', dateOfSale: ''
+            });
+            fetchEstatePlots(selectedEstate.id);
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to onboard legacy sale", "error");
+        } finally {
+            setIsLegacySaleLoading(false);
+        }
+    };
+
+    const handleBulkLegacySaleImport = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEstate) return;
+        
+        try {
+            let preparedSales = [];
+            const lines = legacySaleCsvText.split('\n').filter(l => l.trim().length > 0);
+            for (let i = 0; i < lines.length; i++) {
+                // simple csv split handling commas inside quotes could be complex, assuming standard
+                const cols = lines[i].split(',').map(c => c.trim());
+                if (cols.length < 9) continue;
+                // Expected: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date
+                preparedSales.push({
+                    clientName: cols[0],
+                    clientPhone: cols[1],
+                    clientEmail: cols[2] === '' ? undefined : cols[2],
+                    plotNumber: cols[3],
+                    prototype: cols[4],
+                    size: Number(cols[5]),
+                    agreedPrice: Number(cols[6]),
+                    amountPaidSoFar: Number(cols[7]),
+                    dateOfSale: cols[8],
+                    estateId: selectedEstate.id
+                });
+            }
+
+            if (preparedSales.length === 0) {
+                addToast("No valid sales parsed from CSV text", "error");
+                return;
+            }
+
+            setIsLegacySaleLoading(true);
+
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/legacy-onboard`, 
+                { salesData: preparedSales, companyId: user?.companyId, branchId: user?.branchId }, 
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            addToast(res.data.message, "success");
+            setLegacySaleCsvText('');
+            fetchEstatePlots(selectedEstate.id);
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to bulk onboard legacy sales", "error");
+        } finally {
+            setIsLegacySaleLoading(false);
         }
     };
 
@@ -662,18 +747,24 @@ export const InventoryManager = () => {
                             <Activity size={120} />
                         </div>
                         
-                        <div className="flex border-b border-indigo-200 mb-5 relative z-10 space-x-6">
+                        <div className="flex border-b border-indigo-200 mb-5 relative z-10 space-x-6 overflow-x-auto custom-scrollbar">
                             <button 
-                                className={`pb-3 font-bold text-sm tracking-wide transition-colors ${plotCreationMode === 'AUTO' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-indigo-400 hover:text-indigo-600'}`}
+                                className={`pb-3 font-bold text-sm tracking-wide transition-colors whitespace-nowrap ${plotCreationMode === 'AUTO' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-indigo-400 hover:text-indigo-600'}`}
                                 onClick={() => setPlotCreationMode('AUTO')}
                             >
                                 AUTO GENERATE PLOTS
                             </button>
                             <button 
-                                className={`pb-3 font-bold text-sm tracking-wide transition-colors ${plotCreationMode === 'LEGACY' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-indigo-400 hover:text-indigo-600'}`}
+                                className={`pb-3 font-bold text-sm tracking-wide transition-colors whitespace-nowrap ${plotCreationMode === 'LEGACY' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-indigo-400 hover:text-indigo-600'}`}
                                 onClick={() => setPlotCreationMode('LEGACY')}
                             >
-                                IMPORT LEGACY PLOTS
+                                IMPORT LEGACY PLOTS (UNSOLD)
+                            </button>
+                            <button 
+                                className={`pb-3 font-bold text-sm tracking-wide transition-colors whitespace-nowrap ${plotCreationMode === 'LEGACY_SALES' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-indigo-400 hover:text-indigo-600'}`}
+                                onClick={() => setPlotCreationMode('LEGACY_SALES')}
+                            >
+                                ONBOARD LEGACY SALES
                             </button>
                         </div>
 
@@ -772,6 +863,111 @@ export const InventoryManager = () => {
                                                 className="bg-slate-900 text-white px-6 py-2.5 rounded-xl hover:bg-slate-800 transition disabled:opacity-50 font-bold"
                                             >
                                                 {isLegacyLoading ? 'Importing Array...' : 'Process Bulk Array'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        )}
+
+                        {plotCreationMode === 'LEGACY_SALES' && (
+                            <div className="relative z-10">
+                                <div className="flex space-x-2 mb-4 bg-white/50 p-1 rounded-full w-max border border-indigo-100">
+                                    <button onClick={() => setLegacySaleTab('SINGLE')} type="button" className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${legacySaleTab === 'SINGLE' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-600 hover:bg-indigo-100'}`}>Single Sale Entry</button>
+                                    <button onClick={() => setLegacySaleTab('CSV')} type="button" className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${legacySaleTab === 'CSV' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-600 hover:bg-indigo-100'}`}>Bulk CSV Parse</button>
+                                </div>
+
+                                {legacySaleTab === 'SINGLE' ? (
+                                    <form onSubmit={handleAddLegacySale} className="bg-white/60 p-4 rounded-xl border border-indigo-100/50">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            {/* Client Info */}
+                                            <div className="space-y-3">
+                                                <h4 className="text-xs font-bold text-indigo-900 border-b border-indigo-100 pb-1">CLIENT DETAILS</h4>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Full Name</label>
+                                                    <input required className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.clientName} onChange={e => setLegacySaleForm({ ...legacySaleForm, clientName: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Phone Number</label>
+                                                    <input required className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.clientPhone} onChange={e => setLegacySaleForm({ ...legacySaleForm, clientPhone: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Email (Optional)</label>
+                                                    <input type="email" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.clientEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, clientEmail: e.target.value })} />
+                                                </div>
+                                            </div>
+                                            {/* Plot Info */}
+                                            <div className="space-y-3">
+                                                <h4 className="text-xs font-bold text-indigo-900 border-b border-indigo-100 pb-1">PLOT DETAILS</h4>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Plot Number</label>
+                                                    <input required className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        placeholder="e.g. PLOT-2A-OLD"
+                                                        value={legacySaleForm.plotNumber} onChange={e => setLegacySaleForm({ ...legacySaleForm, plotNumber: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Prototype</label>
+                                                    <input required className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.prototype} onChange={e => setLegacySaleForm({ ...legacySaleForm, prototype: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Size (sqm)</label>
+                                                    <input required type="number" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.size} onChange={e => setLegacySaleForm({ ...legacySaleForm, size: e.target.value })} />
+                                                </div>
+                                            </div>
+                                            {/* Payment Info */}
+                                            <div className="space-y-3">
+                                                <h4 className="text-xs font-bold text-indigo-900 border-b border-indigo-100 pb-1">SALE DETAILS</h4>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Agreed Price (₦)</label>
+                                                    <input required type="number" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.agreedPrice} onChange={e => setLegacySaleForm({ ...legacySaleForm, agreedPrice: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Amount Paid So Far (₦)</label>
+                                                    <input required type="number" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.amountPaidSoFar} onChange={e => setLegacySaleForm({ ...legacySaleForm, amountPaidSoFar: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Original Date of Sale</label>
+                                                    <input required type="date" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-gray-700"
+                                                        value={legacySaleForm.dateOfSale} onChange={e => setLegacySaleForm({ ...legacySaleForm, dateOfSale: e.target.value })} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="submit" 
+                                            disabled={isLegacySaleLoading}
+                                            className="w-full bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center font-bold"
+                                        >
+                                            {isLegacySaleLoading ? 'Onboarding...' : 'Onboard Legacy Sale'}
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <form onSubmit={handleBulkLegacySaleImport} className="space-y-4">
+                                        <div>
+                                            <div className="flex justify-between items-end mb-1.5">
+                                                <label className="block text-xs font-bold text-indigo-900/70 uppercase tracking-wider">Paste CSV Lines</label>
+                                                <span className="text-[10px] font-mono text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Format: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date(YYYY-MM-DD)</span>
+                                            </div>
+                                            <textarea 
+                                                className="w-full h-32 border border-indigo-200/60 rounded-xl p-4 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 transition text-sm font-mono"
+                                                placeholder="John Doe, 08012345678, john@email.com, PLOT-A1, 4 Bedroom Duplex, 500, 25000000, 10000000, 2023-05-12&#10;Jane Smith, 08098765432, , PLOT-A2, 4 Bedroom Duplex, 500, 26000000, 26000000, 2023-06-20"
+                                                value={legacySaleCsvText}
+                                                onChange={e => setLegacySaleCsvText(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <button 
+                                                type="submit" 
+                                                disabled={isLegacySaleLoading || !legacySaleCsvText.trim()}
+                                                className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 font-bold"
+                                            >
+                                                {isLegacySaleLoading ? 'Importing Array...' : 'Process Bulk Sales Array'}
                                             </button>
                                         </div>
                                     </form>
