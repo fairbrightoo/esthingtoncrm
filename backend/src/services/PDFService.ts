@@ -229,7 +229,7 @@ export const PDFService = {
                 
                 <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end;">
                     <div style="width: 40%;">
-                        <div style="border-top: 1px solid #333; margin-top: 40px; margin-bottom: 5px; text-align: center;">
+                        <div style="border-bottom: 1px solid #333; margin-top: 40px; margin-bottom: 5px; padding-bottom: 5px; text-align: center;">
                             {{RECEIPT_SIGNATURE}}
                         </div>
                         <p style="text-align: center; margin: 0; font-weight: bold;">{{RECEIPT_NAME}}</p>
