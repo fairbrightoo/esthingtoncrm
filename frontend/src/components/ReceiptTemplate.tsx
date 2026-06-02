@@ -89,9 +89,9 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>((p
             
             <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div style={{ width: '40%' }}>
-                    <div style={{ borderTop: '1px solid #333', marginTop: '40px', marginBottom: '5px', textAlign: 'center', height: '60px', position: 'relative' }}>
+                    <div style={{ borderBottom: '1px solid #333', marginTop: '40px', marginBottom: '5px', paddingBottom: '5px', textAlign: 'center', minHeight: '60px' }}>
                         {signatureUrl && (
-                            <img src={signatureUrl} alt="Signature" style={{ maxHeight: '60px', position: 'absolute', bottom: '0', left: '50%', transform: 'translateX(-50%)' }} />
+                            <img src={signatureUrl} alt="Signature" style={{ maxHeight: '60px' }} />
                         )}
                     </div>
                     <p style={{ textAlign: 'center', margin: '0', fontWeight: 'bold' }}>{branding.managingDirectorName || 'Managing Director'}</p>
