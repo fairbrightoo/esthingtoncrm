@@ -657,12 +657,27 @@ export const SaleController = {
                                     createdAt: saleDate
                                 }
                             });
-                        } else if (lead.status !== 'CLIENT') {
+                        } else {
+                            // Upgrade status to CLIENT if needed, and always bump updatedAt so it jumps to top
                             await tx.lead.update({
                                 where: { id: lead.id },
-                                data: { status: 'CLIENT' }
+                                data: { 
+                                    status: 'CLIENT',
+                                    updatedAt: new Date()
+                                }
                             });
                         }
+
+                        // Log Activity to ensure 'Last Activity' changes
+                        await tx.leadActivity.create({
+                            data: {
+                                leadId: lead.id,
+                                type: 'NOTE',
+                                description: `Legacy Sale onboarded for Plot ${data.plotNumber}`,
+                                userId: recordedByUserId,
+                                timestamp: new Date()
+                            }
+                        });
 
                         // 2. Plot Assignment / Dynamic Creation
                         let plot = await tx.plot.findUnique({
