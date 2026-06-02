@@ -669,12 +669,12 @@ export const SaleController = {
                         }
 
                         // Log Activity to ensure 'Last Activity' changes
-                        await tx.leadActivity.create({
+                        await tx.activity.create({
                             data: {
                                 leadId: lead.id,
                                 type: 'NOTE',
-                                description: `Legacy Sale onboarded for Plot ${data.plotNumber}`,
-                                userId: recordedByUserId,
+                                notes: `Legacy Sale onboarded for Plot ${data.plotNumber}`,
+                                createdByUserId: recordedByUserId,
                                 timestamp: new Date()
                             }
                         });
