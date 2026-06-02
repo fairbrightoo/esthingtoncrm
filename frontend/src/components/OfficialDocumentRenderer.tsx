@@ -15,6 +15,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
     const [template, setTemplate] = useState<string | null>(null);
     const [companyInfo, setCompanyInfo] = useState<any>(null);
     const [branchInfo, setBranchInfo] = useState<any>(null); // Branch taking ownership
+    const [branchMDUser, setBranchMDUser] = useState<any>(null); // Branch Managing Director user
     const [isLoading, setIsLoading] = useState(true);
     const componentRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,13 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                     });
                     const specificBranch = branchRes.data.find((b: any) => b.id === managingBranchId);
                     setBranchInfo(specificBranch);
+
+                    // Fetch the Branch Managing Director user for signatures
+                    const usersRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${targetCompanyId}/branches/${managingBranchId}/users`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    const mdUser = usersRes.data.find((u: any) => u.role === 'MANAGING_DIRECTOR');
+                    if (mdUser) setBranchMDUser(mdUser);
                 } catch (e) { console.warn("Could not fetch branch overrides", e); }
             }
 
@@ -85,6 +93,11 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         const today = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 
         let html = template;
+
+        // Gender Salutation Logic
+        const gender = sale.lead?.gender?.toLowerCase() || 'male';
+        const correctSalutation = (gender === 'female') ? 'Dear Ma,' : 'Dear Sir,';
+        html = html.replace(/Dear\s*sir\/?ma\w*,?/gi, correctSalutation);
 
         // General Info
         html = html.replace(/{{CURRENT_DATE}}/g, today);
@@ -122,15 +135,45 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         const logoHtml = resolvedLogoUrl ? `<img src="${resolvedLogoUrl}" style="max-width: 250px; max-height: 80px; display: block; margin: 0 auto; border: none; outline: none;" alt="Logo" />` : `<h2 style="text-align: right; margin: 0;">${companyInfo?.name || 'Company Name'}</h2>`;
         html = html.replace(/{{COMPANY_LOGO}}/g, logoHtml);
 
-        // Branch signature takes precedence if it exists
-        const signatureUrl = branchInfo?.signatureUrl || companyInfo?.signatureUrl;
-        const resolvedSignatureUrl = signatureUrl ? (signatureUrl.startsWith('http') ? signatureUrl : `${baseUrl}${signatureUrl}`) : '';
+        // Dynamic Signature and MD Name based on Document Type and Head Office Flag
+        let finalMdName = 'Managing Director';
+        let finalSignatureUrl = '';
+
+        const isHeadOffice = branchInfo?.isHeadOffice === true;
+        const branchGeneralManagerName = branchInfo?.managerName || '';
+        const branchGeneralManagerSig = branchInfo?.signatureUrl || '';
+        const branchMDName = branchMDUser?.fullName || branchGeneralManagerName;
+        const branchMDSig = branchMDUser?.signatureUrl || branchGeneralManagerSig;
+        const groupMDName = companyInfo?.managingDirectorName || '';
+        const groupMDSig = companyInfo?.signatureUrl || '';
+
+        if (documentType === 'OFFER') {
+            if (isHeadOffice) {
+                finalMdName = branchMDName;
+                finalSignatureUrl = branchMDSig;
+            } else {
+                finalMdName = branchGeneralManagerName;
+                finalSignatureUrl = branchGeneralManagerSig;
+            }
+        } else if (documentType === 'PROVISIONAL_ALLOCATION' || documentType === 'FINAL_ALLOCATION') {
+            if (isHeadOffice) {
+                finalMdName = groupMDName;
+                finalSignatureUrl = groupMDSig;
+            } else {
+                finalMdName = branchMDName;
+                finalSignatureUrl = branchMDSig;
+            }
+        } else {
+            // Default fallback
+            finalMdName = branchGeneralManagerName || groupMDName;
+            finalSignatureUrl = branchGeneralManagerSig || groupMDSig;
+        }
+
+        const resolvedSignatureUrl = finalSignatureUrl ? (finalSignatureUrl.startsWith('http') ? finalSignatureUrl : `${baseUrl}${finalSignatureUrl}`) : '';
         const sigHtml = resolvedSignatureUrl ? `<img src="${resolvedSignatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{COMPANY_SIGNATURE}}/g, sigHtml);
-        
-        // Branch manager name takes precedence if it exists
-        const managerName = branchInfo?.managerName || companyInfo?.managingDirectorName || 'Managing Director';
-        html = html.replace(/{{MD_NAME}}/g, managerName);
+        html = html.replace(/{{MD_NAME}}/g, finalMdName || 'Managing Director');
+
         html = html.replace(/{{COMPANY_NAME}}/g, companyInfo?.name || 'Company Name');
         html = html.replace(/{{COMPANY_WEBSITE}}/g, companyInfo?.website || 'www.company.com');
         html = html.replace(/{{COMPANY_EMAIL}}/g, companyInfo?.email || 'info@company.com');
