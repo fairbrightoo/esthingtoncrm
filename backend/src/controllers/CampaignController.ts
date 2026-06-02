@@ -10,7 +10,7 @@ export const CampaignController = {
     async createCampaign(req: Request, res: Response) {
         try {
             // @ts-ignore
-            const { companyId } = req.user as { companyId: string };
+            const { companyId, userId, branchId } = req.user as any;
             const { name, type, filters, templateId, scheduledAt } = req.body;
 
             const campaign = await prisma.campaign.create({
@@ -21,7 +21,9 @@ export const CampaignController = {
                     filters: JSON.stringify(filters), // Store as JSON string: { gender: 'Male', source: 'Facebook' }
                     templateId,
                     scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-                    companyId
+                    companyId,
+                    creatorId: userId,
+                    branchId: branchId
                 }
             });
             res.json(campaign);
@@ -35,9 +37,18 @@ export const CampaignController = {
     async getCampaigns(req: Request, res: Response) {
         try {
             // @ts-ignore
-            const { companyId } = req.user as { companyId: string };
+            const { companyId, userId, branchId, role } = req.user as any;
+            
+            let whereClause: any = { companyId };
+            
+            if (role === 'MARKETER' || role === 'CUSTOMER_CARE' || role === 'BRANCH_HR') {
+                whereClause.creatorId = userId;
+            } else if (role === 'BRANCH_ADMIN') {
+                whereClause.branchId = branchId;
+            }
+
             const campaignsRaw = await prisma.campaign.findMany({
-                where: { companyId },
+                where: whereClause,
                 orderBy: { createdAt: 'desc' },
                 include: { template: true }
             });

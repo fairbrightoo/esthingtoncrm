@@ -103,6 +103,7 @@ model Branch {
   marketingAssets       MarketingAsset[]
   productionScripts     ProductionScript[]
   socialReports         SocialMediaReport[]
+  campaigns             Campaign[]
 }
 
 model User {
@@ -194,6 +195,7 @@ model User {
   authoredScripts         ProductionScript[]  @relation("ScriptAuthor")
   assignedScripts         ProductionScript[]  @relation("ScriptCast")
   oracleSocialReports     SocialMediaReport[] @relation("OracleReports")
+  createdCampaigns        Campaign[]          @relation("CreatedCampaigns")
 }
 
 model Attendance {
@@ -425,9 +427,13 @@ model Campaign {
   filters           String
   templateId        String?
   companyId         String
+  branchId          String?
+  creatorId         String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   company           Company            @relation(fields: [companyId], references: [id])
+  branch            Branch?            @relation(fields: [branchId], references: [id])
+  creator           User?              @relation("CreatedCampaigns", fields: [creatorId], references: [id])
   template          MessageTemplate?   @relation(fields: [templateId], references: [id])
   communicationLogs CommunicationLog[]
 }
