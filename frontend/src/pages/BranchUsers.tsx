@@ -715,7 +715,7 @@ export const BranchUsers = () => {
                                     <button 
                                         type="button"
                                         onClick={() => {
-                                            const headers = "full_name,phone,email,role,password,date_of_birth\nJohn Doe,0800000000,john@example.com,MARKETER,password123,1990-05-24\n";
+                                            const headers = "full_name,email,phone,date_of_birth,bank_name,account_number,account_name,next_of_kin_name,next_of_kin_phone,monthly_salary,commission_rate,role,registered_via_referral\nJohn Doe,john@example.com,0800000000,1990-05-24,Zenith Bank,1234567890,John Doe,Jane Doe,08123456789,150000,5.0,MARKETER,false\n";
                                             const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
                                             const link = document.createElement("a");
                                             link.href = URL.createObjectURL(blob);
@@ -730,10 +730,11 @@ export const BranchUsers = () => {
                                     </button>
                                     <p className="font-semibold mb-2">CSV Format Requirements:</p>
                                     <ul className="list-disc pl-5 space-y-1">
-                                        <li>Required columns: <code>full_name</code>, <code>email</code></li>
-                                        <li>Optional columns: <code>phone</code>, <code>role</code>, <code>password</code>, <code>date_of_birth</code></li>
-                                        <li><code>role</code> must be either <strong>MARKETER</strong> or <strong>CUSTOMER_CARE</strong> (defaults to MARKETER)</li>
-                                        <li>If <code>password</code> is omitted, it defaults to <code>password123</code></li>
+                                        <li>Required columns: <code>full_name</code>, <code>email</code>, <code>phone</code></li>
+                                        <li>Bank details: <code>bank_name</code>, <code>account_number</code>, <code>account_name</code></li>
+                                        <li>Emergency contacts: <code>next_of_kin_name</code>, <code>next_of_kin_phone</code></li>
+                                        <li>Optional info: <code>date_of_birth</code>, <code>monthly_salary</code>, <code>commission_rate</code>, <code>role</code>, <code>registered_via_referral</code></li>
+                                        <li><code>role</code> defaults to MARKETER. Users will receive an auto-generated password via email instantly!</li>
                                     </ul>
                                 </div>
                                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">

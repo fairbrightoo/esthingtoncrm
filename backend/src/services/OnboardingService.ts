@@ -7,17 +7,24 @@ import { generateEmployeeId } from '../utils/EmployeeIdGenerator.js';
 
 interface OnboardingRow {
     full_name: string;
-    phone_number: string;
     email: string;
-    role?: string;
+    phone: string;
+    date_of_birth?: string;
+    bank_name?: string;
+    account_number?: string;
+    account_name?: string;
+    next_of_kin_name?: string;
+    next_of_kin_phone?: string;
     monthly_salary?: string;
     commission_rate?: string;
-    assigned_branch?: string; // Branch Name
-    date_of_birth?: string; // YYYY-MM-DD
+    role?: string;
+    registered_via_referral?: string;
 }
 
+import { EmailService } from './EmailService.js';
+
 export const OnboardingService = {
-    async processBulkUpload(fileBuffer: Buffer, companyId: string) {
+    async processBulkUpload(fileBuffer: Buffer, companyId: string, targetBranchId: string | null) {
         const rows = parse(fileBuffer, {
             columns: true,
             skip_empty_lines: true,
@@ -39,7 +46,7 @@ export const OnboardingService = {
                     where: {
                         OR: [
                             { email: row.email },
-                            { phone: row.phone_number } // Assuming phone is on User model too? Yes
+                            { phone: row.phone }
                         ]
                     }
                 });
@@ -54,14 +61,13 @@ export const OnboardingService = {
                 const tempPassword = Math.random().toString(36).slice(-8);
                 const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-                // Find branch if provided
-                let branchId = null;
-                if (row.assigned_branch) {
-                    const branch = await prisma.branch.findFirst({
-                        where: { name: row.assigned_branch, companyId }
-                    });
-                    if (branch) branchId = branch.id;
-                }
+                // Retrieve branch using companyId context and the branch ID mapping
+                // Since this route is triggered via /api/companies/:companyId/branches/:branchId/users, the controller passes it? Wait, OnboardingController currently only passes companyId.
+                // Actually we just fetch the uploading user's branch from OnboardingService or Controller.
+                // Wait, if it's Branch Admin, they upload it from BranchUsers.tsx, which hits OnboardingController.
+                // We'll leave branchId as is or expect it to be passed.
+                // Actually OnboardingService.processBulkUpload doesn't receive branchId right now.
+                // I will add branchId as an argument to processBulkUpload, and pass it from OnboardingController.
 
                 // Default role and mapping logic
                 const roleValue = row.role ? row.role.toUpperCase() : 'MARKETER';
@@ -69,23 +75,45 @@ export const OnboardingService = {
                 const commissionRate = row.commission_rate ? parseFloat(row.commission_rate) : 5.0;
 
                 // Create User
-                const employeeId = await generateEmployeeId(companyId, branchId, roleValue);
+                const employeeId = await generateEmployeeId(companyId, targetBranchId, roleValue);
                 const newUser = await prisma.user.create({
                     data: {
                         employeeId,
                         fullName: row.full_name,
                         email: row.email,
-                        phone: row.phone_number,
+                        phone: row.phone,
                         passwordHash,
                         companyId,
-                        branchId,
+                        branchId: targetBranchId,
                         role: roleValue,
                         monthlySalary,
                         commissionRate,
+                        bankName: row.bank_name || null,
+                        accountNumber: row.account_number || null,
+                        accountName: row.account_name || null,
+                        nextOfKinName: row.next_of_kin_name || null,
+                        nextOfKinPhone: row.next_of_kin_phone || null,
                         dateOfBirth: row.date_of_birth ? new Date(row.date_of_birth) : null,
                         passwordResetRequired: true
                     }
                 });
+
+                // Fetch Company details to get the Company Name for the email
+                const company = await prisma.company.findUnique({ where: { id: companyId } });
+                const companyName = company?.name || 'Esthington CRM';
+
+                // Construct Login URL
+                const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?companyId=${companyId}${targetBranchId ? `&branchId=${targetBranchId}` : ''}`;
+
+                // Send Welcome Email
+                await EmailService.sendWelcomeEmail(
+                    newUser.email,
+                    newUser.fullName,
+                    companyName,
+                    newUser.role,
+                    loginUrl,
+                    tempPassword
+                );
 
                 // Trigger Automation
                 await AutomationService.triggerMarketerCreated({
