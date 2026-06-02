@@ -488,11 +488,22 @@ export const BranchUsers = () => {
 
             {/* Modal (Create OR Edit) */}
             {(isModalOpen || editingUser) && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-                        <h2 className="text-xl font-bold mb-4">{editingUser ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
-                        <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="space-y-4">
-                            <div>
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                            <h2 className="text-xl font-bold text-gray-800">
+                                {editingUser ? 'Edit Staff Member' : 'Add New Staff Member'}
+                            </h2>
+                            <button type="button" onClick={closeModals} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Scrollable Body */}
+                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                            <form id="staffForm" onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="space-y-5">
+                                <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                 <input required className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} />
@@ -675,14 +686,16 @@ export const BranchUsers = () => {
                                     <option value="ACCOUNTANT">Accountant</option>
                                 </select>
                             </div>
-
-                            <div className="flex justify-end space-x-3 mt-6">
-                                <button type="button" onClick={closeModals} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                    {editingUser ? 'Update Staff' : 'Create Staff'}
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end space-x-3 shrink-0">
+                            <button type="button" onClick={closeModals} className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
+                            <button type="submit" form="staffForm" className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                {editingUser ? 'Save Changes' : 'Create Staff'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
