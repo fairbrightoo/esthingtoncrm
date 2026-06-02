@@ -153,7 +153,7 @@ export const InventoryManager = () => {
     const [legacySaleForm, setLegacySaleForm] = useState({
         clientName: '', clientPhone: '', clientEmail: '',
         plotNumber: '', prototype: '', size: '', agreedPrice: '',
-        amountPaidSoFar: '', dateOfSale: ''
+        amountPaidSoFar: '', dateOfSale: '', marketerEmail: ''
     });
     const [legacySaleCsvText, setLegacySaleCsvText] = useState('');
     const [isLegacySaleLoading, setIsLegacySaleLoading] = useState(false);
@@ -422,7 +422,7 @@ export const InventoryManager = () => {
             setLegacySaleForm({
                 clientName: '', clientPhone: '', clientEmail: '',
                 plotNumber: '', prototype: '', size: '', agreedPrice: '',
-                amountPaidSoFar: '', dateOfSale: ''
+                amountPaidSoFar: '', dateOfSale: '', marketerEmail: ''
             });
             fetchEstatePlots(selectedEstate.id);
         } catch (error: any) {
@@ -898,6 +898,11 @@ export const InventoryManager = () => {
                                                     <input type="email" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                                         value={legacySaleForm.clientEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, clientEmail: e.target.value })} />
                                                 </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Marketer Email (Optional)</label>
+                                                    <input type="email" placeholder="e.g. marketer@company.com" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.marketerEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, marketerEmail: e.target.value })} />
+                                                </div>
                                             </div>
                                             {/* Plot Info */}
                                             <div className="space-y-3">
@@ -952,11 +957,11 @@ export const InventoryManager = () => {
                                         <div>
                                             <div className="flex justify-between items-end mb-1.5">
                                                 <label className="block text-xs font-bold text-indigo-900/70 uppercase tracking-wider">Paste CSV Lines</label>
-                                                <span className="text-[10px] font-mono text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Format: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date(YYYY-MM-DD)</span>
+                                                <span className="text-[10px] font-mono text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Format: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date(YYYY-MM-DD), MarketerEmail</span>
                                             </div>
                                             <textarea 
                                                 className="w-full h-32 border border-indigo-200/60 rounded-xl p-4 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 transition text-sm font-mono"
-                                                placeholder="John Doe, 08012345678, john@email.com, PLOT-A1, 4 Bedroom Duplex, 500, 25000000, 10000000, 2023-05-12&#10;Jane Smith, 08098765432, , PLOT-A2, 4 Bedroom Duplex, 500, 26000000, 26000000, 2023-06-20"
+                                                placeholder="John Doe, 08012345678, john@email.com, PLOT-A1, 4 Bedroom Duplex, 500, 25000000, 10000000, 2023-05-12, mark@esthington.com&#10;Jane Smith, 08098765432, , PLOT-A2, 4 Bedroom Duplex, 500, 26000000, 26000000, 2023-06-20, mark@esthington.com"
                                                 value={legacySaleCsvText}
                                                 onChange={e => setLegacySaleCsvText(e.target.value)}
                                             />

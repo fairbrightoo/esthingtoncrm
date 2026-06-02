@@ -628,6 +628,15 @@ export const SaleController = {
                 const data = salesData[i];
                 try {
                     await prisma.$transaction(async (tx) => {
+                        // 0. Resolve Marketer
+                        let resolvedMarketerId = data.marketerId || null;
+                        if (!resolvedMarketerId && data.marketerEmail) {
+                            const marketer = await tx.user.findFirst({
+                                where: { email: data.marketerEmail, companyId }
+                            });
+                            if (marketer) resolvedMarketerId = marketer.id;
+                        }
+
                         // 1. Verify/Create Lead
                         let lead = await tx.lead.findFirst({
                             where: { phone: data.clientPhone, companyId }
@@ -644,7 +653,7 @@ export const SaleController = {
                                     companyId,
                                     branchId: branchId || null,
                                     status: 'CLIENT',
-                                    assignedToUserId: data.marketerId || null,
+                                    assignedToUserId: resolvedMarketerId,
                                     createdAt: saleDate
                                 }
                             });
@@ -698,7 +707,7 @@ export const SaleController = {
                                 agreedPrice: numericAgreedPrice,
                                 totalPaid: numericAmountPaid,
                                 status: isCompleted ? 'COMPLETED' : 'ONGOING',
-                                marketerId: data.marketerId || lead.assignedToUserId || null,
+                                marketerId: resolvedMarketerId || lead.assignedToUserId || null,
                                 createdAt: saleDate
                             }
                         });
