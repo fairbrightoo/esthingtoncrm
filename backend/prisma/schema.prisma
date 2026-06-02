@@ -79,6 +79,7 @@ model Branch {
   employeeCounter       Int                    @default(2)
   idCardFrontTemplate   String?
   idCardBackTemplate    String?
+  isHeadOffice          Boolean                @default(false)
   attendances           Attendance[]
   company               Company                @relation(fields: [companyId], references: [id])
   leads                 Lead[]

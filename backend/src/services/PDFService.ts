@@ -69,7 +69,7 @@ export const PDFService = {
     /**
      * Process Template Variables (Identical to Frontend Logic)
      */
-    processTemplate(template: string, sale: any, companyInfo: any, branchInfo: any, accountantInfo?: any): string {
+    processTemplate(template: string, sale: any, companyInfo: any, branchInfo: any, accountantInfo?: any, documentType?: 'OFFER' | 'PROVISIONAL_ALLOCATION' | 'FINAL_ALLOCATION' | 'RECEIPT', branchMDUser?: any): string {
         const formatCurrency = (amount: number) => {
             return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
         };
@@ -77,6 +77,12 @@ export const PDFService = {
         const today = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 
         let html = template;
+
+        // Gender Salutation Logic
+        const gender = sale.lead?.gender?.toLowerCase() || 'male';
+        const correctSalutation = (gender === 'female') ? 'Dear Ma,' : 'Dear Sir,';
+        // Replace permutations of "Dear Sir/Ma", "Dear sir/ma", "Dear sir/madam", etc.
+        html = html.replace(/Dear\s*sir\/?ma\w*,?/gi, correctSalutation);
 
         // General Info
         html = html.replace(/{{CURRENT_DATE}}/g, today);
@@ -115,20 +121,49 @@ export const PDFService = {
         const logoHtml = resolvedLogoUrl ? `<img src="${resolvedLogoUrl}" style="max-width: 250px; max-height: 80px; display: block; margin: 0 auto; border: none; outline: none;" alt="Logo" />` : `<h2 style="text-align: right; margin: 0;">${companyInfo?.name || 'Company Name'}</h2>`;
         html = html.replace(/{{COMPANY_LOGO}}/g, logoHtml);
 
-        // Branch signature takes precedence if it exists
-        const signatureUrl = branchInfo?.signatureUrl || companyInfo?.signatureUrl;
-        const resolvedSignatureUrl = signatureUrl ? (signatureUrl.startsWith('http') ? signatureUrl : `${baseUrl}${signatureUrl}`) : '';
+        // Dynamic Signature and MD Name based on Document Type and Head Office Flag
+        let finalMdName = 'Managing Director';
+        let finalSignatureUrl = '';
+
+        const isHeadOffice = branchInfo?.isHeadOffice === true;
+        const branchGeneralManagerName = branchInfo?.managerName || '';
+        const branchGeneralManagerSig = branchInfo?.signatureUrl || '';
+        const branchMDName = branchMDUser?.fullName || branchGeneralManagerName;
+        const branchMDSig = branchMDUser?.signatureUrl || branchGeneralManagerSig;
+        const groupMDName = companyInfo?.managingDirectorName || '';
+        const groupMDSig = companyInfo?.signatureUrl || '';
+
+        if (documentType === 'OFFER') {
+            if (isHeadOffice) {
+                finalMdName = branchMDName;
+                finalSignatureUrl = branchMDSig;
+            } else {
+                finalMdName = branchGeneralManagerName;
+                finalSignatureUrl = branchGeneralManagerSig;
+            }
+        } else if (documentType === 'PROVISIONAL_ALLOCATION' || documentType === 'FINAL_ALLOCATION') {
+            if (isHeadOffice) {
+                finalMdName = groupMDName;
+                finalSignatureUrl = groupMDSig;
+            } else {
+                finalMdName = branchMDName;
+                finalSignatureUrl = branchMDSig;
+            }
+        } else {
+            // Default fallback
+            finalMdName = branchGeneralManagerName || groupMDName;
+            finalSignatureUrl = branchGeneralManagerSig || groupMDSig;
+        }
+
+        const resolvedSignatureUrl = finalSignatureUrl ? (finalSignatureUrl.startsWith('http') ? finalSignatureUrl : `${baseUrl}${finalSignatureUrl}`) : '';
         const sigHtml = resolvedSignatureUrl ? `<img src="${resolvedSignatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{COMPANY_SIGNATURE}}/g, sigHtml);
-        
-        // Branch manager name takes precedence if it exists
-        const managerName = branchInfo?.managerName || companyInfo?.managingDirectorName || 'Managing Director';
-        html = html.replace(/{{MD_NAME}}/g, managerName);
+        html = html.replace(/{{MD_NAME}}/g, finalMdName || 'Managing Director');
 
         // Receipt Specific Signatures (Accountant -> MD)
-        const receiptSignerName = accountantInfo?.fullName || managerName;
+        const receiptSignerName = accountantInfo?.fullName || finalMdName;
         const receiptSignerRole = accountantInfo ? 'Accountant' : 'Authorized Signature';
-        const receiptSigUrl = accountantInfo?.signatureUrl || signatureUrl;
+        const receiptSigUrl = accountantInfo?.signatureUrl || finalSignatureUrl;
         const resolvedReceiptSigUrl = receiptSigUrl ? (receiptSigUrl.startsWith('http') ? receiptSigUrl : `${baseUrl}${receiptSigUrl}`) : '';
         const receiptSigHtml = resolvedReceiptSigUrl ? `<img src="${resolvedReceiptSigUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{RECEIPT_SIGNATURE}}/g, receiptSigHtml);

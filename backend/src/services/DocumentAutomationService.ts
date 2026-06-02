@@ -45,6 +45,14 @@ export const DocumentAutomationService = {
             // Extract the managing branch's accountant if present
             const accountantInfo = sale.plot?.estate?.branch?.users?.[0] || null;
 
+            // Fetch the branch's managing director
+            const branchMDUser = branchInfo?.id ? await prisma.user.findFirst({
+                where: {
+                    branchId: branchInfo.id,
+                    role: 'MANAGING_DIRECTOR'
+                }
+            }) : null;
+
             // Fetch templates
             const templates = await prisma.documentTemplate.findMany({
                 where: { companyId }
@@ -57,7 +65,7 @@ export const DocumentAutomationService = {
             if (trigger === 'OFFER') {
                 const offerTemplate = templates.find(t => t.type === 'OFFER');
                 if (offerTemplate) {
-                    const html = PDFService.processTemplate(offerTemplate.content, sale, companyInfo, branchInfo, accountantInfo);
+                    const html = PDFService.processTemplate(offerTemplate.content, sale, companyInfo, branchInfo, accountantInfo, 'OFFER', branchMDUser);
                     const pdfBuffer = await PDFService.generatePdfBuffer(html);
                     attachments.push({ filename: 'Offer_Letter.pdf', content: pdfBuffer });
                     
@@ -75,7 +83,7 @@ export const DocumentAutomationService = {
                     // Specific payment tweaks
                     receiptHtml = receiptHtml.replace(/{{TRANSACTION_AMOUNT}}/g, new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(payment.amount));
                     
-                    const html = PDFService.processTemplate(receiptHtml, sale, companyInfo, branchInfo, accountantInfo);
+                    const html = PDFService.processTemplate(receiptHtml, sale, companyInfo, branchInfo, accountantInfo, 'RECEIPT', branchMDUser);
                     const pdfBuffer = await PDFService.generatePdfBuffer(html);
                     attachments.push({ filename: `Receipt_${payment.reference || payment.id.substring(0,6)}.pdf`, content: pdfBuffer });
                 }
@@ -86,7 +94,7 @@ export const DocumentAutomationService = {
                 const allocationTemplate = templates.find(t => t.type === allocationType);
                 
                 if (allocationTemplate) {
-                    const html = PDFService.processTemplate(allocationTemplate.content, sale, companyInfo, branchInfo, accountantInfo);
+                    const html = PDFService.processTemplate(allocationTemplate.content, sale, companyInfo, branchInfo, accountantInfo, allocationType as any, branchMDUser);
                     const pdfBuffer = await PDFService.generatePdfBuffer(html);
                     attachments.push({ filename: `${isCompleted ? 'Final' : 'Provisional'}_Allocation_Letter.pdf`, content: pdfBuffer });
                 }

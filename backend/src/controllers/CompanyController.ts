@@ -83,6 +83,7 @@ export const CompanyController = {
                     signatureUrl: true,
                     managerName: true,
                     abbreviation: true,
+                    isHeadOffice: true,
                     idCardFrontTemplate: true,
                     idCardBackTemplate: true
                 }
@@ -216,7 +217,7 @@ export const CompanyController = {
      */
     async createBranch(req: Request, res: Response) {
         const { id } = req.params as any; // Company ID from URL
-        const { name, address, phone, email } = req.body;
+        const { name, address, phone, email, isHeadOffice } = req.body;
         try {
             const branch = await prisma.branch.create({
                 data: {
@@ -224,7 +225,8 @@ export const CompanyController = {
                     name,
                     address,
                     phone,
-                    email
+                    email,
+                    isHeadOffice: isHeadOffice === true || isHeadOffice === 'true'
                 }
             });
             res.json(branch);
@@ -239,7 +241,7 @@ export const CompanyController = {
      */
     async updateBranch(req: Request, res: Response) {
         const { id } = req.params as any; // Branch ID
-        const { name, address, phone, email, managerName, abbreviation, idCardFrontTemplate, idCardBackTemplate } = req.body;
+        const { name, address, phone, email, managerName, abbreviation, idCardFrontTemplate, idCardBackTemplate, isHeadOffice } = req.body;
         let signatureUrl: string | undefined = undefined;
 
         try {
@@ -254,10 +256,11 @@ export const CompanyController = {
                     address, 
                     phone, 
                     email,
-                    ...(managerName && { managerName }),
-                    ...(abbreviation && { abbreviation }),
+                    managerName,
+                    ...(abbreviation !== undefined && { abbreviation }),
                     ...(idCardFrontTemplate !== undefined && { idCardFrontTemplate }),
                     ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
+                    ...(isHeadOffice !== undefined && { isHeadOffice: isHeadOffice === true || isHeadOffice === 'true' }),
                     ...(signatureUrl && { signatureUrl })
                 }
             });

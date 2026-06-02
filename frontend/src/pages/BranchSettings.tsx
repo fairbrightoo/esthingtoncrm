@@ -21,6 +21,7 @@ export const BranchSettings = () => {
     const [abbreviation, setAbbreviation] = useState('');
     const [idCardFrontTemplate, setIdCardFrontTemplate] = useState('');
     const [idCardBackTemplate, setIdCardBackTemplate] = useState('');
+    const [isHeadOffice, setIsHeadOffice] = useState(false);
 
     // Operational Prefs
     const [oooDelegation, setOooDelegation] = useState(false);
@@ -40,6 +41,7 @@ export const BranchSettings = () => {
             setAbbreviation((user.branch as any).abbreviation || '');
             setIdCardFrontTemplate((user.branch as any).idCardFrontTemplate || '');
             setIdCardBackTemplate((user.branch as any).idCardBackTemplate || '');
+            setIsHeadOffice((user.branch as any).isHeadOffice || false);
         }
     }, [user]);
 
@@ -54,6 +56,7 @@ export const BranchSettings = () => {
             formData.append('abbreviation', abbreviation);
             formData.append('idCardFrontTemplate', idCardFrontTemplate);
             formData.append('idCardBackTemplate', idCardBackTemplate);
+            formData.append('isHeadOffice', isHeadOffice.toString());
             if (signatureFile) {
                 formData.append('signature', signatureFile);
             }
@@ -256,6 +259,20 @@ export const BranchSettings = () => {
                                             onChange={(e) => setManagerName(e.target.value)}
                                             className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition"
                                         />
+                                    </div>
+                                    <div className="md:col-span-2 pt-2">
+                                        <label className="flex items-center space-x-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={isHeadOffice}
+                                                onChange={(e) => setIsHeadOffice(e.target.checked)}
+                                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <div>
+                                                <span className="block text-sm font-medium text-gray-900">Mark as Head Office</span>
+                                                <span className="block text-xs text-gray-500">Enable this if this branch serves as the corporate headquarters. Documents will reflect Head Office executive signatures.</span>
+                                            </div>
+                                        </label>
                                     </div>
 
                                     <div>
