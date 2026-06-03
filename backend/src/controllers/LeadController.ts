@@ -138,7 +138,7 @@ export const LeadController = {
             };
 
             // Role-Based Filters
-            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user.role)) {
+            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(user.role)) {
                 // Drop companyId restriction to allow cross-company leads to appear
                 delete whereClause.companyId;
 

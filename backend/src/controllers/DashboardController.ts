@@ -54,7 +54,7 @@ export const DashboardController = {
             const leadWhereClause: any = { ...whereClause };
 
             if (role !== 'SUPER_ADMIN') {
-                if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+                if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                     // Marketers are scoped below
                 } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(role) && branchId) {
                     saleWhereClause.marketer = { branchId: branchId };
@@ -122,7 +122,7 @@ export const DashboardController = {
 
             // Fetch user commission rate if marketer or manager
             let commissionRate = 0;
-            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                 const userObj = await prisma.user.findUnique({ where: { id: userId } });
                 commissionRate = userObj?.commissionRate || 0;
             }
@@ -147,7 +147,7 @@ export const DashboardController = {
             let pendingCommissions = 0;
             let totalSalesGenerated = 0;
 
-            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                 const personalPaymentWhereClause: any = { ...paymentWhereClause };
                 if (Object.keys(dateFilter).length > 0) personalPaymentWhereClause.date = dateFilter;
 
@@ -243,7 +243,7 @@ export const DashboardController = {
             let paidReferralCommissions = 0;
             let pendingReferralCommissions = 0;
 
-            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(role)) {
+            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                 const prospects = await prisma.lead.findMany({
                     where: { ...leadWhereClause, status: 'PROSPECT' },
                     take: 5,
