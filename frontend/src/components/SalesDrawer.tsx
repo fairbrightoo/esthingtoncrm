@@ -13,7 +13,9 @@ interface Plot {
     estate: {
         name: string;
         location: string;
-    }
+        cornerPiecePrice: number;
+    };
+    isCornerPiece: boolean;
 }
 
 interface Sale {
@@ -92,7 +94,6 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [branchUsers, setBranchUsers] = useState<any[]>([]);
     const [plotSearchQuery, setPlotSearchQuery] = useState('');
     const [isPlotDropdownOpen, setIsPlotDropdownOpen] = useState(false);
-    const [isCornerPiece, setIsCornerPiece] = useState(false);
     
     // Purchase Specific Document Details
     const [nameOnDocument, setNameOnDocument] = useState('');
@@ -274,7 +275,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     const resetForms = () => {
         setSelectedPlotId('');
-        setIsCornerPiece(false);
+        setSelectedPlotId('');
         setNameOnDocument('');
         setPhoneOnDocument('');
         setAddressOnDocument('');
@@ -293,7 +294,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const getSelectedPlotPrice = () => {
         const p = plots.find(x => x.id === selectedPlotId);
         if (!p) return 0;
-        return p.price + (isCornerPiece ? 1000000 : 0);
+        return p.price;
     };
 
     // --- RENDERERS ---
@@ -383,16 +384,17 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                         <input type="text" className="h-0 w-0 absolute opacity-0 pointer-events-none" required value={selectedPlotId} onChange={() => {}} />
                     </div>
 
-                    <div className="flex items-center space-x-3 p-3 border rounded bg-gray-50">
-                        <input
-                            type="checkbox"
-                            id="corner"
-                            className="w-5 h-5 text-blue-600 rounded"
-                            checked={isCornerPiece}
-                            onChange={(e) => setIsCornerPiece(e.target.checked)}
-                        />
-                        <label htmlFor="corner" className="text-sm font-medium text-gray-700">Corner Piece (+₦1m)</label>
-                    </div>
+                    {(() => {
+                        const p = plots.find(x => x.id === selectedPlotId);
+                        if (p && p.isCornerPiece) {
+                            return (
+                                <div className="flex items-center p-3 border rounded bg-indigo-50 border-indigo-200 text-indigo-700">
+                                    <span className="text-sm font-semibold">Corner Piece Selected: +₦{(p.estate.cornerPiecePrice || 1000000).toLocaleString()} included in property price</span>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
 
                     <div className="pt-2 border-t border-gray-100">
                         <h4 className="text-sm font-semibold text-gray-700 mb-1">Document Details (Optional)</h4>
@@ -492,7 +494,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         if (!sale) return null;
         
         const balance = sale.agreedPrice - sale.totalPaid;
-        const originalPrice = (sale.plot?.price || sale.agreedPrice) + (sale.isCornerPiece ? 1000000 : 0);
+        const originalPrice = (sale.plot?.price || sale.agreedPrice);
         const discountAmount = originalPrice - sale.agreedPrice;
 
         return (

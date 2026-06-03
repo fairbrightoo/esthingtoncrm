@@ -301,6 +301,7 @@ model Estate {
   documentSearchNumber String?
   searchDocumentUrl    String?
   siteLayoutUrl        String?
+  cornerPiecePrice     Float    @default(1000000)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   company              Company  @relation(fields: [companyId], references: [id])

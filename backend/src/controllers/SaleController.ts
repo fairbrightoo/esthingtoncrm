@@ -11,9 +11,8 @@ export const SaleController = {
     createSale: async (req: Request, res: Response) => {
         try {
             const { 
-                leadId, 
-                plotId, 
-                isCornerPiece, 
+                leadId,
+                plotId,
                 nameOnDocument, 
                 phoneOnDocument, 
                 addressOnDocument, 
@@ -36,7 +35,6 @@ export const SaleController = {
 
             // Pricing Logic
             let finalPrice = plot.price;
-            if (isCornerPiece) finalPrice += 1000000; // 1m surcharge
 
             // Discount Logic
             let activeDiscountId = null;
@@ -92,9 +90,9 @@ export const SaleController = {
                     leadId: String(leadId),
                     marketerId: resolvedMarketerId,
                     plotId: String(plotId),
-                    isCornerPiece: Boolean(isCornerPiece),
+                    plotNumber: plot.plotNumber,
                     agreedPrice: finalPrice,
-                    status: 'ONGOING',
+                    isCornerPiece: plot.isCornerPiece,
                     nameOnDocument: nameOnDocument ? String(nameOnDocument) : null,
                     phoneOnDocument: phoneOnDocument ? String(phoneOnDocument) : null,
                     addressOnDocument: addressOnDocument ? String(addressOnDocument) : null,

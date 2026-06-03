@@ -11,6 +11,7 @@ interface Estate {
     id: string;
     name: string;
     location: string;
+    cornerPiecePrice: number;
     companyId?: string;
     managingBranchId?: string;
     managingCompany: string;
@@ -131,7 +132,7 @@ export const InventoryManager = () => {
     // Modals & Forms
     const [isEstateModalOpen, setIsEstateModalOpen] = useState(false);
     const [isEditEstateModalOpen, setIsEditEstateModalOpen] = useState(false);
-    const [estateForm, setEstateForm] = useState({ name: '', location: '', documentSearchNumber: '' });
+    const [estateForm, setEstateForm] = useState({ name: '', location: '', documentSearchNumber: '', cornerPiecePrice: '' });
     const [searchDocument, setSearchDocument] = useState<File | null>(null);
     const [siteLayout, setSiteLayout] = useState<File | null>(null);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
@@ -140,7 +141,7 @@ export const InventoryManager = () => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Bulk Plot Form
-    const [plotForm, setPlotForm] = useState({ prototype: '', size: '', price: '', quantity: '' });
+    const [plotForm, setPlotForm] = useState({ prototype: '', size: '', price: '', quantity: '', isCornerPiece: false });
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Legacy Imports & Edits
@@ -217,6 +218,7 @@ export const InventoryManager = () => {
             formData.append('name', estateForm.name);
             formData.append('location', estateForm.location);
             if (estateForm.documentSearchNumber) formData.append('documentSearchNumber', estateForm.documentSearchNumber);
+            if (estateForm.cornerPiecePrice) formData.append('cornerPiecePrice', estateForm.cornerPiecePrice);
             if (searchDocument) formData.append('searchDocument', searchDocument);
             if (siteLayout) formData.append('siteLayout', siteLayout);
 
@@ -228,7 +230,7 @@ export const InventoryManager = () => {
             });
             addToast("Estate created successfully", "success");
             setIsEstateModalOpen(false);
-            setEstateForm({ name: '', location: '', documentSearchNumber: '' });
+            setEstateForm({ name: '', location: '', documentSearchNumber: '', cornerPiecePrice: '' });
             setSearchDocument(null);
             setSiteLayout(null);
             fetchEstates();
@@ -245,6 +247,7 @@ export const InventoryManager = () => {
             formData.append('name', estateForm.name);
             formData.append('location', estateForm.location);
             if (estateForm.documentSearchNumber !== undefined) formData.append('documentSearchNumber', estateForm.documentSearchNumber);
+            if (estateForm.cornerPiecePrice !== undefined) formData.append('cornerPiecePrice', estateForm.cornerPiecePrice);
             if (searchDocument) formData.append('searchDocument', searchDocument);
             if (siteLayout) formData.append('siteLayout', siteLayout);
             
@@ -300,13 +303,14 @@ export const InventoryManager = () => {
                 prototype: plotForm.prototype,
                 size: Number(plotForm.size),
                 price: Number(plotForm.price),
-                quantity: Number(plotForm.quantity)
+                quantity: Number(plotForm.quantity),
+                isCornerPiece: plotForm.isCornerPiece
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
             addToast("Plots generated successfully", "success");
-            setPlotForm({ prototype: '', size: '', price: '', quantity: '' });
+            setPlotForm({ prototype: '', size: '', price: '', quantity: '', isCornerPiece: false });
             fetchEstatePlots(selectedEstate.id);
         } catch (error) {
             addToast("Failed to generate plots", "error");
@@ -657,6 +661,12 @@ export const InventoryManager = () => {
                                         value={estateForm.documentSearchNumber} onChange={e => setEstateForm({ ...estateForm, documentSearchNumber: e.target.value })} />
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Corner Piece Price (₦) (Optional)</label>
+                                    <input type="number" className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                        placeholder="e.g. 1000000"
+                                        value={estateForm.cornerPiecePrice} onChange={e => setEstateForm({ ...estateForm, cornerPiecePrice: e.target.value })} />
+                                </div>
+                                <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Search Document (PDF/Image) (Optional)</label>
                                     <input type="file" accept="image/*,.pdf" 
                                         className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
@@ -725,7 +735,7 @@ export const InventoryManager = () => {
                         <div className="flex space-x-3">
                             <button 
                                 onClick={() => {
-                                    setEstateForm({ name: selectedEstate.name, location: selectedEstate.location, documentSearchNumber: selectedEstate.documentSearchNumber || '' });
+                                    setEstateForm({ name: selectedEstate.name, location: selectedEstate.location, documentSearchNumber: selectedEstate.documentSearchNumber || '', cornerPiecePrice: String(selectedEstate.cornerPiecePrice || '1000000') });
                                     setSearchDocument(null);
                                     setIsEditEstateModalOpen(true);
                                 }} 
@@ -789,7 +799,10 @@ export const InventoryManager = () => {
                                         value={plotForm.price} onChange={e => setPlotForm({ ...plotForm, price: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-indigo-900/70 uppercase tracking-wider mb-1.5">Quantity</label>
+                                    <label className="block text-xs font-bold text-indigo-900/70 uppercase tracking-wider mb-1.5 flex items-center h-[18px]">
+                                        <input type="checkbox" className="mr-1.5" checked={plotForm.isCornerPiece} onChange={e => setPlotForm({ ...plotForm, isCornerPiece: e.target.checked })} /> 
+                                        Corner Piece
+                                    </label>
                                     <div className="flex space-x-2">
                                         <input required type="number" min="1" max="500" className="w-full border border-indigo-200/60 rounded-xl px-4 py-2.5 bg-white/80 focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition"
                                             placeholder="150 units"
@@ -1112,6 +1125,12 @@ export const InventoryManager = () => {
                                     <input className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                                         placeholder="e.g. FCDA/2023/XYZ"
                                         value={estateForm.documentSearchNumber} onChange={e => setEstateForm({ ...estateForm, documentSearchNumber: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Corner Piece Price (₦) (Optional)</label>
+                                    <input type="number" className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                        placeholder="e.g. 1000000"
+                                        value={estateForm.cornerPiecePrice} onChange={e => setEstateForm({ ...estateForm, cornerPiecePrice: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Search Document (PDF/Image) (Optional)</label>

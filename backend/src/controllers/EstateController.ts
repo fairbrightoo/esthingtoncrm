@@ -10,7 +10,7 @@ export const EstateController = {
     // 1. Create a new Estate (Branch Admin)
     createEstate: async (req: Request, res: Response) => {
         try {
-            const { name, location, documentSearchNumber } = req.body;
+            const { name, location, documentSearchNumber, cornerPiecePrice } = req.body;
             const user = (req as any).user;
 
             if (!user.companyId || !user.branchId) {
@@ -40,6 +40,7 @@ export const EstateController = {
                     documentSearchNumber: documentSearchNumber || null,
                     searchDocumentUrl,
                     siteLayoutUrl,
+                    cornerPiecePrice: cornerPiecePrice !== undefined ? Number(cornerPiecePrice) : undefined,
                     companyId: user.companyId,
                     managingBranchId: user.branchId
                 }
@@ -56,12 +57,13 @@ export const EstateController = {
     updateEstate: async (req: Request, res: Response) => {
         try {
             const { id } = req.params as { id: string };
-            const { name, location, documentSearchNumber } = req.body;
+            const { name, location, documentSearchNumber, cornerPiecePrice } = req.body;
 
             const updateData: any = {};
             if (name !== undefined) updateData.name = name;
             if (location !== undefined) updateData.location = location;
             if (documentSearchNumber !== undefined) updateData.documentSearchNumber = documentSearchNumber || null;
+            if (cornerPiecePrice !== undefined) updateData.cornerPiecePrice = Number(cornerPiecePrice);
 
             if (req.files) {
                 const files = req.files as { [fieldname: string]: Express.Multer.File[] };

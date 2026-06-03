@@ -48,7 +48,7 @@ export const PlotController = {
     generatePlots: async (req: Request, res: Response) => {
         try {
             const { estateId } = req.params as { estateId: string };
-            const { prototype, size, price, quantity } = req.body;
+            const { prototype, size, price, quantity, isCornerPiece } = req.body;
 
             const estate = await prisma.estate.findUnique({
                 where: { id: estateId },
@@ -57,42 +57,43 @@ export const PlotController = {
 
             if (!estate) return res.status(404).json({ error: "Estate not found" });
 
-            // 1. Estate Acronym (e.g. "Double King Villa" -> DKV)
-            // Sometimes Estate Name doesn't include the company name. 
-            // User example: "Double King Villa" -> DKV. "Neft Meridian City" -> NMC.
-            // Let's just acronymize the estate name directly, assuming they type it out fully.
+            // 1. Estate Acronym
             const estateAcr = estate.name.split(' ').map((w: string) => {
                 if (!w) return '';
                 return w.charAt(0).toUpperCase();
             }).join('');
 
-            // 2. Date string (/02/26)
+            // 2. Date string
             const date = new Date();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = String(date.getFullYear()).slice(2);
             const dateStr = `/${month}/${year}`;
 
-            // 3. Prototype Acronym (e.g. "4 Bedroom Fully Detached Duplex" -> 4FDD)
+            // 3. Prototype Acronym
             let protoAcr = generateAcronym(prototype);
 
-            // Fetch the highest sequence number for this prototype + size in this estate to continue numbering if they click "Add 150 more"
+            // Fetch the highest sequence number for this prototype + size in this estate
             const existingPlotsCount = await prisma.plot.count({
                 where: { estateId, prototype, size: Number(size) }
             });
 
             let startIndex = existingPlotsCount + 1;
             let plotsToCreate = [];
+            
+            const finalPrice = isCornerPiece ? Number(price) + (estate.cornerPiecePrice || 1000000) : Number(price);
+            const sizeStr = isCornerPiece ? `${size}CP` : `${size}`;
 
             for (let i = 0; i < Number(quantity); i++) {
                 const seqStr = String(startIndex + i).padStart(4, '0');
-                const plotNumber = `${estateAcr}${dateStr}-${protoAcr}-${size}-${seqStr}`;
+                const plotNumber = `${estateAcr}${dateStr}-${protoAcr}-${sizeStr}-${seqStr}`;
 
                 plotsToCreate.push({
                     estateId,
                     plotNumber,
                     prototype,
                     size: Number(size),
-                    price: Number(price),
+                    price: finalPrice,
+                    isCornerPiece: isCornerPiece === true,
                     status: 'AVAILABLE'
                 });
             }
