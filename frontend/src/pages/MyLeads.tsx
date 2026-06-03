@@ -58,7 +58,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
     const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
     const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
 
-    const isMarketer = ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user?.role || '');
+    const isMarketer = ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(user?.role || '');
 
     useEffect(() => {
         fetchLeads();
