@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { BudgetManager } from '../components/BudgetManager';
 import { DollarSign, Wallet, AlertTriangle, ArrowRightLeft , Eye, FileText, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
-
+import { Pagination } from '../components/Pagination';
 
 export const getPaymentTypeLabel = (payment: any) => {
     if (!payment.sale || !payment.sale.plot) return { text: 'N/A', bg: 'bg-gray-100', textCol: 'text-gray-600', border: 'border-gray-200' };
