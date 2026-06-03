@@ -22,11 +22,7 @@ export const AICoachWidget: React.FC = () => {
     const dragData = useRef({ isDragging: false, hasDragged: false, startX: 0, startY: 0, startB: 24, startR: 24 });
 
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!dragData.current.isDragging) return;
-            const dx = e.clientX - dragData.current.startX;
-            const dy = e.clientY - dragData.current.startY;
-            
+        const handleDragMove = (dx: number, dy: number) => {
             if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
                 dragData.current.hasDragged = true;
             }
@@ -38,15 +34,32 @@ export const AICoachWidget: React.FC = () => {
             }
         };
 
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!dragData.current.isDragging) return;
+            handleDragMove(e.clientX - dragData.current.startX, e.clientY - dragData.current.startY);
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            if (!dragData.current.isDragging) return;
+            // Prevent scrolling on mobile while dragging
+            e.preventDefault();
+            handleDragMove(e.touches[0].clientX - dragData.current.startX, e.touches[0].clientY - dragData.current.startY);
+        };
+
         const handleMouseUp = () => {
             dragData.current.isDragging = false;
         };
 
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleMouseUp);
+        
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleMouseUp);
         };
     }, []);
 
@@ -57,6 +70,18 @@ export const AICoachWidget: React.FC = () => {
             hasDragged: false,
             startX: e.clientX,
             startY: e.clientY,
+            startB: position.bottom,
+            startR: position.right
+        };
+    };
+
+    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        if ((e.target as HTMLElement).closest('.no-drag')) return;
+        dragData.current = {
+            isDragging: true,
+            hasDragged: false,
+            startX: e.touches[0].clientX,
+            startY: e.touches[0].clientY,
             startB: position.bottom,
             startR: position.right
         };
@@ -145,6 +170,7 @@ export const AICoachWidget: React.FC = () => {
             className={`fixed z-50 flex flex-col items-end touch-none ${isOpen ? '' : 'cursor-pointer'}`}
             style={{ bottom: `${position.bottom}px`, right: `${position.right}px` }}
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
         >
             
             {/* The Chat Window */}
