@@ -181,7 +181,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales`, {
                 leadId,
                 plotId: selectedPlotId,
-                isCornerPiece,
+                isCornerPiece: plots.find(p => p.id === selectedPlotId)?.isCornerPiece || false,
                 nameOnDocument,
                 phoneOnDocument,
                 addressOnDocument,
