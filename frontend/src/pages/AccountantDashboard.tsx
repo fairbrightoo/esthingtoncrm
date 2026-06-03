@@ -153,6 +153,10 @@ export const AccountantDashboard = () => {
         return () => clearInterval(intv);
     }, []);
 
+    const openDisburseFundModal = (reqId: string) => {
+        setConfirmModal({ isOpen: true, type: 'fund', id: reqId, title: 'Confirm Disbursement', message: 'Mark this requisition as successfully disbursed and funds transferred?' });
+    };
+
     const openDisburseCommissionModal = (paymentId: string, commissionType: 'DIRECT' | 'REFERRAL' = 'DIRECT') => {
         setConfirmModal({ isOpen: true, type: 'commission', id: paymentId, commissionType, title: 'Confirm Commission Payout', message: `Mark this ${commissionType.toLowerCase()} commission as successfully disbursed?` });
     };
