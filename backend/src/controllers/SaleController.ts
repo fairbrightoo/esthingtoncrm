@@ -36,7 +36,7 @@ export const SaleController = {
 
             // Pricing Logic
             let finalPrice = plot.price;
-            if (isCornerPiece) finalPrice += 500000; // 500k surcharge
+            if (isCornerPiece) finalPrice += 1000000; // 1m surcharge
 
             // Discount Logic
             let activeDiscountId = null;

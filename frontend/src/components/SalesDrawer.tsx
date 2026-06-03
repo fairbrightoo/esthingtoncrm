@@ -293,7 +293,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const getSelectedPlotPrice = () => {
         const p = plots.find(x => x.id === selectedPlotId);
         if (!p) return 0;
-        return p.price + (isCornerPiece ? 500000 : 0);
+        return p.price + (isCornerPiece ? 1000000 : 0);
     };
 
     // --- RENDERERS ---
@@ -391,7 +391,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             checked={isCornerPiece}
                             onChange={(e) => setIsCornerPiece(e.target.checked)}
                         />
-                        <label htmlFor="corner" className="text-sm font-medium text-gray-700">Corner Piece (+₦500k)</label>
+                        <label htmlFor="corner" className="text-sm font-medium text-gray-700">Corner Piece (+₦1m)</label>
                     </div>
 
                     <div className="pt-2 border-t border-gray-100">
@@ -492,7 +492,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         if (!sale) return null;
         
         const balance = sale.agreedPrice - sale.totalPaid;
-        const originalPrice = (sale.plot?.price || sale.agreedPrice) + (sale.isCornerPiece ? 500000 : 0);
+        const originalPrice = (sale.plot?.price || sale.agreedPrice) + (sale.isCornerPiece ? 1000000 : 0);
         const discountAmount = originalPrice - sale.agreedPrice;
 
         return (
