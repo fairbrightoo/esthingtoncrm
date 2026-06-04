@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, Home, MapPin, ArrowLeft, CheckSquare, Square, Save, Activity, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Trash2, Home, MapPin, ArrowLeft, CheckSquare, Square, Save, Activity, RefreshCw, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Document, Page, pdfjs } from 'react-pdf';
