@@ -305,7 +305,7 @@ export const BranchUsers = () => {
                                     <div className="flex items-center space-x-3">
                                         {u.passportUrl ? (
                                             <img
-                                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${u.passportUrl}`}
+                                                src={getFileUrl(u.passportUrl)}
                                                 alt={u.fullName}
                                                 className="w-8 h-8 rounded-full object-cover border border-gray-200"
                                             />

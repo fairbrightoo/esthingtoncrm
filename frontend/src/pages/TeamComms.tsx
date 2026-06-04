@@ -130,7 +130,7 @@ export const TeamComms = () => {
                                 {!isMe && showAvatar && (
                                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs mr-2 flex-shrink-0">
                                         {sender.passportUrl ? (
-                                            <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${sender.passportUrl}`} className="w-full h-full rounded-full object-cover" alt={sender.fullName} />
+                                            <img src={sender.passportUrl.startsWith('http') ? sender.passportUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${sender.passportUrl}`} className="w-full h-full rounded-full object-cover" alt={sender.fullName} />
                                         ) : sender.fullName.charAt(0)}
                                     </div>
                                 )}

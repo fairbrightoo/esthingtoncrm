@@ -178,7 +178,7 @@ export const BranchAttendance = () => {
                                             <td className="p-5">
                                                 <div className="flex items-center space-x-3">
                                                     {member.passportUrl ? (
-                                                        <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${member.passportUrl}`} alt={member.fullName} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                                                        <img src={member.passportUrl.startsWith('http') ? member.passportUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${member.passportUrl}`} alt={member.fullName} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                                                             <UserIcon size={20} />
