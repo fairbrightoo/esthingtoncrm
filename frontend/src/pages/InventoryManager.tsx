@@ -715,8 +715,8 @@ export const InventoryManager = () => {
                                     </div>
                                 )}
                                 {selectedEstate.searchDocumentUrl && (
-                                    <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedEstate.searchDocumentUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline">
-                                        <Save size={14} className="mr-1" /> View/Download Search Document
+                                    <a href={selectedEstate.searchDocumentUrl.startsWith('http') ? selectedEstate.searchDocumentUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedEstate.searchDocumentUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline">
+                                        <FileText size={16} className="mr-1" /> View/Download Search Document
                                     </a>
                                 )}
                             </div>
@@ -1180,7 +1180,7 @@ export const InventoryManager = () => {
                                 <SecurePdfViewer estate={selectedEstate} />
                             ) : (
                                 <img 
-                                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedEstate.siteLayoutUrl}`} 
+                                    src={selectedEstate.siteLayoutUrl.startsWith('http') ? selectedEstate.siteLayoutUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${selectedEstate.siteLayoutUrl}`} 
                                     alt={`${selectedEstate.name} Site Layout`}
                                     className="max-w-full max-h-full object-contain rounded-xl shadow-2xl border border-slate-700 bg-slate-100"
                                 />
