@@ -44,7 +44,9 @@ export const CompanyPolicies = () => {
         if (readingDoc && readingDoc.fileUrl.toLowerCase().endsWith('.pdf')) {
             setPreviewLoading(true);
             const token = localStorage.getItem('token');
-            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${readingDoc.fileUrl}`, {
+            axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/secure-pdf-stream`, 
+                { filePath: readingDoc.fileUrl },
+                {
                 responseType: 'blob',
                 headers: { Authorization: `Bearer ${token}` }
             }).then((res) => {
@@ -163,7 +165,7 @@ export const CompanyPolicies = () => {
                                         <BookOpen size={14} className="mr-1.5" /> Read Online
                                     </button>
                                     <a 
-                                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.fileUrl}`} 
+                                        href={doc.fileUrl.startsWith('http') ? doc.fileUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.fileUrl}`} 
                                         target="_blank" 
                                         rel="noreferrer"
                                         className="flex items-center justify-center w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-xs font-bold transition-colors"
@@ -263,7 +265,7 @@ export const CompanyPolicies = () => {
                                     <h4 className="text-lg font-bold text-gray-900 mb-2">Preview Unavailable</h4>
                                     <p className="text-gray-500 text-sm mb-6">This document is a Word file (.doc / .docx) or another format that cannot be previewed natively inside the browser.</p>
                                     <a 
-                                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${readingDoc.fileUrl}`} 
+                                        href={readingDoc.fileUrl.startsWith('http') ? readingDoc.fileUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${readingDoc.fileUrl}`} 
                                         className="inline-flex items-center justify-center py-2 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors"
                                         download
                                     >
