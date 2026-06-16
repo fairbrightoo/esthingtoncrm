@@ -130,7 +130,7 @@ export const LeadController = {
             res.status(401).json({ error: 'User not found' });
             return;
         }
-        const { status, search, source, scope } = req.query;
+        const { status, search, source, scope, page, limit } = req.query;
 
         try {
             let whereClause: any = {
@@ -188,6 +188,9 @@ export const LeadController = {
                 ];
             }
 
+            const takeLimit = limit ? parseInt(limit as string) : 5000;
+            const skipOffset = page && limit ? (parseInt(page as string) - 1) * takeLimit : 0;
+
             const leads = await prisma.lead.findMany({
                 where: whereClause,
                 include: {
@@ -202,8 +205,19 @@ export const LeadController = {
                     }
                 },
                 orderBy: { updatedAt: 'desc' },
-                take: 5000 // Increased limit to accommodate bulk uploads without proper pagination
+                skip: skipOffset,
+                take: takeLimit
             });
+
+            if (page && limit) {
+                const totalCount = await prisma.lead.count({ where: whereClause });
+                return res.json({
+                    leads,
+                    totalCount,
+                    totalPages: Math.ceil(totalCount / takeLimit),
+                    currentPage: parseInt(page as string)
+                });
+            }
 
             // SQLite might need manual validation if case-insensitive search is required, 
             // but for MVP this is fine.
@@ -453,10 +467,34 @@ export const LeadController = {
                 updateData.govtIdUrl = await uploadFile(files.govtId[0].buffer, files.govtId[0].originalname, 'kyc/ids');
             }
 
+            // Audit Trail Logic
+            const auditNotes: string[] = [];
+            if (updateData.phone && updateData.phone !== lead.phone) {
+                auditNotes.push(`Phone changed from ${lead.phone || 'None'} to ${updateData.phone}`);
+            }
+            if (updateData.email !== undefined && updateData.email !== lead.email) {
+                auditNotes.push(`Email changed from ${lead.email || 'None'} to ${updateData.email || 'None'}`);
+            }
+            if (updateData.fullName && updateData.fullName !== lead.fullName) {
+                auditNotes.push(`Name changed from ${lead.fullName} to ${updateData.fullName}`);
+            }
+
             const updatedLead = await prisma.lead.update({
                 where: { id },
                 data: updateData
             });
+
+            if (auditNotes.length > 0) {
+                await prisma.activity.create({
+                    data: {
+                        leadId: id,
+                        type: 'LEAD_UPDATED',
+                        direction: 'SYSTEM',
+                        notes: auditNotes.join(' | '),
+                        createdByUserId: user.userId
+                    }
+                });
+            }
 
             res.json(updatedLead);
         } catch (error) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Filter, Phone, Mail, User, Calendar, Upload, Globe } from 'lucide-react';
+import { Search, Filter, Phone, Mail, User, Calendar, Upload, Globe, MoreHorizontal, Edit2, Shield, Trash2, ArrowRightLeft, Activity, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LeadTimeline } from '../components/LeadTimeline';
 import { BulkLeadUploadModal } from '../components/BulkLeadUploadModal';
@@ -32,6 +32,12 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [sourceFilter, setSourceFilter] = useState('ALL'); // New Filter
+    
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [limit] = useState(20);
 
     // Assign Logic
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -43,6 +49,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
     // Edit Logic
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [leadToEdit, setLeadToEdit] = useState<Lead | null>(null);
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
     // Delete Logic
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -62,7 +69,19 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
 
     useEffect(() => {
         fetchLeads();
-    }, [statusFilter, sourceFilter]); // Re-fetch when filter changes
+    }, [statusFilter, sourceFilter, currentPage]); // Re-fetch when filter or page changes
+
+    // Search Debounce Effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage !== 1) {
+                setCurrentPage(1); // Reset to page 1 on search
+            } else {
+                fetchLeads();
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     // ... existing user fetch effect ...
     useEffect(() => {
@@ -82,17 +101,27 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
     const fetchLeads = async () => {
         setIsLoading(true);
         try {
-            const params: any = {};
+            const params: any = { page: currentPage, limit };
             if (statusFilter !== 'ALL') params.status = statusFilter;
             if (sourceFilter !== 'ALL') params.source = sourceFilter;
             if (scope) params.scope = scope;
-            // if (searchTerm) params.search = searchTerm; // Implement debounce for search later
+            if (searchTerm) params.search = searchTerm; // Server-side search!
 
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
                 params
             });
-            setLeads(res.data);
+            
+            if (res.data.leads) {
+                setLeads(res.data.leads);
+                setTotalPages(res.data.totalPages);
+                setTotalCount(res.data.totalCount);
+                setCurrentPage(res.data.currentPage);
+            } else {
+                setLeads(res.data);
+                setTotalPages(1);
+                setTotalCount(res.data.length);
+            }
         } catch (error) {
             console.error("Failed to fetch leads", error);
         } finally {
@@ -298,7 +327,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                         {scope === 'cross-sales' ? 'Cross-Branch Clients' : (scope === 'my' || isMarketer ? 'My Leads' : 'All Branch Leads')}
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">
-                        {filteredLeads.length} active leads found
+                        {totalCount || leads.length} active leads found
                     </p>
                 </div>
 
@@ -375,10 +404,10 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
             </div>
 
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible">
                 {isLoading ? (
                     <div className="p-8 text-center text-gray-500">Loading leads...</div>
-                ) : filteredLeads.length === 0 ? (
+                ) : leads.length === 0 ? (
                     <div className="p-12 text-center text-gray-400">
                         <User size={48} className="mx-auto mb-3 opacity-20" />
                         <p>No leads found matching your criteria.</p>
@@ -397,7 +426,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {filteredLeads.map(lead => (
+                            {leads.map(lead => (
                                 <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center space-x-3">
@@ -472,47 +501,42 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex space-x-3">
-                                            <button
-                                                onClick={() => { setSelectedLead(lead); setTimelineTab('ACTIVITY'); }}
-                                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                            >
-                                                Timeline
+                                        <div className="flex items-center space-x-2 relative">
+                                            <button onClick={() => { setSelectedLead(lead); setTimelineTab('ACTIVITY'); }} className="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50 transition-colors" title="Timeline">
+                                                <Activity size={16} />
                                             </button>
-                                            <button
-                                                onClick={() => { setSelectedLead(lead); setTimelineTab('SALES'); }}
-                                                className="text-green-600 hover:text-green-800 text-sm font-medium"
-                                            >
-                                                Sales
+                                            <button onClick={() => { setSelectedLead(lead); setTimelineTab('SALES'); }} className="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50 transition-colors" title="Sales">
+                                                <DollarSign size={16} />
                                             </button>
-                                            {!isMarketer && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleAssignClick(lead)}
-                                                        className="text-gray-500 hover:text-gray-800 text-sm font-medium"
-                                                    >
-                                                        Re-assign
+                                            
+                                            <button 
+                                                onClick={() => setOpenDropdownId(openDropdownId === lead.id ? null : lead.id)}
+                                                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors ml-1"
+                                                title="More Actions"
+                                            >
+                                                <MoreHorizontal size={16} />
+                                            </button>
+                                            
+                                            {openDropdownId === lead.id && (
+                                                <div className="absolute right-0 top-10 w-40 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-10 overflow-hidden">
+                                                    <button onClick={() => { setLeadToEdit(lead); setIsEditModalOpen(true); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                                                        <Edit2 size={14} className="mr-2 text-gray-400"/> Edit Lead
                                                     </button>
-                                                    <button
-                                                        onClick={() => { setLeadToEdit(lead); setIsEditModalOpen(true); }}
-                                                        className="text-orange-500 hover:text-orange-700 text-sm font-medium"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => openVerifyModal(lead)}
-                                                        className={`text-sm font-medium ${lead.isVerified ? 'text-red-500 hover:text-red-700' : 'text-green-600 hover:text-green-800'}`}
-                                                    >
-                                                        {lead.isVerified ? 'Unverify' : 'Verify'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setLeadToDelete(lead); setIsDeleteModalOpen(true); }}
-                                                        className="text-red-500 hover:text-red-700 text-sm font-medium ml-1"
-                                                    >
-                                                        Delete
-                                                    </button>
-
-                                                </>
+                                                    {!isMarketer && (
+                                                        <>
+                                                            <button onClick={() => { handleAssignClick(lead); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                                                                <ArrowRightLeft size={14} className="mr-2 text-gray-400"/> Re-assign
+                                                            </button>
+                                                            <button onClick={() => { openVerifyModal(lead); setOpenDropdownId(null); }} className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 flex items-center transition-colors ${lead.isVerified ? 'text-orange-600' : 'text-green-600'}`}>
+                                                                <Shield size={14} className={`mr-2 ${lead.isVerified ? 'text-orange-400' : 'text-green-500'}`}/> {lead.isVerified ? 'Unverify' : 'Verify'}
+                                                            </button>
+                                                            <div className="h-px bg-gray-100 my-1"></div>
+                                                            <button onClick={() => { setLeadToDelete(lead); setIsDeleteModalOpen(true); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 flex items-center transition-colors">
+                                                                <Trash2 size={14} className="mr-2"/> Delete
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </td>
@@ -520,6 +544,35 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                             ))}
                         </tbody>
                     </table>
+                    
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                            <span className="text-sm text-gray-500">
+                                Showing <span className="font-medium text-gray-700">{(currentPage - 1) * limit + 1}</span> to <span className="font-medium text-gray-700">{Math.min(currentPage * limit, totalCount)}</span> of <span className="font-medium text-gray-700">{totalCount}</span> results
+                            </span>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-white hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <div className="text-sm font-medium text-gray-600 px-2">
+                                    Page {currentPage} of {totalPages}
+                                </div>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-white hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
                 )}
             </div>
 
@@ -621,21 +674,24 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                     <input
                                         name="fullName" required defaultValue={leadToEdit.fullName}
-                                        className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        disabled={isMarketer && !!leadToEdit.fullName}
+                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.fullName ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                     <input
                                         name="phone" required defaultValue={leadToEdit.phone}
-                                        className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        disabled={isMarketer && !!leadToEdit.phone}
+                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
                                     <input
                                         name="email" type="email" defaultValue={leadToEdit.email}
-                                        className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        disabled={isMarketer && !!leadToEdit.email}
+                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="mb-4">
