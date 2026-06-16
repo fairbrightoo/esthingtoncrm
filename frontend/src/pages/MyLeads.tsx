@@ -413,166 +413,167 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                         <p>No leads found matching your criteria.</p>
                     </div>
                 ) : (
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50 text-gray-500 font-medium text-sm">
-                            <tr>
-                                <th className="px-6 py-4">Name</th>
-                                {!isMarketer && <th className="px-6 py-4">Assigned To</th>}
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Source</th>
-                                <th className="px-6 py-4">Contact</th>
-                                <th className="px-6 py-4">Last Activity</th>
-                                <th className="px-6 py-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {leads.map(lead => (
-                                <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                                                <User size={16} />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => { setSelectedLead(lead); setTimelineTab('ACTIVITY'); }}
-                                                        className="font-semibold text-gray-700 hover:text-blue-600 hover:underline text-left"
-                                                    >
-                                                        {lead.fullName}
-                                                    </button>
-                                                    {lead.isVerified && (
-                                                        <span className="text-green-600 bg-green-50 p-0.5 rounded-full" title="Verified Lead">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                        </span>
+                    <>
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-gray-50 text-gray-500 font-medium text-sm">
+                                <tr>
+                                    <th className="px-6 py-4">Name</th>
+                                    {!isMarketer && <th className="px-6 py-4">Assigned To</th>}
+                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4">Source</th>
+                                    <th className="px-6 py-4">Contact</th>
+                                    <th className="px-6 py-4">Last Activity</th>
+                                    <th className="px-6 py-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {leads.map(lead => (
+                                    <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                                                    <User size={16} />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <button
+                                                            onClick={() => { setSelectedLead(lead); setTimelineTab('ACTIVITY'); }}
+                                                            className="font-semibold text-gray-700 hover:text-blue-600 hover:underline text-left"
+                                                        >
+                                                            {lead.fullName}
+                                                        </button>
+                                                        {lead.isVerified && (
+                                                            <span className="text-green-600 bg-green-50 p-0.5 rounded-full" title="Verified Lead">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {lead.branch && lead.company && (
+                                                        <div className="text-[10px] font-medium text-gray-500 mt-1 flex items-center">
+                                                            <Globe size={10} className="mr-1" />
+                                                            Origin: {lead.company.abbreviation} - {lead.branch.name}
+                                                        </div>
                                                     )}
                                                 </div>
-                                                {lead.branch && lead.company && (
-                                                    <div className="text-[10px] font-medium text-gray-500 mt-1 flex items-center">
-                                                        <Globe size={10} className="mr-1" />
-                                                        Origin: {lead.company.abbreviation} - {lead.branch.name}
+                                            </div>
+                                        </td>
+
+                                        {!isMarketer && (
+                                            <td className="px-6 py-4">
+                                                {lead.assignedToUser ? (
+                                                    <div className="text-sm font-medium text-gray-800 bg-gray-100 inline-block px-2 py-1 rounded">
+                                                        {lead.assignedToUser.fullName}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs text-xs italic">Unassigned</span>
+                                                )}
+                                            </td>
+                                        )}
+
+                                        <td className="px-6 py-4">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${lead.status === 'CLIENT' ? 'bg-green-100 text-green-700' :
+                                                lead.status === 'PROSPECT' ? 'bg-blue-50 text-blue-600' :
+                                                    'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                {lead.status}
+                                            </span>
+                                        </td>
+
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded">
+                                                {lead.source || 'Unknown'}
+                                            </span>
+                                        </td>
+
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col space-y-1 text-sm text-gray-600">
+                                                <div className="flex items-center space-x-2">
+                                                    <Phone size={14} /> <span>{lead.phone}</span>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Mail size={14} /> <span>{lead.email}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                            <div className="flex items-center space-x-1">
+                                                <Calendar size={14} />
+                                                <span>{new Date(lead.updatedAt).toLocaleDateString()}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center space-x-2 relative">
+                                                <button onClick={() => { setSelectedLead(lead); setTimelineTab('ACTIVITY'); }} className="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50 transition-colors" title="Timeline">
+                                                    <Activity size={16} />
+                                                </button>
+                                                <button onClick={() => { setSelectedLead(lead); setTimelineTab('SALES'); }} className="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50 transition-colors" title="Sales">
+                                                    <DollarSign size={16} />
+                                                </button>
+                                                
+                                                <button 
+                                                    onClick={() => setOpenDropdownId(openDropdownId === lead.id ? null : lead.id)}
+                                                    className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors ml-1"
+                                                    title="More Actions"
+                                                >
+                                                    <MoreHorizontal size={16} />
+                                                </button>
+                                                
+                                                {openDropdownId === lead.id && (
+                                                    <div className="absolute right-0 top-10 w-40 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-10 overflow-hidden">
+                                                        <button onClick={() => { setLeadToEdit(lead); setIsEditModalOpen(true); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                                                            <Edit2 size={14} className="mr-2 text-gray-400"/> Edit Lead
+                                                        </button>
+                                                        {!isMarketer && (
+                                                            <>
+                                                                <button onClick={() => { handleAssignClick(lead); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                                                                    <ArrowRightLeft size={14} className="mr-2 text-gray-400"/> Re-assign
+                                                                </button>
+                                                                <button onClick={() => { openVerifyModal(lead); setOpenDropdownId(null); }} className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 flex items-center transition-colors ${lead.isVerified ? 'text-orange-600' : 'text-green-600'}`}>
+                                                                    <Shield size={14} className={`mr-2 ${lead.isVerified ? 'text-orange-400' : 'text-green-500'}`}/> {lead.isVerified ? 'Unverify' : 'Verify'}
+                                                                </button>
+                                                                <div className="h-px bg-gray-100 my-1"></div>
+                                                                <button onClick={() => { setLeadToDelete(lead); setIsDeleteModalOpen(true); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 flex items-center transition-colors">
+                                                                    <Trash2 size={14} className="mr-2"/> Delete
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
-                                    </td>
-
-                                    {!isMarketer && (
-                                        <td className="px-6 py-4">
-                                            {lead.assignedToUser ? (
-                                                <div className="text-sm font-medium text-gray-800 bg-gray-100 inline-block px-2 py-1 rounded">
-                                                    {lead.assignedToUser.fullName}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400 text-xs text-xs italic">Unassigned</span>
-                                            )}
                                         </td>
-                                    )}
-
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${lead.status === 'CLIENT' ? 'bg-green-100 text-green-700' :
-                                            lead.status === 'PROSPECT' ? 'bg-blue-50 text-blue-600' :
-                                                'bg-gray-100 text-gray-600'
-                                            }`}>
-                                            {lead.status}
-                                        </span>
-                                    </td>
-
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded">
-                                            {lead.source || 'Unknown'}
-                                        </span>
-                                    </td>
-
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col space-y-1 text-sm text-gray-600">
-                                            <div className="flex items-center space-x-2">
-                                                <Phone size={14} /> <span>{lead.phone}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Mail size={14} /> <span>{lead.email}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                        <div className="flex items-center space-x-1">
-                                            <Calendar size={14} />
-                                            <span>{new Date(lead.updatedAt).toLocaleDateString()}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center space-x-2 relative">
-                                            <button onClick={() => { setSelectedLead(lead); setTimelineTab('ACTIVITY'); }} className="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50 transition-colors" title="Timeline">
-                                                <Activity size={16} />
-                                            </button>
-                                            <button onClick={() => { setSelectedLead(lead); setTimelineTab('SALES'); }} className="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50 transition-colors" title="Sales">
-                                                <DollarSign size={16} />
-                                            </button>
-                                            
-                                            <button 
-                                                onClick={() => setOpenDropdownId(openDropdownId === lead.id ? null : lead.id)}
-                                                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors ml-1"
-                                                title="More Actions"
-                                            >
-                                                <MoreHorizontal size={16} />
-                                            </button>
-                                            
-                                            {openDropdownId === lead.id && (
-                                                <div className="absolute right-0 top-10 w-40 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-10 overflow-hidden">
-                                                    <button onClick={() => { setLeadToEdit(lead); setIsEditModalOpen(true); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
-                                                        <Edit2 size={14} className="mr-2 text-gray-400"/> Edit Lead
-                                                    </button>
-                                                    {!isMarketer && (
-                                                        <>
-                                                            <button onClick={() => { handleAssignClick(lead); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
-                                                                <ArrowRightLeft size={14} className="mr-2 text-gray-400"/> Re-assign
-                                                            </button>
-                                                            <button onClick={() => { openVerifyModal(lead); setOpenDropdownId(null); }} className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 flex items-center transition-colors ${lead.isVerified ? 'text-orange-600' : 'text-green-600'}`}>
-                                                                <Shield size={14} className={`mr-2 ${lead.isVerified ? 'text-orange-400' : 'text-green-500'}`}/> {lead.isVerified ? 'Unverify' : 'Verify'}
-                                                            </button>
-                                                            <div className="h-px bg-gray-100 my-1"></div>
-                                                            <button onClick={() => { setLeadToDelete(lead); setIsDeleteModalOpen(true); setOpenDropdownId(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 flex items-center transition-colors">
-                                                                <Trash2 size={14} className="mr-2"/> Delete
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-                            <span className="text-sm text-gray-500">
-                                Showing <span className="font-medium text-gray-700">{(currentPage - 1) * limit + 1}</span> to <span className="font-medium text-gray-700">{Math.min(currentPage * limit, totalCount)}</span> of <span className="font-medium text-gray-700">{totalCount}</span> results
-                            </span>
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-white hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                <div className="text-sm font-medium text-gray-600 px-2">
-                                    Page {currentPage} of {totalPages}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                                <span className="text-sm text-gray-500">
+                                    Showing <span className="font-medium text-gray-700">{(currentPage - 1) * limit + 1}</span> to <span className="font-medium text-gray-700">{Math.min(currentPage * limit, totalCount)}</span> of <span className="font-medium text-gray-700">{totalCount}</span> results
+                                </span>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-white hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                    <div className="text-sm font-medium text-gray-600 px-2">
+                                        Page {currentPage} of {totalPages}
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-white hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-white hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
                             </div>
-                        </div>
-                    )}
-                </>
+                        )}
+                    </>
                 )}
             </div>
 
