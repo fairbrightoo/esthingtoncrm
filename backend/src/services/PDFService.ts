@@ -123,6 +123,7 @@ export const PDFService = {
 
         // Dynamic Signature and MD Name based on Document Type and Head Office Flag
         let finalMdName = 'Managing Director';
+        let finalMdTitle = 'Managing Director';
         let finalSignatureUrl = '';
 
         const isHeadOffice = branchInfo?.isHeadOffice === true;
@@ -136,22 +137,27 @@ export const PDFService = {
         if (documentType === 'OFFER') {
             if (isHeadOffice) {
                 finalMdName = branchMDName;
+                finalMdTitle = 'Managing Director';
                 finalSignatureUrl = branchMDSig;
             } else {
                 finalMdName = branchGeneralManagerName;
+                finalMdTitle = 'General Manager';
                 finalSignatureUrl = branchGeneralManagerSig;
             }
         } else if (documentType === 'PROVISIONAL_ALLOCATION' || documentType === 'FINAL_ALLOCATION') {
             if (isHeadOffice) {
                 finalMdName = groupMDName;
+                finalMdTitle = 'Group Managing Director';
                 finalSignatureUrl = groupMDSig;
             } else {
                 finalMdName = branchMDName;
+                finalMdTitle = 'Managing Director';
                 finalSignatureUrl = branchMDSig;
             }
         } else {
             // Default fallback
             finalMdName = branchGeneralManagerName || groupMDName;
+            finalMdTitle = branchGeneralManagerName ? 'General Manager' : 'Managing Director';
             finalSignatureUrl = branchGeneralManagerSig || groupMDSig;
         }
 
@@ -159,6 +165,7 @@ export const PDFService = {
         const sigHtml = resolvedSignatureUrl ? `<img src="${resolvedSignatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{COMPANY_SIGNATURE}}/g, sigHtml);
         html = html.replace(/{{MD_NAME}}/g, finalMdName || 'Managing Director');
+        html = html.replace(/{{MD_TITLE}}/g, finalMdTitle || 'Managing Director');
 
         // Receipt Specific Signatures (Accountant -> MD)
         const receiptSignerName = accountantInfo?.fullName || finalMdName;
