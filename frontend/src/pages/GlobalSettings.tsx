@@ -35,11 +35,15 @@ export const GlobalSettings = () => {
         website: '',
         phone: '',
         abbreviation: '',
+        abbreviation: '',
         idCardFrontTemplate: '',
-        idCardBackTemplate: ''
+        idCardBackTemplate: '',
+        managingDirectorName: ''
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [signatureFile, setSignatureFile] = useState<File | null>(null);
+    const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
 
     // Admin/MD Management
     const [branchLeaders, setBranchLeaders] = useState<any[]>([]);
@@ -61,7 +65,11 @@ export const GlobalSettings = () => {
     const fetchCompanies = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`);
-            setCompanies(res.data);
+            let fetchedCompanies = res.data;
+            if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
+                fetchedCompanies = fetchedCompanies.filter((c: any) => c.id === user.companyId);
+            }
+            setCompanies(fetchedCompanies);
         } catch (error) {
             console.error("Failed to fetch companies", error);
         } finally {
@@ -250,7 +258,9 @@ export const GlobalSettings = () => {
             data.append('abbreviation', formData.abbreviation);
             data.append('idCardFrontTemplate', formData.idCardFrontTemplate);
             data.append('idCardBackTemplate', formData.idCardBackTemplate);
+            data.append('managingDirectorName', formData.managingDirectorName);
             if (logoFile) data.append('logo', logoFile);
+            if (signatureFile) data.append('signature', signatureFile);
 
             if (editingCompany) {
                 await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${editingCompany.id}`, data,
@@ -327,9 +337,11 @@ export const GlobalSettings = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', themeColor: '#000000', address: '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: '', website: '', phone: '', abbreviation: '', idCardFrontTemplate: '', idCardBackTemplate: '' });
+        setFormData({ name: '', themeColor: '#000000', address: '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: '', website: '', phone: '', abbreviation: '', idCardFrontTemplate: '', idCardBackTemplate: '', managingDirectorName: '' });
         setLogoFile(null);
         setLogoPreview(null);
+        setSignatureFile(null);
+        setSignaturePreview(null);
         setEditingCompany(null);
         setEditingBranch(null);
         setEditingAdmin(null);
@@ -356,9 +368,11 @@ export const GlobalSettings = () => {
             phone: '',
             abbreviation: company.abbreviation || '',
             idCardFrontTemplate: company.idCardFrontTemplate || '',
-            idCardBackTemplate: company.idCardBackTemplate || ''
+            idCardBackTemplate: company.idCardBackTemplate || '',
+            managingDirectorName: company.managingDirectorName || ''
         });
         setLogoPreview(company.logoUrl ? (company.logoUrl.startsWith('http') ? company.logoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.logoUrl}`) : null);
+        setSignaturePreview(company.signatureUrl ? (company.signatureUrl.startsWith('http') ? company.signatureUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.signatureUrl}`) : null);
         setShowCompanyModal(true);
     };
 
@@ -372,7 +386,7 @@ export const GlobalSettings = () => {
         resetForm();
         setEditingBranch(branch);
         setSelectedCompanyId(companyId);
-        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '', abbreviation: branch.abbreviation || '', idCardFrontTemplate: branch.idCardFrontTemplate || '', idCardBackTemplate: branch.idCardBackTemplate || '' });
+        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '', abbreviation: branch.abbreviation || '', idCardFrontTemplate: branch.idCardFrontTemplate || '', idCardBackTemplate: branch.idCardBackTemplate || '', managingDirectorName: '' });
         setShowBranchModal(true);
     };
 
@@ -424,16 +438,20 @@ export const GlobalSettings = () => {
             {activeTab === 'COMPANIES' ? (
                 <>
                     <div className="flex justify-end mb-4 space-x-3">
-                        <button onClick={() => setShowBulkUploadModal(true)} className="flex items-center space-x-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition shadow-sm">
-                            <span>Bulk Upload Admins</span>
-                        </button>
-                        <button onClick={handleManageChairman} className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
-                            <span>Manage Global Chairman</span>
-                        </button>
-                        <button onClick={openCreateCompany} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
-                            <Plus size={18} />
-                            <span>Add Company</span>
-                        </button>
+                        {user?.role !== 'GROUP_MANAGING_DIRECTOR' && (
+                            <>
+                                <button onClick={() => setShowBulkUploadModal(true)} className="flex items-center space-x-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition shadow-sm">
+                                    <span>Bulk Upload Admins</span>
+                                </button>
+                                <button onClick={handleManageChairman} className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                                    <span>Manage Global Chairman</span>
+                                </button>
+                                <button onClick={openCreateCompany} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                                    <Plus size={18} />
+                                    <span>Add Company</span>
+                                </button>
+                            </>
+                        )}
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-100">
                 {companies.map(company => (
@@ -552,6 +570,31 @@ export const GlobalSettings = () => {
                                                     if (e.target.files && e.target.files[0]) {
                                                         setLogoFile(e.target.files[0]);
                                                         setLogoPreview(URL.createObjectURL(e.target.files[0]));
+                                                    }
+                                                }} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="flex space-x-4">
+                                        <div className="flex-1">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Group Managing Director Name</label>
+                                            <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={formData.managingDirectorName} onChange={e => setFormData({ ...formData, managingDirectorName: e.target.value })} placeholder="John Doe" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">GMD Signature (Image)</label>
+                                        <div className="flex items-center space-x-4">
+                                            {signaturePreview && (
+                                                <div className="w-16 h-16 bg-gray-50 border rounded-lg flex items-center justify-center p-2">
+                                                    <img src={signaturePreview} alt="Signature Preview" className="max-w-full max-h-full object-contain" />
+                                                </div>
+                                            )}
+                                            <label className="flex-1 cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition text-center shadow-sm">
+                                                {signatureFile ? signatureFile.name : 'Select Signature Image'}
+                                                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                                                    if (e.target.files && e.target.files[0]) {
+                                                        setSignatureFile(e.target.files[0]);
+                                                        setSignaturePreview(URL.createObjectURL(e.target.files[0]));
                                                     }
                                                 }} />
                                             </label>

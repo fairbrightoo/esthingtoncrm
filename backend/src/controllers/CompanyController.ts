@@ -166,12 +166,19 @@ export const CompanyController = {
      */
     async updateCompany(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate, abbreviation } = req.body;
+        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate, abbreviation, managingDirectorName } = req.body;
         let logoUrl: string | undefined = undefined;
+        let signatureUrl: string | undefined = undefined;
 
         try {
-            if (req.file) {
-                logoUrl = await uploadFile(req.file.buffer, req.file.originalname, 'logos');
+            if (req.files) {
+                const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+                if (files.logo && files.logo[0]) {
+                    logoUrl = await uploadFile(files.logo[0].buffer, files.logo[0].originalname, 'logos');
+                }
+                if (files.signature && files.signature[0]) {
+                    signatureUrl = await uploadFile(files.signature[0].buffer, files.signature[0].originalname, 'signatures');
+                }
             }
 
             const company = await prisma.company.update({
@@ -188,6 +195,8 @@ export const CompanyController = {
                     ...(idCardFrontTemplate !== undefined && { idCardFrontTemplate }),
                     ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
                     ...(abbreviation !== undefined && { abbreviation }),
+                    ...(managingDirectorName !== undefined && { managingDirectorName }),
+                    ...(signatureUrl && { signatureUrl }),
                     ...(logoUrl && { logoUrl }) 
                 }
             });

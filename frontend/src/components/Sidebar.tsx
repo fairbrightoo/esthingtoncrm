@@ -91,6 +91,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to="/dashboard/my-leads" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
+                        <NavItem to="/dashboard/settings" icon={<Settings size={20} />} label="Settings" />
                     </>
                 )}
 

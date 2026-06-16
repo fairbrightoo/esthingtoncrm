@@ -16,7 +16,7 @@ router.get('/:companyId/branches/:branchId/users', CompanyController.getBranchUs
 // Protected Admin Routes
 router.post('/bulk-admins', authenticateToken, upload.single('file'), CompanyController.bulkCreateAdmins);
 router.post('/', authenticateToken, upload.single('logo'), CompanyController.createCompany);
-router.put('/:id', authenticateToken, upload.single('logo'), CompanyController.updateCompany);
+router.put('/:id', authenticateToken, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'signature', maxCount: 1 }]), CompanyController.updateCompany);
 router.delete('/:id', authenticateToken, CompanyController.deleteCompany);
 
 router.post('/:id/branches', authenticateToken, CompanyController.createBranch);

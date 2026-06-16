@@ -206,6 +206,7 @@ function App() {
             <Route path="/dashboard/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
+            <Route path="/dashboard/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             {/* Global Chairman Routes */}
             <Route path="/dashboard/chairman" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
