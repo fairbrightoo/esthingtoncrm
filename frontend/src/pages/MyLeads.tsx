@@ -697,25 +697,25 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                     <input
-                                        name="fullName" required defaultValue={leadToEdit.fullName}
-                                        disabled={isMarketer && !!leadToEdit.fullName}
-                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.fullName ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                                        name="fullName" required defaultValue={leadToEdit.fullName === 'null' ? '' : leadToEdit.fullName}
+                                        disabled={isMarketer && !!leadToEdit.fullName && leadToEdit.fullName !== 'null'}
+                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.fullName && leadToEdit.fullName !== 'null' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                     <input
-                                        name="phone" required defaultValue={leadToEdit.phone}
-                                        disabled={isMarketer && !!leadToEdit.phone}
-                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                                        name="phone" required defaultValue={leadToEdit.phone === 'null' ? '' : leadToEdit.phone}
+                                        disabled={isMarketer && !!leadToEdit.phone && leadToEdit.phone !== 'null'}
+                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.phone && leadToEdit.phone !== 'null' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
                                     <input
-                                        name="email" type="email" defaultValue={leadToEdit.email}
-                                        disabled={isMarketer && !!leadToEdit.email}
-                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                                        name="email" type="email" defaultValue={leadToEdit.email === 'null' ? '' : leadToEdit.email}
+                                        disabled={isMarketer && !!leadToEdit.email && leadToEdit.email !== 'null'}
+                                        className={`w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${isMarketer && !!leadToEdit.email && leadToEdit.email !== 'null' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="mb-4">
