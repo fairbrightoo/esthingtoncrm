@@ -234,11 +234,15 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
         if (!leadToEdit) return;
         const formData = new FormData(e.currentTarget);
 
+        const fullName = formData.get('fullName') !== null ? formData.get('fullName') : leadToEdit.fullName;
+        const phone = formData.get('phone') !== null ? formData.get('phone') : leadToEdit.phone;
+        const email = formData.get('email') !== null ? formData.get('email') : leadToEdit.email;
+
         try {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/leads/${leadToEdit.id}`, {
-                fullName: formData.get('fullName'),
-                phone: formData.get('phone'),
-                email: formData.get('email'),
+                fullName,
+                phone,
+                email,
                 gender: formData.get('gender') || undefined,
                 source: formData.get('source') || undefined,
                 whatsappOptIn: formData.get('whatsappOptIn') === 'on'
