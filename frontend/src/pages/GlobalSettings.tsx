@@ -7,7 +7,7 @@ import { DocumentTemplatesConfig } from '../components/DocumentTemplatesConfig';
 import { ProfileSettings } from '../components/ProfileSettings';
 
 export const GlobalSettings = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { addToast } = useToast();
     const [activeTab, setActiveTab] = useState('COMPANIES');
     const [companies, setCompanies] = useState<any[]>([]);
