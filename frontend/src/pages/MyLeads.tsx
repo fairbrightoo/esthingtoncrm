@@ -37,7 +37,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const [limit] = useState(20);
+    const [limit, setLimit] = useState(20);
 
     // Assign Logic
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -69,7 +69,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
 
     useEffect(() => {
         fetchLeads();
-    }, [statusFilter, sourceFilter, currentPage]); // Re-fetch when filter or page changes
+    }, [statusFilter, sourceFilter, currentPage, limit]); // Re-fetch when filter, page, or limit changes
 
     // Search Debounce Effect
     useEffect(() => {
@@ -547,11 +547,30 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                         </table>
                         
                         {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50 gap-4">
+                            <div className="flex items-center space-x-4">
                                 <span className="text-sm text-gray-500">
-                                    Showing <span className="font-medium text-gray-700">{(currentPage - 1) * limit + 1}</span> to <span className="font-medium text-gray-700">{Math.min(currentPage * limit, totalCount)}</span> of <span className="font-medium text-gray-700">{totalCount}</span> results
+                                    Showing <span className="font-medium text-gray-700">{totalCount === 0 ? 0 : (currentPage - 1) * limit + 1}</span> to <span className="font-medium text-gray-700">{Math.min(currentPage * limit, totalCount)}</span> of <span className="font-medium text-gray-700">{totalCount}</span> results
                                 </span>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-500">Rows per page:</span>
+                                    <select
+                                        value={limit}
+                                        onChange={(e) => {
+                                            setLimit(Number(e.target.value));
+                                            setCurrentPage(1);
+                                        }}
+                                        className="border border-gray-200 rounded p-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                    >
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            {totalPages > 1 && (
                                 <div className="flex items-center space-x-2">
                                     <button
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -571,8 +590,8 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                         <ChevronRight size={16} />
                                     </button>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </>
                 )}
             </div>
