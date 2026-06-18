@@ -933,7 +933,7 @@ export const SaleController = {
             const { status, note } = req.body;
 
             const payment = await prisma.payment.update({
-                where: { id: paymentId },
+                where: { id: paymentId as string },
                 data: {
                     bankBranchConfirmation: status, // 'RECEIVED' or 'NOT_RECEIVED'
                     bankBranchConfirmationNote: note || null
@@ -956,7 +956,7 @@ export const SaleController = {
 
             const message = await prisma.paymentMessage.create({
                 data: {
-                    paymentId,
+                    paymentId: paymentId as string,
                     senderId: user.userId || user.id,
                     content
                 },
@@ -978,7 +978,7 @@ export const SaleController = {
             const { paymentId } = req.params;
             
             const messages = await prisma.paymentMessage.findMany({
-                where: { paymentId },
+                where: { paymentId: paymentId as string },
                 include: {
                     sender: { select: { fullName: true, role: true } }
                 },

@@ -258,7 +258,7 @@ export const RequisitionController = {
                 if (role === "ACCOUNTANT" && branchId) {
                     whereClause.receivingBranchId = branchId;
                 } else if (role === "MANAGING_DIRECTOR") {
-                    const companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
+                    const companyBranches = await prisma.branch.findMany({ where: { companyId: companyId as string }, select: { id: true } });
                     const branchIds = companyBranches.map(b => b.id);
                     whereClause.receivingBranchId = { in: branchIds };
                 }
