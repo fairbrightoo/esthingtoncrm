@@ -442,19 +442,21 @@ export const ManagingDirectorDashboard = () => {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            <button
-                                                onClick={() => handleUpdateStatus(p.id, 'APPROVED')}
-                                                className="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
-                                            >
-                                                Confirm Payment
-                                            </button>
-                                            <button
-                                                onClick={() => handleUpdateStatus(p.id, 'REJECTED')}
-                                                className="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 font-medium rounded-lg hover:bg-red-100 transition-colors"
-                                            >
-                                                Not Received
-                                            </button>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex flex-col gap-2 w-36 ml-auto">
+                                                <button
+                                                    onClick={() => handleUpdateStatus(p.id, 'APPROVED')}
+                                                    className="w-full flex justify-center items-center px-3 py-2 bg-green-600 text-white text-xs font-bold rounded shadow-sm hover:bg-green-700 transition-colors"
+                                                >
+                                                    <CheckCircle size={14} className="mr-1.5" /> Confirm Payment
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUpdateStatus(p.id, 'REJECTED')}
+                                                    className="w-full flex justify-center items-center px-3 py-2 bg-white text-red-600 text-xs font-bold rounded shadow-sm border border-red-200 hover:bg-red-50 transition-colors"
+                                                >
+                                                    <XCircle size={14} className="mr-1.5" /> Not Received
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
