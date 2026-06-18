@@ -153,11 +153,13 @@ app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date() });
 });
 
-// Start Background Omnichannel Automation
-AutomationService.startCronJobs();
+if (process.env.NODE_ENV !== 'test') {
+    // Start Background Omnichannel Automation
+    AutomationService.startCronJobs();
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
 export { app, prisma };

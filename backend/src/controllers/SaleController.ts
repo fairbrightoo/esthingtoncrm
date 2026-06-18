@@ -303,9 +303,9 @@ export const SaleController = {
             });
 
             res.status(201).json(payment);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Record Payment Error", error);
-            res.status(500).json({ error: "Failed to record payment" });
+            res.status(500).json({ error: "Failed to record payment", details: error.message });
         }
     },
 

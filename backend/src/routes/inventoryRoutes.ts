@@ -35,5 +35,8 @@ router.get('/payments/processed', authenticateToken, SaleController.getProcessed
 router.put('/payments/:paymentId/status', authenticateToken, SaleController.updatePaymentStatus);
 router.patch('/sales/:saleId/plot', authenticateToken, SaleController.assignPlotNumber);
 router.post('/sales/:saleId/exchange', authenticateToken, SaleController.exchangePlot);
+router.put('/payments/:paymentId/bank-confirm', authenticateToken, SaleController.bankConfirmPayment);
+router.post('/payments/:paymentId/messages', authenticateToken, SaleController.addPaymentMessage);
+router.get('/payments/:paymentId/messages', authenticateToken, SaleController.getPaymentMessages);
 
 export default router;
