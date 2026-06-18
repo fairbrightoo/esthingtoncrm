@@ -130,13 +130,17 @@ export const PlotController = {
             const { plotId } = req.params as { plotId: string };
             const { isCornerPiece } = req.body;
 
-            const plot = await prisma.plot.findUnique({ where: { id: plotId } });
+            const plot = await prisma.plot.findUnique({ 
+                where: { id: plotId },
+                include: { estate: true }
+            });
             if (!plot) return res.status(404).json({ error: "Plot not found" });
 
             const oldPlotNumber = plot.plotNumber;
             let newPlotNumber = oldPlotNumber;
+            let newPrice = plot.price;
+            const cpPrice = plot.estate?.cornerPiecePrice || 1000000;
 
-            // DKV/02/26-4FDD-500-0005 -> DKV/02/26-4FDD-500CP-0005
             const sizeString = String(plot.size);
 
             if (isCornerPiece) {
@@ -144,10 +148,18 @@ export const PlotController = {
                 if (!newPlotNumber.includes(`${sizeString}CP-`)) {
                     newPlotNumber = newPlotNumber.replace(`-${sizeString}-`, `-${sizeString}CP-`);
                 }
+                // Add price if toggling from false to true
+                if (!plot.isCornerPiece) {
+                    newPrice += cpPrice;
+                }
             } else {
                 // Remove CP if it has it
                 if (newPlotNumber.includes(`${sizeString}CP-`)) {
                     newPlotNumber = newPlotNumber.replace(`-${sizeString}CP-`, `-${sizeString}-`);
+                }
+                // Subtract price if toggling from true to false
+                if (plot.isCornerPiece) {
+                    newPrice -= cpPrice;
                 }
             }
 
@@ -155,7 +167,8 @@ export const PlotController = {
                 where: { id: plotId },
                 data: {
                     isCornerPiece: Boolean(isCornerPiece),
-                    plotNumber: newPlotNumber
+                    plotNumber: newPlotNumber,
+                    price: newPrice
                 }
             });
 
