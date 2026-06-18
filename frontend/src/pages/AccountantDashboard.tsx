@@ -399,9 +399,17 @@ export const AccountantDashboard = () => {
                                                                                 );
                                                                             })()}
                                                                         </div>
-                                                                        <span className="text-xs font-semibold text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded w-max border border-orange-100">
-                                                                            Balance: ₦{Math.max(0, (p.sale?.agreedPrice || 0) - (p.sale?.totalPaid || 0)).toLocaleString()}
-                                                                        </span>
+                                                                        <div className="flex gap-1.5 items-center flex-wrap mt-1">
+                                                                            <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
+                                                                                Prev. Paid: ₦{(p.sale?.totalPaid || 0).toLocaleString()}
+                                                                            </span>
+                                                                            <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                                                                                This Payment: ₦{(p.amount + (p.virtualLoanAmount || 0)).toLocaleString()}
+                                                                            </span>
+                                                                            <span className="text-[10px] font-semibold text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+                                                                                New Balance: ₦{Math.max(0, (p.sale?.agreedPrice || 0) - ((p.sale?.totalPaid || 0) + p.amount + (p.virtualLoanAmount || 0))).toLocaleString()}
+                                                                            </span>
+                                                                        </div>
                                                                         <span>Method: {p.method}</span>
                                                                         {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
                                                                         <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
