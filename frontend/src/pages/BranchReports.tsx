@@ -200,7 +200,7 @@ export const BranchReports = () => {
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Banknote size={100} /></div>
                         <div className="relative z-10">
                             <p className="text-blue-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><ArrowDownRight size={14} className="mr-1"/> Direct Cash Inflow</p>
-                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.directBranchRevenue || 0).toLocaleString()}</h2>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.grossCashReceived || 0).toLocaleString()}</h2>
                             <p className="text-xs text-blue-200 mt-2">Cash deposited to this branch's bank accounts.</p>
                         </div>
                     </div>
@@ -208,7 +208,7 @@ export const BranchReports = () => {
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Activity size={100} /></div>
                         <div className="relative z-10">
                             <p className="text-purple-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><TrendingUp size={14} className="mr-1"/> Cross-Branch Value</p>
-                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.crossBranchGenerated || 0).toLocaleString()}</h2>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.outboundSalesVolume || 0).toLocaleString()}</h2>
                             <p className="text-xs text-purple-200 mt-2">Value your staff generated for other branches.</p>
                         </div>
                     </div>
@@ -216,7 +216,7 @@ export const BranchReports = () => {
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Users size={100} /></div>
                         <div className="relative z-10">
                             <p className="text-gray-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><PieIcon size={14} className="mr-1"/> Total Staff Volume</p>
-                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.totalStaffSalesVolume || 0).toLocaleString()}</h2>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.totalSalesGenerated || 0).toLocaleString()}</h2>
                             <p className="text-xs text-gray-200 mt-2">Combined total sales volume of your staff.</p>
                         </div>
                     </div>

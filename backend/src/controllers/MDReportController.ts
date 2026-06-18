@@ -104,14 +104,17 @@ export const MDReportController = {
             });
 
             // Calculate Gross Cash Received (Physical deposits in our accounts)
-            const cashWhere: any = { status: 'APPROVED' };
+            const cashWhere: any = { status: 'APPROVED', OR: [] };
             if (startDate || endDate) cashWhere.date = dateFilter;
             
             if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
                 const companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
-                cashWhere.receivingBranchId = { in: companyBranches.map(b => b.id) };
+                const branchIds = companyBranches.map(b => b.id);
+                cashWhere.OR.push({ receivingBranchId: { in: branchIds } });
+                cashWhere.OR.push({ receivingBranchId: null, sale: { plot: { estate: { managingBranchId: { in: branchIds } } } } });
             } else {
-                cashWhere.receivingBranchId = branchId;
+                cashWhere.OR.push({ receivingBranchId: branchId });
+                cashWhere.OR.push({ receivingBranchId: null, sale: { plot: { estate: { managingBranchId: branchId } } } });
             }
 
             const cashPayments = await prisma.payment.findMany({
