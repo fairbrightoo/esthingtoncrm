@@ -269,6 +269,21 @@ export const SaleController = {
             // Serialize array of URLs
             const proofOfPaymentUrl = JSON.stringify(savedUrls);
 
+            // Deduce receiving branch from accountPaidTo
+            let receivingBranchId: string | null = null;
+            if (accountPaidTo) {
+                const parts = accountPaidTo.split(' - ');
+                const accountNum = parts[parts.length - 1]?.trim();
+                if (accountNum) {
+                    const corporateAccount = await prisma.corporateBankAccount.findFirst({
+                        where: { accountNumber: accountNum }
+                    });
+                    if (corporateAccount) {
+                        receivingBranchId = corporateAccount.branchId;
+                    }
+                }
+            }
+
             // Create Payment with PENDING status
             const payment = await prisma.payment.create({
                 data: {
@@ -281,7 +296,9 @@ export const SaleController = {
                     recordedByUserId: userId,
                     accountPaidTo: accountPaidTo || null,
                     notes: notes || null,
-                    virtualLoanAmount: loanAmount
+                    virtualLoanAmount: loanAmount,
+                    receivingBranchId,
+                    bankBranchConfirmation: receivingBranchId ? 'PENDING' : null
                 }
             });
 
@@ -296,16 +313,31 @@ export const SaleController = {
     getPendingPayments: async (req: Request, res: Response) => {
         try {
             const user = (req as any).user;
-            const whereClause: any = { status: 'PENDING' };
+            
+            let whereClause: any = { status: 'PENDING' };
 
             // Respect Cross-Company & Branch boundaries
             if (user?.role !== 'SUPER_ADMIN') {
-                const saleFilter: any = { marketer: { companyId: user?.companyId } };
-                // If Accountant, restrict to Branch (MD sees full company)
-                if (user?.role === 'ACCOUNTANT' && user?.branchId) {
-                    saleFilter.marketer = { branchId: user?.branchId };
+                const effectiveCompanyId = user?.companyId;
+                const effectiveBranchId = user?.branchId;
+                
+                if (user?.role === 'MANAGING_DIRECTOR') {
+                    // MD sees anything where their COMPANY is involved (Selling, Managing, or Bank)
+                    whereClause.OR = [
+                        { sale: { marketer: { companyId: effectiveCompanyId } } },
+                        { sale: { plot: { estate: { companyId: effectiveCompanyId } } } },
+                        { receivingBranchId: { in: await prisma.branch.findMany({ where: { companyId: effectiveCompanyId } }).then(b => b.map(x => x.id)) } }
+                    ];
+                } else if (user?.role === 'ACCOUNTANT') {
+                    // Accountant restricted to their specific BRANCH
+                    whereClause.OR = [
+                        { sale: { marketer: { branchId: effectiveBranchId } } },
+                        { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
+                        { receivingBranchId: effectiveBranchId }
+                    ];
+                } else {
+                    whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
-                whereClause.sale = saleFilter;
             }
 
             const payments = await prisma.payment.findMany({
@@ -331,7 +363,7 @@ export const SaleController = {
                                 } 
                             },
                             lead: true,
-                            marketer: { select: { fullName: true, role: true } }
+                            marketer: { select: { fullName: true, role: true, companyId: true, branchId: true } }
                         }
                     },
                     recordedByUser: {
@@ -340,7 +372,67 @@ export const SaleController = {
                 },
                 orderBy: { createdAt: 'desc' }
             });
-            res.json(payments);
+
+            // Categorize Payments
+            const directSales: any[] = [];
+            const outboundCrossSales: any[] = [];
+            const inboundCrossSales: any[] = [];
+            const bankConfirmations: any[] = [];
+
+            if (user?.role === 'SUPER_ADMIN') {
+                directSales.push(...payments);
+            } else {
+                const effectiveCompanyId = user?.companyId;
+                const effectiveBranchId = user?.branchId;
+
+                payments.forEach(payment => {
+                    const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
+                    const isSellingBranch = payment.sale.marketer?.branchId === effectiveBranchId;
+                    const isManagingCompany = payment.sale.plot.estate.companyId === effectiveCompanyId;
+                    const isManagingBranch = payment.sale.plot.estate.managingBranchId === effectiveBranchId;
+                    
+                    // Deduce Receiving Branch matching
+                    let isReceivingBank = false;
+                    if (user?.role === 'ACCOUNTANT') {
+                        isReceivingBank = payment.receivingBranchId === effectiveBranchId;
+                    } else if (user?.role === 'MANAGING_DIRECTOR') {
+                        // For MD, we checked if receivingBranchId was in their company branches earlier.
+                        // We can just rely on the DB having filtered it, but to be safe:
+                        if (payment.receivingBranchId) {
+                            const isMyBranch = payment.sale.plot.estate.companyId === effectiveCompanyId; // Simplified check for MD
+                            isReceivingBank = true; // If it's in the list and not selling/managing, it must be bank.
+                        }
+                    }
+
+                    // Direct Sale: We sold it AND we manage it
+                    if (isSellingCompany && isManagingCompany) {
+                        directSales.push(payment);
+                    }
+                    // Outbound Cross-Sale: We sold it, but someone else manages it
+                    else if (isSellingCompany && !isManagingCompany) {
+                        outboundCrossSales.push(payment);
+                    }
+                    // Inbound Cross-Sale: Someone else sold it, but we manage it
+                    else if (!isSellingCompany && isManagingCompany) {
+                        inboundCrossSales.push(payment);
+                    }
+                    // Bank Confirmation: We didn't sell it or manage it, but we hold the cash
+                    else if (!isSellingCompany && !isManagingCompany && isReceivingBank) {
+                        bankConfirmations.push(payment);
+                    }
+                    // If we sold it but the cash went to another branch within our company (for accountants)
+                    else if (user?.role === 'ACCOUNTANT' && isReceivingBank && !isSellingBranch && !isManagingBranch) {
+                        bankConfirmations.push(payment);
+                    }
+                });
+            }
+
+            res.json({
+                directSales,
+                outboundCrossSales,
+                inboundCrossSales,
+                bankConfirmations
+            });
         } catch (error) {
             console.error("Get Pending Payments Error", error);
             res.status(500).json({ error: "Failed to fetch pending payments" });
@@ -352,7 +444,7 @@ export const SaleController = {
         try {
             const user = (req as any).user;
             const { startDate, endDate } = req.query;
-            const whereClause: any = { status: { in: ['APPROVED', 'REJECTED'] } };
+            let whereClause: any = { status: { in: ['APPROVED', 'REJECTED'] } };
 
             if (startDate && endDate) {
                 whereClause.date = {
@@ -363,12 +455,26 @@ export const SaleController = {
 
             // Respect Cross-Company & Branch boundaries
             if (user?.role !== 'SUPER_ADMIN') {
-                const saleFilter: any = { marketer: { companyId: user?.companyId } };
-                // If Accountant, restrict to Branch (MD sees full company)
-                if (user?.role === 'ACCOUNTANT' && user?.branchId) {
-                    saleFilter.marketer = { branchId: user?.branchId };
+                const effectiveCompanyId = user?.companyId;
+                const effectiveBranchId = user?.branchId;
+                
+                if (user?.role === 'MANAGING_DIRECTOR') {
+                    // MD sees anything where their COMPANY is involved (Selling, Managing, or Bank)
+                    whereClause.OR = [
+                        { sale: { marketer: { companyId: effectiveCompanyId } } },
+                        { sale: { plot: { estate: { companyId: effectiveCompanyId } } } },
+                        { receivingBranchId: { in: await prisma.branch.findMany({ where: { companyId: effectiveCompanyId } }).then(b => b.map(x => x.id)) } }
+                    ];
+                } else if (user?.role === 'ACCOUNTANT') {
+                    // Accountant restricted to their specific BRANCH
+                    whereClause.OR = [
+                        { sale: { marketer: { branchId: effectiveBranchId } } },
+                        { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
+                        { receivingBranchId: effectiveBranchId }
+                    ];
+                } else {
+                    whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
-                whereClause.sale = saleFilter;
             }
 
             const payments = await prisma.payment.findMany({
@@ -394,7 +500,7 @@ export const SaleController = {
                                 } 
                             },
                             lead: true,
-                            marketer: { select: { fullName: true, role: true } }
+                            marketer: { select: { fullName: true, role: true, companyId: true, branchId: true } }
                         }
                     },
                     recordedByUser: {
@@ -404,7 +510,65 @@ export const SaleController = {
                 orderBy: { createdAt: 'desc' },
                 ...(startDate && endDate ? {} : { take: 100 }) // Limit history for performance unless filtering
             });
-            res.json(payments);
+
+            // Categorize Payments
+            const directSales: any[] = [];
+            const outboundCrossSales: any[] = [];
+            const inboundCrossSales: any[] = [];
+            const bankConfirmations: any[] = [];
+
+            if (user?.role === 'SUPER_ADMIN') {
+                directSales.push(...payments);
+            } else {
+                const effectiveCompanyId = user?.companyId;
+                const effectiveBranchId = user?.branchId;
+
+                payments.forEach(payment => {
+                    const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
+                    const isSellingBranch = payment.sale.marketer?.branchId === effectiveBranchId;
+                    const isManagingCompany = payment.sale.plot.estate.companyId === effectiveCompanyId;
+                    const isManagingBranch = payment.sale.plot.estate.managingBranchId === effectiveBranchId;
+                    
+                    // Deduce Receiving Branch matching
+                    let isReceivingBank = false;
+                    if (user?.role === 'ACCOUNTANT') {
+                        isReceivingBank = payment.receivingBranchId === effectiveBranchId;
+                    } else if (user?.role === 'MANAGING_DIRECTOR') {
+                        if (payment.receivingBranchId) {
+                            const isMyBranch = payment.sale.plot.estate.companyId === effectiveCompanyId;
+                            isReceivingBank = true;
+                        }
+                    }
+
+                    // Direct Sale: We sold it AND we manage it
+                    if (isSellingCompany && isManagingCompany) {
+                        directSales.push(payment);
+                    }
+                    // Outbound Cross-Sale: We sold it, but someone else manages it
+                    else if (isSellingCompany && !isManagingCompany) {
+                        outboundCrossSales.push(payment);
+                    }
+                    // Inbound Cross-Sale: Someone else sold it, but we manage it
+                    else if (!isSellingCompany && isManagingCompany) {
+                        inboundCrossSales.push(payment);
+                    }
+                    // Bank Confirmation: We didn't sell it or manage it, but we hold the cash
+                    else if (!isSellingCompany && !isManagingCompany && isReceivingBank) {
+                        bankConfirmations.push(payment);
+                    }
+                    // If we sold it but the cash went to another branch within our company (for accountants)
+                    else if (user?.role === 'ACCOUNTANT' && isReceivingBank && !isSellingBranch && !isManagingBranch) {
+                        bankConfirmations.push(payment);
+                    }
+                });
+            }
+
+            res.json({
+                directSales,
+                outboundCrossSales,
+                inboundCrossSales,
+                bankConfirmations
+            });
         } catch (error) {
             console.error("Get Processed Payments Error", error);
             res.status(500).json({ error: "Failed to fetch processed payments" });
@@ -759,6 +923,72 @@ export const SaleController = {
         } catch (error) {
             console.error("Legacy Onboarding Error:", error);
             res.status(500).json({ error: "Failed to onboard legacy sales" });
+        }
+    },
+
+    // 11. Bank Receipt Confirmation
+    bankConfirmPayment: async (req: Request, res: Response) => {
+        try {
+            const { paymentId } = req.params;
+            const { status, note } = req.body;
+
+            const payment = await prisma.payment.update({
+                where: { id: paymentId },
+                data: {
+                    bankBranchConfirmation: status, // 'RECEIVED' or 'NOT_RECEIVED'
+                    bankBranchConfirmationNote: note || null
+                }
+            });
+
+            res.json(payment);
+        } catch (error) {
+            console.error("Bank Confirm Payment Error", error);
+            res.status(500).json({ error: "Failed to confirm bank receipt" });
+        }
+    },
+
+    // 12. Add Payment Message
+    addPaymentMessage: async (req: Request, res: Response) => {
+        try {
+            const { paymentId } = req.params;
+            const { content } = req.body;
+            const user = (req as any).user;
+
+            const message = await prisma.paymentMessage.create({
+                data: {
+                    paymentId,
+                    senderId: user.userId || user.id,
+                    content
+                },
+                include: {
+                    sender: { select: { fullName: true, role: true } }
+                }
+            });
+
+            res.status(201).json(message);
+        } catch (error) {
+            console.error("Add Payment Message Error", error);
+            res.status(500).json({ error: "Failed to add payment message" });
+        }
+    },
+
+    // 13. Get Payment Messages
+    getPaymentMessages: async (req: Request, res: Response) => {
+        try {
+            const { paymentId } = req.params;
+            
+            const messages = await prisma.paymentMessage.findMany({
+                where: { paymentId },
+                include: {
+                    sender: { select: { fullName: true, role: true } }
+                },
+                orderBy: { createdAt: 'asc' }
+            });
+
+            res.json(messages);
+        } catch (error) {
+            console.error("Get Payment Messages Error", error);
+            res.status(500).json({ error: "Failed to fetch payment messages" });
         }
     }
 };

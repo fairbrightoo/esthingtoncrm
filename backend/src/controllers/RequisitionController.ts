@@ -255,13 +255,13 @@ export const RequisitionController = {
             }
 
             if (role !== "SUPER_ADMIN") {
-                const saleFilter: any = {};
                 if (role === "ACCOUNTANT" && branchId) {
-                    saleFilter.marketer = { branchId };
+                    whereClause.receivingBranchId = branchId;
                 } else if (role === "MANAGING_DIRECTOR") {
-                    saleFilter.marketer = { companyId };
+                    const companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
+                    const branchIds = companyBranches.map(b => b.id);
+                    whereClause.receivingBranchId = { in: branchIds };
                 }
-                whereClause.sale = { ...whereClause.sale, ...saleFilter };
             }
 
             const payments = await prisma.payment.findMany({

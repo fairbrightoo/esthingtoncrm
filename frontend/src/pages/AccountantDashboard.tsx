@@ -108,9 +108,34 @@ export const AccountantDashboard = () => {
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/processed?startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             
+            const addCommissionTag = (payment: any) => {
+                const marketerBranchId = payment.sale?.marketer?.branchId;
+                const plotBranchId = payment.sale?.plot?.estate?.managingBranchId;
+                
+                let tag = '[UNKNOWN]';
+                if (marketerBranchId === plotBranchId) {
+                    tag = '[DIRECT SALE]';
+                } else if (user?.branchId === marketerBranchId) {
+                    tag = '[OUTBOUND CROSS-SALE]';
+                } else if (user?.branchId === plotBranchId) {
+                    tag = '[INBOUND CROSS-SALE]';
+                } else {
+                    tag = '[CROSS-SALE]';
+                }
+                return { ...payment, commissionTag: tag };
+            };
+
+            const allProcessed = [
+                ...((payRes.data.directSales || []).map((p: any) => ({ ...p, commissionTag: '[DIRECT SALE]' }))),
+                ...((payRes.data.inboundCrossSales || []).map((p: any) => ({ ...p, commissionTag: '[INBOUND CROSS-SALE]' }))),
+                ...((payRes.data.outboundCrossSales || []).map((p: any) => ({ ...p, commissionTag: '[OUTBOUND CROSS-SALE]' }))),
+                ...((payRes.data.bankConfirmations || []).map((p: any) => ({ ...p, commissionTag: '[BANK CONFIRMATION]' })))
+            ];
+            allProcessed.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
             setHistoryData({
-                payments: payRes.data,
-                commissions: commRes.data,
+                payments: allProcessed,
+                commissions: commRes.data.map(addCommissionTag),
                 requisitions: reqRes.data.filter((r: any) => r.status === 'DISBURSED')
             });
         } catch (error) {
@@ -135,15 +160,40 @@ export const AccountantDashboard = () => {
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
 
-            // Filter for only ones needing accountant action (Approved by MD)
             const approvedReqs = reqRes.data.filter((r: any) => r.status === 'APPROVED_BY_MD' || r.status === 'DISBURSED');
             setDisbursements(approvedReqs);
-            setCommissions(commRes.data);
-            setPendingPayments(pendRes.data);
+            
+            const addCommissionTag = (payment: any) => {
+                const marketerBranchId = payment.sale?.marketer?.branchId;
+                const plotBranchId = payment.sale?.plot?.estate?.managingBranchId;
+                
+                let tag = '[UNKNOWN]';
+                if (marketerBranchId === plotBranchId) {
+                    tag = '[DIRECT SALE]';
+                } else if (user?.branchId === marketerBranchId) {
+                    tag = '[OUTBOUND CROSS-SALE]';
+                } else if (user?.branchId === plotBranchId) {
+                    tag = '[INBOUND CROSS-SALE]';
+                } else {
+                    tag = '[CROSS-SALE]';
+                }
+                return { ...payment, commissionTag: tag };
+            };
+
+            setCommissions(commRes.data.map(addCommissionTag));
+            
+            const allPending = [
+                ...((pendRes.data.directSales || []).map((p: any) => ({ ...p, commissionTag: '[DIRECT SALE]' }))),
+                ...((pendRes.data.inboundCrossSales || []).map((p: any) => ({ ...p, commissionTag: '[INBOUND CROSS-SALE]' }))),
+                ...((pendRes.data.outboundCrossSales || []).map((p: any) => ({ ...p, commissionTag: '[OUTBOUND CROSS-SALE]' }))),
+                ...((pendRes.data.bankConfirmations || []).map((p: any) => ({ ...p, commissionTag: '[BANK CONFIRMATION]' })))
+            ];
+            allPending.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            setPendingPayments(allPending);
         } catch (error) {
             console.error("Failed to fetch dashboard data.", error);
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 
@@ -377,6 +427,11 @@ export const AccountantDashboard = () => {
                                                                     <div className="text-xs text-gray-400">
                                                                         {p.sale?.plot?.estate?.name || 'Unknown Estate'} ({p.sale?.plot?.estate?.location || 'Unknown Location'})
                                                                     </div>
+                                                                    {p.commissionTag && (
+                                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase mt-2 inline-block ${p.commissionTag.includes('DIRECT') ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                                                                            {p.commissionTag}
+                                                                        </span>
+                                                                    )}
                                                                 </td>
                                                                 <td className="px-6 py-4">
                                                                     <div className="font-bold text-blue-700 text-lg flex items-center gap-2">
@@ -544,7 +599,14 @@ export const AccountantDashboard = () => {
                                                                             <span className="text-xs text-gray-500">{payment.sale?.plot?.estate?.name}</span>
                                                                         </td>
                                                                         <td className="px-6 py-4 font-mono text-gray-600">₦{payment.amount.toLocaleString()}</td>
-                                                                        <td className="px-6 py-4 font-bold text-emerald-600 font-mono text-lg">₦{commissionAmount.toLocaleString()}</td>
+                                                                        <td className="px-6 py-4 font-bold text-emerald-600 font-mono text-lg">
+                                                                            ₦{commissionAmount.toLocaleString()}
+                                                                            {payment.commissionTag && (
+                                                                                <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase mt-1 w-max ${payment.commissionTag.includes('DIRECT') ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                                                                                    {payment.commissionTag}
+                                                                                </div>
+                                                                            )}
+                                                                        </td>
                                                                         <td className="px-6 py-4">
                                                                             <button disabled={actionLoading} onClick={() => openDisburseCommissionModal(payment.id, 'DIRECT')}
                                                                                 className="px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">

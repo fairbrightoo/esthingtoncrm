@@ -197,6 +197,7 @@ model User {
   assignedScripts         ProductionScript[]  @relation("ScriptCast")
   oracleSocialReports     SocialMediaReport[] @relation("OracleReports")
   createdCampaigns        Campaign[]          @relation("CreatedCampaigns")
+  sentPaymentMessages     PaymentMessage[]
 }
 
 model Attendance {
@@ -386,9 +387,26 @@ model Payment {
   isReferralCommissionPaid Boolean @default(false)
   referralCommissionDisbursedAt DateTime?
 
-  createdAt      DateTime @default(now())
-  recordedByUser User     @relation(fields: [recordedByUserId], references: [id])
-  sale           Sale     @relation(fields: [saleId], references: [id])
+  // Cross-Company Tracking
+  receivingBranchId          String?
+  bankBranchConfirmation     String?   // 'PENDING', 'RECEIVED', 'NOT_RECEIVED'
+  bankBranchConfirmationNote String?   @db.Text
+
+  createdAt      DateTime         @default(now())
+  recordedByUser User             @relation(fields: [recordedByUserId], references: [id])
+  sale           Sale             @relation(fields: [saleId], references: [id])
+  messages       PaymentMessage[]
+}
+
+model PaymentMessage {
+  id        String   @id @default(uuid())
+  paymentId String
+  senderId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  payment   Payment @relation(fields: [paymentId], references: [id])
+  sender    User    @relation(fields: [senderId], references: [id])
 }
 
 model MessageTemplate {
