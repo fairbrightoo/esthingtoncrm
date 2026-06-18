@@ -106,8 +106,17 @@ export const DocumentAutomationService = {
             // Dispatch Email if attachments exist
             if (attachments.length > 0) {
                 emailBody += `<p>Thank you for choosing ${companyInfo?.name || "Us"}.</p>`;
-                const fromAddress = branchInfo?.email || companyInfo?.email || undefined;
-                await EmailService.send(sale.lead.email, emailSubject, emailBody, attachments, fromAddress);
+                
+                // Construct a fromAddress using the verified domain to avoid Resend domain verification errors
+                const envEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+                const rawEmail = envEmail.includes('<') ? envEmail.match(/<([^>]+)>/)?.[1] || envEmail : envEmail;
+                const fromName = companyInfo?.name || "Esthington Group";
+                const fromAddress = `"${fromName}" <${rawEmail}>`;
+                
+                // Set the replyTo to the actual company email
+                const replyToAddress = branchInfo?.email || companyInfo?.email || undefined;
+
+                await EmailService.send(sale.lead.email, emailSubject, emailBody, attachments, fromAddress, replyToAddress);
                 console.log(`[DocAuto] Successfully emailed ${attachments.length} documents for Sale ${saleId}`);
             }
 
