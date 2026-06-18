@@ -261,43 +261,56 @@ export const PlotController = {
             const numericSize = Number(size);
             const numericNewPrice = Number(newPrice);
 
-            // Fetch all plots targeting this size within the estate that don't already have this exact price
+            // Fetch all plots targeting this size within the estate
             const targetedPlots = await prisma.plot.findMany({
                 where: {
                     estateId,
-                    size: numericSize,
-                    price: { not: numericNewPrice }
-                }
+                    size: numericSize
+                },
+                include: { estate: true }
             });
 
             if (targetedPlots.length === 0) {
+                return res.json({ message: "No plots found for this size.", updatedCount: 0 });
+            }
+
+            const historyLogs: any[] = [];
+            const updatePromises: any[] = [];
+
+            for (const plot of targetedPlots) {
+                const cpPrice = plot.estate?.cornerPiecePrice || 1000000;
+                const finalPrice = plot.isCornerPiece ? numericNewPrice + cpPrice : numericNewPrice;
+
+                if (plot.price !== finalPrice) {
+                    historyLogs.push({
+                        plotId: plot.id,
+                        oldPrice: plot.price,
+                        newPrice: finalPrice,
+                        changedBy: user?.id
+                    });
+
+                    updatePromises.push(
+                        prisma.plot.update({
+                            where: { id: plot.id },
+                            data: { price: finalPrice }
+                        })
+                    );
+                }
+            }
+
+            if (updatePromises.length === 0) {
                 return res.json({ message: "No plots required pricing updates.", updatedCount: 0 });
             }
 
-            // Map history objects mapping backward
-            const historyLogs = targetedPlots.map(plot => ({
-                plotId: plot.id,
-                oldPrice: plot.price,
-                newPrice: numericNewPrice,
-                changedBy: user?.id
-            }));
-
             // Execute Prisma Transaction synchronously
-            const [updateResult] = await prisma.$transaction([
-                prisma.plot.updateMany({
-                    where: {
-                        estateId,
-                        size: numericSize,
-                        price: { not: numericNewPrice }
-                    },
-                    data: { price: numericNewPrice }
-                }),
+            await prisma.$transaction([
+                ...updatePromises,
                 prisma.plotPriceHistory.createMany({
                     data: historyLogs
                 })
             ]);
 
-            res.json({ message: "Plots valuation updated successfully.", updatedCount: updateResult.count });
+            res.json({ message: "Plots valuation updated successfully.", updatedCount: updatePromises.length });
         } catch (error) {
             console.error("Bulk Price Update Error:", error);
             res.status(500).json({ error: "Failed to process bulk valuation update." });
