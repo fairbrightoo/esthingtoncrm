@@ -111,6 +111,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [paymentNotes, setPaymentNotes] = useState('');
     const [corporateAccounts, setCorporateAccounts] = useState<any[]>([]);
     const [proofFiles, setProofFiles] = useState<File[]>([]);
+    const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
     useEffect(() => {
         if (viewState === 'LIST') fetchSales();
@@ -223,7 +224,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     const handleRecordPayment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedSaleId || !paymentAmount) return;
+        if (!selectedSaleId || !paymentAmount || isSubmittingPayment) return;
+        setIsSubmittingPayment(true);
         try {
             if (paymentMethod === 'EQUITY_WALLET') {
                 // Ignore File Upload rules for Equity Wallet drawdown
@@ -270,6 +272,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             if (onLeadUpdate) onLeadUpdate();
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to record payment", "error");
+        } finally {
+            setIsSubmittingPayment(false);
         }
     };
 
@@ -642,8 +646,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             )}
                         </div>
                     )}
-                    <button type="submit" className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 mt-auto">
-                        Submit for Approval
+                    <button disabled={isSubmittingPayment} type="submit" className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 mt-auto disabled:opacity-50">
+                        {isSubmittingPayment ? 'Submitting...' : 'Submit for Approval'}
                     </button>
                 </form>
             </div>

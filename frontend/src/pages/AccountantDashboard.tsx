@@ -399,6 +399,9 @@ export const AccountantDashboard = () => {
                                                                                 );
                                                                             })()}
                                                                         </div>
+                                                                        <span className="text-xs font-semibold text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded w-max border border-orange-100">
+                                                                            Balance: ₦{Math.max(0, (p.sale?.agreedPrice || 0) - (p.sale?.totalPaid || 0)).toLocaleString()}
+                                                                        </span>
                                                                         <span>Method: {p.method}</span>
                                                                         {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
                                                                         <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
