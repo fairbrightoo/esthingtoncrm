@@ -73,7 +73,14 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>((p
                 <tbody>
                     <tr style={{ borderBottom: '1px solid #eee' }}>
                         <td style={{ padding: '15px 12px' }}>
-                            <strong style={{ display: 'block', marginBottom: '2px' }}>Payment for Plot at {sale?.plot?.estate?.name || sale?.product?.estateName || 'Estate'}</strong>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                                <strong>Payment for Plot at {sale?.plot?.estate?.name || sale?.product?.estateName || 'Estate'}</strong>
+                                {(sale?.isCornerPiece || sale?.plot?.isCornerPiece) && (
+                                    <span style={{ backgroundColor: '#fff3cd', color: '#856404', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', border: '1px solid #ffeeba' }}>
+                                        Corner Piece
+                                    </span>
+                                )}
+                            </div>
                             <span style={{ color: '#666', fontSize: '13px' }}>
                                 Plot Size: {sale?.plot?.size || sale?.product?.size || ''}sqm, 
                                 Location: {sale?.plot?.estate?.location || sale?.product?.location || ''}
