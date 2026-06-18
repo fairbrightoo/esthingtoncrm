@@ -20,31 +20,36 @@ export const MDReportController = {
                 dateFilter.lte = new Date(endDate as string);
             }
 
-            // Build where clauses
-            const paymentWhere: any = {
-                status: 'APPROVED',
-                OR: [
-                    { sale: { marketer: { branchId: branchId as string } } },
-                    { sale: { plot: { estate: { managingBranchId: branchId as string } } } }
-                ]
-            };
+            const user = (req as any).user;
+            const companyId = user?.companyId;
+
+            const paymentWhere: any = { status: 'APPROVED' };
             if (startDate || endDate) paymentWhere.date = dateFilter;
 
-            const saleWhere: any = {
-                OR: [
+            const saleWhere: any = {};
+            if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
+                paymentWhere.OR = [
+                    { sale: { marketer: { companyId } } },
+                    { sale: { plot: { estate: { companyId } } } }
+                ];
+                saleWhere.OR = [
+                    { marketer: { companyId } },
+                    { plot: { estate: { companyId } } }
+                ];
+            } else {
+                paymentWhere.OR = [
+                    { sale: { marketer: { branchId: branchId as string } } },
+                    { sale: { plot: { estate: { managingBranchId: branchId as string } } } }
+                ];
+                saleWhere.OR = [
                     { marketer: { branchId: branchId as string } },
                     { plot: { estate: { managingBranchId: branchId as string } } }
-                ]
-            };
-            // Note: For Outstanding balances, we only look at Ongoing sales, regardless of when they were created... 
-            // but if we are filtering, maybe we only look at sales created in that period, or all ongoing ones?
-            // Usually debt is global snapshot. Let's filter sales by date if provided to see NEW debt vs ALL debt.
-            // Let's do ALL debt for total picture, but slice the specific sales array for charts by date.
-            
+                ];
+            }
+
             const salesForChartsWhere = { ...saleWhere };
             if (startDate || endDate) salesForChartsWhere.createdAt = dateFilter;
 
-            // 1. Fetch Gross Revenue (Sum of all approved payments)
             const payments = await prisma.payment.findMany({
                 where: paymentWhere,
                 include: {
@@ -59,19 +64,31 @@ export const MDReportController = {
                 }
             });
 
-            let directBranchRevenue = 0;
-            let crossBranchGenerated = 0;
-            let totalStaffSalesVolume = 0;
+            let totalSalesGenerated = 0;
+            let directSalesVolume = 0;
+            let inboundSalesVolume = 0;
+            let outboundSalesVolume = 0;
             const detailedSalesData: any[] = [];
 
             payments.forEach(p => {
                 const s = p.sale;
-                const mBranchId = s.marketer?.branchId;
-                const estBranchId = s.plot?.estate?.managingBranchId;
+                const isSellingCompany = s.marketer?.companyId === companyId;
+                const isManagingCompany = s.plot?.estate?.companyId === companyId;
+                const isSellingBranch = s.marketer?.branchId === branchId;
+                const isManagingBranch = s.plot?.estate?.managingBranchId === branchId;
                 
                 let saleType = 'Direct Sale';
-                if (mBranchId === branchId && estBranchId !== branchId) saleType = 'Outbound Cross-Sale';
-                if (mBranchId !== branchId && estBranchId === branchId) saleType = 'Inbound Cross-Sale';
+                if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
+                    if (isSellingCompany) totalSalesGenerated += p.amount;
+                    if (isSellingCompany && isManagingCompany) directSalesVolume += p.amount;
+                    else if (isSellingCompany && !isManagingCompany) { saleType = 'Outbound Cross-Sale'; outboundSalesVolume += p.amount; }
+                    else if (!isSellingCompany && isManagingCompany) { saleType = 'Inbound Cross-Sale'; inboundSalesVolume += p.amount; }
+                } else {
+                    if (isSellingBranch) totalSalesGenerated += p.amount;
+                    if (isSellingBranch && isManagingBranch) directSalesVolume += p.amount;
+                    else if (isSellingBranch && !isManagingBranch) { saleType = 'Outbound Cross-Sale'; outboundSalesVolume += p.amount; }
+                    else if (!isSellingBranch && isManagingBranch) { saleType = 'Inbound Cross-Sale'; inboundSalesVolume += p.amount; }
+                }
 
                 detailedSalesData.push({
                     paymentId: p.id,
@@ -84,13 +101,25 @@ export const MDReportController = {
                     managingBranchName: s.plot?.estate?.branch?.name || 'Head Office',
                     saleType
                 });
-
-                if (estBranchId === branchId) directBranchRevenue += p.amount;
-                if (mBranchId === branchId && estBranchId !== branchId) crossBranchGenerated += p.amount;
-                if (mBranchId === branchId) totalStaffSalesVolume += p.amount;
             });
+
+            // Calculate Gross Cash Received (Physical deposits in our accounts)
+            const cashWhere: any = { status: 'APPROVED' };
+            if (startDate || endDate) cashWhere.date = dateFilter;
             
-            const grossRevenue = directBranchRevenue;
+            if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
+                const companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
+                cashWhere.receivingBranchId = { in: companyBranches.map(b => b.id) };
+            } else {
+                cashWhere.receivingBranchId = branchId;
+            }
+
+            const cashPayments = await prisma.payment.findMany({
+                where: cashWhere,
+                select: { amount: true }
+            });
+            const grossCashReceived = cashPayments.reduce((sum, p) => sum + p.amount, 0);
+            const grossRevenue = grossCashReceived;
 
             // Fetch ALL ongoing sales for Total Debt (ignores date filter because old debt is still debt)
             const allOngoingSales = await prisma.sale.findMany({
@@ -229,9 +258,11 @@ export const MDReportController = {
             res.json({
                 kpis: {
                     grossRevenue,
-                    directBranchRevenue,
-                    crossBranchGenerated,
-                    totalStaffSalesVolume,
+                    totalSalesGenerated,
+                    grossCashReceived,
+                    directSalesVolume,
+                    inboundSalesVolume,
+                    outboundSalesVolume,
                     outstandingDebt,
                     totalCommissionsCleared,
                     salesCount: periodSales.length,

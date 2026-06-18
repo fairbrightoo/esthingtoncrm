@@ -114,6 +114,12 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{PLOT_NUMBER}}/g, sale.plot?.plotNumber || sale.plotNumber || '____________________');
         html = html.replace(/{{PROTOTYPE}}/g, sale.plot?.prototype || 'Prototype');
 
+        const isCornerPiece = sale.plot?.isCornerPiece || sale.isCornerPiece;
+        const cornerPieceHtml = isCornerPiece 
+            ? `<span style="background-color: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; border: 1px solid #ffeeba; display: inline-block;">CORNER PIECE</span>` 
+            : '';
+        html = html.replace(/{{CORNER_PIECE_TAG}}/g, cornerPieceHtml);
+
         // Financials
         html = html.replace(/{{AGREED_PRICE}}/g, formatCurrency(sale.agreedPrice));
         html = html.replace(/{{AMOUNT_PAID}}/g, formatCurrency(sale.totalPaid));

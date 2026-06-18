@@ -59,8 +59,13 @@ export const MDOverview = () => {
     }
 
     const kpis = analytics?.kpis || {};
-    const grossRevenue = kpis.grossRevenue || 0;
+    const totalSalesGenerated = kpis.totalSalesGenerated || 0;
+    const grossCashReceived = kpis.grossCashReceived || 0;
     const netProfit = kpis.netBranchProfit || 0;
+
+    const directSalesVolume = kpis.directSalesVolume || 0;
+    const inboundSalesVolume = kpis.inboundSalesVolume || 0;
+    const outboundSalesVolume = kpis.outboundSalesVolume || 0;
     
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-10">
@@ -78,24 +83,59 @@ export const MDOverview = () => {
             </header>
 
             {/* Strategic KPI Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                {/* Gross Revenue */}
+                {/* Total Sales Generated */}
                 <div className="bg-white rounded-2xl p-7 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
                     <div className="absolute -bottom-6 -right-6 p-8 opacity-[0.03] group-hover:scale-110 transition-transform duration-500 pointer-events-none">
                         <TrendingUp size={160} />
                     </div>
                     <div>
-                        <div className="flex items-center space-x-2 text-indigo-600 mb-3">
+                        <div className="flex items-center space-x-2 text-blue-600 mb-3">
                             <ArrowUpRight size={22} strokeWidth={2.5}/>
-                            <span className="font-extrabold text-sm tracking-wider uppercase">Gross Capital Inflow</span>
+                            <span className="font-extrabold text-sm tracking-wider uppercase">Total Sales Generated</span>
                         </div>
-                        <h2 className="text-5xl font-black text-slate-900 mt-1 tracking-tighter">
-                            ₦{grossRevenue.toLocaleString()}
+                        <h2 className="text-4xl font-black text-slate-900 mt-1 tracking-tighter">
+                            ₦{totalSalesGenerated.toLocaleString()}
                         </h2>
                     </div>
                     <div className="mt-8 pt-5 border-t border-slate-50">
-                        <p className="text-sm font-medium text-slate-500">Gross revenue verified across the branch accounts.</p>
+                        <p className="text-xs font-medium text-slate-500">Total volume closed by your marketers, regardless of payment bank.</p>
+                        
+                        {/* Sales Type Breakdown */}
+                        <div className="mt-4 flex flex-col space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Direct Sales:</span>
+                                <span className="font-bold text-slate-800">₦{directSalesVolume.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Outbound Cross-Sales:</span>
+                                <span className="font-bold text-slate-800">₦{outboundSalesVolume.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Inbound Cross-Sales:</span>
+                                <span className="font-bold text-slate-800">₦{inboundSalesVolume.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Gross Cash Received */}
+                <div className="bg-white rounded-2xl p-7 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
+                    <div className="absolute -bottom-6 -right-6 p-8 opacity-[0.03] group-hover:scale-110 transition-transform duration-500 pointer-events-none">
+                        <CheckCircle size={160} />
+                    </div>
+                    <div>
+                        <div className="flex items-center space-x-2 text-emerald-600 mb-3">
+                            <ArrowDownLeft size={22} strokeWidth={2.5}/>
+                            <span className="font-extrabold text-sm tracking-wider uppercase">Gross Cash Received</span>
+                        </div>
+                        <h2 className="text-4xl font-black text-slate-900 mt-1 tracking-tighter">
+                            ₦{grossCashReceived.toLocaleString()}
+                        </h2>
+                    </div>
+                    <div className="mt-8 pt-5 border-t border-slate-50">
+                        <p className="text-xs font-medium text-slate-500">Physical cash deposited into accounts managed by this company.</p>
                     </div>
                 </div>
 
@@ -109,12 +149,12 @@ export const MDOverview = () => {
                             <CheckCircle size={22} strokeWidth={2.5}/>
                             <span className="font-extrabold text-sm tracking-wider uppercase">Estimated Net Profit</span>
                         </div>
-                        <h2 className="text-5xl font-black mt-1 tracking-tighter text-white drop-shadow-sm">
+                        <h2 className="text-4xl font-black mt-1 tracking-tighter text-white drop-shadow-sm">
                             ₦{netProfit.toLocaleString()}
                         </h2>
                     </div>
                     <div className="mt-8 pt-5 border-t border-slate-800/80">
-                        <p className="text-sm font-medium text-slate-400">Projected branch liquidity after total overhead, payroll, and taxes.</p>
+                        <p className="text-xs font-medium text-slate-400">Projected branch liquidity after total overhead, payroll, commissions, and taxes.</p>
                     </div>
                 </div>
 

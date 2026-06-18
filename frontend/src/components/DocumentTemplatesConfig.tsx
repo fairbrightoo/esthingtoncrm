@@ -36,6 +36,7 @@ export const DocumentTemplatesConfig = () => {
         { tag: '{{AMOUNT_PAID}}', desc: 'Total Paid out so far' },
         { tag: '{{BALANCE_OUTSTANDING}}', desc: 'Remaining Balance' },
         { tag: '{{CURRENT_DATE}}', desc: 'Today\'s Date' },
+        { tag: '{{CORNER_PIECE_TAG}}', desc: 'Renders a stylish CORNER PIECE badge if applicable' },
     ];
 
     useEffect(() => {
