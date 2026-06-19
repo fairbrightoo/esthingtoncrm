@@ -368,6 +368,11 @@ export const SaleController = {
                     },
                     recordedByUser: {
                         select: { fullName: true, email: true, role: true }
+                    },
+                    messages: {
+                        select: { senderId: true, createdAt: true },
+                        orderBy: { createdAt: 'desc' },
+                        take: 1
                     }
                 },
                 orderBy: { createdAt: 'desc' }
