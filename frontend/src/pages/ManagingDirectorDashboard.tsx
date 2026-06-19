@@ -275,6 +275,18 @@ export const ManagingDirectorDashboard = () => {
                                         <div className="flex gap-2 items-center flex-wrap">
                                             <span className="text-xs font-semibold text-gray-700">Plot Price: ₦{(p.sale.agreedPrice || 0).toLocaleString()}</span>
                                             {(() => {
+                                                const balance = (p.sale.agreedPrice || 0) - (p.sale.totalPaid || 0);
+                                                return balance > 0 ? (
+                                                    <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 font-bold">
+                                                        Bal: ₦{balance.toLocaleString()}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded border border-green-100 font-bold">
+                                                        Fully Paid
+                                                    </span>
+                                                );
+                                            })()}
+                                            {(() => {
                                                 const label = getPaymentTypeLabel(p as any);
                                                 return (
                                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${label.bg} ${label.textCol} ${label.border}`}>
@@ -287,7 +299,11 @@ export const ManagingDirectorDashboard = () => {
                                         {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
                                         <span className="text-xs text-gray-400">Date: {new Date(p.date).toLocaleDateString()}</span>
                                         {p.bankBranchConfirmation && (
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase w-max ${p.bankBranchConfirmation === 'RECEIVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase w-max ${
+                                                p.bankBranchConfirmation === 'RECEIVED' ? 'bg-green-100 text-green-700' : 
+                                                p.bankBranchConfirmation === 'NOT_RECEIVED' ? 'bg-red-100 text-red-700' :
+                                                'bg-yellow-100 text-yellow-700'
+                                            }`}>
                                                 Bank: {p.bankBranchConfirmation.replace('_', ' ')}
                                             </span>
                                         )}
@@ -361,18 +377,27 @@ export const ManagingDirectorDashboard = () => {
                                         </span>
                                     ) : (
                                         <div className="flex flex-col gap-2 w-36 ml-auto">
-                                            <button
-                                                onClick={() => handleUpdateStatus(p.id, 'APPROVED', isBankConfirmTab)}
-                                                className="w-full flex justify-center items-center px-3 py-2 bg-green-600 text-white text-xs font-bold rounded shadow-sm hover:bg-green-700 transition-colors"
-                                            >
-                                                <CheckCircle size={14} className="mr-1.5" /> {isBankConfirmTab ? 'Mark Received' : 'Approve Sale'}
-                                            </button>
-                                            <button
-                                                onClick={() => handleUpdateStatus(p.id, 'REJECTED', isBankConfirmTab)}
-                                                className="w-full flex justify-center items-center px-3 py-2 bg-white text-red-600 text-xs font-bold rounded shadow-sm border border-red-200 hover:bg-red-50 transition-colors"
-                                            >
-                                                <XCircle size={14} className="mr-1.5" /> {isBankConfirmTab ? 'Not Received' : 'Reject Sale'}
-                                            </button>
+                                            {activeTab === 'APPROVALS' && approvalSubTab === 'INBOUND' ? (
+                                                <div className="text-center text-gray-500 font-medium text-xs">
+                                                    <div className="bg-gray-100 px-3 py-1.5 rounded w-full mb-1">Pending Selling MD</div>
+                                                    <div className="bg-gray-100 px-3 py-1.5 rounded w-full">Approval</div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(p.id, 'APPROVED', isBankConfirmTab)}
+                                                        className="w-full flex justify-center items-center px-3 py-2 bg-green-600 text-white text-xs font-bold rounded shadow-sm hover:bg-green-700 transition-colors"
+                                                    >
+                                                        <CheckCircle size={14} className="mr-1.5" /> {isBankConfirmTab ? 'Mark Received' : 'Approve Sale'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(p.id, 'REJECTED', isBankConfirmTab)}
+                                                        className="w-full flex justify-center items-center px-3 py-2 bg-white text-red-600 text-xs font-bold rounded shadow-sm border border-red-200 hover:bg-red-50 transition-colors"
+                                                    >
+                                                        <XCircle size={14} className="mr-1.5" /> {isBankConfirmTab ? 'Not Received' : 'Reject Sale'}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </td>

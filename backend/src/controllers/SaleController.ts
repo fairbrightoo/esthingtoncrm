@@ -392,15 +392,14 @@ export const SaleController = {
                     const isManagingBranch = payment.sale.plot.estate.managingBranchId === effectiveBranchId;
                     
                     // Deduce Receiving Branch matching
+                    // Determine if the current user is acting on behalf of the receiving bank branch
                     let isReceivingBank = false;
-                    if (user?.role === 'ACCOUNTANT') {
-                        isReceivingBank = payment.receivingBranchId === effectiveBranchId;
-                    } else if (user?.role === 'MANAGING_DIRECTOR') {
-                        // For MD, we checked if receivingBranchId was in their company branches earlier.
-                        // We can just rely on the DB having filtered it, but to be safe:
-                        if (payment.receivingBranchId) {
-                            const isMyBranch = payment.sale.plot.estate.companyId === effectiveCompanyId; // Simplified check for MD
-                            isReceivingBank = true; // If it's in the list and not selling/managing, it must be bank.
+                    if (payment.receivingBranchId) {
+                        if (user?.role === 'ACCOUNTANT') {
+                            isReceivingBank = payment.receivingBranchId === effectiveBranchId;
+                        } else if (user?.role === 'MANAGING_DIRECTOR') {
+                            // MD oversees all branches in their company. In our case, the query already filtered for it.
+                            isReceivingBank = true;
                         }
                     }
 
@@ -412,16 +411,16 @@ export const SaleController = {
                     else if (isSellingCompany && !isManagingCompany) {
                         outboundCrossSales.push(payment);
                     }
+
                     // Inbound Cross-Sale: Someone else sold it, but we manage it
-                    else if (!isSellingCompany && isManagingCompany) {
+                    // NOTE: Removed "else" so it can be evaluated independently from selling company logic
+                    if (!isSellingCompany && isManagingCompany) {
                         inboundCrossSales.push(payment);
                     }
-                    // Bank Confirmation: We didn't sell it or manage it, but we hold the cash
-                    else if (!isSellingCompany && !isManagingCompany && isReceivingBank) {
-                        bankConfirmations.push(payment);
-                    }
-                    // If we sold it but the cash went to another branch within our company (for accountants)
-                    else if (user?.role === 'ACCOUNTANT' && isReceivingBank && !isSellingBranch && !isManagingBranch) {
+
+                    // Bank Confirmation: We hold the cash
+                    // Should appear here if we did NOT sell it. (If we sold it, we just approve the sale directly).
+                    if (isReceivingBank && !isSellingCompany) {
                         bankConfirmations.push(payment);
                     }
                 });
