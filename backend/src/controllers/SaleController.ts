@@ -528,13 +528,12 @@ export const SaleController = {
                     const isManagingCompany = payment.sale.plot.estate.companyId === effectiveCompanyId;
                     const isManagingBranch = payment.sale.plot.estate.managingBranchId === effectiveBranchId;
                     
-                    // Deduce Receiving Branch matching
+                    // Determine if the current user is acting on behalf of the receiving bank branch
                     let isReceivingBank = false;
-                    if (user?.role === 'ACCOUNTANT') {
-                        isReceivingBank = payment.receivingBranchId === effectiveBranchId;
-                    } else if (user?.role === 'MANAGING_DIRECTOR') {
-                        if (payment.receivingBranchId) {
-                            const isMyBranch = payment.sale.plot.estate.companyId === effectiveCompanyId;
+                    if (payment.receivingBranchId) {
+                        if (user?.role === 'ACCOUNTANT') {
+                            isReceivingBank = payment.receivingBranchId === effectiveBranchId;
+                        } else if (user?.role === 'MANAGING_DIRECTOR') {
                             isReceivingBank = true;
                         }
                     }
@@ -547,16 +546,14 @@ export const SaleController = {
                     else if (isSellingCompany && !isManagingCompany) {
                         outboundCrossSales.push(payment);
                     }
+
                     // Inbound Cross-Sale: Someone else sold it, but we manage it
-                    else if (!isSellingCompany && isManagingCompany) {
+                    if (!isSellingCompany && isManagingCompany) {
                         inboundCrossSales.push(payment);
                     }
-                    // Bank Confirmation: We didn't sell it or manage it, but we hold the cash
-                    else if (!isSellingCompany && !isManagingCompany && isReceivingBank) {
-                        bankConfirmations.push(payment);
-                    }
-                    // If we sold it but the cash went to another branch within our company (for accountants)
-                    else if (user?.role === 'ACCOUNTANT' && isReceivingBank && !isSellingBranch && !isManagingBranch) {
+
+                    // Bank Confirmation: We hold the cash
+                    if (isReceivingBank && !isSellingCompany) {
                         bankConfirmations.push(payment);
                     }
                 });
