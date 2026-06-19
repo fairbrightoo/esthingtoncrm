@@ -267,9 +267,9 @@ export const RequisitionController = {
             const payments = await prisma.payment.findMany({
                 where: whereClause,
                 include: {
-                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true } }, referrer: { select: { id: true, fullName: true, email: true } } } },
+                    sale: { include: { lead: { include: { branch: { select: { name: true } }, company: { select: { abbreviation: true } } } }, plot: { select: { plotNumber: true, estate: { select: { name: true, managingBranchId: true } } } }, marketer: { select: { id: true, fullName: true, email: true, commissionRate: true, branchId: true } }, referrer: { select: { id: true, fullName: true, email: true } } } },
                 },
-                orderBy: { date: 'asc' }
+                orderBy: { date: 'desc' }
             });
 
             res.status(200).json(payments);

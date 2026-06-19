@@ -195,7 +195,7 @@ export const AccountantDashboard = () => {
                 ...((pendRes.data.outboundCrossSales || []).map((p: any) => ({ ...p, commissionTag: '[OUTBOUND CROSS-SALE]' }))),
                 ...((pendRes.data.bankConfirmations || []).map((p: any) => ({ ...p, commissionTag: '[BANK CONFIRMATION]' })))
             ];
-            allPending.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            allPending.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
             setPendingPayments(allPending);
         } catch (error) {
             console.error("Failed to fetch dashboard data.", error);
