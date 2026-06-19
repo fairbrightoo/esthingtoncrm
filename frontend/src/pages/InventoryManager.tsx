@@ -343,6 +343,7 @@ export const InventoryManager = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Corner piece toggled", "success");
+            fetchEstatePlots(selectedEstate!.id); // Fetch to get the accurate price from the database
         } catch (error) {
             addToast("Failed to toggle corner piece", "error");
             fetchEstatePlots(selectedEstate!.id); // revert on error
