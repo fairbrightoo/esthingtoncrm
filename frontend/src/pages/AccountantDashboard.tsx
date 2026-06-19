@@ -10,8 +10,15 @@ export const getPaymentTypeLabel = (payment: any) => {
     if (!payment.sale || !payment.sale.plot) return { text: 'N/A', bg: 'bg-gray-100', textCol: 'text-gray-600', border: 'border-gray-200' };
     
     const price = payment.sale.agreedPrice || 0;
-    const amountPaidSoFar = payment.sale.totalPaid || 0;
     const currentPaymentTotal = payment.amount + (payment.virtualLoanAmount || 0);
+    
+    // If the payment is already APPROVED, the sale's totalPaid ALREADY includes this payment.
+    // To correctly evaluate what type of payment this WAS when it was made, we must subtract it.
+    let amountPaidSoFar = payment.sale.totalPaid || 0;
+    if (payment.status === 'APPROVED') {
+        // Subtract to get the "prior" paid amount
+        amountPaidSoFar = Math.max(0, amountPaidSoFar - payment.amount);
+    }
     
     // Is it outright (paid in full on the first go)?
     if (amountPaidSoFar === 0 && currentPaymentTotal >= price) {
