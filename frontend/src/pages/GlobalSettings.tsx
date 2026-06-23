@@ -35,7 +35,6 @@ export const GlobalSettings = () => {
         website: '',
         phone: '',
         abbreviation: '',
-        abbreviation: '',
         idCardFrontTemplate: '',
         idCardBackTemplate: '',
         managingDirectorName: ''

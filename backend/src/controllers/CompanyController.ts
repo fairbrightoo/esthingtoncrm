@@ -151,7 +151,10 @@ export const CompanyController = {
                     passportUrl: true,
                     cvUrl: true,
                     agreementUrl: true,
-                    teamId: true
+                    teamId: true,
+                    isActive: true,
+                    monthlySalary: true,
+                    commissionRate: true
                 }
             });
             res.json(users);
