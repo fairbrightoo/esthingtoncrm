@@ -93,10 +93,10 @@ export const RequisitionController = {
                     lte: new Date(endDate as string)
                 };
             }
-            if (role !== "SUPER_ADMIN" && companyId) {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && companyId) {
                 whereClause.companyId = companyId;
             }
-            if (role === "ACCOUNTANT" && branchId) {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && branchId) {
                 whereClause.branchId = branchId;
             }
 

@@ -319,23 +319,12 @@ export const SaleController = {
             let companyBranchIds: string[] = [];
 
             // Respect Cross-Company & Branch boundaries
-            if (user?.role !== 'SUPER_ADMIN') {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role)) {
                 const effectiveCompanyId = user?.companyId;
                 const effectiveBranchId = user?.branchId;
                 
-                if (user?.role === 'MANAGING_DIRECTOR') {
-                    // Pre-fetch branch IDs for the company
-                    const branches = await prisma.branch.findMany({ where: { companyId: effectiveCompanyId } });
-                    companyBranchIds = branches.map(b => b.id);
-
-                    // MD sees anything where their COMPANY is involved (Selling, Managing, or Bank)
-                    whereClause.OR = [
-                        { sale: { marketer: { companyId: effectiveCompanyId } } },
-                        { sale: { plot: { estate: { companyId: effectiveCompanyId } } } },
-                        { receivingBranchId: { in: companyBranchIds } }
-                    ];
-                } else if (user?.role === 'ACCOUNTANT') {
-                    // Accountant restricted to their specific BRANCH
+                if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
+                    // Restricted to their specific BRANCH
                     whereClause.OR = [
                         { sale: { marketer: { branchId: effectiveBranchId } } },
                         { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
@@ -344,6 +333,9 @@ export const SaleController = {
                 } else {
                     whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
+            } else if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
+                const branches = await prisma.branch.findMany({ where: { companyId: user?.companyId } });
+                companyBranchIds = branches.map(b => b.id);
             }
 
             const payments = await prisma.payment.findMany({
@@ -406,9 +398,9 @@ export const SaleController = {
                     // Determine if the current user is acting on behalf of the receiving bank branch
                     let isReceivingBank = false;
                     if (payment.receivingBranchId) {
-                        if (user?.role === 'ACCOUNTANT') {
+                        if (['ACCOUNTANT', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
                             isReceivingBank = payment.receivingBranchId === effectiveBranchId;
-                        } else if (user?.role === 'MANAGING_DIRECTOR') {
+                        } else if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
                             isReceivingBank = companyBranchIds.includes(payment.receivingBranchId);
                         }
                     }
@@ -465,22 +457,12 @@ export const SaleController = {
             let companyBranchIds: string[] = [];
 
             // Respect Cross-Company & Branch boundaries
-            if (user?.role !== 'SUPER_ADMIN') {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role)) {
                 const effectiveCompanyId = user?.companyId;
                 const effectiveBranchId = user?.branchId;
                 
-                if (user?.role === 'MANAGING_DIRECTOR') {
-                    const branches = await prisma.branch.findMany({ where: { companyId: effectiveCompanyId } });
-                    companyBranchIds = branches.map(b => b.id);
-
-                    // MD sees anything where their COMPANY is involved (Selling, Managing, or Bank)
-                    whereClause.OR = [
-                        { sale: { marketer: { companyId: effectiveCompanyId } } },
-                        { sale: { plot: { estate: { companyId: effectiveCompanyId } } } },
-                        { receivingBranchId: { in: companyBranchIds } }
-                    ];
-                } else if (user?.role === 'ACCOUNTANT') {
-                    // Accountant restricted to their specific BRANCH
+                if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
+                    // Restricted to their specific BRANCH
                     whereClause.OR = [
                         { sale: { marketer: { branchId: effectiveBranchId } } },
                         { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
@@ -489,6 +471,9 @@ export const SaleController = {
                 } else {
                     whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
+            } else if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
+                const branches = await prisma.branch.findMany({ where: { companyId: user?.companyId } });
+                companyBranchIds = branches.map(b => b.id);
             }
 
             const payments = await prisma.payment.findMany({
@@ -546,9 +531,9 @@ export const SaleController = {
                     // Determine if the current user is acting on behalf of the receiving bank branch
                     let isReceivingBank = false;
                     if (payment.receivingBranchId) {
-                        if (user?.role === 'ACCOUNTANT') {
+                        if (['ACCOUNTANT', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
                             isReceivingBank = payment.receivingBranchId === effectiveBranchId;
-                        } else if (user?.role === 'MANAGING_DIRECTOR') {
+                        } else if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
                             isReceivingBank = companyBranchIds.includes(payment.receivingBranchId);
                         }
                     }

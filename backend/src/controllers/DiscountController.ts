@@ -56,7 +56,7 @@ export const DiscountController = {
             const { companyId, branchId, role } = (req as AuthRequest).user || {};
 
             let whereClause: any = { companyId };
-            if (role !== 'SUPER_ADMIN' && role !== 'MANAGING_DIRECTOR') {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role || '')) {
                 whereClause.branchId = branchId;
             }
 

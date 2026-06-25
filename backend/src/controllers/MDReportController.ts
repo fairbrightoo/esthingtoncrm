@@ -27,7 +27,7 @@ export const MDReportController = {
             if (startDate || endDate) paymentWhere.date = dateFilter;
 
             const saleWhere: any = {};
-            if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
+            if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {
                 paymentWhere.OR = [
                     { sale: { marketer: { companyId } } },
                     { sale: { plot: { estate: { companyId } } } }
@@ -78,7 +78,7 @@ export const MDReportController = {
                 const isManagingBranch = s.plot?.estate?.managingBranchId === branchId;
                 
                 let saleType = 'Direct Sale';
-                if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
+                if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {
                     if (isSellingCompany) totalSalesGenerated += p.amount;
                     if (isSellingCompany && isManagingCompany) directSalesVolume += p.amount;
                     else if (isSellingCompany && !isManagingCompany) { saleType = 'Outbound Cross-Sale'; outboundSalesVolume += p.amount; }
@@ -107,7 +107,7 @@ export const MDReportController = {
             const cashWhere: any = { status: 'APPROVED', OR: [] };
             if (startDate || endDate) cashWhere.date = dateFilter;
             
-            if (user?.role === 'MANAGING_DIRECTOR' || !branchId) {
+            if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {
                 const companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
                 const branchIds = companyBranches.map(b => b.id);
                 cashWhere.OR.push({ receivingBranchId: { in: branchIds } });
