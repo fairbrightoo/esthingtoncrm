@@ -202,6 +202,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/knowledge-base`} icon={<BookOpen size={20} />} label="AI Knowledge Base" />
                     </>
                 )}
@@ -213,6 +214,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/advisory`} icon={<CheckCircle size={20} />} label="Advisory Queue" />
                         <NavItem to={`${basePath}/hr-recommendations`} icon={<Users size={20} />} label="HR Recommendations" />
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                     </>
                 )}
@@ -220,6 +222,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'ACCOUNTANT' && (
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />
@@ -229,6 +232,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'SITE_EXPERT' && (
                     <>
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/inspection-tracking`} icon={<CheckCircle size={20} />} label="Inspection Hub" />
                         <NavItem to={`${basePath}/announcements`} icon={<Megaphone size={20} />} label="Announcements" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
@@ -238,6 +242,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
 
                 {user?.role === 'ICT_ORACLE' && (
                     <>
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/media-hub`} icon={<Home size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/production-scripts`} icon={<FileText size={20} />} label="Production Scripts" />
                         <NavItem to={`${basePath}/social-analytics`} icon={<LayoutDashboard size={20} />} label="Social Analytics" />

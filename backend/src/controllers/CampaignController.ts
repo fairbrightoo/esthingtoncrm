@@ -41,9 +41,9 @@ export const CampaignController = {
             
             let whereClause: any = { companyId };
             
-            if (role === 'MARKETER' || role === 'CUSTOMER_CARE' || role === 'BRANCH_HR') {
+            if (['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT'].includes(role)) {
                 whereClause.creatorId = userId;
-            } else if (role === 'BRANCH_ADMIN') {
+            } else if (['BRANCH_ADMIN', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(role)) {
                 whereClause.branchId = branchId;
             }
 
@@ -121,6 +121,27 @@ export const CampaignController = {
                         }
                     }
                 };
+            }
+
+            // Role-Based Isolation to prevent leaking to entire company
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (!user) return res.status(401).json({ error: "User not found" });
+
+            if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT'].includes(user.role)) {
+                delete whereClause.companyId;
+                whereClause.AND = [
+                    ...(whereClause.AND || []),
+                    {
+                        OR: [
+                            { assignedToUserId: user.id },
+                            { sales: { some: { marketerId: user.id } } }
+                        ]
+                    }
+                ];
+            } else if (['BRANCH_ADMIN', 'CUSTOMER_CARE', 'BRANCH_HR', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user.role)) {
+                if (user.branchId) {
+                    whereClause.branchId = user.branchId;
+                }
             }
 
             // 2. Fetch Audience

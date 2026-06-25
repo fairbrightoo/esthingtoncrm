@@ -138,7 +138,7 @@ export const LeadController = {
             };
 
             // Role-Based Filters
-            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(user.role)) {
+            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE'].includes(user.role)) {
                 // Drop companyId restriction to allow cross-company leads to appear
                 delete whereClause.companyId;
 
@@ -656,7 +656,7 @@ export const LeadController = {
                             status: 'PROSPECT', // Default
                             companyId: user.companyId,
                             branchId: user.branchId, // Inherit uploader's branch.
-                            assignedToUserId: user.role === 'MARKETER' ? user.id : null // Marketers assign to self, CC leaves unassigned?
+                            assignedToUserId: ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT'].includes(user.role) ? user.id : null
                         }
                     });
 
