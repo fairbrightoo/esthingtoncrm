@@ -405,24 +405,26 @@ export const SaleController = {
                         }
                     }
 
+                    const isCompanyLevel = user?.role === 'GROUP_MANAGING_DIRECTOR';
+                    const isSelling = isCompanyLevel ? isSellingCompany : isSellingBranch;
+                    const isManaging = isCompanyLevel ? isManagingCompany : isManagingBranch;
+                    
                     // Direct Sale: We sold it AND we manage it
-                    if (isSellingCompany && isManagingCompany) {
+                    if (isSelling && isManaging) {
                         directSales.push(payment);
                     }
                     // Outbound Cross-Sale: We sold it, but someone else manages it
-                    else if (isSellingCompany && !isManagingCompany) {
+                    else if (isSelling && !isManaging) {
                         outboundCrossSales.push(payment);
                     }
 
                     // Inbound Cross-Sale: Someone else sold it, but we manage it
-                    // NOTE: Removed "else" so it can be evaluated independently from selling company logic
-                    if (!isSellingCompany && isManagingCompany) {
+                    if (!isSelling && isManaging) {
                         inboundCrossSales.push(payment);
                     }
 
                     // Bank Confirmation: We hold the cash
-                    // Should appear here if we did NOT sell it. (If we sold it, we just approve the sale directly).
-                    if (isReceivingBank && !isSellingCompany) {
+                    if (isReceivingBank && !isSelling) {
                         bankConfirmations.push(payment);
                     }
                 });
@@ -538,22 +540,26 @@ export const SaleController = {
                         }
                     }
 
+                    const isCompanyLevel = user?.role === 'GROUP_MANAGING_DIRECTOR';
+                    const isSelling = isCompanyLevel ? isSellingCompany : isSellingBranch;
+                    const isManaging = isCompanyLevel ? isManagingCompany : isManagingBranch;
+                    
                     // Direct Sale: We sold it AND we manage it
-                    if (isSellingCompany && isManagingCompany) {
+                    if (isSelling && isManaging) {
                         directSales.push(payment);
                     }
                     // Outbound Cross-Sale: We sold it, but someone else manages it
-                    else if (isSellingCompany && !isManagingCompany) {
+                    else if (isSelling && !isManaging) {
                         outboundCrossSales.push(payment);
                     }
 
                     // Inbound Cross-Sale: Someone else sold it, but we manage it
-                    if (!isSellingCompany && isManagingCompany) {
+                    if (!isSelling && isManaging) {
                         inboundCrossSales.push(payment);
                     }
 
                     // Bank Confirmation: We hold the cash
-                    if (isReceivingBank && !isSellingCompany) {
+                    if (isReceivingBank && !isSelling) {
                         bankConfirmations.push(payment);
                     }
                 });
