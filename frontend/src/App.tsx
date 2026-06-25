@@ -203,6 +203,9 @@ function App() {
             <Route path="/admin/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
 
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
+            <Route path="/dashboard/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
+            <Route path="/dashboard/leaves" element={<DashboardLayout><HRLeaveManagement /></DashboardLayout>} />
             <Route path="/dashboard/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />

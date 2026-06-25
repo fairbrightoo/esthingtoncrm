@@ -12,8 +12,16 @@ export const DiscountController = {
 
             if (!companyId) return res.status(401).json({ error: "Unauthorized" });
 
+            // Fetch company and branch to enforce Head Office Delegation
+            const company = await prisma.company.findUnique({ where: { id: companyId }, select: { hoDelegatesDiscounts: true } });
+            const branch = branchId ? await prisma.branch.findUnique({ where: { id: branchId }, select: { isHeadOffice: true } }) : null;
+
+            if (role === 'MANAGING_DIRECTOR' && branch?.isHeadOffice && !company?.hoDelegatesDiscounts) {
+                return res.status(403).json({ error: "The GMD has disabled discount generation for the Head Office MD." });
+            }
+
             // Validate that we are MD or Super Admin or Branch Admin
-            if (!['SUPER_ADMIN', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'].includes(role || '')) {
+            if (!['SUPER_ADMIN', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN', 'GROUP_MANAGING_DIRECTOR'].includes(role || '')) {
                 return res.status(403).json({ error: "Insufficient privileges to issue discount codes." });
             }
 
@@ -88,6 +96,15 @@ export const DiscountController = {
 
             if (role !== 'SUPER_ADMIN' && existing.companyId !== companyId) {
                 return res.status(403).json({ error: "Unauthorized" });
+            }
+
+            // Enforce Head Office Delegation
+            const { branchId: userBranchId } = (req as AuthRequest).user || {};
+            const company = await prisma.company.findUnique({ where: { id: existing.companyId }, select: { hoDelegatesDiscounts: true } });
+            const branch = userBranchId ? await prisma.branch.findUnique({ where: { id: userBranchId }, select: { isHeadOffice: true } }) : null;
+
+            if (role === 'MANAGING_DIRECTOR' && branch?.isHeadOffice && !company?.hoDelegatesDiscounts) {
+                return res.status(403).json({ error: "The GMD has disabled discount management for the Head Office MD." });
             }
 
             const updated = await prisma.discountCode.update({

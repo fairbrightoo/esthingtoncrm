@@ -84,11 +84,38 @@ export const HRWorkflowController = {
     },
 
     async getAllCompanyLeaves(req: Request, res: Response) {
-        // For Managing Director
-        const { companyId } = (req as any).user;
+        // For Managing Director and Group Managing Director
+        const { companyId, branchId, role } = (req as any).user;
         try {
+            let targetBranchId = branchId;
+            let isUserHeadOffice = false;
+            let hoDelegatesLeaves = false;
+
+            if (companyId) {
+                const company = await prisma.company.findUnique({ where: { id: companyId }, select: { hoDelegatesLeaves: true } });
+                hoDelegatesLeaves = company?.hoDelegatesLeaves || false;
+            }
+
+            if (branchId) {
+                const branch = await prisma.branch.findUnique({ where: { id: branchId }, select: { isHeadOffice: true } });
+                isUserHeadOffice = branch?.isHeadOffice || false;
+            }
+
+            if (role === 'GROUP_MANAGING_DIRECTOR') {
+                const hoBranch = await prisma.branch.findFirst({ where: { companyId, isHeadOffice: true } });
+                if (hoBranch) {
+                    targetBranchId = hoBranch.id;
+                } else {
+                    return res.json([]);
+                }
+            } else if (role === 'MANAGING_DIRECTOR') {
+                if (isUserHeadOffice && !hoDelegatesLeaves) {
+                    return res.json([]);
+                }
+            }
+
             const leaves = await prisma.leaveRequest.findMany({
-                where: { companyId, status: 'PENDING_MD_APPROVAL' }, // MD only needs to see vetted leaves
+                where: { companyId, branchId: targetBranchId, status: 'PENDING_MD_APPROVAL' }, 
                 include: { 
                     user: { select: { fullName: true, role: true } },
                     branch: { select: { name: true } },
@@ -128,12 +155,22 @@ export const HRWorkflowController = {
     },
 
     async approveLeaveAsMD(req: Request, res: Response) {
-        const { userId: mdUserId } = (req as any).user;
+        const { userId: mdUserId, role, companyId, branchId } = (req as any).user;
         const { leaveId } = req.params;
         const { status, mdRemarks } = req.body; // APPROVED or REJECTED
 
         if (!['APPROVED', 'REJECTED'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status for MD approval. Use APPROVED or REJECTED.' });
+        }
+
+        // Head Office Delegation Enforcement
+        if (role === 'MANAGING_DIRECTOR') {
+            const company = await prisma.company.findUnique({ where: { id: companyId }, select: { hoDelegatesLeaves: true } });
+            const branch = await prisma.branch.findUnique({ where: { id: branchId }, select: { isHeadOffice: true } });
+            
+            if (branch?.isHeadOffice && !company?.hoDelegatesLeaves) {
+                return res.status(403).json({ error: 'The GMD has disabled leave approval for the Head Office MD.' });
+            }
         }
 
         try {

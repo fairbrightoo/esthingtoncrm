@@ -36,8 +36,11 @@ export const GlobalSettings = () => {
         phone: '',
         abbreviation: '',
         idCardFrontTemplate: '',
-        idCardBackTemplate: '',
-        managingDirectorName: ''
+        managingDirectorName: '',
+        hoDelegatesPayments: false,
+        hoDelegatesDiscounts: true,
+        hoDelegatesLeaves: true,
+        hoDelegatesRequisitions: true
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -258,6 +261,10 @@ export const GlobalSettings = () => {
             data.append('idCardFrontTemplate', formData.idCardFrontTemplate);
             data.append('idCardBackTemplate', formData.idCardBackTemplate);
             data.append('managingDirectorName', formData.managingDirectorName);
+            data.append('hoDelegatesPayments', String(formData.hoDelegatesPayments));
+            data.append('hoDelegatesDiscounts', String(formData.hoDelegatesDiscounts));
+            data.append('hoDelegatesLeaves', String(formData.hoDelegatesLeaves));
+            data.append('hoDelegatesRequisitions', String(formData.hoDelegatesRequisitions));
             if (logoFile) data.append('logo', logoFile);
             if (signatureFile) data.append('signature', signatureFile);
 
@@ -352,26 +359,30 @@ export const GlobalSettings = () => {
         setShowCompanyModal(true);
     };
 
-    const openEditCompany = (company: any) => {
-        setEditingCompany(company);
-        setFormData({ 
-            name: company.name, 
-            themeColor: company.themeColor || '#000000', 
-            address: '', 
-            smsSenderId: company.smsSenderId || '',
-            waPhoneNumberId: company.waPhoneNumberId || '',
-            waBusinessAccountId: company.waBusinessAccountId || '',
-            waToken: company.waToken || '',
-            email: company.email || '',
-            website: company.website || '',
-            phone: '',
-            abbreviation: company.abbreviation || '',
-            idCardFrontTemplate: company.idCardFrontTemplate || '',
-            idCardBackTemplate: company.idCardBackTemplate || '',
-            managingDirectorName: company.managingDirectorName || ''
+    const openEditCompany = (comp: any) => {
+        setEditingCompany(comp);
+        setFormData({
+            name: comp.name || '',
+            themeColor: comp.themeColor || '#000000',
+            address: comp.address || '',
+            smsSenderId: comp.smsSenderId || '',
+            waPhoneNumberId: comp.waPhoneNumberId || '',
+            waBusinessAccountId: comp.waBusinessAccountId || '',
+            waToken: comp.waToken || '',
+            email: comp.email || '',
+            website: comp.website || '',
+            phone: comp.phone || '',
+            abbreviation: comp.abbreviation || '',
+            idCardFrontTemplate: comp.idCardFrontTemplate || '',
+            idCardBackTemplate: comp.idCardBackTemplate || '',
+            managingDirectorName: comp.managingDirectorName || '',
+            hoDelegatesPayments: comp.hoDelegatesPayments ?? false,
+            hoDelegatesDiscounts: comp.hoDelegatesDiscounts ?? true,
+            hoDelegatesLeaves: comp.hoDelegatesLeaves ?? true,
+            hoDelegatesRequisitions: comp.hoDelegatesRequisitions ?? true
         });
-        setLogoPreview(company.logoUrl ? (company.logoUrl.startsWith('http') ? company.logoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.logoUrl}`) : null);
-        setSignaturePreview(company.signatureUrl ? (company.signatureUrl.startsWith('http') ? company.signatureUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${company.signatureUrl}`) : null);
+        setLogoPreview(comp.logoUrl ? (comp.logoUrl.startsWith('http') ? comp.logoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${comp.logoUrl}`) : null);
+        setSignaturePreview(comp.signatureUrl ? (comp.signatureUrl.startsWith('http') ? comp.signatureUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${comp.signatureUrl}`) : null);
         setShowCompanyModal(true);
     };
 
@@ -639,6 +650,28 @@ export const GlobalSettings = () => {
                                                 <label className="block text-xs font-medium text-gray-700 mb-1">Back Page HTML</label>
                                                 <textarea className="w-full px-4 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24" value={formData.idCardBackTemplate} onChange={e => setFormData({ ...formData, idCardBackTemplate: e.target.value })} placeholder="<div>Back of ID Card</div>"></textarea>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t">
+                                        <h4 className="text-sm font-semibold text-gray-800 mb-2">Head Office Delegation (GMD Only)</h4>
+                                        <p className="text-xs text-gray-500 mb-3">Allow the MD at the Head Office branch to approve the following items:</p>
+                                        <div className="space-y-3">
+                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4" checked={formData.hoDelegatesPayments} onChange={e => setFormData({ ...formData, hoDelegatesPayments: e.target.checked })} />
+                                                <span className="text-sm font-medium text-gray-700">Client Payments (Direct & Cross-Sales)</span>
+                                            </label>
+                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4" checked={formData.hoDelegatesDiscounts} onChange={e => setFormData({ ...formData, hoDelegatesDiscounts: e.target.checked })} />
+                                                <span className="text-sm font-medium text-gray-700">Generate Promotional Discounts</span>
+                                            </label>
+                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4" checked={formData.hoDelegatesLeaves} onChange={e => setFormData({ ...formData, hoDelegatesLeaves: e.target.checked })} />
+                                                <span className="text-sm font-medium text-gray-700">Staff Leave Requests</span>
+                                            </label>
+                                            <label className="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4" checked={formData.hoDelegatesRequisitions} onChange={e => setFormData({ ...formData, hoDelegatesRequisitions: e.target.checked })} />
+                                                <span className="text-sm font-medium text-gray-700">Branch Requisitions (Fund Requests)</span>
+                                            </label>
                                         </div>
                                     </div>
                                 </>

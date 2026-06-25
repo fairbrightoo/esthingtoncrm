@@ -96,7 +96,17 @@ export const RequisitionController = {
             if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && companyId) {
                 whereClause.companyId = companyId;
             }
-            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && branchId) {
+
+            if (role === 'GROUP_MANAGING_DIRECTOR' && companyId) {
+                // GMD only oversees requisitions for the Head Office branch
+                const hoBranch = await prisma.branch.findFirst({ where: { companyId, isHeadOffice: true } });
+                if (hoBranch) {
+                    whereClause.branchId = hoBranch.id;
+                } else {
+                    res.status(200).json([]);
+                    return;
+                }
+            } else if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && branchId) {
                 whereClause.branchId = branchId;
             }
 
@@ -127,10 +137,21 @@ export const RequisitionController = {
     // 3. MD Approves or Rejects Request
     async processApproval(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const { userId, role } = req.user!;
-            if (role !== "MANAGING_DIRECTOR" && role !== "SUPER_ADMIN") {
-                res.status(403).json({ error: "Only Managing Director can approve requisitions." });
+            const { userId, role, companyId, branchId } = req.user!;
+            if (role !== "MANAGING_DIRECTOR" && role !== "SUPER_ADMIN" && role !== "GROUP_MANAGING_DIRECTOR") {
+                res.status(403).json({ error: "Insufficient privileges to process requisitions." });
                 return;
+            }
+
+            // Head Office Delegation Enforcement
+            if (role === 'MANAGING_DIRECTOR') {
+                const company = await prisma.company.findUnique({ where: { id: companyId! }, select: { hoDelegatesRequisitions: true } });
+                const branch = await prisma.branch.findUnique({ where: { id: branchId! }, select: { isHeadOffice: true } });
+                
+                if (branch?.isHeadOffice && !company?.hoDelegatesRequisitions) {
+                    res.status(403).json({ error: "The GMD has disabled requisition approval for the Head Office MD." });
+                    return;
+                }
             }
 
             const reqId = req.params.id as string;

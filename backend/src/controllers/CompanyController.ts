@@ -169,7 +169,7 @@ export const CompanyController = {
      */
     async updateCompany(req: Request, res: Response) {
         const { id } = req.params as any;
-        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate, abbreviation, managingDirectorName } = req.body;
+        const { name, themeColor, smsSenderId, waPhoneNumberId, waBusinessAccountId, waToken, email, website, idCardFrontTemplate, idCardBackTemplate, abbreviation, managingDirectorName, hoDelegatesPayments, hoDelegatesDiscounts, hoDelegatesLeaves, hoDelegatesRequisitions } = req.body;
         let logoUrl: string | undefined = undefined;
         let signatureUrl: string | undefined = undefined;
 
@@ -199,6 +199,10 @@ export const CompanyController = {
                     ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
                     ...(abbreviation !== undefined && { abbreviation }),
                     ...(managingDirectorName !== undefined && { managingDirectorName }),
+                    ...(hoDelegatesPayments !== undefined && { hoDelegatesPayments: hoDelegatesPayments === true || hoDelegatesPayments === 'true' }),
+                    ...(hoDelegatesDiscounts !== undefined && { hoDelegatesDiscounts: hoDelegatesDiscounts === true || hoDelegatesDiscounts === 'true' }),
+                    ...(hoDelegatesLeaves !== undefined && { hoDelegatesLeaves: hoDelegatesLeaves === true || hoDelegatesLeaves === 'true' }),
+                    ...(hoDelegatesRequisitions !== undefined && { hoDelegatesRequisitions: hoDelegatesRequisitions === true || hoDelegatesRequisitions === 'true' }),
                     ...(signatureUrl && { signatureUrl }),
                     ...(logoUrl && { logoUrl }) 
                 }

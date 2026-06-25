@@ -317,12 +317,30 @@ export const SaleController = {
             let whereClause: any = { status: 'PENDING' };
 
             let companyBranchIds: string[] = [];
+            let effectiveCompanyId = user?.companyId;
+            let effectiveBranchId = user?.branchId;
+
+            // Fetch company and branch details to enforce Head Office Delegation
+            let isUserHeadOffice = false;
+            let hoDelegatesPayments = false;
+
+            if (effectiveCompanyId) {
+                const company = await prisma.company.findUnique({ where: { id: effectiveCompanyId }, select: { hoDelegatesPayments: true } });
+                hoDelegatesPayments = company?.hoDelegatesPayments || false;
+            }
+
+            if (effectiveBranchId) {
+                const branch = await prisma.branch.findUnique({ where: { id: effectiveBranchId }, select: { isHeadOffice: true } });
+                isUserHeadOffice = branch?.isHeadOffice || false;
+            }
+
+            if (user?.role === 'MANAGING_DIRECTOR' && isUserHeadOffice && !hoDelegatesPayments) {
+                // If MD of Head Office and GMD hasn't delegated payments, they see nothing
+                return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+            }
 
             // Respect Cross-Company & Branch boundaries
             if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role)) {
-                const effectiveCompanyId = user?.companyId;
-                const effectiveBranchId = user?.branchId;
-                
                 if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
                     // Restricted to their specific BRANCH
                     whereClause.OR = [
@@ -334,8 +352,19 @@ export const SaleController = {
                     whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
             } else if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
-                const branches = await prisma.branch.findMany({ where: { companyId: user?.companyId } });
-                companyBranchIds = branches.map(b => b.id);
+                // GMD only oversees the Head Office branch for pending payments
+                const hoBranch = await prisma.branch.findFirst({ where: { companyId: effectiveCompanyId, isHeadOffice: true } });
+                if (hoBranch) {
+                    effectiveBranchId = hoBranch.id;
+                    whereClause.OR = [
+                        { sale: { marketer: { branchId: effectiveBranchId } } },
+                        { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
+                        { receivingBranchId: effectiveBranchId }
+                    ];
+                    companyBranchIds = [hoBranch.id]; // For receiving bank logic
+                } else {
+                    return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+                }
             }
 
             const payments = await prisma.payment.findMany({
@@ -406,8 +435,9 @@ export const SaleController = {
                     }
 
                     const isCompanyLevel = user?.role === 'GROUP_MANAGING_DIRECTOR';
-                    const isSelling = isCompanyLevel ? isSellingCompany : isSellingBranch;
-                    const isManaging = isCompanyLevel ? isManagingCompany : isManagingBranch;
+                    // For GMD, act exactly like the Head Office Branch MD
+                    const isSelling = isCompanyLevel ? isSellingBranch : isSellingBranch;
+                    const isManaging = isCompanyLevel ? isManagingBranch : isManagingBranch;
                     
                     // Direct Sale: We sold it AND we manage it
                     if (isSelling && isManaging) {
@@ -458,11 +488,30 @@ export const SaleController = {
 
             let companyBranchIds: string[] = [];
 
+            let effectiveCompanyId = user?.companyId;
+            let effectiveBranchId = user?.branchId;
+
+            // Fetch company and branch details to enforce Head Office Delegation
+            let isUserHeadOffice = false;
+            let hoDelegatesPayments = false;
+
+            if (effectiveCompanyId) {
+                const company = await prisma.company.findUnique({ where: { id: effectiveCompanyId }, select: { hoDelegatesPayments: true } });
+                hoDelegatesPayments = company?.hoDelegatesPayments || false;
+            }
+
+            if (effectiveBranchId) {
+                const branch = await prisma.branch.findUnique({ where: { id: effectiveBranchId }, select: { isHeadOffice: true } });
+                isUserHeadOffice = branch?.isHeadOffice || false;
+            }
+
+            if (user?.role === 'MANAGING_DIRECTOR' && isUserHeadOffice && !hoDelegatesPayments) {
+                // If MD of Head Office and GMD hasn't delegated payments, they see nothing
+                return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+            }
+
             // Respect Cross-Company & Branch boundaries
             if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role)) {
-                const effectiveCompanyId = user?.companyId;
-                const effectiveBranchId = user?.branchId;
-                
                 if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
                     // Restricted to their specific BRANCH
                     whereClause.OR = [
@@ -474,8 +523,19 @@ export const SaleController = {
                     whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
             } else if (user?.role === 'GROUP_MANAGING_DIRECTOR') {
-                const branches = await prisma.branch.findMany({ where: { companyId: user?.companyId } });
-                companyBranchIds = branches.map(b => b.id);
+                // GMD only oversees the Head Office branch for processed payments
+                const hoBranch = await prisma.branch.findFirst({ where: { companyId: effectiveCompanyId, isHeadOffice: true } });
+                if (hoBranch) {
+                    effectiveBranchId = hoBranch.id;
+                    whereClause.OR = [
+                        { sale: { marketer: { branchId: effectiveBranchId } } },
+                        { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
+                        { receivingBranchId: effectiveBranchId }
+                    ];
+                    companyBranchIds = [hoBranch.id]; // For receiving bank logic
+                } else {
+                    return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+                }
             }
 
             const payments = await prisma.payment.findMany({
@@ -541,8 +601,9 @@ export const SaleController = {
                     }
 
                     const isCompanyLevel = user?.role === 'GROUP_MANAGING_DIRECTOR';
-                    const isSelling = isCompanyLevel ? isSellingCompany : isSellingBranch;
-                    const isManaging = isCompanyLevel ? isManagingCompany : isManagingBranch;
+                    // For GMD, act exactly like the Head Office Branch MD
+                    const isSelling = isCompanyLevel ? isSellingBranch : isSellingBranch;
+                    const isManaging = isCompanyLevel ? isManagingBranch : isManagingBranch;
                     
                     // Direct Sale: We sold it AND we manage it
                     if (isSelling && isManaging) {
