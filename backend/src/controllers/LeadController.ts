@@ -162,12 +162,12 @@ export const LeadController = {
                         { sales: { some: { marketer: { branchId: user.branchId } } } }
                     ];
                 }
-            } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE') {
+            } else if (['BRANCH_ADMIN', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user.role)) {
                 if (user.branchId) {
                     whereClause.branchId = user.branchId;
                 }
             }
-            // SUPER_ADMIN and MANAGING_DIRECTOR see all in company (already set)
+            // SUPER_ADMIN and GROUP_MANAGING_DIRECTOR see all in company (already set)
 
             // Status Filter
             if (status && status !== 'ALL') {
