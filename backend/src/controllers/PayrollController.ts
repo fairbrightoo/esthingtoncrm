@@ -19,7 +19,11 @@ export const PayrollController = {
 
       // Get Active Staff
       const staffList = await prisma.user.findMany({
-        where: { branchId, isActive: true }
+        where: { 
+            branchId, 
+            isActive: true,
+            role: { not: 'MANAGING_DIRECTOR' }
+        }
       });
 
       // Get HR Settings for late deduction

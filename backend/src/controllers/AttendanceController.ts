@@ -133,7 +133,8 @@ export const AttendanceController = {
                 where: {
                     companyId,
                     branchId,
-                    role: { in: ['MARKETER', 'CUSTOMER_CARE'] }
+                    isActive: true,
+                    role: { not: 'MANAGING_DIRECTOR' }
                 }
             });
 
