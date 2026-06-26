@@ -523,13 +523,13 @@ export const GlobalSettings = () => {
             {/* Modals */}
             {(showCompanyModal || showBranchModal) && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center mb-6 shrink-0">
                             <h2 className="text-xl font-bold">{showCompanyModal ? (editingCompany ? 'Edit Company' : 'New Company') : (editingBranch ? 'Edit Branch' : 'New Branch')}</h2>
                             <button onClick={() => { setShowCompanyModal(false); setShowBranchModal(false); }}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
                             <div className="flex space-x-4">
                                 <div className="flex-1">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -708,11 +708,11 @@ export const GlobalSettings = () => {
                                     </div>
                                 </>
                             )}
+                        </div>
 
-                            <div className="flex justify-end space-x-3 mt-6">
-                                <button onClick={() => { setShowCompanyModal(false); setShowBranchModal(false); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                <button onClick={showCompanyModal ? handleSaveCompany : handleSaveBranch} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
-                            </div>
+                        <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-100 shrink-0">
+                            <button onClick={() => { setShowCompanyModal(false); setShowBranchModal(false); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                            <button onClick={showCompanyModal ? handleSaveCompany : handleSaveBranch} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
                         </div>
                     </div>
                 </div>
