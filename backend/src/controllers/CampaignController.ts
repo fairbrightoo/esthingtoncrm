@@ -127,7 +127,7 @@ export const CampaignController = {
             const user = await prisma.user.findUnique({ where: { id: userId } });
             if (!user) return res.status(401).json({ error: "User not found" });
 
-            if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT'].includes(user.role)) {
+            if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT', 'BRANCH_HR'].includes(user.role)) {
                 delete whereClause.companyId;
                 whereClause.AND = [
                     ...(whereClause.AND || []),
@@ -138,7 +138,7 @@ export const CampaignController = {
                         ]
                     }
                 ];
-            } else if (['BRANCH_ADMIN', 'CUSTOMER_CARE', 'BRANCH_HR', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user.role)) {
+            } else if (['BRANCH_ADMIN', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user.role)) {
                 if (user.branchId) {
                     whereClause.branchId = user.branchId;
                 }

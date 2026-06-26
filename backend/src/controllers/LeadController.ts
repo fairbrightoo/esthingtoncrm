@@ -138,7 +138,7 @@ export const LeadController = {
             };
 
             // Role-Based Filters
-            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE'].includes(user.role)) {
+            if (scope === 'my' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'BRANCH_HR', 'ACCOUNTANT'].includes(user.role)) {
                 // Drop companyId restriction to allow cross-company leads to appear
                 delete whereClause.companyId;
 
@@ -162,7 +162,7 @@ export const LeadController = {
                         { sales: { some: { marketer: { branchId: user.branchId } } } }
                     ];
                 }
-            } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE' || user.role === 'BRANCH_HR' || user.role === 'ACCOUNTANT') {
+            } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE') {
                 if (user.branchId) {
                     whereClause.branchId = user.branchId;
                 }
