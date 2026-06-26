@@ -51,15 +51,18 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
                     return;
                 }
 
-                // 2. Load face-api models (using jsdelivr CDN for fast remote loading)
+                // 2. Load face-api models (using tinyFaceDetector for much faster loading)
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
                 await Promise.all([
-                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
                     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
                 ]);
                 setModelsLoaded(true);
                 setStatusText('Models Loaded. Preparing Reference Image...');
+                
+                // Allow UI to breathe before heavy processing
+                await new Promise(resolve => setTimeout(resolve, 100));
 
                 // 3. Process Reference Image from URL
                 const imgUrl = profile.referencePhotoUrl.startsWith('http') 
@@ -70,7 +73,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
                 const proxyUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
                 
                 const img = await faceapi.fetchImage(proxyUrl);
-                const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
                 
                 if (detection) {
                     setReferenceDescriptor(detection.descriptor);
@@ -139,7 +142,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
             img.src = imageSrc;
             await new Promise((resolve) => { img.onload = resolve; });
 
-            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+            const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
                 addToast("No face detected in webcam.", "error");
