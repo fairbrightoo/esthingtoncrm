@@ -36,12 +36,16 @@ export const GlobalUserController = {
             // Allow user to update their own profile
             const updateData: any = {};
             
-            if (req.file) {
-                // Assuming you have uploadFile logic, let's use it
-                // Need to import uploadFile if not imported
-                // I will add import uploadFile from '../services/StorageService.js'; if missing
-                const fileUrl = await uploadFile(req.file.buffer, req.file.originalname, 'signature');
-                updateData.signatureUrl = fileUrl;
+            if (req.files && Array.isArray(req.files)) {
+                for (const file of req.files) {
+                    if (file.fieldname === 'signature') {
+                        const fileUrl = await uploadFile(file.buffer, file.originalname, 'signature');
+                        updateData.signatureUrl = fileUrl;
+                    } else if (file.fieldname === 'referencePhoto') {
+                        const fileUrl = await uploadFile(file.buffer, file.originalname, 'referencePhoto');
+                        updateData.referencePhotoUrl = fileUrl;
+                    }
+                }
             }
 
             if (Object.keys(updateData).length === 0) {

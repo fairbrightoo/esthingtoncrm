@@ -133,6 +133,9 @@ app.use('/api/referrals', referralRoutes);
 import payrollRoutes from './routes/payrollRoutes.js';
 app.use('/api/payroll', payrollRoutes);
 
+import attendanceRoutes from './routes/attendanceRoutes.js';
+app.use('/api/attendance', attendanceRoutes);
+
 import taxRoutes from './routes/taxRoutes.js';
 app.use('/api/taxes', taxRoutes);
 

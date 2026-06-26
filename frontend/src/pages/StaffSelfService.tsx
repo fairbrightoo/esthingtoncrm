@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CalendarClock, AlertTriangle, CheckCircle, Target, MessageSquare, XCircle } from 'lucide-react';
+import { CalendarClock, AlertTriangle, CheckCircle, Target, MessageSquare, XCircle, Clock } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { ClockInComponent } from '../components/ClockInComponent';
 
 export const StaffSelfService = () => {
     const { addToast } = useToast();
@@ -9,8 +10,9 @@ export const StaffSelfService = () => {
     const [leaves, setLeaves] = useState<any[]>([]);
     const [queries, setQueries] = useState<any[]>([]);
     const [appraisals, setAppraisals] = useState<any[]>([]);
+    const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('LEAVES');
+    const [activeTab, setActiveTab] = useState('ATTENDANCE');
 
     // New Leave Form
     const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -30,14 +32,16 @@ export const StaffSelfService = () => {
     const fetchMyData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const [lRes, qRes, aRes] = await Promise.all([
+            const [lRes, qRes, aRes, attRes] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/my-leaves`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/my-queries`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/appraisals/my-appraisals`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/appraisals/my-appraisals`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/attendance/my-records`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             setLeaves(lRes.data);
             setQueries(qRes.data);
             setAppraisals(aRes.data);
+            setAttendanceHistory(attRes.data);
             setLoading(false);
         } catch (error) {
             setLoading(false);
@@ -84,7 +88,10 @@ export const StaffSelfService = () => {
             <h1 className="text-2xl font-bold text-gray-900 mb-6">Staff HR Self-Service</h1>
 
             {/* Navigation Tabs */}
-            <div className="bg-white rounded-xl p-1 shadow-sm border border-gray-100 inline-flex">
+            <div className="bg-white rounded-xl p-1 shadow-sm border border-gray-100 inline-flex flex-wrap">
+                <button onClick={() => setActiveTab('ATTENDANCE')} className={`px-6 py-2.5 rounded-lg text-sm font-medium flex items-center ${activeTab === 'ATTENDANCE' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                    <Clock size={16} className="mr-2" /> Daily Attendance
+                </button>
                 <button onClick={() => setActiveTab('LEAVES')} className={`px-6 py-2.5 rounded-lg text-sm font-medium flex items-center ${activeTab === 'LEAVES' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                     <CalendarClock size={16} className="mr-2" /> My Leaves
                 </button>
@@ -105,6 +112,48 @@ export const StaffSelfService = () => {
                 <div className="p-10 text-center text-gray-500 bg-white rounded-xl">Loading...</div>
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
+                    {/* ATTENDANCE TAB */}
+                    {activeTab === 'ATTENDANCE' && (
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div>
+                                    <ClockInComponent onClockInSuccess={fetchMyData} />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2">Recent Attendance Records</h3>
+                                    {attendanceHistory.length === 0 ? (
+                                        <p className="text-gray-500 text-sm">No attendance records found for this month.</p>
+                                    ) : (
+                                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                                            {attendanceHistory.map(record => (
+                                                <div key={record.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                                                    <div>
+                                                        <p className="font-bold text-gray-900">{new Date(record.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                                                        <div className="text-sm text-gray-600 mt-1 space-y-1">
+                                                            <p><span className="font-semibold">In:</span> {record.clockIn ? new Date(record.clockIn).toLocaleTimeString() : '--:--'}</p>
+                                                            <p><span className="font-semibold">Out:</span> {record.clockOut ? new Date(record.clockOut).toLocaleTimeString() : '--:--'}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-3 sm:mt-0 text-right">
+                                                        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                                            record.status === 'PRESENT' ? 'bg-green-100 text-green-700' : 
+                                                            record.status === 'LATE' ? 'bg-yellow-100 text-yellow-700' : 
+                                                            record.status === 'ABSENT' ? 'bg-red-100 text-red-700' :
+                                                            'bg-gray-200 text-gray-700'
+                                                        }`}>
+                                                            {record.status}
+                                                        </span>
+                                                        <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider">{record.method}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* LEAVES TAB */}
                     {activeTab === 'LEAVES' && (
                         <div>

@@ -40,7 +40,10 @@ export const GlobalSettings = () => {
         hoDelegatesPayments: false,
         hoDelegatesDiscounts: true,
         hoDelegatesLeaves: true,
-        hoDelegatesRequisitions: true
+        hoDelegatesRequisitions: true,
+        latitude: '',
+        longitude: '',
+        geofenceRadius: 20
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -309,7 +312,10 @@ export const GlobalSettings = () => {
                 email: formData.email,
                 abbreviation: formData.abbreviation,
                 idCardFrontTemplate: formData.idCardFrontTemplate,
-                idCardBackTemplate: formData.idCardBackTemplate
+                idCardBackTemplate: formData.idCardBackTemplate,
+                latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+                longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+                geofenceRadius: formData.geofenceRadius
             };
             if (editingBranch) {
                 await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branches/${editingBranch.id}`, payload,
@@ -343,7 +349,7 @@ export const GlobalSettings = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', themeColor: '#000000', address: '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: '', website: '', phone: '', abbreviation: '', idCardFrontTemplate: '', idCardBackTemplate: '', managingDirectorName: '' });
+        setFormData({ name: '', themeColor: '#000000', address: '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: '', website: '', phone: '', abbreviation: '', idCardFrontTemplate: '', idCardBackTemplate: '', managingDirectorName: '', hoDelegatesPayments: false, hoDelegatesDiscounts: true, hoDelegatesLeaves: true, hoDelegatesRequisitions: true, latitude: '', longitude: '', geofenceRadius: 20 });
         setLogoFile(null);
         setLogoPreview(null);
         setSignatureFile(null);
@@ -396,7 +402,7 @@ export const GlobalSettings = () => {
         resetForm();
         setEditingBranch(branch);
         setSelectedCompanyId(companyId);
-        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '', abbreviation: branch.abbreviation || '', idCardFrontTemplate: branch.idCardFrontTemplate || '', idCardBackTemplate: branch.idCardBackTemplate || '', managingDirectorName: '' });
+        setFormData({ name: branch.name, themeColor: '#000000', address: branch.address || '', smsSenderId: '', waPhoneNumberId: '', waBusinessAccountId: '', waToken: '', email: branch.email || '', website: '', phone: branch.phone || '', abbreviation: branch.abbreviation || '', idCardFrontTemplate: branch.idCardFrontTemplate || '', idCardBackTemplate: branch.idCardBackTemplate || '', managingDirectorName: '', hoDelegatesPayments: false, hoDelegatesDiscounts: true, hoDelegatesLeaves: true, hoDelegatesRequisitions: true, latitude: branch.latitude || '', longitude: branch.longitude || '', geofenceRadius: branch.geofenceRadius || 20 });
         setShowBranchModal(true);
     };
 
@@ -691,6 +697,24 @@ export const GlobalSettings = () => {
                                         <div className="flex-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Branch Email</label>
                                             <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="branch@company.com" />
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t">
+                                        <h4 className="text-sm font-semibold text-gray-800 mb-2">Geofencing & Location (Jibble Mode)</h4>
+                                        <div className="flex space-x-4">
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Latitude</label>
+                                                <input type="number" step="any" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" value={formData.latitude} onChange={e => setFormData({ ...formData, latitude: e.target.value })} placeholder="e.g. 9.0765" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Longitude</label>
+                                                <input type="number" step="any" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" value={formData.longitude} onChange={e => setFormData({ ...formData, longitude: e.target.value })} placeholder="e.g. 7.3986" />
+                                            </div>
+                                        </div>
+                                        <div className="mt-3">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Geofence Radius (Meters): {formData.geofenceRadius}m</label>
+                                            <input type="range" min="10" max="500" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" value={formData.geofenceRadius} onChange={e => setFormData({ ...formData, geofenceRadius: parseInt(e.target.value) })} />
+                                            <p className="text-[10px] text-gray-500 mt-1">Adjust this to account for indoor GPS drift.</p>
                                         </div>
                                     </div>
                                     <div className="pt-4 border-t">

@@ -85,6 +85,9 @@ model Branch {
   idCardFrontTemplate   String?
   idCardBackTemplate    String?
   isHeadOffice          Boolean                @default(false)
+  latitude              Float?
+  longitude             Float?
+  geofenceRadius        Int?                   @default(20)
   attendances           Attendance[]
   company               Company                @relation(fields: [companyId], references: [id])
   leads                 Lead[]
@@ -121,6 +124,8 @@ model User {
   role                   String               @default("MARKETER")
   isActive               Boolean              @default(true)
   passwordResetRequired  Boolean              @default(true)
+  attendancePin          String?
+  referencePhotoUrl      String?
   companyId              String?
   branchId               String?
   createdAt              DateTime             @default(now())
@@ -212,6 +217,10 @@ model Attendance {
   status    String    @default("PRESENT")
   checkIn   DateTime?
   checkOut  DateTime?
+  clockInPhotoUrl String?
+  clockOutPhotoUrl String?
+  clockInLat      Float?
+  clockInLng      Float?
   notes     String?
   branchId  String
   companyId String

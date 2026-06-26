@@ -233,7 +233,7 @@ export const CompanyController = {
      */
     async createBranch(req: Request, res: Response) {
         const { id } = req.params as any; // Company ID from URL
-        const { name, address, phone, email, isHeadOffice } = req.body;
+        const { name, address, phone, email, isHeadOffice, latitude, longitude, geofenceRadius } = req.body;
         try {
             const branch = await prisma.branch.create({
                 data: {
@@ -242,7 +242,10 @@ export const CompanyController = {
                     address,
                     phone,
                     email,
-                    isHeadOffice: isHeadOffice === true || isHeadOffice === 'true'
+                    isHeadOffice: isHeadOffice === true || isHeadOffice === 'true',
+                    ...(latitude !== undefined && { latitude }),
+                    ...(longitude !== undefined && { longitude }),
+                    ...(geofenceRadius !== undefined && { geofenceRadius })
                 }
             });
             res.json(branch);
@@ -257,7 +260,7 @@ export const CompanyController = {
      */
     async updateBranch(req: Request, res: Response) {
         const { id } = req.params as any; // Branch ID
-        const { name, address, phone, email, managerName, abbreviation, idCardFrontTemplate, idCardBackTemplate, isHeadOffice } = req.body;
+        const { name, address, phone, email, managerName, abbreviation, idCardFrontTemplate, idCardBackTemplate, isHeadOffice, latitude, longitude, geofenceRadius } = req.body;
         let signatureUrl: string | undefined = undefined;
 
         try {
@@ -277,6 +280,9 @@ export const CompanyController = {
                     ...(idCardFrontTemplate !== undefined && { idCardFrontTemplate }),
                     ...(idCardBackTemplate !== undefined && { idCardBackTemplate }),
                     ...(isHeadOffice !== undefined && { isHeadOffice: isHeadOffice === true || isHeadOffice === 'true' }),
+                    ...(latitude !== undefined && { latitude }),
+                    ...(longitude !== undefined && { longitude }),
+                    ...(geofenceRadius !== undefined && { geofenceRadius }),
                     ...(signatureUrl && { signatureUrl })
                 }
             });

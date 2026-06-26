@@ -74,6 +74,7 @@ import { SocialMediaAnalytics } from './pages/SocialMediaAnalytics';
 import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { ChairmanExpenses } from './pages/ChairmanExpenses';
 import { NoticeArchive } from './pages/NoticeArchive';
+import { Kiosk } from './pages/Kiosk';
 import { useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -189,6 +190,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/select-branch" element={<BranchSelection />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/kiosk" element={<Kiosk />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Super Admin Routes */}
