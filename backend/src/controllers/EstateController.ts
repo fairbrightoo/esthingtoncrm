@@ -113,6 +113,8 @@ export const EstateController = {
                 const availablePlots = availablePlotsList.length;
                 
                 const breakdownMap: Record<string, number> = {};
+                const configsMap: Record<string, {prototype: string, size: number}> = {};
+
                 availablePlotsList.forEach(p => {
                     let type = p.prototype || 'Unknown Type';
                     if (p.size) {
@@ -120,7 +122,16 @@ export const EstateController = {
                     }
                     breakdownMap[type] = (breakdownMap[type] || 0) + 1;
                 });
+
+                estate.plots.forEach(p => {
+                    if (p.prototype && p.size) {
+                        const key = `${p.prototype}_${p.size}`;
+                        configsMap[key] = { prototype: p.prototype, size: p.size };
+                    }
+                });
+
                 const plotBreakdown = Object.entries(breakdownMap).map(([size, count]) => ({ size, count }));
+                const plotConfigs = Object.values(configsMap);
 
                 return {
                     id: estate.id,
@@ -137,7 +148,8 @@ export const EstateController = {
                     createdAt: estate.createdAt,
                     totalPlots,
                     availablePlots,
-                    plotBreakdown
+                    plotBreakdown,
+                    plotConfigs
                 };
             });
 

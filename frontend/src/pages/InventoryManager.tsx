@@ -22,6 +22,7 @@ interface Estate {
     searchDocumentUrl?: string;
     siteLayoutUrl?: string;
     plotBreakdown?: { size: string; count: number }[];
+    plotConfigs?: { prototype: string; size: number }[];
 }
 
 interface Plot {
@@ -160,6 +161,9 @@ export const InventoryManager = () => {
     const [isLegacySaleLoading, setIsLegacySaleLoading] = useState(false);
     const [csvText, setCsvText] = useState('');
     const [isLegacyLoading, setIsLegacyLoading] = useState(false);
+    const [branchStaff, setBranchStaff] = useState<any[]>([]);
+    const [staffSearchQuery, setStaffSearchQuery] = useState('');
+    const [showStaffDropdown, setShowStaffDropdown] = useState(false);
 
     const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
     const [bulkPriceForm, setBulkPriceForm] = useState({ size: '', newPrice: '' });
@@ -179,8 +183,21 @@ export const InventoryManager = () => {
     useEffect(() => {
         if (selectedEstate && viewMode === 'DETAIL') {
             fetchEstatePlots(selectedEstate.id);
+            fetchBranchStaff(selectedEstate.companyId, selectedEstate.managingBranchId);
         }
     }, [selectedEstate, viewMode]);
+
+    const fetchBranchStaff = async (companyId?: string, branchId?: string) => {
+        if (!companyId || !branchId) return;
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches/${branchId}/users`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setBranchStaff(res.data);
+        } catch (error) {
+            console.error("Failed to load branch staff", error);
+        }
+    };
 
     const fetchEstates = async () => {
         setLoading(true);
@@ -913,6 +930,41 @@ export const InventoryManager = () => {
                                                         value={legacySaleForm.clientEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, clientEmail: e.target.value })} />
                                                 </div>
                                                 <div>
+                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Staff Name (Autofills Email)</label>
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                            placeholder="Search staff name..."
+                                                            value={staffSearchQuery}
+                                                            onChange={e => {
+                                                                setStaffSearchQuery(e.target.value);
+                                                                setShowStaffDropdown(true);
+                                                            }}
+                                                            onFocus={() => setShowStaffDropdown(true)}
+                                                            onBlur={() => setTimeout(() => setShowStaffDropdown(false), 200)}
+                                                        />
+                                                        {showStaffDropdown && staffSearchQuery && (
+                                                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                                {branchStaff.filter(s => s.fullName.toLowerCase().includes(staffSearchQuery.toLowerCase())).map(staff => (
+                                                                    <div 
+                                                                        key={staff.id} 
+                                                                        className="px-3 py-2 text-sm hover:bg-indigo-50 cursor-pointer"
+                                                                        onClick={() => {
+                                                                            setStaffSearchQuery(staff.fullName);
+                                                                            setLegacySaleForm({ ...legacySaleForm, marketerEmail: staff.email });
+                                                                            setShowStaffDropdown(false);
+                                                                        }}
+                                                                    >
+                                                                        <div className="font-medium">{staff.fullName}</div>
+                                                                        <div className="text-xs text-gray-500">{staff.email}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div>
                                                     <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Marketer Email (Optional)</label>
                                                     <input type="email" placeholder="e.g. marketer@company.com" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                                         value={legacySaleForm.marketerEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, marketerEmail: e.target.value })} />
@@ -929,13 +981,43 @@ export const InventoryManager = () => {
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Prototype</label>
-                                                    <input required className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                        value={legacySaleForm.prototype} onChange={e => setLegacySaleForm({ ...legacySaleForm, prototype: e.target.value })} />
+                                                    <select 
+                                                        required 
+                                                        className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.prototype} 
+                                                        onChange={e => {
+                                                            const p = e.target.value;
+                                                            setLegacySaleForm(prev => {
+                                                                const availableSizes = selectedEstate?.plotConfigs?.filter(c => c.prototype === p) || [];
+                                                                return { ...prev, prototype: p, size: availableSizes.length === 1 ? String(availableSizes[0].size) : prev.size };
+                                                            });
+                                                        }}
+                                                    >
+                                                        <option value="">Select Prototype...</option>
+                                                        {Array.from(new Set(selectedEstate?.plotConfigs?.map(c => c.prototype))).map(proto => (
+                                                            <option key={proto} value={proto}>{proto}</option>
+                                                        ))}
+                                                    </select>
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Size (sqm)</label>
-                                                    <input required type="number" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                        value={legacySaleForm.size} onChange={e => setLegacySaleForm({ ...legacySaleForm, size: e.target.value })} />
+                                                    <select 
+                                                        required 
+                                                        className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={legacySaleForm.size} 
+                                                        onChange={e => {
+                                                            const s = e.target.value;
+                                                            setLegacySaleForm(prev => {
+                                                                const availableProtos = selectedEstate?.plotConfigs?.filter(c => String(c.size) === s) || [];
+                                                                return { ...prev, size: s, prototype: availableProtos.length === 1 ? availableProtos[0].prototype : prev.prototype };
+                                                            });
+                                                        }}
+                                                    >
+                                                        <option value="">Select Size...</option>
+                                                        {Array.from(new Set(selectedEstate?.plotConfigs?.map(c => String(c.size)))).map(size => (
+                                                            <option key={size} value={size}>{size} sqm</option>
+                                                        ))}
+                                                    </select>
                                                 </div>
                                             </div>
                                             {/* Payment Info */}
