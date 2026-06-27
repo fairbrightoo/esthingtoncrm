@@ -48,8 +48,8 @@ export const BranchAttendance = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            // Filter for only rank-and-file staff (Marketers and Customer Care)
-            const staffList = usersRes.data.filter((u: User) => ['MARKETER', 'CUSTOMER_CARE'].includes(u.role));
+            // Filter out only the Managing Director
+            const staffList = usersRes.data.filter((u: User) => u.role !== 'MANAGING_DIRECTOR');
             setStaff(staffList);
 
             // Fetch attendance for selected date
