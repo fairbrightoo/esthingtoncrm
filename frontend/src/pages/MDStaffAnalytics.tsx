@@ -48,7 +48,7 @@ export const MDStaffAnalytics = () => {
     const fetchPerformance = async (staffId: string) => {
         setLoadingPerformance(true);
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/md/staff/${staffId}`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/reports/md/staff/${staffId}`, {
                 params: { startDate, endDate },
                 headers: { Authorization: `Bearer ${token}` }
             });
