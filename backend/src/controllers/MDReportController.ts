@@ -286,5 +286,94 @@ export const MDReportController = {
             console.error('MD Analytics Error:', error);
             res.status(500).json({ error: 'Failed to generate Managing Director reports' });
         }
+    },
+
+    async getMDStaffPerformance(req: Request, res: Response) {
+        try {
+            const { staffId } = req.params;
+            const { startDate, endDate } = req.query;
+
+            const targetStaff = await prisma.user.findUnique({
+                where: { id: staffId },
+                include: { branch: true }
+            });
+
+            if (!targetStaff) {
+                return res.status(404).json({ error: 'Staff not found' });
+            }
+
+            const dateFilter: any = {};
+            if (startDate) {
+                dateFilter.gte = new Date(startDate as string);
+                dateFilter.gte.setHours(0,0,0,0);
+            }
+            if (endDate) {
+                dateFilter.lte = new Date(endDate as string);
+                dateFilter.lte.setHours(23,59,59,999);
+            }
+
+            // 1. Attendance Summary & Raw Logs
+            const attendanceWhere: any = { userId: staffId };
+            if (startDate || endDate) attendanceWhere.date = dateFilter;
+
+            const attendanceRecords = await prisma.attendance.findMany({
+                where: attendanceWhere,
+                orderBy: { date: 'desc' }
+            });
+
+            let daysPresent = 0, daysAbsent = 0, daysLate = 0, daysLeave = 0;
+            attendanceRecords.forEach(r => {
+                if (r.status === 'PRESENT') daysPresent++;
+                else if (r.status === 'ABSENT') daysAbsent++;
+                else if (r.status === 'LATE') daysLate++;
+                else if (r.status === 'APPROVED_LEAVE') daysLeave++;
+            });
+
+            // 2. Lead Generation
+            const leadWhere: any = { assignedToUserId: staffId };
+            if (startDate || endDate) leadWhere.createdAt = dateFilter;
+
+            const leadsGenerated = await prisma.lead.count({
+                where: leadWhere
+            });
+
+            // 3. Sales Generation
+            const paymentWhere: any = { status: 'APPROVED', sale: { marketerId: staffId } };
+            if (startDate || endDate) paymentWhere.date = dateFilter;
+
+            const payments = await prisma.payment.findMany({
+                where: paymentWhere
+            });
+            const totalSalesVolume = payments.reduce((sum, p) => sum + p.amount, 0);
+            const totalSalesCount = payments.length;
+
+            res.json({
+                staff: {
+                    id: targetStaff.id,
+                    fullName: targetStaff.fullName,
+                    role: targetStaff.role,
+                    branch: targetStaff.branch?.name,
+                    passportUrl: targetStaff.passportUrl
+                },
+                attendance: {
+                    daysPresent,
+                    daysAbsent,
+                    daysLate,
+                    daysLeave,
+                    rawLogs: attendanceRecords
+                },
+                leads: {
+                    count: leadsGenerated
+                },
+                sales: {
+                    volume: totalSalesVolume,
+                    count: totalSalesCount
+                }
+            });
+
+        } catch (error) {
+            console.error('MD Staff Performance Error:', error);
+            res.status(500).json({ error: 'Failed to fetch staff performance' });
+        }
     }
 };

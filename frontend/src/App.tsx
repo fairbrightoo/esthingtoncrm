@@ -34,6 +34,7 @@ import { DepartmentBuilder } from './pages/DepartmentBuilder';
 import { CustomerCareDashboard } from './pages/CustomerCareDashboard';
 import { ManagingDirectorDashboard } from './pages/ManagingDirectorDashboard';
 import { MDOverview } from './pages/MDOverview';
+import { MDStaffAnalytics } from './pages/MDStaffAnalytics';
 import { AccountantDashboard } from './pages/AccountantDashboard';
 import { AccountantOverview } from './pages/AccountantOverview';
 import { Announcements } from './pages/Announcements';
@@ -231,6 +232,7 @@ function App() {
             <Route path="/dashboard/:branchName/tasks" element={<DashboardLayout><Tasks /></DashboardLayout>} />
             
             <Route path="/dashboard/:branchName/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/staff-analytics" element={<DashboardLayout><MDStaffAnalytics /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/disbursements" element={<DashboardLayout><AccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
