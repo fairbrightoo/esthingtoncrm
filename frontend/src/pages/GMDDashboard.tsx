@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Building2, Users, TrendingUp, DollarSign, Activity } from 'lucide-react';
+import { AnnouncementWidget } from '../components/AnnouncementWidget';
 
 export const GMDDashboard = () => {
     const { token } = useAuth();
@@ -65,6 +66,8 @@ export const GMDDashboard = () => {
                     </div>
                 </div>
             </header>
+
+            <AnnouncementWidget />
 
             {loading && <div className="w-full h-1 bg-indigo-100 overflow-hidden"><div className="h-full bg-indigo-500 animate-pulse w-1/2"></div></div>}
 
