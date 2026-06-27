@@ -414,12 +414,14 @@ export const ManagingDirectorDashboard = () => {
         <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Managing Director Portal</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        {user?.role === 'GROUP_MANAGING_DIRECTOR' ? 'Global Approvals Portal' : 'Managing Director Portal'}
+                    </h1>
                     <p className="text-gray-500">Approve payments and issue promotional discounts.</p>
                 </div>
             </div>
 
-            <AnnouncementWidget />
+            {user?.role !== 'GROUP_MANAGING_DIRECTOR' && <AnnouncementWidget />}
 
             <div className="flex space-x-4 border-b border-gray-200">
                 <button
