@@ -477,7 +477,7 @@ export const InventoryManager = () => {
                         const size = row.Size || row.size;
                         const agreedPrice = row.AgreedPrice || row['Agreed Price'] || row.agreedPrice;
                         const amountPaid = row.AmountPaid || row['Amount Paid'] || row.amountPaid;
-                        const date = row.Date || row.date || row.Timestamp || row.timestamp;
+                        const date = row.Date || row.date || row['Original Date of Sale'] || row.originalDateOfSale;
                         const marketerEmail = row.MarketerEmail || row['Marketer Email'] || row.marketerEmail;
 
                         if (!clientName || !phone || !plotNumber || !prototype || !size || !agreedPrice || !amountPaid) {
@@ -1084,9 +1084,9 @@ export const InventoryManager = () => {
                                                 </div>
                                                 <h4 className="text-sm font-bold text-indigo-900 mb-1">Upload Bulk Sales CSV</h4>
                                                 <p className="text-[11px] text-indigo-900/60 text-center mb-4 max-w-md">
-                                                    File must contain headers: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date (or Timestamp), MarketerEmail.
+                                                    File must contain headers: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date, MarketerEmail.
                                                     <br/>
-                                                    <span className="opacity-80">Dates can be in any standard format (e.g., YYYY-MM-DD, MM/DD/YYYY, or Google Forms timestamps).</span>
+                                                    <span className="opacity-80">Google Forms 'Timestamp' columns are automatically ignored. Dates can be in any standard format (e.g., YYYY-MM-DD, MM/DD/YYYY).</span>
                                                 </p>
                                                 <input 
                                                     type="file" 
