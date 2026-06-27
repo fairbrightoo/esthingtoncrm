@@ -37,7 +37,11 @@ export const CompanyController = {
                     managingDirectorName: true,
                     idCardFrontTemplate: true,
                     idCardBackTemplate: true,
-                    abbreviation: true
+                    abbreviation: true,
+                    hoDelegatesPayments: true,
+                    hoDelegatesDiscounts: true,
+                    hoDelegatesLeaves: true,
+                    hoDelegatesRequisitions: true
                 }
             });
             res.json(companies);
@@ -85,7 +89,10 @@ export const CompanyController = {
                     abbreviation: true,
                     isHeadOffice: true,
                     idCardFrontTemplate: true,
-                    idCardBackTemplate: true
+                    idCardBackTemplate: true,
+                    latitude: true,
+                    longitude: true,
+                    geofenceRadius: true
                 }
             });
             res.json(branches);
