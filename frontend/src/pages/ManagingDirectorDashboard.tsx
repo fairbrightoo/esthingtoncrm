@@ -47,7 +47,7 @@ interface PendingData {
 }
 
 export const ManagingDirectorDashboard = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { addToast } = useToast();
     
     const [pendingData, setPendingData] = useState<PendingData>({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
