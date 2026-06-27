@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, Home, MapPin, ArrowLeft, CheckSquare, Square, Save
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Document, Page, pdfjs } from 'react-pdf';
+import Papa from 'papaparse';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -157,7 +158,7 @@ export const InventoryManager = () => {
         plotNumber: '', prototype: '', size: '', agreedPrice: '',
         amountPaidSoFar: '', dateOfSale: '', marketerEmail: ''
     });
-    const [legacySaleCsvText, setLegacySaleCsvText] = useState('');
+    const [legacySaleCsvFile, setLegacySaleCsvFile] = useState<File | null>(null);
     const [isLegacySaleLoading, setIsLegacySaleLoading] = useState(false);
     const [csvText, setCsvText] = useState('');
     const [isLegacyLoading, setIsLegacyLoading] = useState(false);
@@ -456,50 +457,74 @@ export const InventoryManager = () => {
 
     const handleBulkLegacySaleImport = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedEstate) return;
+        if (!selectedEstate || !legacySaleCsvFile) return;
         
-        try {
-            let preparedSales = [];
-            const lines = legacySaleCsvText.split('\n').filter(l => l.trim().length > 0);
-            for (let i = 0; i < lines.length; i++) {
-                // simple csv split handling commas inside quotes could be complex, assuming standard
-                const cols = lines[i].split(',').map(c => c.trim());
-                if (cols.length < 9) continue;
-                // Expected: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date
-                preparedSales.push({
-                    clientName: cols[0],
-                    clientPhone: cols[1],
-                    clientEmail: cols[2] === '' ? undefined : cols[2],
-                    plotNumber: cols[3],
-                    prototype: cols[4],
-                    size: Number(cols[5]),
-                    agreedPrice: Number(cols[6]),
-                    amountPaidSoFar: Number(cols[7]),
-                    dateOfSale: cols[8],
-                    estateId: selectedEstate.id
-                });
+        setIsLegacySaleLoading(true);
+
+        Papa.parse(legacySaleCsvFile, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                try {
+                    let preparedSales = [];
+                    for (const row of results.data as any[]) {
+                        // Support both column headers from the format or generic ones
+                        const clientName = row.ClientName || row['Client Name'] || row.clientName;
+                        const phone = row.Phone || row.phone;
+                        const email = row.Email || row.email;
+                        const plotNumber = row.PlotNumber || row['Plot Number'] || row.plotNumber;
+                        const prototype = row.Prototype || row.prototype;
+                        const size = row.Size || row.size;
+                        const agreedPrice = row.AgreedPrice || row['Agreed Price'] || row.agreedPrice;
+                        const amountPaid = row.AmountPaid || row['Amount Paid'] || row.amountPaid;
+                        const date = row.Date || row.date;
+                        const marketerEmail = row.MarketerEmail || row['Marketer Email'] || row.marketerEmail;
+
+                        if (!clientName || !phone || !plotNumber || !prototype || !size || !agreedPrice || !amountPaid) {
+                            continue; // Skip invalid rows
+                        }
+
+                        preparedSales.push({
+                            clientName,
+                            clientPhone: phone,
+                            clientEmail: email || undefined,
+                            plotNumber,
+                            prototype,
+                            size: Number(size),
+                            agreedPrice: Number(agreedPrice),
+                            amountPaidSoFar: Number(amountPaid),
+                            dateOfSale: date,
+                            marketerEmail: marketerEmail || undefined,
+                            estateId: selectedEstate.id
+                        });
+                    }
+
+                    if (preparedSales.length === 0) {
+                        addToast("No valid sales parsed from CSV. Ensure columns match the expected format.", "error");
+                        setIsLegacySaleLoading(false);
+                        return;
+                    }
+
+                    const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/legacy-onboard`, 
+                        { salesData: preparedSales, companyId: user?.companyId, branchId: user?.branchId }, 
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    addToast(res.data.message, "success");
+                    setLegacySaleCsvFile(null);
+                    fetchEstatePlots(selectedEstate.id);
+                } catch (error: any) {
+                    addToast(error.response?.data?.error || "Failed to bulk onboard legacy sales", "error");
+                } finally {
+                    setIsLegacySaleLoading(false);
+                }
+            },
+            error: (err) => {
+                console.error("CSV Parse Error:", err);
+                addToast("Failed to parse CSV file", "error");
+                setIsLegacySaleLoading(false);
             }
-
-            if (preparedSales.length === 0) {
-                addToast("No valid sales parsed from CSV text", "error");
-                return;
-            }
-
-            setIsLegacySaleLoading(true);
-
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/legacy-onboard`, 
-                { salesData: preparedSales, companyId: user?.companyId, branchId: user?.branchId }, 
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            addToast(res.data.message, "success");
-            setLegacySaleCsvText('');
-            fetchEstatePlots(selectedEstate.id);
-        } catch (error: any) {
-            addToast(error.response?.data?.error || "Failed to bulk onboard legacy sales", "error");
-        } finally {
-            setIsLegacySaleLoading(false);
-        }
+        });
     };
 
     const handleBulkPriceUpdate = async (e: React.FormEvent) => {
@@ -1052,25 +1077,43 @@ export const InventoryManager = () => {
                                     </form>
                                 ) : (
                                     <form onSubmit={handleBulkLegacySaleImport} className="space-y-4">
-                                        <div>
-                                            <div className="flex justify-between items-end mb-1.5">
-                                                <label className="block text-xs font-bold text-indigo-900/70 uppercase tracking-wider">Paste CSV Lines</label>
-                                                <span className="text-[10px] font-mono text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Format: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date(YYYY-MM-DD), MarketerEmail</span>
+                                        <div className="bg-white/60 p-6 rounded-xl border border-indigo-100/50">
+                                            <div className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-200/60 rounded-xl p-8 bg-indigo-50/30 transition hover:bg-indigo-50/50 group">
+                                                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                                    <FileText size={24} />
+                                                </div>
+                                                <h4 className="text-sm font-bold text-indigo-900 mb-1">Upload Bulk Sales CSV</h4>
+                                                <p className="text-xs text-indigo-900/60 text-center mb-4 max-w-sm">
+                                                    File must contain headers: ClientName, Phone, Email, PlotNumber, Prototype, Size, AgreedPrice, AmountPaid, Date, MarketerEmail
+                                                </p>
+                                                <input 
+                                                    type="file" 
+                                                    accept=".csv"
+                                                    onChange={e => {
+                                                        if (e.target.files && e.target.files.length > 0) {
+                                                            setLegacySaleCsvFile(e.target.files[0]);
+                                                        } else {
+                                                            setLegacySaleCsvFile(null);
+                                                        }
+                                                    }}
+                                                    className="hidden"
+                                                    id="legacy-sale-csv-upload"
+                                                />
+                                                <label 
+                                                    htmlFor="legacy-sale-csv-upload"
+                                                    className="bg-white border border-indigo-200 px-5 py-2 rounded-lg text-sm font-bold text-indigo-700 cursor-pointer hover:bg-indigo-50 transition shadow-sm"
+                                                >
+                                                    {legacySaleCsvFile ? legacySaleCsvFile.name : 'Select CSV File'}
+                                                </label>
                                             </div>
-                                            <textarea 
-                                                className="w-full h-32 border border-indigo-200/60 rounded-xl p-4 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 transition text-sm font-mono"
-                                                placeholder="John Doe, 08012345678, john@email.com, PLOT-A1, 4 Bedroom Duplex, 500, 25000000, 10000000, 2023-05-12, mark@esthington.com&#10;Jane Smith, 08098765432, , PLOT-A2, 4 Bedroom Duplex, 500, 26000000, 26000000, 2023-06-20, mark@esthington.com"
-                                                value={legacySaleCsvText}
-                                                onChange={e => setLegacySaleCsvText(e.target.value)}
-                                            />
                                         </div>
                                         <div className="flex justify-end">
                                             <button 
                                                 type="submit" 
-                                                disabled={isLegacySaleLoading || !legacySaleCsvText.trim()}
+                                                disabled={isLegacySaleLoading || !legacySaleCsvFile}
                                                 className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 font-bold"
                                             >
-                                                {isLegacySaleLoading ? 'Importing Array...' : 'Process Bulk Sales Array'}
+                                                {isLegacySaleLoading ? 'Importing File...' : 'Process Bulk Sales File'}
                                             </button>
                                         </div>
                                     </form>
