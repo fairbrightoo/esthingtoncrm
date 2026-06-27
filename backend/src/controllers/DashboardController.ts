@@ -300,9 +300,55 @@ export const DashboardController = {
             let pendingReferralCommissions = 0;
 
             if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
-                // ... same logic
-                // For brevity, skipping Marketer detailed fetches as we only need to edit Accountant comms.
-                // Wait, if I skip it I break it. I must include it. Let's write a function to deduce the sale type tag.
+                recentProspects = (await prisma.lead.findMany({
+                    where: { ...leadWhereClause, status: { not: 'CLIENT' } },
+                    take: 20,
+                    orderBy: { createdAt: 'desc' },
+                    select: { id: true, fullName: true, phone: true, createdAt: true, source: true }
+                })).map(l => ({ ...l, date: l.createdAt }));
+
+                recentClients = (await prisma.lead.findMany({
+                    where: { ...leadWhereClause, status: 'CLIENT' },
+                    take: 20,
+                    orderBy: { createdAt: 'desc' },
+                    select: { id: true, fullName: true, phone: true, createdAt: true, source: true }
+                })).map(l => ({ ...l, date: l.createdAt }));
+
+                const myPayments = await prisma.payment.findMany({
+                    where: { ...paymentWhereClause, status: 'APPROVED' },
+                    orderBy: { date: 'desc' },
+                    include: { sale: { include: { lead: true, plot: { include: { estate: true } } } } }
+                });
+
+                recentPayments = myPayments.slice(0, 20).map((p: any) => ({
+                    id: p.id,
+                    amount: p.amount,
+                    date: p.date,
+                    clientName: p.sale.lead.fullName,
+                    product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`
+                }));
+
+                const myDueComms = myPayments.filter(p => !p.isCommissionPaid);
+                detailedDueCommissions = myDueComms.map((p: any) => ({
+                    id: p.id,
+                    amount: p.amount,
+                    commission: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0),
+                    date: p.date,
+                    clientName: p.sale.lead.fullName,
+                    product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`,
+                    saleType: "[DIRECT SALE]"
+                }));
+
+                const myPaidComms = myPayments.filter(p => p.isCommissionPaid);
+                detailedPaidCommissions = myPaidComms.map((p: any) => ({
+                    id: p.id,
+                    amount: p.amount,
+                    commission: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0),
+                    date: p.commissionDisbursedAt || p.date,
+                    clientName: p.sale.lead.fullName,
+                    product: `${p.sale.plot.prototype} - ${p.sale.plot.estate.name}`,
+                    saleType: "[DIRECT SALE]"
+                }));
             }
             
             // Actually I need to inject `saleType` into the commission payloads for Accountants.
