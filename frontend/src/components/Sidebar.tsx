@@ -109,6 +109,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
                 )}
 
@@ -128,6 +130,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions" />
                         <NavItem to={`${basePath}/announcements`} icon={<Megaphone size={20} />} label="Announcements" />
                         <NavItem to={`${basePath}/events`} icon={<Calendar size={20} />} label="Events & Calendar" />
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                     </>
                 )}
 
@@ -219,6 +222,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
                 )}
 
@@ -229,6 +234,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />
+                        <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
                 )}
 
