@@ -302,6 +302,14 @@ export const MDReportController = {
                 return res.status(404).json({ error: 'Staff not found' });
             }
 
+            // Security Check: Ensure MD can only see their own branch staff
+            const user = (req as any).user;
+            const isSuperUser = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role);
+            
+            if (!isSuperUser && targetStaff.branchId !== user?.branchId) {
+                return res.status(403).json({ error: 'Unauthorized: You can only view performance data for staff within your own branch' });
+            }
+
             const dateFilter: any = {};
             if (startDate) {
                 dateFilter.gte = new Date(startDate as string);
