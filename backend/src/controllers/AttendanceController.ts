@@ -125,8 +125,21 @@ export const AttendanceController = {
 
             // First day of the month
             const startDate = new Date(targetYear, targetMonth - 1, 1);
+            
             // Last day of the month
-            const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+            let endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+            
+            // If it's the current month, cap endDate to today or yesterday depending on time
+            const now = new Date();
+            if (targetYear === now.getFullYear() && targetMonth === now.getMonth() + 1) {
+                if (now.getHours() >= 17) {
+                    // Past 5 PM, include today
+                    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+                } else {
+                    // Before 5 PM, only calculate up to yesterday
+                    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+                }
+            }
 
             // 1. Fetch all applicable staff
             const staff = await prisma.user.findMany({
@@ -150,12 +163,36 @@ export const AttendanceController = {
                 }
             });
 
-            // Group attendance by user
-            const attendanceByUser = attendanceRecords.reduce((acc: any, record: any) => {
-                if (!acc[record.userId]) acc[record.userId] = [];
-                acc[record.userId].push(record);
+            // Group attendance by user AND date
+            const attendanceByUserAndDate = attendanceRecords.reduce((acc: any, record: any) => {
+                if (!acc[record.userId]) acc[record.userId] = {};
+                const dateStr = record.date.toISOString().split('T')[0];
+                acc[record.userId][dateStr] = record;
                 return acc;
             }, {});
+
+            // Fetch Approved Leaves
+            const approvedLeaves = await prisma.leaveRequest.findMany({
+                where: {
+                    companyId,
+                    branchId,
+                    status: 'APPROVED',
+                    startDate: { lte: endDate },
+                    endDate: { gte: startDate }
+                }
+            });
+
+            // Fetch Holidays
+            const holidays = await prisma.holiday.findMany({
+                where: {
+                    companyId,
+                    date: {
+                        gte: startDate,
+                        lte: endDate
+                    }
+                }
+            });
+            const holidayDateStrings = holidays.map(h => h.date.toISOString().split('T')[0]);
 
             // 3. Calculate Payroll
             const payrollReport = staff.map((user: any) => {
@@ -163,19 +200,62 @@ export const AttendanceController = {
                 const absentPenaltyRate = monthlySalary / 22; // Assume 22 working days
                 const latePenaltyRate = monthlySalary / 44; // Half of a day's pay
 
-                const userAttendance = attendanceByUser[user.id] || [];
-
                 let daysPresent = 0;
                 let daysAbsent = 0;
                 let daysLate = 0;
                 let daysLeave = 0;
 
-                userAttendance.forEach((record: any) => {
-                    if (record.status === 'PRESENT') daysPresent++;
-                    else if (record.status === 'ABSENT') daysAbsent++;
-                    else if (record.status === 'LATE') daysLate++;
-                    else if (record.status === 'APPROVED_LEAVE') daysLeave++;
-                });
+                const userLeaves = approvedLeaves.filter(l => l.userId === user.id);
+
+                // Loop through every working day in the range
+                let currentDate = new Date(startDate);
+                currentDate.setHours(0, 0, 0, 0);
+                const end = new Date(endDate);
+                end.setHours(0, 0, 0, 0);
+
+                while (currentDate <= end) {
+                    const dayOfWeek = currentDate.getDay();
+                    // Skip weekends (0 = Sunday, 6 = Saturday)
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        continue;
+                    }
+
+                    const dateStr = currentDate.toISOString().split('T')[0];
+
+                    // Skip Public Holidays
+                    if (holidayDateStrings.includes(dateStr)) {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        continue;
+                    }
+
+                    const userAtt = attendanceByUserAndDate[user.id]?.[dateStr];
+
+                    if (userAtt) {
+                        if (userAtt.status === 'PRESENT') daysPresent++;
+                        else if (userAtt.status === 'ABSENT') daysAbsent++;
+                        else if (userAtt.status === 'LATE') daysLate++;
+                        else if (userAtt.status === 'APPROVED_LEAVE') daysLeave++;
+                    } else {
+                        // Check if on approved leave
+                        const isOnLeave = userLeaves.some(l => {
+                            const lStart = new Date(l.startDate);
+                            lStart.setHours(0, 0, 0, 0);
+                            const lEnd = new Date(l.endDate);
+                            lEnd.setHours(23, 59, 59, 999);
+                            return currentDate >= lStart && currentDate <= lEnd;
+                        });
+
+                        if (isOnLeave) {
+                            daysLeave++;
+                        } else {
+                            // Unrecorded absence!
+                            daysAbsent++;
+                        }
+                    }
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
 
                 const totalDeductions = (daysAbsent * absentPenaltyRate) + (daysLate * latePenaltyRate);
                 const netSalary = Math.max(0, monthlySalary - totalDeductions); // Ensure salary doesn't go negative
