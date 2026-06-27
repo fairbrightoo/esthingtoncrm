@@ -92,6 +92,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/approvals" icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to="/dashboard/requisitions" icon={<FileSpreadsheet size={20} />} label="Fund Requests" />
                         <NavItem to="/dashboard/leaves" icon={<CalendarClock size={20} />} label="Leave Approvals" />
+                        <NavItem to="/dashboard/staff-analytics" icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to="/dashboard/my-leads" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to="/dashboard/settings" icon={<Settings size={20} />} label="Settings" />

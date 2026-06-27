@@ -63,6 +63,7 @@ import { GMAdvisoryQueue } from './pages/GMAdvisoryQueue';
 import { HRRecommendations } from './pages/HRRecommendations';
 import { GMDashboard } from './pages/GMDashboard';
 import { GMDDashboard } from './pages/GMDDashboard';
+import { GMDStaffAnalytics } from './pages/GMDStaffAnalytics';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
 import { SiteExpertDashboard } from './pages/SiteExpertDashboard';
 import { SiteInspectionTracking } from './pages/SiteInspectionTracking';
@@ -209,6 +210,7 @@ function App() {
             <Route path="/dashboard/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
             <Route path="/dashboard/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
             <Route path="/dashboard/leaves" element={<DashboardLayout><HRLeaveManagement /></DashboardLayout>} />
+            <Route path="/dashboard/staff-analytics" element={<DashboardLayout><GMDStaffAnalytics /></DashboardLayout>} />
             <Route path="/dashboard/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
