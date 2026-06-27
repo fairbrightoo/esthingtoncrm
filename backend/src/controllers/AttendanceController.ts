@@ -160,8 +160,8 @@ export const AttendanceController = {
             // 3. Calculate Payroll
             const payrollReport = staff.map((user: any) => {
                 const monthlySalary = user.monthlySalary || 0;
-                const absentPenaltyRate = monthlySalary / 20;
-                const latePenaltyRate = monthlySalary / 40;
+                const absentPenaltyRate = monthlySalary / 22; // Assume 22 working days
+                const latePenaltyRate = monthlySalary / 44; // Half of a day's pay
 
                 const userAttendance = attendanceByUser[user.id] || [];
 
