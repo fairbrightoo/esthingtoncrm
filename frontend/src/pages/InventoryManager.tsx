@@ -929,45 +929,47 @@ export const InventoryManager = () => {
                                                     <input type="email" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                                         value={legacySaleForm.clientEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, clientEmail: e.target.value })} />
                                                 </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Staff Name (Autofills Email)</label>
-                                                    <div className="relative">
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                            placeholder="Search staff name..."
-                                                            value={staffSearchQuery}
-                                                            onChange={e => {
-                                                                setStaffSearchQuery(e.target.value);
-                                                                setShowStaffDropdown(true);
-                                                            }}
-                                                            onFocus={() => setShowStaffDropdown(true)}
-                                                            onBlur={() => setTimeout(() => setShowStaffDropdown(false), 200)}
-                                                        />
-                                                        {showStaffDropdown && staffSearchQuery && (
-                                                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                                                {branchStaff.filter(s => s.fullName.toLowerCase().includes(staffSearchQuery.toLowerCase())).map(staff => (
-                                                                    <div 
-                                                                        key={staff.id} 
-                                                                        className="px-3 py-2 text-sm hover:bg-indigo-50 cursor-pointer"
-                                                                        onClick={() => {
-                                                                            setStaffSearchQuery(staff.fullName);
-                                                                            setLegacySaleForm({ ...legacySaleForm, marketerEmail: staff.email });
-                                                                            setShowStaffDropdown(false);
-                                                                        }}
-                                                                    >
-                                                                        <div className="font-medium">{staff.fullName}</div>
-                                                                        <div className="text-xs text-gray-500">{staff.email}</div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
+                                                <div className="flex gap-3">
+                                                    <div className="w-1/2">
+                                                        <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Staff Name</label>
+                                                        <div className="relative">
+                                                            <input 
+                                                                type="text" 
+                                                                className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                                placeholder="Search staff..."
+                                                                value={staffSearchQuery}
+                                                                onChange={e => {
+                                                                    setStaffSearchQuery(e.target.value);
+                                                                    setShowStaffDropdown(true);
+                                                                }}
+                                                                onFocus={() => setShowStaffDropdown(true)}
+                                                                onBlur={() => setTimeout(() => setShowStaffDropdown(false), 200)}
+                                                            />
+                                                            {showStaffDropdown && staffSearchQuery && (
+                                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                                    {branchStaff.filter(s => s.fullName.toLowerCase().includes(staffSearchQuery.toLowerCase())).map(staff => (
+                                                                        <div 
+                                                                            key={staff.id} 
+                                                                            className="px-3 py-2 text-sm hover:bg-indigo-50 cursor-pointer"
+                                                                            onMouseDown={() => {
+                                                                                setStaffSearchQuery(staff.fullName);
+                                                                                setLegacySaleForm({ ...legacySaleForm, marketerEmail: staff.email });
+                                                                                setShowStaffDropdown(false);
+                                                                            }}
+                                                                        >
+                                                                            <div className="font-medium">{staff.fullName}</div>
+                                                                            <div className="text-xs text-gray-500">{staff.email}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Marketer Email (Optional)</label>
-                                                    <input type="email" placeholder="e.g. marketer@company.com" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                        value={legacySaleForm.marketerEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, marketerEmail: e.target.value })} />
+                                                    <div className="w-1/2">
+                                                        <label className="block text-[10px] font-bold text-indigo-900/70 uppercase tracking-wider mb-1">Marketer Email</label>
+                                                        <input type="email" placeholder="e.g. mkt@company.com" className="w-full border border-indigo-200/60 rounded-lg px-3 py-2 bg-white/80 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                            value={legacySaleForm.marketerEmail} onChange={e => setLegacySaleForm({ ...legacySaleForm, marketerEmail: e.target.value })} />
+                                                    </div>
                                                 </div>
                                             </div>
                                             {/* Plot Info */}
