@@ -293,8 +293,8 @@ export const MDReportController = {
             const { staffId } = req.params;
             const { startDate, endDate } = req.query;
 
-            const targetStaff = await prisma.user.findUnique({
-                where: { id: staffId },
+            const targetStaff: any = await prisma.user.findUnique({
+                where: { id: staffId as string },
                 include: { branch: true }
             });
 
