@@ -967,7 +967,6 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                 </div>
                             </form>
                         </div>
-                        </div>
                     </div>
                 </div>
             )}
