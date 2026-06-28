@@ -1053,5 +1053,38 @@ export const SaleController = {
             console.error("Get Payment Messages Error", error);
             res.status(500).json({ error: "Failed to fetch payment messages" });
         }
+    },
+
+    // 14. Cancel Intended Sale (Offer Letter Level)
+    cancelSale: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const sale = await prisma.sale.findUnique({ where: { id: String(id) } });
+
+            if (!sale) {
+                return res.status(404).json({ error: "Sale not found" });
+            }
+
+            if (sale.status !== 'ONGOING' || sale.totalPaid > 0) {
+                return res.status(400).json({ error: "Only ongoing sales with zero payments can be cancelled." });
+            }
+
+            // Cancel the sale
+            const updatedSale = await prisma.sale.update({
+                where: { id: String(id) },
+                data: { status: 'CANCELLED' }
+            });
+
+            // Revert Plot Status back to AVAILABLE
+            await prisma.plot.update({
+                where: { id: sale.plotId },
+                data: { status: 'AVAILABLE' }
+            });
+
+            res.json(updatedSale);
+        } catch (error) {
+            console.error("Cancel Sale Error", error);
+            res.status(500).json({ error: "Failed to cancel the sale." });
+        }
     }
 };

@@ -38,5 +38,6 @@ router.post('/sales/:saleId/exchange', authenticateToken, SaleController.exchang
 router.put('/payments/:paymentId/bank-confirm', authenticateToken, SaleController.bankConfirmPayment);
 router.post('/payments/:paymentId/messages', authenticateToken, SaleController.addPaymentMessage);
 router.get('/payments/:paymentId/messages', authenticateToken, SaleController.getPaymentMessages);
+router.put('/sales/:id/cancel', authenticateToken, SaleController.cancelSale);
 
 export default router;

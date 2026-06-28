@@ -83,6 +83,7 @@ export const AutomationService = {
             await this.runDay7NurturingEmail();
             await this.runBirthdayEmails();
             await this.runDailyAIPaymentReminders();
+            await this.runOfferExpirationsAndReminders();
             console.log('[CRON] Sequences completed.');
         });
         console.log('[CRON] Automation Service initialized and running in background.');
@@ -143,6 +144,97 @@ export const AutomationService = {
             }
         } catch (error) {
             console.error('[CRON] Failed Day 7 Nurturing:', error);
+        }
+    },
+
+    async runOfferExpirationsAndReminders() {
+        try {
+            console.log('[CRON] Starting Offer Expirations and Reminders...');
+            const systemAdmin = await prisma.user.findFirst({ where: { role: 'SUPER_ADMIN' } });
+
+            const today = new Date();
+            const ongoingSalesZeroPaid = await prisma.sale.findMany({
+                where: { status: 'ONGOING', totalPaid: 0 },
+                include: { lead: { include: { company: true } }, plot: { include: { estate: true } } }
+            });
+
+            for (const sale of ongoingSalesZeroPaid) {
+                const lead = sale.lead;
+                if (!lead.email) continue;
+
+                const diffTime = Math.abs(today.getTime() - new Date(sale.createdAt).getTime());
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                let emailHtml = '';
+                let subject = '';
+                let logContent = '';
+                let shouldExpire = false;
+
+                if (diffDays === 4) {
+                    subject = `Action Required: Your Property Offer Expires in 3 Days - ${lead.company.name}`;
+                    emailHtml = `
+                    <div style="font-family: sans-serif; max-w: 600px; margin: auto; padding: 20px;">
+                        <h2 style="color: #4F46E5;">Hello ${lead.fullName},</h2>
+                        <p>This is a gentle reminder that your Offer Letter for <strong>${sale.plot.prototype} at ${sale.plot.estate.name}</strong> will expire in 3 days.</p>
+                        <p>To lock in the agreed price of <strong>₦${sale.agreedPrice.toLocaleString()}</strong>, please ensure that your initial deposit is made and recorded before the expiration date.</p>
+                        <p>If you have any questions, please reply to this email.</p>
+                    </div>`;
+                    logContent = 'Auto Drip: Offer Expiration Reminder (3 Days Left)';
+                } else if (diffDays === 6) {
+                    subject = `URGENT: Your Property Offer Expires Tomorrow - ${lead.company.name}`;
+                    emailHtml = `
+                    <div style="font-family: sans-serif; max-w: 600px; margin: auto; padding: 20px;">
+                        <h2 style="color: #DC2626;">Hello ${lead.fullName},</h2>
+                        <p>Your Offer Letter for <strong>${sale.plot.prototype} at ${sale.plot.estate.name}</strong> expires tomorrow.</p>
+                        <p>Please note that once the offer expires, the plot will be released back to the market, and any future offers will be subject to current market prices.</p>
+                        <p>Please make your payment today to secure your plot.</p>
+                    </div>`;
+                    logContent = 'Auto Drip: Offer Expiration Reminder (1 Day Left)';
+                } else if (diffDays >= 7) {
+                    shouldExpire = true;
+                    subject = `Offer Expired: ${sale.plot.prototype} at ${sale.plot.estate.name}`;
+                    emailHtml = `
+                    <div style="font-family: sans-serif; max-w: 600px; margin: auto; padding: 20px;">
+                        <h2 style="color: #4B5563;">Hello ${lead.fullName},</h2>
+                        <p>We are writing to inform you that your Offer Letter for <strong>${sale.plot.prototype} at ${sale.plot.estate.name}</strong> has expired due to non-payment within the 7-day validity period.</p>
+                        <p>The plot has now been released back to the market.</p>
+                        <p>If you are still interested in purchasing a property, please contact us to generate a new offer at the current market rate.</p>
+                    </div>`;
+                    logContent = 'Auto Drip: Offer Expired Notification';
+                }
+
+                if (emailHtml && subject) {
+                    const sentId = await EmailService.send(lead.email, subject, emailHtml, undefined, lead.company.email || undefined);
+                    if (systemAdmin) {
+                        await prisma.communicationLog.create({
+                            data: {
+                                leadId: lead.id,
+                                userId: systemAdmin.id,
+                                type: 'EMAIL',
+                                direction: 'OUTBOUND',
+                                content: logContent,
+                                status: 'SENT',
+                                providerId: sentId
+                            }
+                        });
+                    }
+                    console.log(`[CRON] Sent Offer Reminder/Expiration (${diffDays} days) to ${lead.email}`);
+                }
+
+                if (shouldExpire) {
+                    await prisma.sale.update({
+                        where: { id: sale.id },
+                        data: { status: 'EXPIRED' }
+                    });
+                    await prisma.plot.update({
+                        where: { id: sale.plotId },
+                        data: { status: 'AVAILABLE' }
+                    });
+                    console.log(`[CRON] Expired sale ${sale.id} and released plot ${sale.plotId}`);
+                }
+            }
+        } catch (error) {
+            console.error('[CRON] Failed Offer Expirations and Reminders:', error);
         }
     },
 

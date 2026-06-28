@@ -89,6 +89,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
 
     // Form: New Sale
+    const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
     const [selectedPlotId, setSelectedPlotId] = useState('');
     const [marketerId, setMarketerId] = useState('');
     const [branchUsers, setBranchUsers] = useState<any[]>([]);
@@ -173,11 +174,12 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     const handleCreateSale = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedPlotId) return;
+        if (!selectedPlotId || isSubmittingPurchase) return;
         if (!termsAccepted) {
             addToast("Client must accept Terms & Conditions", "warning");
             return;
         }
+        setIsSubmittingPurchase(true);
         try {
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales`, {
                 leadId,
@@ -199,6 +201,22 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             console.error("Failed to record purchase", error);
             const errMsg = error.response?.data?.error || "Failed to record purchase";
             addToast(errMsg, "error");
+        } finally {
+            setIsSubmittingPurchase(false);
+        }
+    };
+
+    const handleCancelOffer = async (saleId: string) => {
+        if (!window.confirm("Are you sure you want to cancel this offer? The plot will be released back to the market.")) return;
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${saleId}/cancel`, {}, { 
+                headers: { Authorization: `Bearer ${token}` } 
+            });
+            addToast("Offer cancelled successfully.", "success");
+            fetchSales();
+        } catch (error: any) {
+            console.error("Failed to cancel offer", error);
+            addToast(error.response?.data?.error || "Failed to cancel offer", "error");
         }
     };
 
@@ -485,8 +503,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                         </div>
                     )}
 
-                    <button disabled={!selectedPlotId} type="submit" className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 mt-auto">
-                        Confirm Purchase
+                    <button disabled={!selectedPlotId || isSubmittingPurchase} type="submit" className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 mt-auto">
+                        {isSubmittingPurchase ? 'Confirming...' : 'Confirm Purchase'}
                     </button>
                 </form>
             </div>
@@ -676,8 +694,12 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
                     {sales.map(sale => {
                         const progress = Math.min((sale.totalPaid / sale.agreedPrice) * 100, 100);
+                        const isInactive = sale.status === 'CANCELLED' || sale.status === 'EXPIRED';
+                        const statusStyle = sale.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                            isInactive ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700';
+                        
                         return (
-                            <div key={sale.id} className="bg-white border rounded-xl shadow-sm overflow-hidden">
+                            <div key={sale.id} className={`bg-white border rounded-xl shadow-sm overflow-hidden ${isInactive ? 'opacity-60 grayscale' : ''}`}>
                                 {/* Header */}
                                 <div className="p-4 border-b bg-gray-50 border-gray-100">
                                     <div className="flex justify-between items-start mb-2">
@@ -689,7 +711,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                 <MapPin size={12} className="mr-1" /> {sale.plot.estate.location}
                                             </div>
                                         </div>
-                                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${sale.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${statusStyle}`}>
                                             {sale.status}
                                         </div>
                                     </div>
@@ -734,7 +756,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
                                     <div className="flex-1"></div>
 
-                                    {['SUPER_ADMIN', 'BRANCH_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role) && sale.status !== 'EXCHANGED' && (
+                                    {['SUPER_ADMIN', 'BRANCH_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role) && sale.status !== 'EXCHANGED' && !isInactive && (
                                         <button
                                             onClick={() => { setSaleToExchange(sale); setIsExchangeModalOpen(true); }}
                                             className="text-[11px] bg-red-50 text-red-700 px-3 py-1.5 rounded font-bold hover:bg-red-100 flex items-center shadow-sm border border-red-100"
@@ -743,12 +765,21 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                         </button>
                                     )}
 
-                                    {sale.totalPaid > 0 && !['EXCHANGED', 'REFUNDED', 'REFUND_IN_PROGRESS', 'REFUND_REQUESTED'].includes(sale.status) && (
+                                    {sale.totalPaid > 0 && !['EXCHANGED', 'REFUNDED', 'REFUND_IN_PROGRESS', 'REFUND_REQUESTED'].includes(sale.status) && !isInactive && (
                                         <button
                                             onClick={() => { setSaleForRefund(sale); setIsRefundModalOpen(true); }}
                                             className="text-[11px] bg-orange-50 text-orange-700 px-3 py-1.5 rounded font-bold hover:bg-orange-100 flex items-center shadow-sm border border-orange-100"
                                         >
                                             Refund Request
+                                        </button>
+                                    )}
+
+                                    {sale.totalPaid === 0 && sale.status === 'ONGOING' && (
+                                        <button
+                                            onClick={() => handleCancelOffer(sale.id)}
+                                            className="text-[11px] bg-red-50 text-red-700 px-3 py-1.5 rounded font-bold hover:bg-red-100 flex items-center shadow-sm border border-red-100"
+                                        >
+                                            Cancel Offer
                                         </button>
                                     )}
 
@@ -765,7 +796,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                     )}
 
                                     <button
-                                        disabled={sale.status === 'COMPLETED' || sale.status === 'EXCHANGED'}
+                                        disabled={isInactive || sale.status === 'COMPLETED' || sale.status === 'EXCHANGED'}
                                         onClick={() => { setSelectedSaleId(sale.id); setViewState('NEW_PAYMENT'); }}
                                         className="text-[11px] bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded font-bold hover:bg-emerald-100 flex items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-sm border border-emerald-100"
                                     >
