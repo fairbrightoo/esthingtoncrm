@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Filter, Phone, Mail, User, Calendar, Upload, Globe, MoreHorizontal, Edit2, Shield, Trash2, ArrowRightLeft, Activity, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Phone, Mail, User, Calendar, Upload, Globe, MoreHorizontal, Edit2, Shield, Trash2, ArrowRightLeft, Activity, DollarSign, ChevronLeft, ChevronRight, BookUser } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LeadTimeline } from '../components/LeadTimeline';
 import { BulkLeadUploadModal } from '../components/BulkLeadUploadModal';
@@ -57,6 +57,39 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
 
     // Add Lead Logic
     const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
+    const [addFormName, setAddFormName] = useState('');
+    const [addFormPhone, setAddFormPhone] = useState('');
+    const [addFormEmail, setAddFormEmail] = useState('');
+
+    const openAddLeadModal = () => {
+        setAddFormName('');
+        setAddFormPhone('');
+        setAddFormEmail('');
+        setIsAddLeadModalOpen(true);
+    };
+
+    const handleImportContacts = async () => {
+        try {
+            const props = ['name', 'tel', 'email'];
+            const contacts = await (navigator as any).contacts.select(props, { multiple: false });
+            if (contacts && contacts.length > 0) {
+                const contact = contacts[0];
+                if (contact.name && contact.name.length > 0) setAddFormName(contact.name[0]);
+                if (contact.tel && contact.tel.length > 0) {
+                    let phone = contact.tel[0].replace(/[\s-]/g, '');
+                    setAddFormPhone(phone);
+                }
+                if (contact.email && contact.email.length > 0) setAddFormEmail(contact.email[0]);
+                addToast("Contact imported successfully. Please review the details.", "success");
+            }
+        } catch (err: any) {
+            console.error("Contact picker error:", err);
+            // Ignore cancellation errors
+            if (err.name !== 'InvalidStateError' && err.name !== 'SecurityError' && err.name !== 'NotAllowedError') {
+                addToast("Failed to open contacts.", "error");
+            }
+        }
+    };
     const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
     
     // Global Search Logic
@@ -344,7 +377,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                         Bulk Upload
                     </button>
                     <button
-                        onClick={() => setIsAddLeadModalOpen(true)}
+                        onClick={openAddLeadModal}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm"
                     >
                         <User size={16} className="mr-2" />
@@ -605,12 +638,26 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                 isAddLeadModalOpen && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-                            <h2 className="text-lg font-bold mb-4">Add New Lead</h2>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-bold">Add New Lead</h2>
+                                {'contacts' in navigator && 'ContactsManager' in window && (
+                                    <button 
+                                        type="button" 
+                                        onClick={handleImportContacts}
+                                        className="flex items-center text-[11px] font-bold bg-indigo-50 text-indigo-700 px-2 py-1.5 rounded hover:bg-indigo-100 transition-colors shadow-sm border border-indigo-100"
+                                    >
+                                        <BookUser size={14} className="mr-1.5" />
+                                        From Contacts
+                                    </button>
+                                )}
+                            </div>
                             <form onSubmit={handleAddLeadSubmit}>
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                     <input
                                         name="fullName" required
+                                        value={addFormName}
+                                        onChange={e => setAddFormName(e.target.value)}
                                         className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     />
                                 </div>
@@ -618,6 +665,8 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                     <input
                                         name="phone" required
+                                        value={addFormPhone}
+                                        onChange={e => setAddFormPhone(e.target.value)}
                                         className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     />
                                 </div>
@@ -625,6 +674,8 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
                                     <input
                                         name="email" type="email"
+                                        value={addFormEmail}
+                                        onChange={e => setAddFormEmail(e.target.value)}
                                         className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     />
                                 </div>
