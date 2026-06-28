@@ -276,7 +276,8 @@ export const ManagingDirectorDashboard = () => {
                                             <span className="text-xs font-semibold text-gray-700">Plot Price: ₦{(p.sale.agreedPrice || 0).toLocaleString()}</span>
                                             {(() => {
                                                 let balance = (p.sale.agreedPrice || 0) - (p.sale.totalPaid || 0);
-                                                if (p.status === 'PENDING') {
+                                                // Always subtract pending amounts when viewing pending approvals
+                                                if (p.status === 'PENDING' || activeTab === 'APPROVALS') {
                                                     balance -= (p.amount || 0);
                                                     balance -= (p.virtualLoanAmount || 0);
                                                 }
