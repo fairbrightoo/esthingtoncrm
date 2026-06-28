@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Tag, CreditCard, Plus, Building, MapPin } from 'lucide-react';
+import { Tag, CreditCard, Plus, Building, MapPin, Clock, FileText, ArrowRightLeft } from 'lucide-react';
 
 interface Plot {
     id: string;
@@ -697,6 +697,21 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                         const isInactive = sale.status === 'CANCELLED' || sale.status === 'EXPIRED';
                         const statusStyle = sale.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                                             isInactive ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700';
+
+                        let daysLeftText = '';
+                        if (sale.status === 'ONGOING' && sale.totalPaid === 0) {
+                            const diffTime = Math.abs(new Date().getTime() - new Date(sale.createdAt).getTime());
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            const timeLeft = 7 - diffDays;
+                            
+                            if (timeLeft > 1) {
+                                daysLeftText = `Expires in ${timeLeft} days`;
+                            } else if (timeLeft === 1) {
+                                daysLeftText = `Expires Tomorrow`;
+                            } else if (timeLeft <= 0) {
+                                daysLeftText = `Expires Today`;
+                            }
+                        }
                         
                         return (
                             <div key={sale.id} className={`bg-white border rounded-xl shadow-sm overflow-hidden ${isInactive ? 'opacity-60 grayscale' : ''}`}>
@@ -711,8 +726,15 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                 <MapPin size={12} className="mr-1" /> {sale.plot.estate.location}
                                             </div>
                                         </div>
-                                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${statusStyle}`}>
-                                            {sale.status}
+                                        <div className="flex flex-col items-end">
+                                            <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${statusStyle}`}>
+                                                {sale.status}
+                                            </div>
+                                            {daysLeftText && (
+                                                <div className="text-[10px] text-red-500 font-bold mt-1.5 flex items-center bg-red-50 px-1.5 py-0.5 rounded">
+                                                    <Clock size={10} className="mr-1" /> {daysLeftText}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     {/* Progress */}
