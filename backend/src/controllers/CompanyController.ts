@@ -143,7 +143,8 @@ export const CompanyController = {
             const users = await prisma.user.findMany({
                 where: {
                     companyId,
-                    branchId
+                    branchId,
+                    isActive: true
                 },
                 select: {
                     id: true,
