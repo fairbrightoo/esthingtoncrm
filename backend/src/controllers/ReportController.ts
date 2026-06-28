@@ -126,6 +126,7 @@ export const ReportController = {
           clientName: sale.lead.fullName,
           description: description,
           amountPaid: payment.amount,
+          virtualLoanAmount: payment.virtualLoanAmount || 0,
           commissionAccrued: commissionAccrued,
           referrerName: referrerName,
           referralCommissionAccrued: referralCommissionAccrued,

@@ -116,14 +116,16 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         const doc = new jsPDF('landscape');
         doc.text(`Sales Report - ${filters.month}/${filters.year}`, 14, 15);
         
-        const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Comm Paid", "Referrer", "Ref Comm", "Estate", "Marketer", "Acct Paid To", "Sale Type", "Managing Branch"];
+        const tableColumn = ["S/N", "Trans Date", "Clients", "Desc", "Sqm", "Corner", "Amount Paid", "Virtual Loan", "Comm Paid", "Referrer", "Ref Comm", "Estate", "Marketer", "Acct Paid To", "Sale Type", "Managing Branch"];
         const tableRows: any[] = [];
 
         let totalAmount = 0;
+        let totalVirtualLoan = 0;
         let totalComm = 0;
 
         salesData.forEach(sale => {
             totalAmount += sale.amountPaid;
+            totalVirtualLoan += sale.virtualLoanAmount || 0;
             totalComm += sale.commissionAccrued + (sale.referralCommissionAccrued || 0);
             const rowData = [
                 sale.sn,
@@ -133,6 +135,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 sale.plotSize,
                 sale.isCornerPiece,
                 formatCurrencyForExport(sale.amountPaid),
+                formatCurrencyForExport(sale.virtualLoanAmount || 0),
                 formatCurrencyForExport(sale.commissionAccrued),
                 sale.referrerName && sale.referrerName !== 'N/A' ? sale.referrerName : 'N/A',
                 formatCurrencyForExport(sale.referralCommissionAccrued || 0),
@@ -145,7 +148,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             tableRows.push(rowData);
         });
 
-        tableRows.push(["", "", "", "", "", "GRAND TOTAL", formatCurrencyForExport(totalAmount), formatCurrencyForExport(totalComm), "", "", "", "", "", "", ""]);
+        tableRows.push(["", "", "", "", "", "GRAND TOTAL", formatCurrencyForExport(totalAmount), formatCurrencyForExport(totalVirtualLoan), formatCurrencyForExport(totalComm), "", "", "", "", "", "", ""]);
 
         autoTable(doc, {
             head: [tableColumn],
@@ -168,6 +171,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             "Plot In Sqm": sale.plotSize,
             "Corner Piece": sale.isCornerPiece,
             "Amount Paid (N)": sale.amountPaid,
+            "Virtual Loan (N)": sale.virtualLoanAmount || 0,
             "Comm Paid (N)": sale.commissionAccrued,
             "Referrer": sale.referrerName && sale.referrerName !== 'N/A' ? sale.referrerName : 'N/A',
             "Ref Comm (N)": sale.referralCommissionAccrued || 0,
@@ -179,12 +183,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         }));
         
         const totalAmount = salesData.reduce((sum, s) => sum + s.amountPaid, 0);
+        const totalVirtualLoan = salesData.reduce((sum, s) => sum + (s.virtualLoanAmount || 0), 0);
         const totalComm = salesData.reduce((sum, s) => sum + s.commissionAccrued + (s.referralCommissionAccrued || 0), 0);
         
         csvData.push({
             "S/N": "" as any, "Trans Date": "", "Clients": "", "Description": "", "Plot In Sqm": "", 
             "Corner Piece": "GRAND TOTAL", 
             "Amount Paid (N)": totalAmount as any, 
+            "Virtual Loan (N)": totalVirtualLoan as any,
             "Comm Paid (N)": totalComm as any, 
             "Referrer": "",
             "Ref Comm (N)": "",
@@ -379,6 +385,9 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                     <div className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-sm flex items-center">
                                         Total Sales: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
                                     </div>
+                                    <div className="text-sm font-bold text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200 shadow-sm flex items-center">
+                                        Total Virtual Loans: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + (sale.virtualLoanAmount || 0), 0))}</span>
+                                    </div>
                                     <div className="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 shadow-sm flex items-center">
                                         Total Comm: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + (sale.commissionAccrued || 0) + (sale.referralCommissionAccrued || 0), 0))}</span>
                                     </div>
@@ -416,6 +425,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                         <th className="p-3">Sqm</th>
                                         <th className="p-3 text-center">Corner</th>
                                         <th className="p-3">Amount Paid</th>
+                                        <th className="p-3 text-orange-600 bg-orange-50/50">Virtual Loan</th>
                                         <th className="p-3">Comm. Accrued</th>
                                         <th className="p-3 text-indigo-600 bg-indigo-50/50">Referrer</th>
                                         <th className="p-3 text-indigo-600 bg-indigo-50/50">Ref. Comm.</th>
@@ -439,6 +449,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <td className="p-3">{sale.plotSize}</td>
                                                 <td className="p-3 text-center">{sale.isCornerPiece}</td>
                                                 <td className="p-3 font-semibold text-emerald-600">{formatCurrency(sale.amountPaid)}</td>
+                                                <td className="p-3 font-medium text-orange-600 bg-orange-50/10">{sale.virtualLoanAmount > 0 ? formatCurrency(sale.virtualLoanAmount) : <span className="text-gray-400 font-normal">₦0</span>}</td>
                                                 <td className="p-3 text-gray-600">{formatCurrency(sale.commissionAccrued)}</td>
                                                 <td className="p-3 text-indigo-600 bg-indigo-50/10 font-medium">{sale.referrerName && sale.referrerName !== 'N/A' ? sale.referrerName : <span className="text-gray-400 font-normal">N/A</span>}</td>
                                                 <td className="p-3 text-indigo-600 bg-indigo-50/10 font-bold">{sale.referralCommissionAccrued > 0 ? formatCurrency(sale.referralCommissionAccrued) : <span className="text-gray-400 font-normal">₦0</span>}</td>
@@ -460,6 +471,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                         <tr className="bg-gray-50 border-t-2">
                                             <td colSpan={6} className="p-3 text-right font-bold text-gray-800">GRAND TOTAL:</td>
                                             <td className="p-3 font-bold text-emerald-700">{formatCurrency(salesData.reduce((sum, s) => sum + s.amountPaid, 0))}</td>
+                                            <td className="p-3 font-bold text-orange-700">{formatCurrency(salesData.reduce((sum, s) => sum + (s.virtualLoanAmount || 0), 0))}</td>
                                             <td className="p-3 font-bold text-gray-600">{formatCurrency(salesData.reduce((sum, s) => sum + s.commissionAccrued, 0))}</td>
                                             <td></td>
                                             <td className="p-3 font-bold text-indigo-600">{formatCurrency(salesData.reduce((sum, s) => sum + (s.referralCommissionAccrued || 0), 0))}</td>
