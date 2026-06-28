@@ -88,6 +88,10 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [refundReason, setRefundReason] = useState('');
     const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
 
+    // Cancel Offer Logic
+    const [saleToCancel, setSaleToCancel] = useState<string | null>(null);
+    const [isCancellingOffer, setIsCancellingOffer] = useState(false);
+
     // Form: New Sale
     const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
     const [selectedPlotId, setSelectedPlotId] = useState('');
@@ -206,17 +210,21 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         }
     };
 
-    const handleCancelOffer = async (saleId: string) => {
-        if (!window.confirm("Are you sure you want to cancel this offer? The plot will be released back to the market.")) return;
+    const confirmCancelOffer = async () => {
+        if (!saleToCancel) return;
+        setIsCancellingOffer(true);
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${saleId}/cancel`, {}, { 
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${saleToCancel}/cancel`, {}, { 
                 headers: { Authorization: `Bearer ${token}` } 
             });
             addToast("Offer cancelled successfully.", "success");
             fetchSales();
+            setSaleToCancel(null);
         } catch (error: any) {
             console.error("Failed to cancel offer", error);
             addToast(error.response?.data?.error || "Failed to cancel offer", "error");
+        } finally {
+            setIsCancellingOffer(false);
         }
     };
 
@@ -798,7 +806,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
                                     {sale.totalPaid === 0 && sale.status === 'ONGOING' && (
                                         <button
-                                            onClick={() => handleCancelOffer(sale.id)}
+                                            onClick={() => setSaleToCancel(sale.id)}
                                             className="text-[11px] bg-red-50 text-red-700 px-3 py-1.5 rounded font-bold hover:bg-red-100 flex items-center shadow-sm border border-red-100"
                                         >
                                             Cancel Offer
@@ -959,9 +967,41 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                 </div>
                             </form>
                         </div>
+                        </div>
                     </div>
                 </div>
             )}
+
+            {/* Cancel Offer Modal */}
+            {saleToCancel && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6">
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Cancel Offer</h3>
+                            <p className="text-gray-600 text-sm">
+                                Are you sure you want to cancel this offer? The plot will be released back to the market immediately. This action cannot be undone.
+                            </p>
+                            <div className="mt-6 flex justify-end space-x-3">
+                                <button
+                                    onClick={() => setSaleToCancel(null)}
+                                    className="px-4 py-2 font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                    disabled={isCancellingOffer}
+                                >
+                                    No, Keep It
+                                </button>
+                                <button
+                                    onClick={confirmCancelOffer}
+                                    disabled={isCancellingOffer}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                                >
+                                    {isCancellingOffer ? 'Cancelling...' : 'Yes, Cancel Offer'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div >
     );
 };
