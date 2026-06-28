@@ -275,7 +275,10 @@ export const ManagingDirectorDashboard = () => {
                                         <div className="flex gap-2 items-center flex-wrap">
                                             <span className="text-xs font-semibold text-gray-700">Plot Price: ₦{(p.sale.agreedPrice || 0).toLocaleString()}</span>
                                             {(() => {
-                                                const balance = (p.sale.agreedPrice || 0) - (p.sale.totalPaid || 0);
+                                                let balance = (p.sale.agreedPrice || 0) - (p.sale.totalPaid || 0);
+                                                if (p.status === 'PENDING') {
+                                                    balance -= (p.amount || 0);
+                                                }
                                                 return balance > 0 ? (
                                                     <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 font-bold">
                                                         Bal: ₦{balance.toLocaleString()}
