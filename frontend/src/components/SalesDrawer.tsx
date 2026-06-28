@@ -699,7 +699,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                             isInactive ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700';
 
                         let daysLeftText = '';
-                        if (sale.status === 'ONGOING' && sale.totalPaid === 0) {
+                        if (sale.status === 'ONGOING' && Number(sale.totalPaid) === 0) {
                             const diffTime = Math.abs(new Date().getTime() - new Date(sale.createdAt).getTime());
                             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                             const timeLeft = 7 - diffDays;
