@@ -1,8 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import prisma from '../config/prisma.js';
-import { generatePassword } from '../utils/passwordGenerator.js';
-import bcrypt from 'bcryptjs';
 
 export const LegacySaleRequestController = {
 
@@ -59,11 +57,11 @@ export const LegacySaleRequestController = {
     // 2. View Sent Requests (Submitting Branch Admin)
     async getSentRequests(req: AuthRequest, res: Response) {
         try {
-            const { branchId } = req.user!;
+            const branchId = req.user!.branchId!;
             const requests = await prisma.legacySaleRequest.findMany({
                 where: { requestingBranchId: branchId },
                 include: {
-                    estate: { select: { name: true, managingCompany: true, managingBranch: true } },
+                    estate: { select: { name: true, company: true, branch: true } },
                     assignedPlot: { select: { plotNumber: true } }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -77,7 +75,7 @@ export const LegacySaleRequestController = {
     // 3. View Received Requests (Managing Branch Admin)
     async getReceivedRequests(req: AuthRequest, res: Response) {
         try {
-            const { branchId } = req.user!;
+            const branchId = req.user!.branchId!;
             const requests = await prisma.legacySaleRequest.findMany({
                 where: { managingBranchId: branchId },
                 include: {
@@ -97,9 +95,9 @@ export const LegacySaleRequestController = {
     // 4. Reject Request (Managing Branch Admin)
     async rejectRequest(req: AuthRequest, res: Response) {
         try {
-            const { requestId } = req.params;
+            const { requestId } = req.params as { requestId: string };
             const { rejectionReason } = req.body;
-            const { branchId } = req.user!;
+            const branchId = req.user!.branchId!;
 
             const existing = await prisma.legacySaleRequest.findUnique({ where: { id: requestId } });
             if (!existing || existing.managingBranchId !== branchId) {
@@ -123,9 +121,10 @@ export const LegacySaleRequestController = {
     // 5. Approve Request and Execute Onboarding (Managing Branch Admin)
     async approveRequest(req: AuthRequest, res: Response) {
         try {
-            const { requestId } = req.params;
+            const { requestId } = req.params as { requestId: string };
             const { assignedPlotId } = req.body; // Branch Admin selects an available Plot ID
-            const { userId, branchId } = req.user!;
+            const userId = req.user!.userId;
+            const branchId = req.user!.branchId!;
 
             const request = await prisma.legacySaleRequest.findUnique({ 
                 where: { id: requestId },
@@ -157,46 +156,41 @@ export const LegacySaleRequestController = {
             }
 
             // 3. Register or Find Client (in Requesting Branch context)
-            let clientUser;
-            if (request.clientEmail) {
-                clientUser = await prisma.user.findUnique({ where: { email: request.clientEmail.toLowerCase().trim() } });
-            }
-            if (!clientUser) {
-                const tempPassword = generatePassword();
-                const hashedPassword = await bcrypt.hash(tempPassword, 10);
-                clientUser = await prisma.user.create({
-                    data: {
-                        fullName: request.clientName,
-                        email: request.clientEmail || `client-${Date.now()}@temp.esthington.com`,
-                        phone: request.clientPhone,
-                        password: hashedPassword,
-                        role: 'CLIENT',
-                        companyId: request.requestingCompanyId, // ATTRIBUTED TO REQUESTING COMPANY
-                        branchId: request.requestingBranchId,     // ATTRIBUTED TO REQUESTING BRANCH
-                        isActive: true
-                    }
-                });
-            }
-
-            // 4. Create Lead if not exists
             let lead = await prisma.lead.findFirst({
-                where: { email: clientUser.email }
+                where: { phone: request.clientPhone, companyId: request.requestingCompanyId }
             });
+
             if (!lead) {
                 lead = await prisma.lead.create({
                     data: {
-                        name: clientUser.fullName,
-                        email: clientUser.email,
-                        phone: clientUser.phone || "",
+                        fullName: request.clientName,
+                        email: request.clientEmail || null,
+                        phone: request.clientPhone || "",
                         source: "LEGACY_MIGRATION",
-                        status: "CLOSED_WON",
+                        status: "CLIENT",
                         companyId: request.requestingCompanyId, // ATTRIBUTED TO REQUESTING COMPANY
                         branchId: request.requestingBranchId,     // ATTRIBUTED TO REQUESTING BRANCH
-                        assignedToId: marketerId || request.requestingUserId,
-                        convertedToClientId: clientUser.id
+                        assignedToUserId: marketerId || request.requestingUserId,
+                        createdAt: request.dateOfSale
                     }
                 });
+            } else {
+                await prisma.lead.update({
+                    where: { id: lead.id },
+                    data: { status: 'CLIENT', updatedAt: new Date() }
+                });
             }
+
+            // 4. Log Activity
+            await prisma.activity.create({
+                data: {
+                    leadId: lead.id,
+                    type: 'NOTE',
+                    notes: `Legacy Sale onboarded via Cross-Branch Request for Plot ${plot.plotNumber}`,
+                    createdByUserId: userId,
+                    timestamp: new Date()
+                }
+            });
 
             // 5. Update Plot
             await prisma.plot.update({
@@ -213,13 +207,10 @@ export const LegacySaleRequestController = {
                     isCornerPiece: plot.isCornerPiece,
                     agreedPrice: request.agreedPrice,
                     totalPaid: request.amountPaidSoFar,
-                    saleStatus: request.amountPaidSoFar >= request.agreedPrice ? 'COMPLETED' : 'ACTIVE',
-                    dateOfSale: request.dateOfSale,
-                    companyId: request.requestingCompanyId, // ATTRIBUTED TO REQUESTING COMPANY
-                    branchId: request.requestingBranchId,     // ATTRIBUTED TO REQUESTING BRANCH
-                    // Cross-Company details
-                    crossCompanyId: request.requestingCompanyId !== request.managingCompanyId ? request.managingCompanyId : null,
-                    receivingBranchId: request.requestingCompanyId !== request.managingCompanyId ? request.managingBranchId : null
+                    status: request.amountPaidSoFar >= request.agreedPrice ? 'COMPLETED' : 'ONGOING',
+                    createdAt: request.dateOfSale,
+                    // Cross-Company details (if applicable)
+                    // Currently Sale model doesn't have crossCompanyId, we rely on the related Marketer and Lead.
                 }
             });
 
@@ -229,9 +220,9 @@ export const LegacySaleRequestController = {
                     data: {
                         saleId: sale.id,
                         amount: request.amountPaidSoFar,
-                        paymentMethod: 'LEGACY_MIGRATION',
-                        paymentDate: request.dateOfSale,
-                        status: 'CONFIRMED',
+                        method: 'LEGACY_MIGRATION',
+                        date: request.dateOfSale,
+                        status: 'APPROVED',
                         recordedByUserId: userId, // The approving MD
                         reference: `LEGACY-REQ-${request.id}`,
                         notes: `Legacy Sale approved and onboarded. Originally requested by ${request.requestingUserId}`,
