@@ -67,6 +67,9 @@ model Company {
   hoDelegatesDiscounts    Boolean @default(true)
   hoDelegatesLeaves       Boolean @default(true)
   hoDelegatesRequisitions Boolean @default(true)
+
+  requestingLegacySales LegacySaleRequest[] @relation("RequestingCompany")
+  managingLegacySales   LegacySaleRequest[] @relation("ManagingCompany")
 }
 
 model Branch {
@@ -114,6 +117,9 @@ model Branch {
   socialReports         SocialMediaReport[]
   campaigns             Campaign[]
   Announcement          Announcement[]
+
+  requestingLegacySales LegacySaleRequest[] @relation("RequestingBranch")
+  managingLegacySales   LegacySaleRequest[] @relation("ManagingBranch")
 }
 
 model User {
@@ -209,6 +215,8 @@ model User {
   oracleSocialReports     SocialMediaReport[] @relation("OracleReports")
   createdCampaigns        Campaign[]          @relation("CreatedCampaigns")
   sentPaymentMessages     PaymentMessage[]
+
+  requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
 }
 
 model Attendance {
@@ -323,6 +331,8 @@ model Estate {
   company              Company  @relation(fields: [companyId], references: [id])
   branch               Branch   @relation(fields: [managingBranchId], references: [id])
   plots                Plot[]
+
+  legacySaleRequests LegacySaleRequest[]
 }
 
 model Plot {
@@ -339,6 +349,8 @@ model Plot {
   estate        Estate             @relation(fields: [estateId], references: [id])
   sales         Sale[]
   priceHistory  PlotPriceHistory[]
+
+  legacySaleRequests LegacySaleRequest[]
 }
 
 model PlotPriceHistory {
@@ -1057,4 +1069,45 @@ model SocialMediaReport {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model LegacySaleRequest {
+  id                  String   @id @default(uuid())
+  clientName          String
+  clientPhone         String
+  clientEmail         String?
+  prototype           String
+  size                Float
+  agreedPrice         Float
+  amountPaidSoFar     Float
+  dateOfSale          DateTime
+  requestedPlotNumber String?
+  marketerEmail       String?
+  notes               String?  @db.Text
+  status              String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason     String?  @db.Text
+  
+  estateId            String
+  estate              Estate   @relation(fields: [estateId], references: [id])
+  
+  assignedPlotId      String?
+  assignedPlot        Plot?    @relation(fields: [assignedPlotId], references: [id])
+  
+  requestingUserId    String
+  requestingUser      User     @relation("RequestedLegacySales", fields: [requestingUserId], references: [id])
+  
+  requestingCompanyId String
+  requestingCompany   Company  @relation("RequestingCompany", fields: [requestingCompanyId], references: [id])
+  
+  requestingBranchId  String
+  requestingBranch    Branch   @relation("RequestingBranch", fields: [requestingBranchId], references: [id])
+  
+  managingCompanyId   String
+  managingCompany     Company  @relation("ManagingCompany", fields: [managingCompanyId], references: [id])
+  
+  managingBranchId    String
+  managingBranch      Branch   @relation("ManagingBranch", fields: [managingBranchId], references: [id])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }

@@ -72,6 +72,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Global User Mgmt" />
                         <NavItem to="/admin/global-clients" icon={<Globe size={20} />} label="Global Clients" />
                         <NavItem to="/admin/inventory" icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to="/admin/legacy-requests" icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
                     </>
                 )}
@@ -109,6 +110,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/leads`} icon={<FileText size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
@@ -143,6 +145,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Leads" />
                         <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/templates`} icon={<BookOpen size={20} />} label="Templates" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />

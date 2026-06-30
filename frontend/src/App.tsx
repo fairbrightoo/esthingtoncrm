@@ -20,6 +20,7 @@ import { BranchReports } from './pages/BranchReports';
 import { BranchSettings } from './pages/BranchSettings';
 import { CallScripts } from './pages/CallScripts';
 import { InventoryManager } from './pages/InventoryManager';
+import { LegacySalesRequests } from './pages/LegacySalesRequests';
 import { Campaigns } from './pages/Campaigns';
 import { CommunicationTemplates } from './pages/CommunicationTemplates';
 import { BranchAttendance } from './pages/BranchAttendance';
@@ -84,7 +85,7 @@ const DashboardHome = () => {
     const { user } = useAuth();
     if (user?.role === 'SUPER_ADMIN') return <Navigate to="/admin" replace />;
     if (user?.role === 'GLOBAL_CHAIRMAN') return <Navigate to="/dashboard/chairman" replace />;
-    if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDDashboard />;
+    if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDashboard />;
     
     if (user?.branch?.name) {
         const branchSlug = user.branch.name.toLowerCase().replace(/\s+/g, '-');
@@ -202,6 +203,7 @@ function App() {
             <Route path="/admin/global-clients" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
             <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
             <Route path="/admin/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
+            <Route path="/admin/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
             <Route path="/admin/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/admin/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
@@ -255,6 +257,7 @@ function App() {
             <Route path="/dashboard/:branchName/command-center" element={<DashboardLayout><BDMCommandCenter /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/department" element={<DashboardLayout><DepartmentBuilder /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/templates" element={<DashboardLayout><CommunicationTemplates /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/knowledge-base" element={<DashboardLayout><AIKnowledgeBase /></DashboardLayout>} />

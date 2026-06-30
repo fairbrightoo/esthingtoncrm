@@ -40,4 +40,12 @@ router.post('/payments/:paymentId/messages', authenticateToken, SaleController.a
 router.get('/payments/:paymentId/messages', authenticateToken, SaleController.getPaymentMessages);
 router.put('/sales/:id/cancel', authenticateToken, SaleController.cancelSale);
 
+// --- LEGACY SALE REQUESTS ROUTES ---
+import { LegacySaleRequestController } from '../controllers/LegacySaleRequestController.js';
+router.post('/legacy-sale-requests', authenticateToken, LegacySaleRequestController.createRequest);
+router.get('/legacy-sale-requests/sent', authenticateToken, LegacySaleRequestController.getSentRequests);
+router.get('/legacy-sale-requests/received', authenticateToken, LegacySaleRequestController.getReceivedRequests);
+router.put('/legacy-sale-requests/:requestId/approve', authenticateToken, LegacySaleRequestController.approveRequest);
+router.put('/legacy-sale-requests/:requestId/reject', authenticateToken, LegacySaleRequestController.rejectRequest);
+
 export default router;

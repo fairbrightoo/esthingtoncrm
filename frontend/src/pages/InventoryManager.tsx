@@ -928,9 +928,27 @@ export const InventoryManager = () => {
 
                         {plotCreationMode === 'LEGACY_SALES' && (
                             <div className="relative z-10">
-                                <div className="flex space-x-2 mb-4 bg-white/50 p-1 rounded-full w-max border border-indigo-100">
-                                    <button onClick={() => setLegacySaleTab('SINGLE')} type="button" className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${legacySaleTab === 'SINGLE' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-600 hover:bg-indigo-100'}`}>Single Sale Entry</button>
-                                    <button onClick={() => setLegacySaleTab('CSV')} type="button" className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${legacySaleTab === 'CSV' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-600 hover:bg-indigo-100'}`}>Bulk CSV Parse</button>
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-4 sm:space-y-0">
+                                    <div className="flex space-x-2 bg-white/50 p-1 rounded-full border border-indigo-100">
+                                        <button onClick={() => setLegacySaleTab('SINGLE')} type="button" className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${legacySaleTab === 'SINGLE' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-600 hover:bg-indigo-100'}`}>Single Sale Entry</button>
+                                        <button onClick={() => setLegacySaleTab('CSV')} type="button" className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${legacySaleTab === 'CSV' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-600 hover:bg-indigo-100'}`}>Bulk CSV Parse</button>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-indigo-800 font-medium mb-1">Selling for another branch's estate?</p>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                if (user?.role === 'SUPER_ADMIN') {
+                                                    window.location.href = '/admin/legacy-requests';
+                                                } else {
+                                                    window.location.href = `/dashboard/${user?.branch?.name?.toLowerCase().replace(/\s+/g, '-')}/legacy-requests`;
+                                                }
+                                            }}
+                                            className="px-4 py-1.5 bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg hover:bg-indigo-200 transition"
+                                        >
+                                            Submit Cross-Branch Request →
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {legacySaleTab === 'SINGLE' ? (
