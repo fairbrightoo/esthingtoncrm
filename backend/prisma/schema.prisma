@@ -63,10 +63,10 @@ model Company {
   productionScripts    ProductionScript[]
   socialReports        SocialMediaReport[]
 
-  hoDelegatesPayments      Boolean @default(false)
-  hoDelegatesDiscounts     Boolean @default(true)
-  hoDelegatesLeaves        Boolean @default(true)
-  hoDelegatesRequisitions  Boolean @default(true)
+  hoDelegatesPayments     Boolean @default(false)
+  hoDelegatesDiscounts    Boolean @default(true)
+  hoDelegatesLeaves       Boolean @default(true)
+  hoDelegatesRequisitions Boolean @default(true)
 }
 
 model Branch {
@@ -113,6 +113,7 @@ model Branch {
   productionScripts     ProductionScript[]
   socialReports         SocialMediaReport[]
   campaigns             Campaign[]
+  Announcement          Announcement[]
 }
 
 model User {
@@ -211,24 +212,24 @@ model User {
 }
 
 model Attendance {
-  id        String    @id @default(uuid())
-  userId    String
-  date      DateTime
-  status    String    @default("PRESENT")
-  checkIn   DateTime?
-  checkOut  DateTime?
-  clockInPhotoUrl String?
+  id               String    @id @default(uuid())
+  userId           String
+  date             DateTime
+  status           String    @default("PRESENT")
+  checkIn          DateTime?
+  checkOut         DateTime?
+  clockInPhotoUrl  String?
   clockOutPhotoUrl String?
-  clockInLat      Float?
-  clockInLng      Float?
-  notes     String?
-  branchId  String
-  companyId String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  company   Company   @relation(fields: [companyId], references: [id])
-  branch    Branch    @relation(fields: [branchId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
+  clockInLat       Float?
+  clockInLng       Float?
+  notes            String?
+  branchId         String
+  companyId        String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  company          Company   @relation(fields: [companyId], references: [id])
+  branch           Branch    @relation(fields: [branchId], references: [id])
+  user             User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
 }
@@ -351,34 +352,34 @@ model PlotPriceHistory {
 }
 
 model Sale {
-  id                String          @id @default(uuid())
-  leadId            String
-  marketerId        String?
-  plotId            String
-  isCornerPiece     Boolean         @default(false)
-  agreedPrice       Float
-  totalPaid         Float           @default(0.0)
-  status            String          @default("ONGOING")
-  nextPaymentDue    DateTime?
-  nameOnDocument    String?
-  phoneOnDocument   String?
-  addressOnDocument String?
-  plotNumber        String?
-  termsAccepted     Boolean         @default(false)
-  termsAcceptedAt   DateTime?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  discountCodeId    String?
+  id                     String          @id @default(uuid())
+  leadId                 String
+  marketerId             String?
+  plotId                 String
+  isCornerPiece          Boolean         @default(false)
+  agreedPrice            Float
+  totalPaid              Float           @default(0.0)
+  status                 String          @default("ONGOING")
+  nextPaymentDue         DateTime?
+  nameOnDocument         String?
+  phoneOnDocument        String?
+  addressOnDocument      String?
+  plotNumber             String?
+  termsAccepted          Boolean         @default(false)
+  termsAcceptedAt        DateTime?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  discountCodeId         String?
   marketerCommissionRate Float?
   referrerId             String?
   referrerCommissionRate Float?
-  payments          Payment[]
-  plot              Plot            @relation(fields: [plotId], references: [id])
-  lead              Lead            @relation(fields: [leadId], references: [id])
-  marketer          User?           @relation("SaleMarketer", fields: [marketerId], references: [id])
-  referrer          User?           @relation("SaleReferrer", fields: [referrerId], references: [id])
-  discountCode      DiscountCode?   @relation(fields: [discountCodeId], references: [id])
-  refundRequests    RefundRequest[]
+  payments               Payment[]
+  plot                   Plot            @relation(fields: [plotId], references: [id])
+  lead                   Lead            @relation(fields: [leadId], references: [id])
+  marketer               User?           @relation("SaleMarketer", fields: [marketerId], references: [id])
+  referrer               User?           @relation("SaleReferrer", fields: [referrerId], references: [id])
+  discountCode           DiscountCode?   @relation(fields: [discountCodeId], references: [id])
+  refundRequests         RefundRequest[]
 }
 
 model Payment {
@@ -396,15 +397,15 @@ model Payment {
   accountPaidTo     String?
   virtualLoanAmount Float    @default(0)
 
-  isCommissionPaid      Boolean   @default(false)
-  commissionDisbursedAt DateTime?
-  isReferralCommissionPaid Boolean @default(false)
+  isCommissionPaid              Boolean   @default(false)
+  commissionDisbursedAt         DateTime?
+  isReferralCommissionPaid      Boolean   @default(false)
   referralCommissionDisbursedAt DateTime?
 
   // Cross-Company Tracking
   receivingBranchId          String?
-  bankBranchConfirmation     String?   // 'PENDING', 'RECEIVED', 'NOT_RECEIVED'
-  bankBranchConfirmationNote String?   @db.Text
+  bankBranchConfirmation     String? // 'PENDING', 'RECEIVED', 'NOT_RECEIVED'
+  bankBranchConfirmationNote String? @db.Text
 
   createdAt      DateTime         @default(now())
   recordedByUser User             @relation(fields: [recordedByUserId], references: [id])
@@ -419,8 +420,8 @@ model PaymentMessage {
   content   String   @db.Text
   createdAt DateTime @default(now())
 
-  payment   Payment @relation(fields: [paymentId], references: [id])
-  sender    User    @relation(fields: [senderId], references: [id])
+  payment Payment @relation(fields: [paymentId], references: [id])
+  sender  User    @relation(fields: [senderId], references: [id])
 }
 
 model MessageTemplate {
@@ -784,19 +785,19 @@ model CompanyDocument {
 }
 
 model HelpdeskTicket {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  category    String   @default("GENERAL") // GENERAL, TECHNICAL, BILLING, SALES
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  status        String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority      String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  category      String   @default("GENERAL") // GENERAL, TECHNICAL, BILLING, SALES
   attachmentUrl String?
-  companyId   String
-  branchId    String?
-  creatorId   String // Internal User ID who logged the ticket
-  leadId      String? // Optional relation to the Client/Lead
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  companyId     String
+  branchId      String?
+  creatorId     String // Internal User ID who logged the ticket
+  leadId        String? // Optional relation to the Client/Lead
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
   branch  Branch? @relation(fields: [branchId], references: [id])
@@ -988,73 +989,72 @@ model TeamMessage {
   sender User @relation("MessageSender", fields: [senderId], references: [id])
 }
 
-
 model ReferralCode {
-  id          String   @id @default(uuid())
-  code        String   @unique
-  creatorId   String
-  creator     User     @relation("CreatedReferralCodes", fields: [creatorId], references: [id])
-  percentage  Float
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  users       User[]   @relation("UsedReferralCode")
+  id         String   @id @default(uuid())
+  code       String   @unique
+  creatorId  String
+  creator    User     @relation("CreatedReferralCodes", fields: [creatorId], references: [id])
+  percentage Float
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  users      User[]   @relation("UsedReferralCode")
 }
 
 model MarketingAsset {
   id                 String   @id @default(uuid())
   title              String
   description        String?
-  type               String   // IMAGE, VIDEO_LINK, FLYER
-  fileUrl            String   // R2 URL or external video link
+  type               String // IMAGE, VIDEO_LINK, FLYER
+  fileUrl            String // R2 URL or external video link
   uploadedByOracleId String
   companyId          String
   branchId           String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  uploadedByOracle   User     @relation("OracleAssets", fields: [uploadedByOracleId], references: [id])
-  company            Company  @relation(fields: [companyId], references: [id])
-  branch             Branch?  @relation(fields: [branchId], references: [id])
-  socialReports      SocialMediaReport[]
+  uploadedByOracle User                @relation("OracleAssets", fields: [uploadedByOracleId], references: [id])
+  company          Company             @relation(fields: [companyId], references: [id])
+  branch           Branch?             @relation(fields: [branchId], references: [id])
+  socialReports    SocialMediaReport[]
 }
 
 model ProductionScript {
-  id          String   @id @default(uuid())
-  title       String
-  content     String   @db.Text // Rich text
-  authorId    String
-  companyId   String
-  branchId    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  title     String
+  content   String   @db.Text // Rich text
+  authorId  String
+  companyId String
+  branchId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  author       User     @relation("ScriptAuthor", fields: [authorId], references: [id])
-  assignedCast User[]   @relation("ScriptCast")
-  company      Company  @relation(fields: [companyId], references: [id])
-  branch       Branch?  @relation(fields: [branchId], references: [id])
+  author       User    @relation("ScriptAuthor", fields: [authorId], references: [id])
+  assignedCast User[]  @relation("ScriptCast")
+  company      Company @relation(fields: [companyId], references: [id])
+  branch       Branch? @relation(fields: [branchId], references: [id])
 }
 
 model SocialMediaReport {
-  id             String         @id @default(uuid())
-  platform       String         // e.g., YOUTUBE, INSTAGRAM, TIKTOK, FACEBOOK
-  views          Int            @default(0)
-  likes          Int            @default(0)
-  comments       Int            @default(0)
-  shares         Int            @default(0)
-  reportDate     DateTime       @default(now())
-  
-  assetId        String?
-  asset          MarketingAsset? @relation(fields: [assetId], references: [id])
-  
-  reporterId     String
-  reporter       User           @relation("OracleReports", fields: [reporterId], references: [id])
-  
-  companyId      String
-  company        Company        @relation(fields: [companyId], references: [id])
-  
-  branchId       String?
-  branch         Branch?        @relation(fields: [branchId], references: [id])
-  
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id         String   @id @default(uuid())
+  platform   String // e.g., YOUTUBE, INSTAGRAM, TIKTOK, FACEBOOK
+  views      Int      @default(0)
+  likes      Int      @default(0)
+  comments   Int      @default(0)
+  shares     Int      @default(0)
+  reportDate DateTime @default(now())
+
+  assetId String?
+  asset   MarketingAsset? @relation(fields: [assetId], references: [id])
+
+  reporterId String
+  reporter   User   @relation("OracleReports", fields: [reporterId], references: [id])
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
