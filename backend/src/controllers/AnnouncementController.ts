@@ -20,7 +20,13 @@ export const AnnouncementController = {
             let announcements: any[] = [];
             if (companyId) {
                 const rawAnnouncements = await prisma.announcement.findMany({
-                    where: { companyId },
+                    where: { 
+                        companyId,
+                        OR: [
+                            { branchId: user.branchId },
+                            { branchId: null }
+                        ]
+                    },
                     include: {
                         author: {
                             select: { id: true, fullName: true, role: true }
@@ -91,6 +97,7 @@ export const AnnouncementController = {
                     content,
                     priority: priority || 'NORMAL',
                     companyId: companyId,
+                    branchId: (user.role === 'SUPER_ADMIN' || user.role === 'GLOBAL_CHAIRMAN') ? null : user.branchId,
                     authorId: user.userId
                 },
                 include: {

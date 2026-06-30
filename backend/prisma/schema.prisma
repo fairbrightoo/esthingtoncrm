@@ -490,10 +490,12 @@ model Announcement {
   content      String
   priority     String              @default("NORMAL") // e.g., "NORMAL", "HIGH"
   companyId    String
+  branchId     String?
   authorId     String
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   company      Company             @relation(fields: [companyId], references: [id])
+  branch       Branch?             @relation(fields: [branchId], references: [id])
   author       User                @relation(fields: [authorId], references: [id])
   readReceipts NoticeReadReceipt[]
 }
