@@ -326,7 +326,7 @@ export const LegacySalesRequests = () => {
                                         value={createForm.estateId} onChange={e => setCreateForm({ ...createForm, estateId: e.target.value })}>
                                         <option value="">-- Choose an Estate --</option>
                                         {estates.map(e => (
-                                            <option key={e.id} value={e.id}>{e.name} (Managed by {e.managingBranch})</option>
+                                            <option key={e.id} value={e.id}>{e.name} (Managed by {e.managingCompany ? `${e.managingCompany} | ` : ''}{e.managingBranch})</option>
                                         ))}
                                     </select>
                                 </div>
