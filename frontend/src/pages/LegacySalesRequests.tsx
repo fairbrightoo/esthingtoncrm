@@ -266,6 +266,11 @@ export const LegacySalesRequests = () => {
                                                 <p className="font-semibold text-gray-700">{req.estate?.name}</p>
                                                 <p className="text-gray-500 text-xs mt-1">Requested: {req.requestedPlotNumber || 'N/A'}</p>
                                                 <p className="text-gray-500 text-xs">{req.size}sqm - {req.prototype}</p>
+                                                {req.notes && (
+                                                    <div className="mt-2 text-[10px] text-gray-500 bg-gray-100/50 p-2 rounded-lg border border-gray-200">
+                                                        <span className="font-bold text-gray-700">Notes: </span>{req.notes}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <p className="font-bold text-gray-700">₦{req.agreedPrice.toLocaleString()}</p>
