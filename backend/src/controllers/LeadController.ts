@@ -313,8 +313,13 @@ export const LeadController = {
 
 
             // Integrity Check: Email/Phone Uniqueness Global
+            let orConditions: any[] = [{ phone }];
+            if (email) {
+                orConditions.push({ email: { equals: String(email), mode: 'insensitive' } });
+            }
+
             const existing = await prisma.lead.findFirst({
-                where: { OR: [{ email: { equals: email, mode: 'insensitive' } }, { phone }] }
+                where: { OR: orConditions }
             });
 
             if (existing) {
@@ -342,7 +347,7 @@ export const LeadController = {
                     whatsappOptIn: whatsappOptIn !== undefined ? Boolean(whatsappOptIn) : true,
                     status: 'PROSPECT',
                     companyId: user.companyId,
-                    branchId: user.branchId, // Defaults to creator's branch
+                    branchId: user.branchId || null, // Defaults to creator's branch, fall back to null if empty string
                     // If creator is Marketer, assign to self. If Admin, use provided ID or self.
                     assignedToUserId: assignedToUserId ? String(assignedToUserId) : user.id
                 }

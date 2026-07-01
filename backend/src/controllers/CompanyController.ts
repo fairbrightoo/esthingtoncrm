@@ -729,7 +729,7 @@ export const CompanyController = {
                     nextOfKinName,
                     nextOfKinPhone,
                     companyId,
-                    branchId,
+                    branchId: branchId || null,
                     referralCodeId,
                     referredById
                 }
