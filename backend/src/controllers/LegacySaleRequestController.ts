@@ -81,7 +81,12 @@ export const LegacySaleRequestController = {
                 include: {
                     estate: { select: { name: true } },
                     requestingCompany: { select: { name: true } },
-                    requestingBranch: { select: { name: true } },
+                    requestingBranch: { 
+                        select: { 
+                            name: true,
+                            company: { select: { name: true } }
+                        } 
+                    },
                     requestingUser: { select: { fullName: true } }
                 },
                 orderBy: { createdAt: 'desc' }

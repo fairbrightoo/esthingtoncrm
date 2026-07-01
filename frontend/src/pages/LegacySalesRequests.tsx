@@ -31,10 +31,58 @@ export const LegacySalesRequests = () => {
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
 
+    const [branchStaff, setBranchStaff] = useState<any[]>([]);
+    const [staffSearchQuery, setStaffSearchQuery] = useState('');
+    const [showStaffDropdown, setShowStaffDropdown] = useState(false);
+
+    const [estatePlots, setEstatePlots] = useState<any[]>([]);
+    const [availablePrototypes, setAvailablePrototypes] = useState<string[]>([]);
+    const [availableSizes, setAvailableSizes] = useState<string[]>([]);
+
     useEffect(() => {
         fetchData();
         fetchEstates();
-    }, []);
+        if (user?.companyId && user?.branchId) {
+            fetchBranchStaff(user.companyId, user.branchId);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (createForm.estateId) {
+            fetchEstatePlots(createForm.estateId);
+        } else {
+            setEstatePlots([]);
+            setAvailablePrototypes([]);
+            setAvailableSizes([]);
+            setCreateForm(prev => ({ ...prev, prototype: '', size: '' }));
+        }
+    }, [createForm.estateId]);
+
+    const fetchBranchStaff = async (companyId: string, branchId: string) => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches/${branchId}/users`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setBranchStaff(res.data);
+        } catch (error) {
+            console.error("Failed to load branch staff", error);
+        }
+    };
+
+    const fetchEstatePlots = async (estateId: string) => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${estateId}/plots`, { headers: { Authorization: `Bearer ${token}` } });
+            const plots = res.data;
+            setEstatePlots(plots);
+            
+            const protos = Array.from(new Set(plots.map((p: any) => p.prototype).filter(Boolean)));
+            const sizes = Array.from(new Set(plots.map((p: any) => String(p.size)).filter(Boolean)));
+            setAvailablePrototypes(protos as string[]);
+            setAvailableSizes(sizes as string[]);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -209,7 +257,9 @@ export const LegacySalesRequests = () => {
                                                 <p className="font-bold text-gray-800">{req.clientName}</p>
                                                 <p className="text-gray-500 text-xs mt-1">{req.clientPhone}</p>
                                                 {activeTab === 'RECEIVED' && (
-                                                    <p className="text-[10px] text-indigo-600 font-semibold mt-2 uppercase">From: {req.requestingBranch?.name}</p>
+                                                    <p className="text-[10px] text-indigo-600 font-semibold mt-2 uppercase">
+                                                        From: {req.requestingBranch?.company?.name ? `${req.requestingBranch.company.name} | ` : ''}{req.requestingBranch?.name || 'Unknown'}
+                                                    </p>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
@@ -300,10 +350,47 @@ export const LegacySalesRequests = () => {
                                             <input type="email" className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                                 value={createForm.clientEmail} onChange={e => setCreateForm({ ...createForm, clientEmail: e.target.value })} />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-600 mb-1">Marketer Email (Optional)</label>
-                                            <input type="email" className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                value={createForm.marketerEmail} onChange={e => setCreateForm({ ...createForm, marketerEmail: e.target.value })} placeholder="Credit to specific marketer" />
+                                        <div className="flex gap-3">
+                                            <div className="w-1/2">
+                                                <label className="block text-xs font-bold text-gray-600 mb-1">Staff Name</label>
+                                                <div className="relative">
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        placeholder="Search staff..."
+                                                        value={staffSearchQuery}
+                                                        onChange={e => {
+                                                            setStaffSearchQuery(e.target.value);
+                                                            setShowStaffDropdown(true);
+                                                        }}
+                                                        onFocus={() => setShowStaffDropdown(true)}
+                                                        onBlur={() => setTimeout(() => setShowStaffDropdown(false), 200)}
+                                                    />
+                                                    {showStaffDropdown && staffSearchQuery && (
+                                                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                            {branchStaff.filter(s => s.fullName.toLowerCase().includes(staffSearchQuery.toLowerCase())).map(staff => (
+                                                                <div 
+                                                                    key={staff.id} 
+                                                                    className="px-3 py-2 text-sm hover:bg-indigo-50 cursor-pointer"
+                                                                    onMouseDown={() => {
+                                                                        setStaffSearchQuery(staff.fullName);
+                                                                        setCreateForm({ ...createForm, marketerEmail: staff.email });
+                                                                        setShowStaffDropdown(false);
+                                                                    }}
+                                                                >
+                                                                    <div className="font-bold text-gray-800">{staff.fullName}</div>
+                                                                    <div className="text-xs text-gray-500">{staff.email}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="w-1/2">
+                                                <label className="block text-xs font-bold text-gray-600 mb-1">Marketer Email (Optional)</label>
+                                                <input type="email" className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                    value={createForm.marketerEmail} onChange={e => setCreateForm({ ...createForm, marketerEmail: e.target.value })} placeholder="Credit to marketer" />
+                                            </div>
                                         </div>
                                     </div>
 
@@ -312,14 +399,38 @@ export const LegacySalesRequests = () => {
                                         <h3 className="font-bold text-indigo-900 border-b border-indigo-100 pb-2">Sale Details</h3>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-600 mb-1">Prototype (e.g. 4 Bedroom Terrace)</label>
-                                            <input required className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                value={createForm.prototype} onChange={e => setCreateForm({ ...createForm, prototype: e.target.value })} />
+                                            <select required className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                value={createForm.prototype} 
+                                                onChange={e => {
+                                                    const proto = e.target.value;
+                                                    const matchingPlot = estatePlots.find(p => p.prototype === proto);
+                                                    setCreateForm({ 
+                                                        ...createForm, 
+                                                        prototype: proto,
+                                                        size: matchingPlot ? String(matchingPlot.size) : createForm.size
+                                                    });
+                                                }}>
+                                                <option value="">Select Prototype...</option>
+                                                {availablePrototypes.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                            </select>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-600 mb-1">Size (sqm)</label>
-                                                <input required type="number" className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                    value={createForm.size} onChange={e => setCreateForm({ ...createForm, size: e.target.value })} />
+                                                <select required className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                    value={createForm.size} 
+                                                    onChange={e => {
+                                                        const sz = e.target.value;
+                                                        const matchingPlot = estatePlots.find(p => String(p.size) === sz);
+                                                        setCreateForm({ 
+                                                            ...createForm, 
+                                                            size: sz,
+                                                            prototype: matchingPlot ? matchingPlot.prototype : createForm.prototype
+                                                        });
+                                                    }}>
+                                                    <option value="">Select Size...</option>
+                                                    {availableSizes.map((s, i) => <option key={i} value={s}>{s}</option>)}
+                                                </select>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-600 mb-1">Requested Plot Number</label>
