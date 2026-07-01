@@ -326,13 +326,30 @@ model Estate {
   searchDocumentUrl    String?
   siteLayoutUrl        String?
   cornerPiecePrice     Float    @default(1000000)
+  projectSupervisionFee Float   @default(200000)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   company              Company  @relation(fields: [companyId], references: [id])
   branch               Branch   @relation(fields: [managingBranchId], references: [id])
   plots                Plot[]
+  plotConfigs          PlotPrototypeConfig[]
 
   legacySaleRequests LegacySaleRequest[]
+}
+
+model PlotPrototypeConfig {
+  id                  String   @id @default(uuid())
+  estateId            String
+  prototype           String
+  size                Float
+  settingOutFee       Float    @default(400000)
+  infrastructureFee   Float    @default(3000000)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  estate              Estate   @relation(fields: [estateId], references: [id], onDelete: Cascade)
+
+  @@unique([estateId, prototype, size])
 }
 
 model Plot {

@@ -10,7 +10,7 @@ export const EstateController = {
     // 1. Create a new Estate (Branch Admin)
     createEstate: async (req: Request, res: Response) => {
         try {
-            const { name, location, documentSearchNumber, cornerPiecePrice } = req.body;
+            const { name, location, documentSearchNumber, cornerPiecePrice, projectSupervisionFee } = req.body;
             const user = (req as any).user;
 
             if (!user.companyId || !user.branchId) {
@@ -41,6 +41,7 @@ export const EstateController = {
                     searchDocumentUrl,
                     siteLayoutUrl,
                     cornerPiecePrice: cornerPiecePrice !== undefined ? Number(cornerPiecePrice) : undefined,
+                    projectSupervisionFee: projectSupervisionFee !== undefined ? Number(projectSupervisionFee) : undefined,
                     companyId: user.companyId,
                     managingBranchId: user.branchId
                 }
@@ -57,13 +58,14 @@ export const EstateController = {
     updateEstate: async (req: Request, res: Response) => {
         try {
             const { id } = req.params as { id: string };
-            const { name, location, documentSearchNumber, cornerPiecePrice } = req.body;
+            const { name, location, documentSearchNumber, cornerPiecePrice, projectSupervisionFee } = req.body;
 
             const updateData: any = {};
             if (name !== undefined) updateData.name = name;
             if (location !== undefined) updateData.location = location;
             if (documentSearchNumber !== undefined) updateData.documentSearchNumber = documentSearchNumber || null;
             if (cornerPiecePrice !== undefined) updateData.cornerPiecePrice = Number(cornerPiecePrice);
+            if (projectSupervisionFee !== undefined) updateData.projectSupervisionFee = Number(projectSupervisionFee);
 
             if (req.files) {
                 const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -99,6 +101,7 @@ export const EstateController = {
                 include: {
                     company: { select: { name: true, themeColor: true } },
                     branch: { select: { name: true } },
+                    plotConfigs: true,
                     plots: {
                         select: { status: true, prototype: true, size: true } // Fetch status, prototype, and size for breakdown
                     }
@@ -113,7 +116,7 @@ export const EstateController = {
                 const availablePlots = availablePlotsList.length;
                 
                 const breakdownMap: Record<string, number> = {};
-                const configsMap: Record<string, {prototype: string, size: number}> = {};
+                const configsMap: Record<string, {prototype: string, size: number, settingOutFee: number, infrastructureFee: number}> = {};
 
                 availablePlotsList.forEach(p => {
                     let type = p.prototype || 'Unknown Type';
@@ -126,7 +129,13 @@ export const EstateController = {
                 estate.plots.forEach(p => {
                     if (p.prototype && p.size) {
                         const key = `${p.prototype}_${p.size}`;
-                        configsMap[key] = { prototype: p.prototype, size: p.size };
+                        const existingConfig = estate.plotConfigs.find(c => c.prototype === p.prototype && c.size === p.size);
+                        configsMap[key] = { 
+                            prototype: p.prototype, 
+                            size: p.size,
+                            settingOutFee: existingConfig ? existingConfig.settingOutFee : 400000,
+                            infrastructureFee: existingConfig ? existingConfig.infrastructureFee : 3000000
+                        };
                     }
                 });
 
@@ -143,6 +152,7 @@ export const EstateController = {
                     companyTheme: estate.company.themeColor,
                     managingBranch: estate.branch.name,
                     documentSearchNumber: estate.documentSearchNumber,
+                    projectSupervisionFee: estate.projectSupervisionFee,
                     searchDocumentUrl: estate.searchDocumentUrl,
                     siteLayoutUrl: estate.siteLayoutUrl,
                     createdAt: estate.createdAt,
@@ -185,6 +195,41 @@ export const EstateController = {
         } catch (error) {
             console.error("Delete Estate Error:", error);
             res.status(500).json({ error: "Failed to delete estate" });
+        }
+    },
+
+    // 5. Update Prototype Fees
+    updatePrototypeFees: async (req: Request, res: Response) => {
+        try {
+            const id = req.params.id as string;
+            const { fees } = req.body; // Array of { prototype, size, settingOutFee, infrastructureFee }
+
+            for (const fee of fees) {
+                await prisma.plotPrototypeConfig.upsert({
+                    where: {
+                        estateId_prototype_size: {
+                            estateId: id,
+                            prototype: fee.prototype,
+                            size: Number(fee.size)
+                        }
+                    },
+                    update: {
+                        settingOutFee: Number(fee.settingOutFee),
+                        infrastructureFee: Number(fee.infrastructureFee)
+                    },
+                    create: {
+                        estateId: id,
+                        prototype: fee.prototype,
+                        size: Number(fee.size),
+                        settingOutFee: Number(fee.settingOutFee),
+                        infrastructureFee: Number(fee.infrastructureFee)
+                    }
+                });
+            }
+            res.json({ message: "Prototype fees updated successfully" });
+        } catch (error) {
+            console.error("Update Prototype Fees Error:", error);
+            res.status(500).json({ error: "Failed to update prototype fees" });
         }
     },
 

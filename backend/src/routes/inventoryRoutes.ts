@@ -11,6 +11,7 @@ const router = express.Router();
 router.post('/estates', authenticateToken, upload.fields([{ name: 'searchDocument', maxCount: 1 }, { name: 'siteLayout', maxCount: 1 }]), EstateController.createEstate);
 router.get('/estates', authenticateToken, EstateController.getEstates);
 router.put('/estates/:id', authenticateToken, upload.fields([{ name: 'searchDocument', maxCount: 1 }, { name: 'siteLayout', maxCount: 1 }]), EstateController.updateEstate);
+router.put('/estates/:id/prototype-fees', authenticateToken, EstateController.updatePrototypeFees);
 router.delete('/estates/:id', authenticateToken, EstateController.deleteEstate);
 router.post('/estates/secure-pdf-stream', authenticateToken, EstateController.streamSecurePdf);
 

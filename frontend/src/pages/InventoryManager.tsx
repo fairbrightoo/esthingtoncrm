@@ -134,10 +134,12 @@ export const InventoryManager = () => {
     // Modals & Forms
     const [isEstateModalOpen, setIsEstateModalOpen] = useState(false);
     const [isEditEstateModalOpen, setIsEditEstateModalOpen] = useState(false);
-    const [estateForm, setEstateForm] = useState({ name: '', location: '', documentSearchNumber: '', cornerPiecePrice: '' });
+    const [estateForm, setEstateForm] = useState({ name: '', location: '', documentSearchNumber: '', cornerPiecePrice: '', projectSupervisionFee: '200000' });
     const [searchDocument, setSearchDocument] = useState<File | null>(null);
     const [siteLayout, setSiteLayout] = useState<File | null>(null);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
+    
+    const [prototypeFeesForm, setPrototypeFeesForm] = useState<any[]>([]);
 
     const [estateToDelete, setEstateToDelete] = useState<Estate | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -237,6 +239,7 @@ export const InventoryManager = () => {
             formData.append('location', estateForm.location);
             if (estateForm.documentSearchNumber) formData.append('documentSearchNumber', estateForm.documentSearchNumber);
             if (estateForm.cornerPiecePrice) formData.append('cornerPiecePrice', estateForm.cornerPiecePrice);
+            if (estateForm.projectSupervisionFee) formData.append('projectSupervisionFee', estateForm.projectSupervisionFee);
             if (searchDocument) formData.append('searchDocument', searchDocument);
             if (siteLayout) formData.append('siteLayout', siteLayout);
 
@@ -248,7 +251,7 @@ export const InventoryManager = () => {
             });
             addToast("Estate created successfully", "success");
             setIsEstateModalOpen(false);
-            setEstateForm({ name: '', location: '', documentSearchNumber: '', cornerPiecePrice: '' });
+            setEstateForm({ name: '', location: '', documentSearchNumber: '', cornerPiecePrice: '', projectSupervisionFee: '200000' });
             setSearchDocument(null);
             setSiteLayout(null);
             fetchEstates();
@@ -266,6 +269,8 @@ export const InventoryManager = () => {
             formData.append('location', estateForm.location);
             if (estateForm.documentSearchNumber !== undefined) formData.append('documentSearchNumber', estateForm.documentSearchNumber);
             if (estateForm.cornerPiecePrice !== undefined) formData.append('cornerPiecePrice', estateForm.cornerPiecePrice);
+            if (estateForm.projectSupervisionFee !== undefined) formData.append('projectSupervisionFee', estateForm.projectSupervisionFee);
+
             if (searchDocument) formData.append('searchDocument', searchDocument);
             if (siteLayout) formData.append('siteLayout', siteLayout);
             
@@ -287,6 +292,25 @@ export const InventoryManager = () => {
             if(updated) setSelectedEstate(updated);
         } catch (error) {
             addToast("Failed to update estate", "error");
+        }
+    };
+
+    const handleUpdatePrototypeFees = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEstate) return;
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/prototype-fees`, {
+                fees: prototypeFeesForm
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            addToast("Prototype fees updated successfully", "success");
+            fetchEstates();
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates`, { headers: { Authorization: `Bearer ${token}` } });
+            const updated = res.data.find((E: Estate) => E.id === selectedEstate.id);
+            if(updated) setSelectedEstate(updated);
+        } catch (error) {
+            addToast("Failed to update prototype fees", "error");
         }
     };
 
@@ -710,6 +734,12 @@ export const InventoryManager = () => {
                                         value={estateForm.cornerPiecePrice} onChange={e => setEstateForm({ ...estateForm, cornerPiecePrice: e.target.value })} />
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Project Supervision Cost (₦)</label>
+                                    <input type="number" required className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                        placeholder="e.g. 200000"
+                                        value={estateForm.projectSupervisionFee} onChange={e => setEstateForm({ ...estateForm, projectSupervisionFee: e.target.value })} />
+                                </div>
+                                <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Search Document (PDF/Image) (Optional)</label>
                                     <input type="file" accept="image/*,.pdf" 
                                         className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
@@ -778,9 +808,10 @@ export const InventoryManager = () => {
                         <div className="flex space-x-3">
                             <button 
                                 onClick={() => {
-                                    setEstateForm({ name: selectedEstate.name, location: selectedEstate.location, documentSearchNumber: selectedEstate.documentSearchNumber || '', cornerPiecePrice: String(selectedEstate.cornerPiecePrice || '1000000') });
+                                    setEstateForm({ name: selectedEstate.name, location: selectedEstate.location, documentSearchNumber: selectedEstate.documentSearchNumber || '', cornerPiecePrice: String(selectedEstate.cornerPiecePrice || '1000000'), projectSupervisionFee: String(selectedEstate.projectSupervisionFee || '200000') });
                                     setSearchDocument(null);
                                     setIsEditEstateModalOpen(true);
+                                    setPrototypeFeesForm(selectedEstate.plotConfigs?.map((c: any) => ({ ...c })) || []);
                                 }} 
                                 className="flex items-center px-4 py-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl font-medium transition shadow-sm border border-indigo-100"
                             >
@@ -1281,6 +1312,12 @@ export const InventoryManager = () => {
                                         value={estateForm.cornerPiecePrice} onChange={e => setEstateForm({ ...estateForm, cornerPiecePrice: e.target.value })} />
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Project Supervision Cost (₦)</label>
+                                    <input type="number" required className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                        placeholder="e.g. 200000"
+                                        value={estateForm.projectSupervisionFee} onChange={e => setEstateForm({ ...estateForm, projectSupervisionFee: e.target.value })} />
+                                </div>
+                                <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Search Document (PDF/Image) (Optional)</label>
                                     <input type="file" accept="image/*,.pdf" 
                                         className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
@@ -1302,6 +1339,54 @@ export const InventoryManager = () => {
                                     </button>
                                 </div>
                             </form>
+
+                            {/* Prototype Fees Section */}
+                            {prototypeFeesForm.length > 0 && (
+                                <div className="p-6 border-t border-gray-100 bg-white">
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4">Plot Prototype Configurations</h3>
+                                    <p className="text-xs text-gray-500 mb-4">Manage dynamic fees for document generation (e.g., Offer Letters).</p>
+                                    <form onSubmit={handleUpdatePrototypeFees} className="space-y-4">
+                                        {prototypeFeesForm.map((fee, idx) => (
+                                            <div key={idx} className="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm space-y-3 relative">
+                                                <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
+                                                    <Activity size={40} />
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="font-bold text-indigo-900">{fee.prototype}</span>
+                                                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">{fee.size} sqm</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs font-semibold text-gray-600 mb-1">Setting Out Fee (₦)</label>
+                                                        <input type="number" required className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                                            value={fee.settingOutFee} 
+                                                            onChange={e => {
+                                                                const newForm = [...prototypeFeesForm];
+                                                                newForm[idx].settingOutFee = e.target.value;
+                                                                setPrototypeFeesForm(newForm);
+                                                            }} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-semibold text-gray-600 mb-1">Infrastructure Fee (₦)</label>
+                                                        <input type="number" required className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                                            value={fee.infrastructureFee} 
+                                                            onChange={e => {
+                                                                const newForm = [...prototypeFeesForm];
+                                                                newForm[idx].infrastructureFee = e.target.value;
+                                                                setPrototypeFeesForm(newForm);
+                                                            }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-end pt-2">
+                                            <button type="submit" className="px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-black font-medium shadow-md transition">
+                                                Update Prototype Fees
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
