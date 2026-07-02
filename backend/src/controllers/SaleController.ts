@@ -158,7 +158,8 @@ export const SaleController = {
                                                 take: 1
                                             }
                                         }
-                                    }
+                                    },
+                                    plotConfigs: true
                                 }
                             } 
                         }
@@ -384,7 +385,8 @@ export const SaleController = {
                                                         take: 1
                                                     }
                                                 }
-                                            }
+                                            },
+                                            plotConfigs: true
                                         }
                                     } 
                                 } 
@@ -555,7 +557,8 @@ export const SaleController = {
                                                         take: 1
                                                     }
                                                 }
-                                            }
+                                            },
+                                            plotConfigs: true
                                         }
                                     } 
                                 } 
