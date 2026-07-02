@@ -703,8 +703,8 @@ export const InventoryManager = () => {
                 {/* Create Estate Modal */}
                 {isEstateModalOpen && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-                            <div className="p-6 bg-gray-50 border-b border-gray-100">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all custom-scrollbar">
+                            <div className="p-6 bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
                                 <h2 className="text-xl font-bold text-gray-800">Create New Estate</h2>
                                 <p className="text-sm text-gray-500 mt-1">This estate will be managed by {user?.branch?.name || 'your branch'}.</p>
                             </div>
@@ -1283,8 +1283,8 @@ export const InventoryManager = () => {
 
                 {isEditEstateModalOpen && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-                            <div className="p-6 bg-indigo-50 border-b border-indigo-100">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all custom-scrollbar">
+                            <div className="p-6 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10">
                                 <h2 className="text-xl font-bold text-gray-800">Edit Estate Details</h2>
                                 <p className="text-sm text-gray-500 mt-1">Update fields or upload missing Search Documents.</p>
                             </div>
