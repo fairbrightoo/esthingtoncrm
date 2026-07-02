@@ -114,6 +114,23 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{PLOT_NUMBER}}/g, sale.plot?.plotNumber || sale.plotNumber || '____________________');
         html = html.replace(/{{PROTOTYPE}}/g, sale.plot?.prototype || 'Prototype');
 
+        // Dynamic Fees
+        const supervisionFee = sale.plot?.estate?.projectSupervisionFee || 0;
+        let settingOutFee = 400000; // fallback
+        let infrastructureFee = 3000000; // fallback
+
+        if (sale.plot?.estate?.plotConfigs && sale.plot?.prototype && sale.plot?.size) {
+            const config = sale.plot.estate.plotConfigs.find((c: any) => c.prototype === sale.plot.prototype && c.size === sale.plot.size);
+            if (config) {
+                settingOutFee = config.settingOutFee;
+                infrastructureFee = config.infrastructureFee;
+            }
+        }
+
+        html = html.replace(/{{PROJECT_SUPERVISION_FEE}}/g, formatCurrency(supervisionFee));
+        html = html.replace(/{{SETTING_OUT_FEE}}/g, formatCurrency(settingOutFee));
+        html = html.replace(/{{INFRASTRUCTURE_FEE}}/g, formatCurrency(infrastructureFee));
+
         const isCornerPiece = sale.plot?.isCornerPiece || sale.isCornerPiece;
         const cornerPieceHtml = isCornerPiece 
             ? `<span style="background-color: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; border: 1px solid #ffeeba; display: inline-block;">CORNER PIECE</span>` 
