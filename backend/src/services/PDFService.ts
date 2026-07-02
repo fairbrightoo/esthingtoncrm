@@ -98,6 +98,22 @@ export const PDFService = {
         html = html.replace(/{{PLOT_SIZE}}/g, `${sale.plot?.size} sqm`);
         html = html.replace(/{{PLOT_NUMBER}}/g, sale.plot?.plotNumber || sale.plotNumber || '____________________');
         html = html.replace(/{{PROTOTYPE}}/g, sale.plot?.prototype || 'Prototype');
+        // Dynamic Fees
+        const supervisionFee = sale.plot?.estate?.projectSupervisionFee || 0;
+        let settingOutFee = 400000; // fallback
+        let infrastructureFee = 3000000; // fallback
+
+        if (sale.plot?.estate?.plotConfigs && sale.plot?.prototype && sale.plot?.size) {
+            const config = sale.plot.estate.plotConfigs.find((c: any) => c.prototype === sale.plot.prototype && c.size === sale.plot.size);
+            if (config) {
+                settingOutFee = config.settingOutFee;
+                infrastructureFee = config.infrastructureFee;
+            }
+        }
+
+        html = html.replace(/{{PROJECT_SUPERVISION_FEE}}/g, formatCurrency(supervisionFee));
+        html = html.replace(/{{SETTING_OUT_FEE}}/g, formatCurrency(settingOutFee));
+        html = html.replace(/{{INFRASTRUCTURE_FEE}}/g, formatCurrency(infrastructureFee));
 
         // Financials
         html = html.replace(/{{AGREED_PRICE}}/g, formatCurrency(sale.agreedPrice || 0));

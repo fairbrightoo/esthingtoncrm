@@ -22,7 +22,8 @@ export const DocumentAutomationService = {
                                                 take: 1
                                             }
                                         }
-                                    } 
+                                    },
+                                    plotConfigs: true
                                 } 
                             } 
                         } 
