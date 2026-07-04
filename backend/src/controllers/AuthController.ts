@@ -82,6 +82,7 @@ export const AuthController = {
                     branchId: user.branchId,
                     company: user.company,
                     branch: user.branch,
+                    esthCoinBalance: user.esthCoinBalance,
                     passwordResetRequired: user.passwordResetRequired
                 }
             });

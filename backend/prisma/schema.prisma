@@ -153,6 +153,7 @@ model User {
   employeeId             String?              @unique
   nextOfKinName          String?
   nextOfKinPhone         String?
+  esthCoinBalance        Float                @default(0)
   activities             Activity[]
   attendances            Attendance[]
   communicationLogs      CommunicationLog[]
@@ -217,8 +218,20 @@ model User {
   sentPaymentMessages     PaymentMessage[]
 
   requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
+  esthCoinLedgers      EsthCoinLedger[]
 }
 
+model EsthCoinLedger {
+  id              String   @id @default(uuid())
+  userId          String
+  amount          Float
+  transactionType String   // e.g., 'SALES_COMMISSION', 'CLAWBACK_REFUND', 'SPEND'
+  referenceId     String?  // ID of Payment, Refund, etc.
+  description     String?
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id])
+}
 model Attendance {
   id               String    @id @default(uuid())
   userId           String

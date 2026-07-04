@@ -250,6 +250,26 @@ export const SaleController = {
                             data: { status: 'SOLD' }
                         });
                     }
+
+                    // --- EsthCoin Earning Logic ---
+                    if (sale.marketerId) {
+                        const esthCoinYield = numericAmount / 20_000_000;
+                        if (esthCoinYield > 0) {
+                            await tx.esthCoinLedger.create({
+                                data: {
+                                    userId: sale.marketerId,
+                                    amount: esthCoinYield,
+                                    transactionType: 'SALES_COMMISSION',
+                                    referenceId: payment.id,
+                                    description: `Earned from approved equity payment of ₦${numericAmount.toLocaleString()}`
+                                }
+                            });
+                            await tx.user.update({
+                                where: { id: sale.marketerId },
+                                data: { esthCoinBalance: { increment: esthCoinYield } }
+                            });
+                        }
+                    }
                 });
 
                 return res.status(201).json({ message: "Equity payment successful" });
@@ -699,6 +719,26 @@ export const SaleController = {
                         return res.status(500).json({ 
                             error: `Payment approved, but failed to generate/email documents. Reason: ${docError.message}` 
                         });
+                    }
+
+                    // --- EsthCoin Earning Logic ---
+                    if (sale.marketerId) {
+                        const esthCoinYield = payment.amount / 20_000_000;
+                        if (esthCoinYield > 0) {
+                            await prisma.esthCoinLedger.create({
+                                data: {
+                                    userId: sale.marketerId,
+                                    amount: esthCoinYield,
+                                    transactionType: 'SALES_COMMISSION',
+                                    referenceId: payment.id,
+                                    description: `Earned from approved payment of ₦${payment.amount.toLocaleString()}`
+                                }
+                            });
+                            await prisma.user.update({
+                                where: { id: sale.marketerId },
+                                data: { esthCoinBalance: { increment: esthCoinYield } }
+                            });
+                        }
                     }
                 }
             }

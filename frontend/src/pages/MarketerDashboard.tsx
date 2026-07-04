@@ -235,6 +235,18 @@ export const MarketerDashboard = () => {
                         <p className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">Approved Only</p>
                     </div>
                 </div>
+                {user?.esthCoinBalance !== undefined && (
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center space-x-4">
+                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl shadow-sm border border-indigo-100">
+                            <span className="text-2xl font-black">E</span>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-indigo-600/70 uppercase tracking-wider mb-1">EsthCoin Balance</p>
+                            <h3 className="text-2xl font-black text-indigo-600 drop-shadow-sm">{Number(user.esthCoinBalance).toFixed(2)}</h3>
+                            <p className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">Digital Rewards</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Main Content Area */}

@@ -151,6 +151,26 @@ export const RefundController = {
                         createdByUserId: user.userId
                     }
                 }));
+
+                // --- EsthCoin Clawback Mechanism ---
+                if (refund.marketerId) {
+                    const clawbackAmount = refund.totalPaidByClient / 20_000_000;
+                    if (clawbackAmount > 0) {
+                        transactionOps.push(prisma.esthCoinLedger.create({
+                            data: {
+                                userId: refund.marketerId,
+                                amount: -clawbackAmount, // Negative amount for clawback
+                                transactionType: 'CLAWBACK_REFUND',
+                                referenceId: refund.id,
+                                description: `Clawback triggered by approved refund of ₦${refund.totalPaidByClient.toLocaleString()}`
+                            }
+                        }));
+                        transactionOps.push(prisma.user.update({
+                            where: { id: refund.marketerId },
+                            data: { esthCoinBalance: { decrement: clawbackAmount } }
+                        }));
+                    }
+                }
             }
             else if (action === 'REJECT') {
                 updatedStatus = 'REJECTED';

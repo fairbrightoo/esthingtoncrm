@@ -9,6 +9,7 @@ interface User {
     branchId?: string;
     branch?: { id?: string; name: string; address: string; phone?: string; email?: string };
     company?: { id?: string; name: string; themeColor: string; logoUrl: string; address?: string; phone?: string; email?: string; website?: string };
+    esthCoinBalance?: number;
 }
 
 interface AuthContextType {
