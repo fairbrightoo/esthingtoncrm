@@ -416,8 +416,6 @@ export const SaleController = {
             if (user?.role === 'SUPER_ADMIN') {
                 directSales.push(...payments);
             } else {
-                const effectiveCompanyId = user?.companyId;
-                const effectiveBranchId = user?.branchId;
 
                 payments.forEach(payment => {
                     const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
@@ -584,8 +582,6 @@ export const SaleController = {
             if (user?.role === 'SUPER_ADMIN') {
                 directSales.push(...payments);
             } else {
-                const effectiveCompanyId = user?.companyId;
-                const effectiveBranchId = user?.branchId;
 
                 payments.forEach(payment => {
                     const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
