@@ -114,9 +114,11 @@ export const DashboardController = {
             }
 
             let commissionRate = 0;
+            let esthCoinBalance = 0;
             if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                 const userObj = await prisma.user.findUnique({ where: { id: userId } });
                 commissionRate = userObj?.commissionRate || 0;
+                esthCoinBalance = userObj?.esthCoinBalance || 0;
             }
 
             const sales = await prisma.sale.findMany({
@@ -442,7 +444,8 @@ export const DashboardController = {
                     outboundSalesVolume,
                     commissionRate,
                     paidReferralCommissions,
-                    pendingReferralCommissions
+                    pendingReferralCommissions,
+                    esthCoinBalance
                 },
                 charts: {
                     revenue: monthlyRevenue.map(({ name, value }) => ({ name, value }))

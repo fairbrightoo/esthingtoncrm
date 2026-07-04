@@ -241,7 +241,7 @@ export const MarketerDashboard = () => {
                     </div>
                     <div>
                         <p className="text-xs font-bold text-indigo-600/70 uppercase tracking-wider mb-1">EsthCoin Balance</p>
-                        <h3 className="text-2xl font-black text-indigo-600 drop-shadow-sm">{Number(user?.esthCoinBalance || 0).toFixed(2)}</h3>
+                        <h3 className="text-2xl font-black text-indigo-600 drop-shadow-sm">{Number(stats?.financial?.esthCoinBalance ?? user?.esthCoinBalance ?? 0).toFixed(2)}</h3>
                         <p className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">Digital Rewards</p>
                     </div>
                 </div>
