@@ -85,7 +85,7 @@ const DashboardHome = () => {
     const { user } = useAuth();
     if (user?.role === 'SUPER_ADMIN') return <Navigate to="/admin" replace />;
     if (user?.role === 'GLOBAL_CHAIRMAN') return <Navigate to="/dashboard/chairman" replace />;
-    if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDashboard />;
+    if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDDashboard />;
     
     if (user?.branch?.name) {
         const branchSlug = user.branch.name.toLowerCase().replace(/\s+/g, '-');
