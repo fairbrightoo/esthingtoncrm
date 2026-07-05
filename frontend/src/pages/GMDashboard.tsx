@@ -54,7 +54,7 @@ export const GMDashboard = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-sm font-medium text-gray-500">Total Leads</p>
-                        <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats?.totalLeads || 0}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats?.financial?.totalLeads || 0}</h3>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
                         <Users size={24} />
@@ -74,7 +74,7 @@ export const GMDashboard = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
                     <div>
                         <p className="text-sm font-medium text-gray-500">Branch Revenue</p>
-                        <h3 className="text-2xl font-bold text-gray-900 mt-1">₦{stats?.revenue?.toLocaleString() || 0}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mt-1">₦{stats?.financial?.grossCashReceived?.toLocaleString() || stats?.financial?.totalRevenue?.toLocaleString() || 0}</h3>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
                         <TrendingUp size={24} />
