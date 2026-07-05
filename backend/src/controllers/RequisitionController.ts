@@ -197,12 +197,42 @@ export const RequisitionController = {
                 return;
             }
 
-            const updated = await prisma.requisition.update({
+            // Fetch requisition to calculate total amount
+            const requisition = await prisma.requisition.findUnique({
                 where: { id: reqId },
-                data: { gmRecommendation }
+                include: { items: true }
             });
 
-            res.status(200).json({ message: `Requisition marked as ${gmRecommendation.toLowerCase()}`, requisition: updated });
+            if (!requisition) {
+                res.status(404).json({ error: "Requisition not found." });
+                return;
+            }
+
+            let newStatus = requisition.status;
+            let amountApproved = null;
+            let approvedByUserId = null;
+
+            if (gmRecommendation === "RECOMMENDED") {
+                const totalAmount = requisition.items.reduce((sum: number, item: any) => sum + (item.qty * item.unitPrice), 0);
+                if (totalAmount < 30000) {
+                    newStatus = "APPROVED_BY_MD";
+                    amountApproved = totalAmount;
+                    approvedByUserId = userId; // GM is effectively acting as the approver
+                }
+            }
+
+            const updated = await prisma.requisition.update({
+                where: { id: reqId },
+                data: { 
+                    gmRecommendation,
+                    status: newStatus,
+                    amountApproved: amountApproved ? amountApproved : requisition.amountApproved,
+                    approvedByUserId: approvedByUserId ? approvedByUserId : requisition.approvedByUserId
+                }
+            });
+
+            const bypassMsg = newStatus === "APPROVED_BY_MD" ? " and auto-approved because it is under ₦30,000" : "";
+            res.status(200).json({ message: `Requisition marked as ${gmRecommendation.toLowerCase()}${bypassMsg}`, requisition: updated });
         } catch (error) {
             console.error("Error setting recommendation:", error);
             res.status(500).json({ error: "Failed to process recommendation." });

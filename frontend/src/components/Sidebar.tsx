@@ -220,10 +220,16 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
 
                 {user?.role === 'GENERAL_MANAGER' && (
                     <>
-                        <NavItem to={`${basePath}/broadcasts`} icon={<Megaphone size={20} />} label="Branch Broadcasts" />
                         <NavItem to={`${basePath}/network`} icon={<Globe size={20} />} label="GM Network" />
                         <NavItem to={`${basePath}/advisory`} icon={<CheckCircle size={20} />} label="Advisory Queue" />
+                        <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
+                        <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
+                        <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Branch Leads" />
+                        <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/hr-recommendations`} icon={<Users size={20} />} label="HR Recommendations" />
+                        <NavItem to={`${basePath}/broadcasts`} icon={<Megaphone size={20} />} label="Branch Broadcasts" />
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
