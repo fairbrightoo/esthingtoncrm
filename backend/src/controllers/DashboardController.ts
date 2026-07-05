@@ -51,7 +51,7 @@ export const DashboardController = {
             if (role !== 'SUPER_ADMIN') {
                 if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                     // Marketers are scoped below
-                } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(role) && branchId) {
+                } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE', 'GENERAL_MANAGER'].includes(role) && branchId) {
                     saleWhereClause.marketer = { branchId: branchId };
                 } else if (role === 'MANAGING_DIRECTOR') {
                     saleWhereClause.marketer = { companyId: companyId };
@@ -142,7 +142,7 @@ export const DashboardController = {
             let inboundSalesVolume = 0;
             let outboundSalesVolume = 0;
 
-            if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'SUPER_ADMIN'].includes(role)) {
+            if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'SUPER_ADMIN', 'GENERAL_MANAGER'].includes(role)) {
                 // Calculate Gross Cash
                 let cashWhere: any = { status: 'APPROVED' };
                 if (Object.keys(dateFilter).length > 0) cashWhere.date = dateFilter;
@@ -150,7 +150,7 @@ export const DashboardController = {
                 if (role === 'MANAGING_DIRECTOR') {
                     const branchIds = await prisma.branch.findMany({ where: { companyId } }).then(b => b.map(x => x.id));
                     cashWhere.receivingBranchId = { in: branchIds };
-                } else if (role === 'ACCOUNTANT') {
+                } else if (role === 'ACCOUNTANT' || role === 'GENERAL_MANAGER') {
                     cashWhere.receivingBranchId = branchId;
                 }
 
@@ -170,7 +170,7 @@ export const DashboardController = {
                         { sale: { marketer: { companyId } } },
                         { sale: { plot: { estate: { companyId } } } }
                     ];
-                } else if (role === 'ACCOUNTANT') {
+                } else if (role === 'ACCOUNTANT' || role === 'GENERAL_MANAGER') {
                     breakdownWhereClause.OR = [
                         { sale: { marketer: { branchId } } },
                         { sale: { plot: { estate: { managingBranchId: branchId } } } }
@@ -193,7 +193,7 @@ export const DashboardController = {
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;
                     const isManagingCompany = p.sale.plot.estate.companyId === companyId;
                     
-                    if (role === 'ACCOUNTANT') {
+                    if (role === 'ACCOUNTANT' || role === 'GENERAL_MANAGER') {
                         const isSellingBranch = p.sale.marketer?.branchId === branchId;
                         const isManagingBranch = p.sale.plot.estate.managingBranchId === branchId;
                         if (isSellingBranch && isManagingBranch) directSalesVolume += p.amount;
