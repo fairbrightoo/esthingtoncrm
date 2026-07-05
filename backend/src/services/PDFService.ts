@@ -178,7 +178,7 @@ export const PDFService = {
         }
 
         const resolvedSignatureUrl = finalSignatureUrl ? (finalSignatureUrl.startsWith('http') ? finalSignatureUrl : `${baseUrl}${finalSignatureUrl}`) : '';
-        const sigHtml = resolvedSignatureUrl ? `<img src="${resolvedSignatureUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
+        const sigHtml = resolvedSignatureUrl ? `<img src="${resolvedSignatureUrl}" style="max-height: 120px; max-width: 250px; object-fit: contain; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{COMPANY_SIGNATURE}}/g, sigHtml);
         html = html.replace(/{{MD_NAME}}/g, finalMdName || 'Managing Director');
         html = html.replace(/{{MD_TITLE}}/g, finalMdTitle || 'Managing Director');
@@ -188,7 +188,7 @@ export const PDFService = {
         const receiptSignerRole = accountantInfo ? 'Accountant' : 'Authorized Signature';
         const receiptSigUrl = accountantInfo?.signatureUrl || finalSignatureUrl;
         const resolvedReceiptSigUrl = receiptSigUrl ? (receiptSigUrl.startsWith('http') ? receiptSigUrl : `${baseUrl}${receiptSigUrl}`) : '';
-        const receiptSigHtml = resolvedReceiptSigUrl ? `<img src="${resolvedReceiptSigUrl}" style="max-height: 60px; display: block; border: none;" alt="Signature" />` : ``;
+        const receiptSigHtml = resolvedReceiptSigUrl ? `<img src="${resolvedReceiptSigUrl}" style="max-height: 120px; max-width: 250px; object-fit: contain; display: block; border: none;" alt="Signature" />` : ``;
         html = html.replace(/{{RECEIPT_SIGNATURE}}/g, receiptSigHtml);
         html = html.replace(/{{RECEIPT_NAME}}/g, receiptSignerName);
         html = html.replace(/{{RECEIPT_ROLE}}/g, receiptSignerRole);
