@@ -351,17 +351,36 @@ export const AutomationService = {
                     return pDate.getMonth() === month && pDate.getFullYear() === year;
                 });
 
+                // Check months since start of the sale
+                const saleStartDate = new Date(sale.createdAt);
+                const monthsSinceStart = (year - saleStartDate.getFullYear()) * 12 + month - saleStartDate.getMonth();
+
+                // Prevent daily spam: check if we already sent a reminder in the last 7 days
+                const recentReminder = await prisma.communicationLog.findFirst({
+                    where: {
+                        leadId: lead.id,
+                        providerId: 'AI_REMINDER_CRON',
+                        createdAt: { gte: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000) }
+                    }
+                });
+                if (recentReminder) continue;
+
                 let prompt = '';
                 let reminderType = '';
 
-                // Condition 1: 30 days overdue
-                if (diffDays >= 30) {
-                    prompt = `You are a Customer Care representative for ${lead.company.name}. You are messaging ${lead.fullName} who has an ongoing property purchase. Their last payment was over 30 days ago, and their outstanding balance is ₦${balance.toLocaleString()}. Write a very short, professional, and firm message (max 2 sentences) urging them to clear their arrears immediately to avoid risking the loss of their property allocation. Keep it respectful but urgent. Do not use placeholders.`;
+                // Condition 1: 5th Month Reminder (1 month left)
+                if (monthsSinceStart === 5 && !paidThisMonth) {
+                    prompt = `You are a Customer Care representative for ${lead.company.name}. You are messaging ${lead.fullName} who has an ongoing property purchase. Their outstanding balance is ₦${balance.toLocaleString()}. First, warmly thank them for choosing us. Then, gently and encouragingly remind them that they are in the 5th month of their 6-month payment plan, leaving only 1 month left to complete their payment. Politely encourage them to strive to complete it soon to avoid any penalties on overdue debts. Keep it warm and supportive (max 3 sentences). Do not use placeholders.`;
+                    reminderType = 'FIFTH_MONTH_REMINDER';
+                }
+                // Condition 2: 30 days overdue
+                else if (diffDays >= 30) {
+                    prompt = `You are a Customer Care representative for ${lead.company.name}. You are messaging ${lead.fullName} who has an ongoing property purchase. Their outstanding balance is ₦${balance.toLocaleString()}. First, thank them warmly for choosing us. Write a short, polite, supportive, and encouraging message (max 2 sentences) gently reminding them to make a payment towards completing what they owe. Do not be harsh. Do not use placeholders.`;
                     reminderType = 'OVERDUE_WARNING';
                 } 
-                // Condition 2: End of month gentle reminder
+                // Condition 3: End of month gentle reminder
                 else if (isEndOfMonth && !paidThisMonth) {
-                    prompt = `You are a Customer Care representative for ${lead.company.name}. You are messaging ${lead.fullName} who has an ongoing property purchase but hasn't made a payment this month. Their outstanding balance is ₦${balance.toLocaleString()}. Write a very short, subtle, and friendly message (max 2 sentences) reminding them to make a deposit before the month ends. Be highly professional. Do not use placeholders.`;
+                    prompt = `You are a Customer Care representative for ${lead.company.name}. You are messaging ${lead.fullName} who has an ongoing property purchase but hasn't made a payment this month. Their outstanding balance is ₦${balance.toLocaleString()}. Write a short, warm, and friendly message (max 2 sentences) thanking them for their business and gently reminding them to make a deposit before the month ends. Be highly professional and supportive. Do not use placeholders.`;
                     reminderType = 'GENTLE_REMINDER';
                 }
 
