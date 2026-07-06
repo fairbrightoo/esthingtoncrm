@@ -48,18 +48,10 @@ export const DashboardController = {
             const saleWhereClause: any = {};
             const leadWhereClause: any = { ...whereClause };
 
-            if (role !== 'SUPER_ADMIN') {
-                if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
-                    // Marketers are scoped below
-                } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(role) && branchId) {
-                    saleWhereClause.marketer = { branchId: branchId };
-                } else if (role === 'MANAGING_DIRECTOR' || role === 'GENERAL_MANAGER') {
-                    saleWhereClause.marketer = { companyId: companyId };
-                }
-            }
-
-            if (role === 'MARKETER') {
+            if (scope === 'PERSONAL') {
                 saleWhereClause.marketerId = userId;
+                delete saleWhereClause.marketer;
+                
                 leadWhereClause.OR = [
                     { assignedToUserId: userId },
                     { sales: { some: { marketerId: userId } } }
@@ -67,42 +59,63 @@ export const DashboardController = {
                 delete leadWhereClause.companyId;
                 delete leadWhereClause.branchId;
                 delete leadWhereClause.assignedToUserId;
-            } else if (role === 'TEAM_LEAD') {
-                if (scope === 'TEAM') {
-                    saleWhereClause.marketer = { team: { teamLeadId: userId } };
-                } else {
-                    saleWhereClause.marketerId = userId;
+            } else {
+                if (role !== 'SUPER_ADMIN') {
+                    if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
+                        // Marketers are scoped below
+                    } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(role) && branchId) {
+                        saleWhereClause.marketer = { branchId: branchId };
+                    } else if (role === 'MANAGING_DIRECTOR' || role === 'GENERAL_MANAGER') {
+                        saleWhereClause.marketer = { companyId: companyId };
+                    }
                 }
-                leadWhereClause.OR = [
-                    { assignedToUserId: userId },
-                    { sales: { some: { marketerId: userId } } }
-                ];
-                delete leadWhereClause.companyId;
-                delete leadWhereClause.branchId;
-            } else if (role === 'BDM') {
-                if (scope === 'TEAM') {
-                    saleWhereClause.marketer = { team: { bdmId: userId } };
-                } else {
+
+                if (role === 'MARKETER') {
                     saleWhereClause.marketerId = userId;
+                    leadWhereClause.OR = [
+                        { assignedToUserId: userId },
+                        { sales: { some: { marketerId: userId } } }
+                    ];
+                    delete leadWhereClause.companyId;
+                    delete leadWhereClause.branchId;
+                    delete leadWhereClause.assignedToUserId;
+                } else if (role === 'TEAM_LEAD') {
+                    if (scope === 'TEAM') {
+                        saleWhereClause.marketer = { team: { teamLeadId: userId } };
+                    } else {
+                        saleWhereClause.marketerId = userId;
+                    }
+                    leadWhereClause.OR = [
+                        { assignedToUserId: userId },
+                        { sales: { some: { marketerId: userId } } }
+                    ];
+                    delete leadWhereClause.companyId;
+                    delete leadWhereClause.branchId;
+                } else if (role === 'BDM') {
+                    if (scope === 'TEAM') {
+                        saleWhereClause.marketer = { team: { bdmId: userId } };
+                    } else {
+                        saleWhereClause.marketerId = userId;
+                    }
+                    leadWhereClause.OR = [
+                        { assignedToUserId: userId },
+                        { sales: { some: { marketerId: userId } } }
+                    ];
+                    delete leadWhereClause.companyId;
+                    delete leadWhereClause.branchId;
+                } else if (role === 'HEAD_BDD') {
+                    if (scope === 'DEPARTMENT') {
+                        saleWhereClause.marketer = { role: { in: ['MARKETER', 'TEAM_LEAD', 'BDM'] } };
+                    } else {
+                        saleWhereClause.marketerId = userId;
+                    }
+                    leadWhereClause.OR = [
+                        { assignedToUserId: userId },
+                        { sales: { some: { marketerId: userId } } }
+                    ];
+                    delete leadWhereClause.companyId;
+                    delete leadWhereClause.branchId;
                 }
-                leadWhereClause.OR = [
-                    { assignedToUserId: userId },
-                    { sales: { some: { marketerId: userId } } }
-                ];
-                delete leadWhereClause.companyId;
-                delete leadWhereClause.branchId;
-            } else if (role === 'HEAD_BDD') {
-                if (scope === 'DEPARTMENT') {
-                    saleWhereClause.marketer = { role: { in: ['MARKETER', 'TEAM_LEAD', 'BDM'] } };
-                } else {
-                    saleWhereClause.marketerId = userId;
-                }
-                leadWhereClause.OR = [
-                    { assignedToUserId: userId },
-                    { sales: { some: { marketerId: userId } } }
-                ];
-                delete leadWhereClause.companyId;
-                delete leadWhereClause.branchId;
             }
 
             const paymentWhereClause: any = { sale: saleWhereClause };
@@ -113,13 +126,9 @@ export const DashboardController = {
                 leadWhereClause.createdAt = dateFilter;
             }
 
-            let commissionRate = 0;
-            let esthCoinBalance = 0;
-            if (['MARKETER', 'CUSTOMER_CARE', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
-                const userObj = await prisma.user.findUnique({ where: { id: userId } });
-                commissionRate = userObj?.commissionRate || 0;
-                esthCoinBalance = userObj?.esthCoinBalance || 0;
-            }
+            const userObj = await prisma.user.findUnique({ where: { id: userId } });
+            const commissionRate = userObj?.commissionRate || 0;
+            const esthCoinBalance = userObj?.esthCoinBalance || 0;
 
             const sales = await prisma.sale.findMany({
                 where: saleWhereClause,

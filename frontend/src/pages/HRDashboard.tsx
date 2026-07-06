@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Users, UserCheck, CalendarClock, AlertTriangle, ChevronRight, FileText, Target, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 export const HRDashboard = () => {
     const { user } = useAuth();
@@ -12,12 +13,26 @@ export const HRDashboard = () => {
         openQueries: 0,
         awardsCount: 0
     });
+    const [personalStats, setPersonalStats] = useState<any>(null);
+    const [dashboardTab, setDashboardTab] = useState<'CONSOLE' | 'PERFORMANCE'>('CONSOLE');
     const [loading, setLoading] = useState(true);
 
     const basePath = `/dashboard/${user?.branch?.name?.toLowerCase().replace(/\s+/g, '-') || 'head-office'}`;
 
     useEffect(() => {
         fetchOverview();
+        const fetchPersonalStats = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const statsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setPersonalStats(statsRes.data);
+            } catch (error) {
+                console.error("Failed to fetch personal stats", error);
+            }
+        };
+        fetchPersonalStats();
     }, []);
 
     const fetchOverview = async () => {
@@ -78,7 +93,25 @@ export const HRDashboard = () => {
                 </div>
             </div>
 
-            {/* Quick Stats Cards */}
+            <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200 w-max">
+                <button
+                    onClick={() => setDashboardTab('CONSOLE')}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'CONSOLE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Console View
+                </button>
+                <button
+                    onClick={() => setDashboardTab('PERFORMANCE')}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'PERFORMANCE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    My Sales Performance
+                </button>
+            </div>
+
+            {dashboardTab === 'PERFORMANCE' ? (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            ) : (
+                <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-500"><Users size={100} /></div>
@@ -151,8 +184,8 @@ export const HRDashboard = () => {
                         <ChevronRight className="text-gray-300 group-hover:text-blue-600 transition-colors" size={20} />
                     </Link>
                 </div>
-            </div>
-
+            </div>        </>
+            )}
         </div>
     );
 };

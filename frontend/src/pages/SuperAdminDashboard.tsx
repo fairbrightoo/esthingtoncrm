@@ -4,13 +4,16 @@ import { Building2, Globe, Users, FileText, Phone, Activity, DollarSign, Trendin
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export const SuperAdminDashboard = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [data, setData] = useState<any>(null);
+    const [personalStats, setPersonalStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'CONSOLE' | 'PERFORMANCE'>('CONSOLE');
     
     // Filtering States
     const [dateFilter, setDateFilter] = useState('ALL_TIME');
@@ -61,6 +64,17 @@ export const SuperAdminDashboard = () => {
         if (dateFilter !== 'CUSTOM') {
             fetchData();
         }
+        const fetchPersonalStats = async () => {
+            try {
+                const statsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setPersonalStats(statsRes.data);
+            } catch (error) {
+                console.error("Failed to fetch personal stats", error);
+            }
+        };
+        fetchPersonalStats();
     }, [dateFilter, token]);
 
     const formatCurrency = (amount: number) => {
@@ -82,6 +96,21 @@ export const SuperAdminDashboard = () => {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Global Command Center</h1>
                     <p className="text-gray-500 mt-1">Real-time financial and conversion aggregation.</p>
+                </div>
+
+                <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
+                    <button
+                        onClick={() => setActiveTab('CONSOLE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'CONSOLE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Console View
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('PERFORMANCE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'PERFORMANCE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        My Sales Performance
+                    </button>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-3">
@@ -126,6 +155,10 @@ export const SuperAdminDashboard = () => {
 
             <AnnouncementWidget />
 
+            {activeTab === 'PERFORMANCE' ? (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            ) : (
+                <>
             {/* Massive KPI Banner */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard 
@@ -356,6 +389,8 @@ export const SuperAdminDashboard = () => {
                     )}
                 </div>
             </div>
+            </>
+            )}
         </div>
     );
 };

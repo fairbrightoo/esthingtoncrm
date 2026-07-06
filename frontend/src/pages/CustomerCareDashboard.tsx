@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
 import { CustomerCareInbox } from '../components/CustomerCareInbox';
 import { DailyAIOutreach } from '../components/DailyAIOutreach';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
@@ -22,9 +23,10 @@ export const CustomerCareDashboard = () => {
 
     const [stats, setStats] = useState<any>(null);
     const [birthdays, setBirthdays] = useState<any[]>([]);
+    const [personalStats, setPersonalStats] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [timeFilter, setTimeFilter] = useState<'ALL' | 'THIS_MONTH' | 'LAST_MONTH'>('ALL');
-    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'INBOX' | 'AI_OUTREACH'>('OVERVIEW');
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'INBOX' | 'AI_OUTREACH' | 'PERFORMANCE'>('OVERVIEW');
 
     // Quick Message State
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
@@ -52,15 +54,19 @@ export const CustomerCareDashboard = () => {
 
                 const query = timeFilter !== 'ALL' ? `?startDate=${currentMonthStart}&endDate=${currentMonthEnd}` : '';
 
-                const [statsRes, birthdaysRes] = await Promise.all([
+                const [statsRes, birthdaysRes, personalStatsRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats${query}`, {
                         headers: { Authorization: `Bearer ${token}` }
                     }),
                     axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events/clients`, {
                         headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
+                        headers: { Authorization: `Bearer ${token}` }
                     })
                 ]);
                 setStats(statsRes.data);
+                setPersonalStats(personalStatsRes.data);
                 setBirthdays(birthdaysRes.data.upcomingBirthdays || []);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
@@ -143,6 +149,13 @@ export const CustomerCareDashboard = () => {
                     Dashboard Overview
                 </button>
                 <button 
+                    onClick={() => setActiveTab('PERFORMANCE')} 
+                    className={`pb-4 px-6 font-bold text-sm transition-all border-b-[3px] flex items-center ${activeTab === 'PERFORMANCE' ? 'border-purple-600 text-purple-700' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'}`}
+                >
+                    <TrendingUp size={16} className="mr-2" />
+                    My Sales Performance
+                </button>
+                <button 
                     onClick={() => setActiveTab('INBOX')} 
                     className={`pb-4 px-6 font-bold text-sm transition-all border-b-[3px] flex items-center ${activeTab === 'INBOX' ? 'border-purple-600 text-purple-700' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'}`}
                 >
@@ -158,11 +171,15 @@ export const CustomerCareDashboard = () => {
                 </button>
             </div>
 
+            {activeTab === 'PERFORMANCE' && (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            )}
+
             {activeTab === 'INBOX' ? (
                 <CustomerCareInbox />
             ) : activeTab === 'AI_OUTREACH' ? (
                 <DailyAIOutreach />
-            ) : (
+            ) : activeTab === 'OVERVIEW' ? (
                 <>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-gray-800 mb-4 sm:mb-0">Overview Metrics</h2>
@@ -341,7 +358,7 @@ export const CustomerCareDashboard = () => {
                 </div>
             )}
             </>
-            )}
+            ) : null}
         </div>
     );
 };

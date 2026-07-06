@@ -5,6 +5,7 @@ import { BudgetManager } from '../components/BudgetManager';
 import { DollarSign, Wallet, AlertTriangle, ArrowRightLeft , Eye, FileText, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
 import { Pagination } from '../components/Pagination';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 export const getPaymentTypeLabel = (payment: any) => {
     if (!payment.sale || !payment.sale.plot) return { text: 'N/A', bg: 'bg-gray-100', textCol: 'text-gray-600', border: 'border-gray-200' };
@@ -41,8 +42,10 @@ export const getPaymentTypeLabel = (payment: any) => {
 };
 
 export const AccountantDashboard = () => {
+    const { token, user } = useAuth();
+    const [personalStats, setPersonalStats] = useState<any>(null);
 
-    const [activeTab, setActiveTab] = useState<'DISBURSEMENTS' | 'BUDGETS' | 'REFUNDS' | 'PAYMENTS_COMMISSIONS' | 'HISTORY'>('DISBURSEMENTS');
+    const [activeTab, setActiveTab] = useState<'DISBURSEMENTS' | 'BUDGETS' | 'REFUNDS' | 'PAYMENTS_COMMISSIONS' | 'HISTORY' | 'PERFORMANCE'>('DISBURSEMENTS');
     const [disbursements, setDisbursements] = useState<any[]>([]);
     const [commissions, setCommissions] = useState<any[]>([]);
     const [pendingPayments, setPendingPayments] = useState<any[]>([]);
@@ -100,11 +103,6 @@ export const AccountantDashboard = () => {
             </div>
         );
     };
-
-    const token = localStorage.getItem('token');
-
-
-
 
     const fetchHistory = async () => {
         try {
@@ -251,15 +249,13 @@ export const AccountantDashboard = () => {
         }
     };
 
-    const { user } = useAuth();
-
     return (
         <div>
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-800">Accountant Disbursement Center</h1>
                 <p className="text-gray-500">Manage approved requisitions and commission payouts.</p>
             </div>
-            <div className="flex bg-gray-100 rounded-lg p-1 w-fit mt-4 mb-8">
+            <div className="flex space-x-4 border-b border-gray-200 overflow-x-auto whitespace-nowrap hide-scrollbar">
                 <button
                     onClick={() => setActiveTab('DISBURSEMENTS')}
                     className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'DISBURSEMENTS' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
@@ -274,9 +270,15 @@ export const AccountantDashboard = () => {
                 </button>
                 <button
                     onClick={() => setActiveTab('REFUNDS')}
-                    className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'REFUNDS' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'REFUNDS' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
                 >
-                    <ArrowRightLeft size={16} /> Client Refunds
+                    <ArrowRightLeft className="w-4 h-4 mr-2" /> Refunds
+                </button>
+                <button
+                    onClick={() => setActiveTab('PERFORMANCE')}
+                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'PERFORMANCE' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                    <CreditCard className="w-4 h-4 mr-2" /> My Sales Performance
                 </button>
                 <button
                     onClick={() => setActiveTab('PAYMENTS_COMMISSIONS')}

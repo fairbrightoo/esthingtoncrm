@@ -4,14 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Loader2, Users, FileSpreadsheet, CheckCircle, TrendingUp, Search, CalendarClock } from 'lucide-react';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 export const BranchDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState<any>(null);
+    const [personalStats, setPersonalStats] = useState<any>(null);
     const [requisitions, setRequisitions] = useState<any[]>([]);
     const [staffCount, setStaffCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [dashboardTab, setDashboardTab] = useState<'CONSOLE' | 'PERFORMANCE'>('CONSOLE');
 
     const basePath = `/dashboard/${user?.branch?.name?.toLowerCase().replace(/\s+/g, '-') || 'head-office'}`;
 
@@ -21,8 +24,12 @@ export const BranchDashboard = () => {
                 const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
                 
                 // 1. Fetch Financial & Lead Stats
-                const statsResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats`, { headers });
+                const [statsResponse, personalStatsRes] = await Promise.all([
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats`, { headers }),
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, { headers })
+                ]);
                 setStats(statsResponse.data);
+                setPersonalStats(personalStatsRes.data);
 
                 // 2. Fetch Branch Requisitions (To see what branch money is pending)
                 const reqsResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers });
@@ -71,9 +78,28 @@ export const BranchDashboard = () => {
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Operations Ground Control</h1>
                     <p className="text-slate-500 mt-1 font-medium">Branch momentum and pending authorizations for {user?.branch?.name}.</p>
                 </div>
+                <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
+                    <button
+                        onClick={() => setDashboardTab('CONSOLE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'CONSOLE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Console View
+                    </button>
+                    <button
+                        onClick={() => setDashboardTab('PERFORMANCE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'PERFORMANCE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        My Sales Performance
+                    </button>
+                </div>
             </header>
 
             <AnnouncementWidget />
+
+            {dashboardTab === 'PERFORMANCE' ? (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            ) : (
+                <>
 
             {/* Strategic KPI Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -184,6 +210,8 @@ export const BranchDashboard = () => {
                 </div>
 
             </div>
+            </>
+            )}
         </div>
     );
 };

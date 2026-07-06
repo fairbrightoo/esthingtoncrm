@@ -3,18 +3,22 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useParams, Link } from 'react-router-dom';
 import { Megaphone, Users, CheckCircle, Globe, TrendingUp, Calendar, AlertTriangle } from 'lucide-react';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 export const GMDashboard = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { branchName } = useParams();
     const [stats, setStats] = useState<any>(null);
+    const [personalStats, setPersonalStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [dashboardTab, setDashboardTab] = useState<'CONSOLE' | 'PERFORMANCE'>('CONSOLE');
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const [statsRes, reqsRes] = await Promise.all([
+                const [statsRes, personalStatsRes, reqsRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, { headers: { Authorization: `Bearer ${token}` } }),
                     axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers: { Authorization: `Bearer ${token}` } })
                 ]);
                 
@@ -24,6 +28,7 @@ export const GMDashboard = () => {
                     ...statsRes.data,
                     pendingRequisitions: pendingAdvisories
                 });
+                setPersonalStats(personalStatsRes.data);
             } catch (error) {
                 console.error("Failed to load GM dashboard data:", error);
             } finally {
@@ -36,11 +41,25 @@ export const GMDashboard = () => {
     if (loading) return <div className="p-10 text-center animate-pulse text-gray-500">Loading your Operational Desk...</div>;
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+        <div className="p-8 max-w-7xl mx-auto space-y-6">
+            <div className="flex justify-between items-center mb-2">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">General Manager Desk</h1>
                     <p className="text-gray-500 mt-2">Operational oversight for {branchName?.replace(/-/g, ' ')}</p>
+                </div>
+                <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
+                    <button
+                        onClick={() => setDashboardTab('CONSOLE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'CONSOLE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Console View
+                    </button>
+                    <button
+                        onClick={() => setDashboardTab('PERFORMANCE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'PERFORMANCE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        My Sales Performance
+                    </button>
                 </div>
                 <div className="flex space-x-3">
                     <Link to={`/dashboard/${branchName}/network`} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center shadow-sm transition-all text-sm font-medium">
@@ -49,6 +68,10 @@ export const GMDashboard = () => {
                 </div>
             </div>
 
+            {dashboardTab === 'PERFORMANCE' ? (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            ) : (
+                <>
             {/* Quick Actions / Metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
@@ -132,6 +155,8 @@ export const GMDashboard = () => {
                     </div>
                 </div>
             </div>
+            </>
+            )}
         </div>
     );
 };

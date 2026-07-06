@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { MonitorPlay, FileVideo, BookOpen, Youtube, HardDrive } from 'lucide-react';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 export const ICTOracleDashboard = () => {
     const { token, user } = useAuth();
     const [youtubeCount, setYoutubeCount] = useState(0);
     const [driveCount, setDriveCount] = useState(0);
+    const [personalStats, setPersonalStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [dashboardTab, setDashboardTab] = useState<'CONSOLE' | 'PERFORMANCE'>('CONSOLE');
 
     const branchId = user?.branchId || user?.branch?.id;
     const companyId = user?.companyId || user?.company?.id;
@@ -18,10 +21,16 @@ export const ICTOracleDashboard = () => {
 
     const fetchAssetMetrics = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches/${branchId}/assets`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const assets = res.data;
+            const [assetsRes, statsRes] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/branches/${branchId}/assets`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            ]);
+            const assets = assetsRes.data;
+            setPersonalStats(statsRes.data);
             let yt = 0;
             let dr = 0;
             assets.forEach((a: any) => {
@@ -41,10 +50,31 @@ export const ICTOracleDashboard = () => {
     
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-800 tracking-tight">ICT Oracle Console</h1>
-                <p className="text-gray-500 mt-1">Welcome, {user?.fullName}. Direct the branch's digital media and training.</p>
+            <div className="flex justify-between items-center mb-2">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-800 tracking-tight">ICT Oracle Console</h1>
+                    <p className="text-gray-500 mt-1">Welcome, {user?.fullName}. Direct the branch's digital media and training.</p>
+                </div>
+                <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
+                    <button
+                        onClick={() => setDashboardTab('CONSOLE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'CONSOLE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Console View
+                    </button>
+                    <button
+                        onClick={() => setDashboardTab('PERFORMANCE')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${dashboardTab === 'PERFORMANCE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        My Sales Performance
+                    </button>
+                </div>
             </div>
+
+            {dashboardTab === 'PERFORMANCE' ? (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            ) : (
+                <>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
@@ -91,6 +121,8 @@ export const ICTOracleDashboard = () => {
                 <h3 className="text-cyan-800 font-bold mb-2">Cloudflare Storage Protocol Active</h3>
                 <p className="text-cyan-700 text-sm">To prevent exorbitant bandwidth costs, please remember that only graphics (images/flyers) should be uploaded directly. Large videos MUST be hosted on external platforms (YouTube/Google Drive), and only their URL links pasted here.</p>
             </div>
+            </>
+            )}
         </div>
     );
 };

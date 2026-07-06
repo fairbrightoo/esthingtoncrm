@@ -10,6 +10,7 @@ import { MDBudgetReview } from '../components/MDBudgetReview';
 import { Calculator } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
 import { getPaymentTypeLabel } from './AccountantDashboard';
+import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
 
 interface Payment {
     id: string;
@@ -60,8 +61,9 @@ export const ManagingDirectorDashboard = () => {
     const [messageModal, setMessageModal] = useState<{ isOpen: boolean, paymentId: string }>({ isOpen: false, paymentId: '' });
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [personalStats, setPersonalStats] = useState<any>(null);
 
-    const [activeTab, setActiveTab] = useState<'APPROVALS' | 'HISTORY' | 'DISCOUNTS' | 'FUNDS_REQUEST' | 'BUDGETS' | 'REFUNDS'>('APPROVALS');
+    const [activeTab, setActiveTab] = useState<'APPROVALS' | 'HISTORY' | 'DISCOUNTS' | 'FUNDS_REQUEST' | 'BUDGETS' | 'REFUNDS' | 'PERFORMANCE'>('APPROVALS');
     const [approvalSubTab, setApprovalSubTab] = useState<'DIRECT' | 'INBOUND' | 'OUTBOUND' | 'BANK'>('DIRECT');
     const [historySubTab, setHistorySubTab] = useState<'DIRECT' | 'INBOUND' | 'OUTBOUND' | 'BANK'>('DIRECT');
 
@@ -143,7 +145,19 @@ export const ManagingDirectorDashboard = () => {
         fetchPendingPayments();
         fetchProcessedPayments();
         fetchRequisitions();
-    }, []);
+        
+        const fetchPersonalStats = async () => {
+            try {
+                const statsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setPersonalStats(statsRes.data);
+            } catch (error) {
+                console.error("Failed to fetch personal stats", error);
+            }
+        };
+        fetchPersonalStats();
+    }, [token]);
 
     const handleUpdateStatus = (paymentId: string, status: 'APPROVED' | 'REJECTED', isBankConfirm: boolean = false) => {
         setConfirmModal({ isOpen: true, paymentId, status, rejectionReason: '', isBankConfirm });
@@ -428,7 +442,7 @@ export const ManagingDirectorDashboard = () => {
 
             {user?.role !== 'GROUP_MANAGING_DIRECTOR' && <AnnouncementWidget />}
 
-            <div className="flex space-x-4 border-b border-gray-200">
+            <div className="flex space-x-4 border-b border-gray-200 overflow-x-auto whitespace-nowrap hide-scrollbar">
                 <button
                     onClick={() => setActiveTab('APPROVALS')}
                     className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'APPROVALS' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
@@ -461,9 +475,15 @@ export const ManagingDirectorDashboard = () => {
                 </button>
                 <button
                     onClick={() => setActiveTab('REFUNDS')}
-                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'REFUNDS' ? 'text-orange-600 border-b-2 border-orange-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'REFUNDS' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
                 >
                     <AlertTriangle className="w-4 h-4 mr-2" /> Refunds
+                </button>
+                <button
+                    onClick={() => setActiveTab('PERFORMANCE')}
+                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'PERFORMANCE' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                    <TrendingUp className="w-4 h-4 mr-2" /> My Sales Performance
                 </button>
                 <button
                     onClick={() => setActiveTab('HISTORY')}
@@ -472,6 +492,10 @@ export const ManagingDirectorDashboard = () => {
                     <FileText className="w-4 h-4 mr-2" /> History
                 </button>
             </div>
+
+            {activeTab === 'PERFORMANCE' && (
+                <SalesPerformanceTab stats={personalStats} user={user} />
+            )}
 
             {activeTab === 'REFUNDS' && <RefundQueue roleContext="MANAGING_DIRECTOR" />}
             {activeTab === 'BUDGETS' && <MDBudgetReview />}
