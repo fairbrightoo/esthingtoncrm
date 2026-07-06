@@ -51,9 +51,9 @@ export const DashboardController = {
             if (role !== 'SUPER_ADMIN') {
                 if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT'].includes(role)) {
                     // Marketers are scoped below
-                } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE', 'GENERAL_MANAGER'].includes(role) && branchId) {
+                } else if (['BRANCH_ADMIN', 'ACCOUNTANT', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(role) && branchId) {
                     saleWhereClause.marketer = { branchId: branchId };
-                } else if (role === 'MANAGING_DIRECTOR') {
+                } else if (role === 'MANAGING_DIRECTOR' || role === 'GENERAL_MANAGER') {
                     saleWhereClause.marketer = { companyId: companyId };
                 }
             }
@@ -147,10 +147,10 @@ export const DashboardController = {
                 let cashWhere: any = { status: 'APPROVED' };
                 if (Object.keys(dateFilter).length > 0) cashWhere.date = dateFilter;
 
-                if (role === 'MANAGING_DIRECTOR') {
+                if (role === 'MANAGING_DIRECTOR' || role === 'GENERAL_MANAGER') {
                     const branchIds = await prisma.branch.findMany({ where: { companyId } }).then(b => b.map(x => x.id));
                     cashWhere.receivingBranchId = { in: branchIds };
-                } else if (role === 'ACCOUNTANT' || role === 'GENERAL_MANAGER') {
+                } else if (role === 'ACCOUNTANT') {
                     cashWhere.receivingBranchId = branchId;
                 }
 
@@ -165,12 +165,12 @@ export const DashboardController = {
                 const breakdownWhereClause: any = { status: 'APPROVED' };
                 if (Object.keys(dateFilter).length > 0) breakdownWhereClause.date = dateFilter;
 
-                if (role === 'MANAGING_DIRECTOR') {
+                if (role === 'MANAGING_DIRECTOR' || role === 'GENERAL_MANAGER') {
                     breakdownWhereClause.OR = [
                         { sale: { marketer: { companyId } } },
                         { sale: { plot: { estate: { companyId } } } }
                     ];
-                } else if (role === 'ACCOUNTANT' || role === 'GENERAL_MANAGER') {
+                } else if (role === 'ACCOUNTANT') {
                     breakdownWhereClause.OR = [
                         { sale: { marketer: { branchId } } },
                         { sale: { plot: { estate: { managingBranchId: branchId } } } }
@@ -193,14 +193,13 @@ export const DashboardController = {
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;
                     const isManagingCompany = p.sale.plot.estate.companyId === companyId;
                     
-                    if (role === 'ACCOUNTANT' || role === 'GENERAL_MANAGER') {
+                    if (role === 'ACCOUNTANT') {
                         const isSellingBranch = p.sale.marketer?.branchId === branchId;
                         const isManagingBranch = p.sale.plot.estate.managingBranchId === branchId;
                         if (isSellingBranch && isManagingBranch) directSalesVolume += p.amount;
                         else if (isSellingBranch && !isManagingBranch) outboundSalesVolume += p.amount;
                         else if (!isSellingBranch && isManagingBranch) inboundSalesVolume += p.amount;
-                    } else {
-                        // MD scope
+                    } else if (role === 'MANAGING_DIRECTOR' || role === 'GENERAL_MANAGER') {
                         if (isSellingCompany && isManagingCompany) directSalesVolume += p.amount;
                         else if (isSellingCompany && !isManagingCompany) outboundSalesVolume += p.amount;
                         else if (!isSellingCompany && isManagingCompany) inboundSalesVolume += p.amount;

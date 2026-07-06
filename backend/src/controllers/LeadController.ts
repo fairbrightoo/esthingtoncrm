@@ -366,9 +366,9 @@ export const LeadController = {
             }
 
             res.json(lead);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Create Lead Error:', error);
-            res.status(500).json({ error: 'Failed to create lead' });
+            res.status(500).json({ error: `Failed to create lead. Details: ${error.message || String(error)}` });
         }
     },
 
