@@ -12,8 +12,13 @@ export const AutoLogout = () => {
 
     const checkIdleStatus = () => {
         if (!isAuthenticated) return;
+        
+        const lastSaved = localStorage.getItem('lastActivityTime');
+        const lastActivity = lastSaved ? parseInt(lastSaved, 10) : Date.now();
         const now = Date.now();
-        if (now - lastActivityTime.current >= TIMEOUT_MS) {
+        
+        if (now - lastActivity >= TIMEOUT_MS) {
+            localStorage.removeItem('lastActivityTime');
             logout();
             addToast("You have been logged out due to inactivity.", "warning");
         }
@@ -22,7 +27,7 @@ export const AutoLogout = () => {
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        lastActivityTime.current = Date.now();
+        localStorage.setItem('lastActivityTime', Date.now().toString());
 
         // Check every 10 seconds to see if they've exceeded the idle timeout
         intervalRef.current = setInterval(checkIdleStatus, 10000);
@@ -35,13 +40,16 @@ export const AutoLogout = () => {
             
             // If they are ALREADY timed out when they perform activity (e.g. waking up phone),
             // log them out IMMEDIATELY before updating the timer.
+            const lastSaved = localStorage.getItem('lastActivityTime');
+            const lastActivity = lastSaved ? parseInt(lastSaved, 10) : Date.now();
             const now = Date.now();
-            if (now - lastActivityTime.current >= TIMEOUT_MS) {
+            
+            if (now - lastActivity >= TIMEOUT_MS) {
                 checkIdleStatus();
                 return;
             }
 
-            lastActivityTime.current = now;
+            localStorage.setItem('lastActivityTime', now.toString());
             throttleTimer = setTimeout(() => {
                 throttleTimer = null;
             }, 1000); // only update max once per second
@@ -53,12 +61,19 @@ export const AutoLogout = () => {
             }
         };
 
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'lastActivityTime') {
+                checkIdleStatus();
+            }
+        };
+
         const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
 
         events.forEach(event => {
             window.addEventListener(event, handleActivity, { passive: true });
         });
         document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('storage', handleStorageChange);
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -67,6 +82,7 @@ export const AutoLogout = () => {
                 window.removeEventListener(event, handleActivity);
             });
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('storage', handleStorageChange);
         };
     }, [isAuthenticated, logout, addToast]);
 
