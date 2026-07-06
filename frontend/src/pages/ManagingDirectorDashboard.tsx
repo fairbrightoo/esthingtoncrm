@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List, MessageCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List, MessageCircle, TrendingUp } from 'lucide-react';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
 import { Pagination, getPaginatedData } from '../components/Pagination';
 import { MDDiscountManager } from '../components/MDDiscountManager';
