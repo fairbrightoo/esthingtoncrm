@@ -200,7 +200,7 @@ export const LegacySalesRequests = () => {
                     </h1>
                     <p className="text-gray-500 mt-1 text-sm">Submit cross-branch legacy sales or review requests sent to your managed estates.</p>
                 </div>
-                {['BRANCH_ADMIN', 'SUPER_ADMIN'].includes(user?.role || '') && (
+                {['BRANCH_ADMIN', 'SUPER_ADMIN', 'GENERAL_MANAGER'].includes(user?.role || '') && (
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
                         className="mt-4 md:mt-0 px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center"
@@ -280,7 +280,7 @@ export const LegacySalesRequests = () => {
                                                 <StatusBadge status={req.status} />
                                             </td>
                                             <td className="px-6 py-4">
-                                                {activeTab === 'RECEIVED' && req.status === 'PENDING' && (
+                                                {activeTab === 'RECEIVED' && req.status === 'PENDING' && ['BRANCH_ADMIN', 'SUPER_ADMIN'].includes(user?.role || '') && (
                                                     <div className="flex space-x-2">
                                                         <button 
                                                             onClick={() => { setSelectedRequest(req); fetchAvailablePlots(req.estateId); setIsApproveModalOpen(true); }}

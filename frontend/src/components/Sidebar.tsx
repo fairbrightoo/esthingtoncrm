@@ -227,6 +227,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/hr-recommendations`} icon={<Users size={20} />} label="HR Recommendations" />
                         <NavItem to={`${basePath}/broadcasts`} icon={<Megaphone size={20} />} label="Branch Broadcasts" />
