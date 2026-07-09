@@ -100,9 +100,13 @@ export const LegacySaleRequestController = {
     // 4. Reject Request (Managing Branch Admin)
     async rejectRequest(req: AuthRequest, res: Response) {
         try {
+            const { role, branchId } = req.user!;
+            if (role !== 'BRANCH_ADMIN' && role !== 'SUPER_ADMIN') {
+                return res.status(403).json({ error: "Only Branch Admins can reject requests." });
+            }
+
             const { requestId } = req.params as { requestId: string };
             const { rejectionReason } = req.body;
-            const branchId = req.user!.branchId!;
 
             const existing = await prisma.legacySaleRequest.findUnique({ where: { id: requestId } });
             if (!existing || existing.managingBranchId !== branchId) {
@@ -126,10 +130,13 @@ export const LegacySaleRequestController = {
     // 5. Approve Request and Execute Onboarding (Managing Branch Admin)
     async approveRequest(req: AuthRequest, res: Response) {
         try {
+            const { role, userId, branchId } = req.user!;
+            if (role !== 'BRANCH_ADMIN' && role !== 'SUPER_ADMIN') {
+                return res.status(403).json({ error: "Only Branch Admins can approve requests." });
+            }
+
             const { requestId } = req.params as { requestId: string };
             const { assignedPlotId } = req.body; // Branch Admin selects an available Plot ID
-            const userId = req.user!.userId;
-            const branchId = req.user!.branchId!;
 
             const request = await prisma.legacySaleRequest.findUnique({ 
                 where: { id: requestId },
