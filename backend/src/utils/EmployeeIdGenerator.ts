@@ -20,13 +20,13 @@ export async function generateEmployeeId(companyId: string, branchId: string | n
         if (role === 'MANAGING_DIRECTOR') {
             const mdCount = await prisma.user.count({ where: { branchId, role: 'MANAGING_DIRECTOR' }});
             const num = mdCount === 0 ? 1 : 100 + mdCount;
-            return `${compAbbr}/${branchAbbr}/${String(num).padStart(3, '0')}`;
+            return `${compAbbr}/${branchAbbr}/MD/${String(num).padStart(3, '0')}`;
         }
         
         if (role === 'GENERAL_MANAGER') {
             const gmCount = await prisma.user.count({ where: { branchId, role: 'GENERAL_MANAGER' }});
-            const num = gmCount === 0 ? 2 : 100 + gmCount;
-            return `${compAbbr}/${branchAbbr}/${String(num).padStart(3, '0')}`;
+            const num = gmCount === 0 ? 1 : 100 + gmCount;
+            return `${compAbbr}/${branchAbbr}/GM/${String(num).padStart(3, '0')}`;
         }
         
         const updatedBranch = await prisma.branch.update({ 
