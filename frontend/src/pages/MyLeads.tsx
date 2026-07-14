@@ -258,7 +258,8 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
             addToast("Lead created successfully!", 'success');
         } catch (error: any) {
             console.error("Failed to create lead", error);
-            addToast(error.response?.data?.error || "Failed to create lead", 'error');
+            const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || "Unknown error";
+            addToast(`Failed to create lead: ${errorMsg}`, 'error');
         }
     };
 
