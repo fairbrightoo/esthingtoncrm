@@ -186,9 +186,15 @@ export const GlobalUserManagement = () => {
                     >
                         <option value="ALL">All Roles</option>
                         <option value="SUPER_ADMIN">Super Admins</option>
+                        <option value="GLOBAL_CHAIRMAN">Global Chairman</option>
+                        <option value="GROUP_MANAGING_DIRECTOR">Group Managing Directors</option>
                         <option value="GENERAL_MANAGER">General Managers</option>
                         <option value="MANAGING_DIRECTOR">Managing Directors</option>
                         <option value="BRANCH_ADMIN">Branch Admins</option>
+                        <option value="BRANCH_HR">Branch HR</option>
+                        <option value="HEAD_BDD">Head of BDD (HOD)</option>
+                        <option value="BDM">Business Development Managers (BDM)</option>
+                        <option value="TEAM_LEAD">Team Leads</option>
                         <option value="MARKETER">Marketers</option>
                         <option value="SITE_EXPERT">Site Experts</option>
                         <option value="ICT_ORACLE">ICT Oracles</option>
