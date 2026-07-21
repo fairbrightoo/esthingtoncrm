@@ -25,6 +25,7 @@ router.put('/plots/:plotId', authenticateToken, PlotController.updatePlot);
 router.put('/plots/:plotId/toggle-cp', authenticateToken, PlotController.toggleCornerPiece);
 router.get('/plots/:plotId/history', authenticateToken, PlotController.getPlotHistory);
 router.put('/estates/:estateId/plots/bulk-price', authenticateToken, PlotController.updateBulkPlotPrices);
+router.put('/estates/:estateId/plots/bulk-edit-attributes', authenticateToken, PlotController.updateBulkPlotAttributes);
 
 // --- SALES & PAYMENTS ROUTES ---
 router.post('/sales', authenticateToken, SaleController.createSale);

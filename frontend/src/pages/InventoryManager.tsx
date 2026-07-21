@@ -170,7 +170,9 @@ export const InventoryManager = () => {
     const [showStaffDropdown, setShowStaffDropdown] = useState(false);
 
 
-    const [isUpdatingBulkPrice, setIsUpdatingBulkPrice] = useState(false);
+    const [isBulkEditAttrModalOpen, setIsBulkEditAttrModalOpen] = useState(false);
+    const [bulkEditAttrForm, setBulkEditAttrForm] = useState({ oldPrototype: '', oldSize: '', newPrototype: '', newSize: '' });
+    const [isUpdatingBulkAttr, setIsUpdatingBulkAttr] = useState(false);
 
     const [historyModal, setHistoryModal] = useState<{isOpen: boolean, plot: Plot | null, logs: any[], loading: boolean}>({isOpen: false, plot: null, logs: [], loading: false});
 
@@ -567,6 +569,25 @@ export const InventoryManager = () => {
             addToast(error.response?.data?.error || "Failed to bulk update plot prices", "error");
         } finally {
             setIsUpdatingBulkPrice(false);
+        }
+    };
+
+    const handleBulkEditAttributes = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEstate) return;
+        setIsUpdatingBulkAttr(true);
+        try {
+            const res = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/plots/bulk-edit-attributes`, bulkEditAttrForm, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            addToast(`Successfully updated attributes for ${res.data.updatedCount} plots.`, "success");
+            setIsBulkEditAttrModalOpen(false);
+            setBulkEditAttrForm({ oldPrototype: '', oldSize: '', newPrototype: '', newSize: '' });
+            fetchEstatePlots(selectedEstate.id);
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to bulk update plot attributes", "error");
+        } finally {
+            setIsUpdatingBulkAttr(false);
         }
     };
 
@@ -1184,12 +1205,20 @@ export const InventoryManager = () => {
                         <div className="flex items-center space-x-3">
                             <h3 className="font-bold text-gray-700">Generated Plots ({estatePlots.length})</h3>
                             {['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role || '') && estatePlots.length > 0 && (
-                                <button 
-                                    onClick={() => setIsBulkPriceModalOpen(true)}
-                                    className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-bold rounded-lg transition"
-                                >
-                                    Bulk Update Prices
-                                </button>
+                                <div className="flex space-x-2">
+                                    <button 
+                                        onClick={() => setIsBulkPriceModalOpen(true)}
+                                        className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-bold rounded-lg transition"
+                                    >
+                                        Bulk Update Prices
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsBulkEditAttrModalOpen(true)}
+                                        className="px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-xs font-bold rounded-lg transition"
+                                    >
+                                        Bulk Edit Plot Attributes
+                                    </button>
+                                </div>
                             )}
                         </div>
                         <div className="flex space-x-4 text-sm font-medium">
@@ -1460,6 +1489,66 @@ export const InventoryManager = () => {
                                     <button type="button" onClick={() => setIsBulkPriceModalOpen(false)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition">Cancel</button>
                                     <button type="submit" disabled={isUpdatingBulkPrice || !bulkPriceForm.size || !bulkPriceForm.prototype} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-md shadow-blue-200 transition disabled:opacity-50">
                                         {isUpdatingBulkPrice ? 'Executing...' : 'Confirm Update'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Bulk Edit Plot Attributes Modal */}
+                {isBulkEditAttrModalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                            <div className="p-6 bg-indigo-50 border-b border-indigo-100">
+                                <h2 className="text-xl font-bold text-indigo-900">Bulk Edit Plot Attributes</h2>
+                                <p className="text-sm text-indigo-700/70 mt-1">Fix incorrectly spelled prototypes or wrong plot sizes across multiple plots at once.</p>
+                            </div>
+                            <form onSubmit={handleBulkEditAttributes} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Target Plots to Change</label>
+                                    <select required className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                        value={bulkEditAttrForm.oldPrototype && bulkEditAttrForm.oldSize ? `${bulkEditAttrForm.oldPrototype}|${bulkEditAttrForm.oldSize}` : ""} 
+                                        onChange={e => {
+                                            const [proto, sz] = e.target.value.split('|');
+                                            setBulkEditAttrForm({ ...bulkEditAttrForm, oldPrototype: proto || '', oldSize: sz || '', newPrototype: proto || '', newSize: sz || '' });
+                                        }}>
+                                        <option value="">Select the incorrectly named plots...</option>
+                                        {Array.from(new Set(estatePlots.map(p => `${p.prototype}|${p.size}`))).sort().map(key => {
+                                            const [proto, size] = key.split('|');
+                                            const count = estatePlots.filter(p => p.prototype === proto && String(p.size) === size).length;
+                                            return (
+                                                <option key={key} value={key}>{proto} ({size} sqm) - {count} units</option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">New Building Prototype</label>
+                                        <input required type="text" className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                            placeholder="e.g. 3 Bedroom Detached Bungalow"
+                                            value={bulkEditAttrForm.newPrototype} onChange={e => setBulkEditAttrForm({ ...bulkEditAttrForm, newPrototype: e.target.value })} />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">New Plot Size (sqm)</label>
+                                        <input required type="number" className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                            placeholder="e.g. 450"
+                                            value={bulkEditAttrForm.newSize} onChange={e => setBulkEditAttrForm({ ...bulkEditAttrForm, newSize: e.target.value })} />
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex items-start space-x-2">
+                                    <svg className="text-yellow-600 flex-shrink-0 mt-0.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                    <p className="text-xs text-yellow-800">
+                                        Plot IDs will be automatically regenerated to reflect these new attributes <strong>ONLY for AVAILABLE plots</strong>. Sold or Reserved plots will retain their current Plot ID to preserve document integrity.
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                                    <button type="button" onClick={() => setIsBulkEditAttrModalOpen(false)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition">Cancel</button>
+                                    <button type="submit" disabled={isUpdatingBulkAttr || !bulkEditAttrForm.oldPrototype || !bulkEditAttrForm.oldSize} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium shadow-md shadow-indigo-200 transition disabled:opacity-50">
+                                        {isUpdatingBulkAttr ? 'Executing...' : 'Confirm Update'}
                                     </button>
                                 </div>
                             </form>

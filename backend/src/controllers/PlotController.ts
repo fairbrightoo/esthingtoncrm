@@ -318,6 +318,95 @@ export const PlotController = {
         }
     },
 
+    // 5.6 Bulk Update Plot Attributes
+    updateBulkPlotAttributes: async (req: Request, res: Response) => {
+        try {
+            const { estateId } = req.params as { estateId: string };
+            const { oldPrototype, oldSize, newPrototype, newSize } = req.body;
+
+            if (!oldPrototype || !oldSize || !newPrototype || !newSize) {
+                return res.status(400).json({ error: "oldPrototype, oldSize, newPrototype, and newSize are required." });
+            }
+
+            const numericOldSize = Number(oldSize);
+            const numericNewSize = Number(newSize);
+
+            const estate = await prisma.estate.findUnique({
+                where: { id: estateId }
+            });
+
+            if (!estate) return res.status(404).json({ error: "Estate not found" });
+
+            // Estate Acronym
+            const estateAcr = estate.name.split(' ').map((w: string) => {
+                if (!w) return '';
+                return w.charAt(0).toUpperCase();
+            }).join('');
+
+            // Date string
+            const date = new Date();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(2);
+            const dateStr = `/${month}/${year}`;
+
+            // New Prototype Acronym
+            let newProtoAcr = generateAcronym(newPrototype);
+
+            // Find all plots to update
+            const targetedPlots = await prisma.plot.findMany({
+                where: {
+                    estateId,
+                    prototype: oldPrototype,
+                    size: numericOldSize
+                },
+                orderBy: {
+                    plotNumber: 'asc'
+                }
+            });
+
+            if (targetedPlots.length === 0) {
+                return res.json({ message: "No plots found matching the specified prototype and size.", updatedCount: 0 });
+            }
+
+            const existingNewPlotsCount = await prisma.plot.count({
+                where: { estateId, prototype: newPrototype, size: numericNewSize }
+            });
+            let seqCounter = existingNewPlotsCount + 1;
+
+            const updatePromises: any[] = [];
+
+            for (const plot of targetedPlots) {
+                let finalPlotNumber = plot.plotNumber;
+
+                // Only regenerate plot number if the plot is AVAILABLE
+                if (plot.status === 'AVAILABLE') {
+                    const sizeStr = plot.isCornerPiece ? `${numericNewSize}CP` : `${numericNewSize}`;
+                    const seqStr = String(seqCounter).padStart(4, '0');
+                    finalPlotNumber = `${estateAcr}${dateStr}-${newProtoAcr}-${sizeStr}-${seqStr}`;
+                    seqCounter++;
+                }
+
+                updatePromises.push(
+                    prisma.plot.update({
+                        where: { id: plot.id },
+                        data: {
+                            prototype: newPrototype,
+                            size: numericNewSize,
+                            plotNumber: finalPlotNumber
+                        }
+                    })
+                );
+            }
+
+            await prisma.$transaction(updatePromises);
+
+            res.json({ message: "Plots attributes updated successfully.", updatedCount: updatePromises.length });
+        } catch (error) {
+            console.error("Bulk Attributes Update Error:", error);
+            res.status(500).json({ error: "Failed to process bulk attributes update." });
+        }
+    },
+
     // 6. Get Price History for a Plot
     getPlotHistory: async (req: Request, res: Response) => {
         try {
