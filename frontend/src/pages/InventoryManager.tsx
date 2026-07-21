@@ -152,14 +152,15 @@ export const InventoryManager = () => {
     const [plotCreationMode, setPlotCreationMode] = useState<'AUTO' | 'LEGACY' | 'LEGACY_SALES'>('AUTO');
     const [legacyTab, setLegacyTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
     const [legacyPlotForm, setLegacyPlotForm] = useState({ plotNumber: '', prototype: '', size: '', price: '', isCornerPiece: false });
-    
-    // Legacy Sales Onboarding
-    const [legacySaleTab, setLegacySaleTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
-    const [legacySaleForm, setLegacySaleForm] = useState({
-        clientName: '', clientPhone: '', clientEmail: '',
+    const [legacySaleForm, setLegacySaleForm] = useState({ 
+        clientName: '', phone: '', email: '', 
         plotNumber: '', prototype: '', size: '', agreedPrice: '',
-        amountPaidSoFar: '', dateOfSale: '', marketerEmail: ''
+        amountPaid: '', date: '', marketerEmail: '', isCornerPiece: false
     });
+    
+    // Bulk Modals
+    const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
+    const [bulkPriceForm, setBulkPriceForm] = useState({ prototype: '', size: '', newPrice: '' });
     const [legacySaleCsvFile, setLegacySaleCsvFile] = useState<File | null>(null);
     const [isLegacySaleLoading, setIsLegacySaleLoading] = useState(false);
     const [csvText, setCsvText] = useState('');
@@ -168,8 +169,7 @@ export const InventoryManager = () => {
     const [staffSearchQuery, setStaffSearchQuery] = useState('');
     const [showStaffDropdown, setShowStaffDropdown] = useState(false);
 
-    const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
-    const [bulkPriceForm, setBulkPriceForm] = useState({ size: '', newPrice: '' });
+
     const [isUpdatingBulkPrice, setIsUpdatingBulkPrice] = useState(false);
 
     const [historyModal, setHistoryModal] = useState<{isOpen: boolean, plot: Plot | null, logs: any[], loading: boolean}>({isOpen: false, plot: null, logs: [], loading: false});
@@ -561,7 +561,7 @@ export const InventoryManager = () => {
             });
             addToast(`Successfully updated the price of ${res.data.updatedCount} plots.`, "success");
             setIsBulkPriceModalOpen(false);
-            setBulkPriceForm({ size: '', newPrice: '' });
+            setBulkPriceForm({ prototype: '', size: '', newPrice: '' });
             fetchEstatePlots(selectedEstate.id);
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to bulk update plot prices", "error");
@@ -1432,13 +1432,21 @@ export const InventoryManager = () => {
                             </div>
                             <form onSubmit={handleBulkPriceUpdate} className="p-6 space-y-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Target Plot Size (sqm)</label>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Target Prototype & Size</label>
                                     <select required className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition"
-                                        value={bulkPriceForm.size} onChange={e => setBulkPriceForm({ ...bulkPriceForm, size: e.target.value })}>
-                                        <option value="">Select a documented size...</option>
-                                        {Array.from(new Set(estatePlots.map(p => p.size))).sort((a,b) => a-b).map(size => (
-                                            <option key={size} value={size}>{size} sqm ({estatePlots.filter(p => p.size === size).length} units)</option>
-                                        ))}
+                                        value={bulkPriceForm.prototype && bulkPriceForm.size ? `${bulkPriceForm.prototype}|${bulkPriceForm.size}` : ""} 
+                                        onChange={e => {
+                                            const [proto, sz] = e.target.value.split('|');
+                                            setBulkPriceForm({ ...bulkPriceForm, prototype: proto || '', size: sz || '' });
+                                        }}>
+                                        <option value="">Select a documented prototype and size...</option>
+                                        {Array.from(new Set(estatePlots.map(p => `${p.prototype}|${p.size}`))).sort().map(key => {
+                                            const [proto, size] = key.split('|');
+                                            const count = estatePlots.filter(p => p.prototype === proto && String(p.size) === size).length;
+                                            return (
+                                                <option key={key} value={key}>{proto} ({size} sqm) - {count} units</option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
                                 <div>
@@ -1450,7 +1458,7 @@ export const InventoryManager = () => {
                                 
                                 <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
                                     <button type="button" onClick={() => setIsBulkPriceModalOpen(false)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition">Cancel</button>
-                                    <button type="submit" disabled={isUpdatingBulkPrice || !bulkPriceForm.size} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-md shadow-blue-200 transition disabled:opacity-50">
+                                    <button type="submit" disabled={isUpdatingBulkPrice || !bulkPriceForm.size || !bulkPriceForm.prototype} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-md shadow-blue-200 transition disabled:opacity-50">
                                         {isUpdatingBulkPrice ? 'Executing...' : 'Confirm Update'}
                                     </button>
                                 </div>

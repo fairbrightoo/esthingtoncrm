@@ -253,18 +253,19 @@ export const PlotController = {
     updateBulkPlotPrices: async (req: Request, res: Response) => {
         try {
             const { estateId } = req.params as { estateId: string };
-            const { size, newPrice } = req.body;
+            const { prototype, size, newPrice } = req.body;
             const user = (req as any).user;
 
-            if (!size || !newPrice) return res.status(400).json({ error: "Size and newPrice are required." });
+            if (!prototype || !size || !newPrice) return res.status(400).json({ error: "Prototype, size and newPrice are required." });
 
             const numericSize = Number(size);
             const numericNewPrice = Number(newPrice);
 
-            // Fetch all plots targeting this size within the estate
+            // Fetch all plots targeting this prototype and size within the estate
             const targetedPlots = await prisma.plot.findMany({
                 where: {
                     estateId,
+                    prototype,
                     size: numericSize
                 },
                 include: { estate: true }
