@@ -209,6 +209,7 @@ function App() {
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
             <Route path="/admin/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/admin/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
+            <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
             <Route path="/dashboard/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
