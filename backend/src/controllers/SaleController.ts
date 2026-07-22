@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { DocumentAutomationService } from '../services/DocumentAutomationService.js';
+import { PaymentService } from '../services/PaymentService.js';
 import { uploadFile } from '../services/StorageService.js';
 import prisma from '../config/prisma.js';
 
@@ -668,82 +669,14 @@ export const SaleController = {
                 return;
             }
 
-            const payment = await prisma.payment.update({
-                where: { id: paymentId },
-                data: { 
-                    status: String(status),
-                    rejectionReason: status === 'REJECTED' ? (rejectionReason || null) : null
-                }
-            });
-
-            // If approved, update the sale totals
             if (status === 'APPROVED') {
-                const sale = await prisma.sale.findUnique({
-                    where: { id: payment.saleId },
-                    include: { lead: true }
-                });
-
-                if (sale) {
-                    const newTotal = sale.totalPaid + payment.amount + (payment.virtualLoanAmount || 0);
-                    const isCompleted = newTotal >= sale.agreedPrice;
-
-                    await prisma.sale.update({
-                        where: { id: sale.id },
-                        data: {
-                            totalPaid: newTotal,
-                            status: isCompleted ? 'COMPLETED' : 'ONGOING',
-                            updatedAt: new Date()
-                        }
-                    });
-
-                    // If full payment is achieved, update Plot status to SOLD
-                    if (isCompleted) {
-                        await prisma.plot.update({
-                            where: { id: sale.plotId },
-                            data: { status: 'SOLD' }
-                        });
-                    }
-
-                    // AUTO-CONVERT Lead to CLIENT if not already
-                    if (sale.lead.status === 'PROSPECT') {
-                        await prisma.lead.update({
-                            where: { id: sale.leadId },
-                            data: { status: 'CLIENT' }
-                        });
-                    }
-
-                    // Fire off background task to email Receipt & Allocation Letters
-                    try {
-                        await DocumentAutomationService.dispatchDocuments(sale.id, 'PAYMENT', payment.id);
-                    } catch (docError: any) {
-                        return res.status(500).json({ 
-                            error: `Payment approved, but failed to generate/email documents. Reason: ${docError.message}` 
-                        });
-                    }
-
-                    // --- EsthCoin Earning Logic ---
-                    if (sale.marketerId) {
-                        const esthCoinYield = payment.amount / 20_000_000;
-                        if (esthCoinYield > 0) {
-                            await prisma.esthCoinLedger.create({
-                                data: {
-                                    userId: sale.marketerId,
-                                    amount: esthCoinYield,
-                                    transactionType: 'SALES_COMMISSION',
-                                    referenceId: payment.id,
-                                    description: `Earned from approved payment of ₦${payment.amount.toLocaleString()}`
-                                }
-                            });
-                            await prisma.user.update({
-                                where: { id: sale.marketerId },
-                                data: { esthCoinBalance: { increment: esthCoinYield } }
-                            });
-                        }
-                    }
-                }
+                const approvedPayment = await PaymentService.approvePayment(paymentId);
+                return res.json(approvedPayment);
+            } else {
+                const rejectedPayment = await PaymentService.rejectPayment(paymentId, rejectionReason || '');
+                return res.json(rejectedPayment);
             }
 
-            res.json(payment);
         } catch (error) {
             console.error("Update Payment Status Error", error);
             res.status(500).json({ error: "Failed to update payment status" });

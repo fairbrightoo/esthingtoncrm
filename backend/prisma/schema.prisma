@@ -161,7 +161,8 @@ model User {
   leads                  Lead[]               @relation("AssignedLeads")
   salesMarketer          Sale[]               @relation("SaleMarketer")
   salesReferred          Sale[]               @relation("SaleReferrer")
-  Payment                Payment[]
+  paymentsRecorded       Payment[]               @relation("PaymentRecorded")
+  paymentsApproved       Payment[]               @relation("PaymentApproved")
   tasks                  Task[]
   branch                 Branch?              @relation(fields: [branchId], references: [id])
   company                Company?             @relation(fields: [companyId], references: [id])
@@ -450,8 +451,13 @@ model Payment {
   bankBranchConfirmation     String? // 'PENDING', 'RECEIVED', 'NOT_RECEIVED'
   bankBranchConfirmationNote String? @db.Text
 
+  // Approvals
+  approvedByUserId String?
+  approvalNote     String? @db.Text
+
   createdAt      DateTime         @default(now())
-  recordedByUser User             @relation(fields: [recordedByUserId], references: [id])
+  recordedByUser User             @relation("PaymentRecorded", fields: [recordedByUserId], references: [id])
+  approvedByUser User?            @relation("PaymentApproved", fields: [approvedByUserId], references: [id])
   sale           Sale             @relation(fields: [saleId], references: [id])
   messages       PaymentMessage[]
 }

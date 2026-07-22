@@ -18,6 +18,8 @@ import { GlobalSettings } from './pages/GlobalSettings';
 import { BranchUsers } from './pages/BranchUsers';
 import { BranchReports } from './pages/BranchReports';
 import { BranchSettings } from './pages/BranchSettings';
+
+import GlobalTreasuryDashboard from './pages/GlobalTreasuryDashboard';
 import { CallScripts } from './pages/CallScripts';
 import { InventoryManager } from './pages/InventoryManager';
 import { LegacySalesRequests } from './pages/LegacySalesRequests';
@@ -62,8 +64,8 @@ import { BranchBroadcasts } from './pages/BranchBroadcasts';
 import { GMNetwork } from './pages/GMNetwork';
 import { GMAdvisoryQueue } from './pages/GMAdvisoryQueue';
 import { HRRecommendations } from './pages/HRRecommendations';
-import { GMDashboard } from './pages/GMDashboard';
 import { GMDDashboard } from './pages/GMDDashboard';
+import { GMDDashboard as GMDDashboardReal } from './pages/GMDDashboard';
 import { GMDStaffAnalytics } from './pages/GMDStaffAnalytics';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
 import { SiteExpertDashboard } from './pages/SiteExpertDashboard';
@@ -85,7 +87,7 @@ const DashboardHome = () => {
     const { user } = useAuth();
     if (user?.role === 'SUPER_ADMIN') return <Navigate to="/admin" replace />;
     if (user?.role === 'GLOBAL_CHAIRMAN') return <Navigate to="/dashboard/chairman" replace />;
-    if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDDashboard />;
+    if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDDashboardReal />;
     
     if (user?.branch?.name) {
         const branchSlug = user.branch.name.toLowerCase().replace(/\s+/g, '-');
@@ -104,7 +106,7 @@ const BranchDashboardRouter = () => {
   }
 
   if (user?.role === 'GENERAL_MANAGER') {
-    return <GMDashboard />;
+    return <GMDDashboardReal />;
   }
 
   if (user?.role === 'MARKETER' || user?.role === 'TEAM_LEAD' || user?.role === 'BDM' || user?.role === 'HEAD_BDD') {
@@ -201,7 +203,7 @@ function App() {
             <Route path="/admin/onboarding" element={<DashboardLayout><BulkOnboarding /></DashboardLayout>} />
             <Route path="/admin/users" element={<DashboardLayout><GlobalUserManagement /></DashboardLayout>} />
             <Route path="/admin/global-clients" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
-            <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
+            <Route path="/admin/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
             <Route path="/admin/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
             <Route path="/admin/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
@@ -220,7 +222,8 @@ function App() {
 
             {/* Global Chairman Routes */}
             <Route path="/dashboard/chairman" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/chairman/crm" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/crm" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
             <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><ChairmanExpenses /></DashboardLayout>} />
             <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
             <Route path="/dashboard/chairman/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />

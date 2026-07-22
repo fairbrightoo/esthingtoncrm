@@ -1,7 +1,9 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark } from 'lucide-react';
+
+
 
 export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onClose?: () => void }) => {
     const { user, logout } = useAuth();
@@ -71,6 +73,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/onboarding" icon={<Upload size={20} />} label="Bulk Onboarding" />
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Global User Mgmt" />
                         <NavItem to="/admin/global-clients" icon={<Globe size={20} />} label="Global Clients" />
+                        <NavItem to="/admin/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/admin/inventory" icon={<Home size={20} />} label="Inventory" />
                         <NavItem to="/admin/legacy-requests" icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
@@ -80,6 +83,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'GLOBAL_CHAIRMAN' && (
                     <>
                         <NavItem to="/dashboard/chairman/crm" icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to="/dashboard/chairman/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/dashboard/chairman/expenses" icon={<FileSpreadsheet size={20} />} label="My Expenses" />
                         <NavItem to="/dashboard/chairman/broadcasts" icon={<Megaphone size={20} />} label="Broadcasts" />
                         <NavItem to="/dashboard/chairman/reports" icon={<FileText size={20} />} label="Global Reports" />

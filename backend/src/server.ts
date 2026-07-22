@@ -69,6 +69,7 @@ import corporateBankAccountRoutes from './routes/corporateBankAccountRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
+import globalTreasuryRoutes from './routes/globalTreasuryRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import scriptRoutes from './routes/scriptRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
@@ -150,6 +151,7 @@ import teamRoutes from './routes/teamRoutes.js';
 app.use('/api/gmd-analytics', gmdAnalyticsRoutes);
 app.use('/api/gm', gmRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/global-treasury', globalTreasuryRoutes);
 
 // Basic health check
 app.get('/health', (req: Request, res: Response) => {
