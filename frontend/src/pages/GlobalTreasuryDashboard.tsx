@@ -38,6 +38,11 @@ export default function GlobalTreasuryDashboard() {
         isOpen: false, type: 'PAYMENT', data: null, isLoading: false
     });
 
+    // Receipt Modal
+    const [receiptModal, setReceiptModal] = useState<{isOpen: boolean, url: string | null, isPdf: boolean}>({
+        isOpen: false, url: null, isPdf: false
+    });
+
     useEffect(() => {
         if (!token) return;
         fetchCompanies();
@@ -240,6 +245,24 @@ export default function GlobalTreasuryDashboard() {
         doc.save("Pending_Commissions.pdf");
     };
 
+    const getReceiptInfo = (urlStr: string | null) => {
+        if (!urlStr) return null;
+        let url = urlStr;
+        try {
+            const parsed = JSON.parse(urlStr);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                url = parsed[0];
+            }
+        } catch(e) {
+            // Not a JSON string, assume it's just the URL itself
+        }
+        if (url.startsWith('/')) {
+            url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
+        }
+        const isPdf = url.toLowerCase().endsWith('.pdf');
+        return { url, isPdf };
+    };
+
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 md:p-10 font-inter text-slate-800">
             {/* Header Ribbon */}
@@ -348,10 +371,27 @@ export default function GlobalTreasuryDashboard() {
                                             <p><span className="font-medium text-slate-800">Plot:</span> {p.sale?.plotNumber || p.sale?.plot?.plotNumber}</p>
                                             <p><span className="font-medium text-slate-800">Method:</span> {p.method} | <span className="font-medium text-slate-800">Ref:</span> {p.reference || 'N/A'}</p>
                                             <p><span className="font-medium text-slate-800">Bank Paid To:</span> {p.accountPaidTo || 'N/A'}</p>
-                                            {p.proofOfPaymentUrl && (
-                                                <a href={p.proofOfPaymentUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline text-xs inline-flex items-center mt-2">
-                                                    <Paperclip size={12} className="mr-1" /> View Receipt
-                                                </a>
+                                            {getReceiptInfo(p.proofOfPaymentUrl) && (
+                                                <div className="mt-3">
+                                                    {getReceiptInfo(p.proofOfPaymentUrl)?.isPdf ? (
+                                                        <button 
+                                                            onClick={() => setReceiptModal({ isOpen: true, url: getReceiptInfo(p.proofOfPaymentUrl)?.url || null, isPdf: true })}
+                                                            className="flex items-center text-xs font-medium text-slate-600 hover:text-indigo-600 transition bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:shadow"
+                                                        >
+                                                            <Paperclip size={14} className="mr-1.5 text-indigo-500" /> View PDF Receipt
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => setReceiptModal({ isOpen: true, url: getReceiptInfo(p.proofOfPaymentUrl)?.url || null, isPdf: false })}
+                                                            className="group relative overflow-hidden rounded-xl border border-slate-200 shadow-sm block w-24 h-16 bg-slate-100 hover:border-indigo-400 transition"
+                                                        >
+                                                            <img src={getReceiptInfo(p.proofOfPaymentUrl)?.url || ''} alt="Receipt Thumbnail" className="w-full h-full object-cover group-hover:scale-110 transition duration-300" />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
+                                                                <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm transition-all transform translate-y-2 group-hover:translate-y-0 shadow-sm">View</span>
+                                                            </div>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                         <button 
@@ -503,12 +543,29 @@ export default function GlobalTreasuryDashboard() {
                                             <p><span className="font-medium text-slate-800">Plot:</span> {p.sale?.plotNumber || p.sale?.plot?.plotNumber}</p>
                                             <p><span className="font-medium text-slate-800">Method:</span> {p.method} | <span className="font-medium text-slate-800">Ref:</span> {p.reference || 'N/A'}</p>
                                             <p><span className="font-medium text-slate-800">Bank Paid To:</span> {p.accountPaidTo || 'N/A'}</p>
-                                            {p.proofOfPaymentUrl && (
-                                                <a href={p.proofOfPaymentUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline text-xs inline-flex items-center mt-2">
-                                                    <Paperclip size={12} className="mr-1" /> View Receipt
-                                                </a>
+                                            {getReceiptInfo(p.proofOfPaymentUrl) && (
+                                                <div className="mt-3">
+                                                    {getReceiptInfo(p.proofOfPaymentUrl)?.isPdf ? (
+                                                        <button 
+                                                            onClick={() => setReceiptModal({ isOpen: true, url: getReceiptInfo(p.proofOfPaymentUrl)?.url || null, isPdf: true })}
+                                                            className="flex items-center text-xs font-medium text-slate-600 hover:text-indigo-600 transition bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:shadow"
+                                                        >
+                                                            <Paperclip size={14} className="mr-1.5 text-indigo-500" /> View PDF Receipt
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => setReceiptModal({ isOpen: true, url: getReceiptInfo(p.proofOfPaymentUrl)?.url || null, isPdf: false })}
+                                                            className="group relative overflow-hidden rounded-xl border border-slate-200 shadow-sm block w-24 h-16 bg-slate-100 hover:border-indigo-400 transition"
+                                                        >
+                                                            <img src={getReceiptInfo(p.proofOfPaymentUrl)?.url || ''} alt="Receipt Thumbnail" className="w-full h-full object-cover group-hover:scale-110 transition duration-300" />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
+                                                                <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm transition-all transform translate-y-2 group-hover:translate-y-0 shadow-sm">View</span>
+                                                            </div>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             )}
-                                            <p className="mt-2 text-xs text-slate-400">Approved on {new Date(p.date).toLocaleDateString()}</p>
+                                            <p className="mt-4 text-xs text-slate-400 border-t border-slate-200/60 pt-2">Approved on {new Date(p.date).toLocaleDateString()}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -580,7 +637,30 @@ export default function GlobalTreasuryDashboard() {
                                 <button onClick={handleApproveOverride} disabled={overrideModal.isLoading} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl hover:bg-amber-700 font-medium shadow-md shadow-amber-200 transition disabled:opacity-50 flex items-center">
                                     {overrideModal.isLoading ? 'Processing...' : 'Confirm Override'}
                                 </button>
-                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Receipt Modal */}
+            {receiptModal.isOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden relative" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-slate-800 flex items-center">
+                                <Paperclip className="mr-2 text-indigo-500" size={18} />
+                                Payment Receipt
+                            </h3>
+                            <button onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })} className="text-slate-400 hover:text-rose-500 transition">
+                                <XSquare size={24} />
+                            </button>
+                        </div>
+                        <div className="p-4 bg-slate-100/50 flex justify-center items-center min-h-[50vh] max-h-[80vh] overflow-y-auto">
+                            {receiptModal.isPdf ? (
+                                <iframe src={receiptModal.url || ''} className="w-full h-[70vh] rounded-xl border border-slate-200" title="PDF Receipt" />
+                            ) : (
+                                <img src={receiptModal.url || ''} alt="Full Receipt" className="max-w-full rounded-xl shadow-sm border border-slate-200" />
+                            )}
                         </div>
                     </div>
                 </div>
