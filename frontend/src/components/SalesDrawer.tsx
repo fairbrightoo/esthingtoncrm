@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Tag, CreditCard, Plus, Building, MapPin, Clock } from 'lucide-react';
+import { Tag, CreditCard, Plus, Building, MapPin, Clock, X } from 'lucide-react';
 
 interface Plot {
     id: string;
