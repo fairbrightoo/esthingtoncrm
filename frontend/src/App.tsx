@@ -64,7 +64,7 @@ import { BranchBroadcasts } from './pages/BranchBroadcasts';
 import { GMNetwork } from './pages/GMNetwork';
 import { GMAdvisoryQueue } from './pages/GMAdvisoryQueue';
 import { HRRecommendations } from './pages/HRRecommendations';
-import { GMDDashboard } from './pages/GMDDashboard';
+import { GMDashboard } from './pages/GMDashboard';
 import { GMDDashboard as GMDDashboardReal } from './pages/GMDDashboard';
 import { GMDStaffAnalytics } from './pages/GMDStaffAnalytics';
 import { ExecutiveMemos } from './pages/ExecutiveMemos';
@@ -106,7 +106,7 @@ const BranchDashboardRouter = () => {
   }
 
   if (user?.role === 'GENERAL_MANAGER') {
-    return <GMDDashboardReal />;
+    return <GMDashboard />;
   }
 
   if (user?.role === 'MARKETER' || user?.role === 'TEAM_LEAD' || user?.role === 'BDM' || user?.role === 'HEAD_BDD') {
