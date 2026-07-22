@@ -25,3 +25,29 @@ services:
       - key: VITE_API_URL
         # This forces the frontend to dynamically use the backend's external URL, which must be overridden in the dashboard if you use a custom domain.
         sync: false
+
+  - type: web
+    name: esthington-os-backend-main
+    branch: main
+    env: node
+    buildCommand: cd backend && npm install --include=dev && npx puppeteer browsers install chrome && npx prisma generate && npx prisma db push && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '3000'
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    env: static
+    name: esthington-os-frontend-main
+    branch: main
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
