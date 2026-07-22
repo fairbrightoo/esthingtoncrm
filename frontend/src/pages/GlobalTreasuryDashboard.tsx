@@ -403,7 +403,7 @@ export default function GlobalTreasuryDashboard() {
                         )}
                     </div>
                 </div>
-            ) : (
+            ) : activeTab === 'COMMISSIONS' ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-wrap gap-4">
                         <div className="flex items-center space-x-3">
