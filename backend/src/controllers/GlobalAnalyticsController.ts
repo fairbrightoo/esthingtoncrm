@@ -57,6 +57,7 @@ export const GlobalAnalyticsController = {
             });
 
             payments.forEach(p => {
+                if (!p.sale || !p.sale.lead) return;
                 const cid = p.sale.marketer?.companyId || p.sale.lead.companyId;
                 const bid = p.sale.marketer?.branchId || p.sale.lead.branchId;
                 const leadId = p.sale.lead.id;

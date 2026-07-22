@@ -51,7 +51,7 @@ export const EnterpriseReportController = {
             });
 
             // Flatten data for frontend Excel/CSV export
-            const flattenedData = payments.map(p => ({
+            const flattenedData = payments.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map(p => ({
                 id: p.id,
                 date: p.date,
                 amount: p.amount,
@@ -65,6 +65,7 @@ export const EnterpriseReportController = {
                 plotNumber: p.sale.plot.plotNumber,
                 companyName: p.sale.lead.company?.name || 'N/A',
                 branchName: p.sale.lead.branch?.name || 'N/A',
+                marketerName: p.sale.marketer?.fullName || 'N/A',
             }));
 
             res.json({ success: true, data: flattenedData });

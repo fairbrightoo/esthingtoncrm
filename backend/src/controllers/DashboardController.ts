@@ -199,6 +199,7 @@ export const DashboardController = {
                 });
 
                 breakdownPayments.forEach(p => {
+                    if (!p.sale || !p.sale.plot || !p.sale.plot.estate) return;
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;
                     const isManagingCompany = p.sale.plot.estate.companyId === companyId;
                     
@@ -330,7 +331,7 @@ export const DashboardController = {
                     include: { sale: { include: { lead: true, plot: { include: { estate: true } } } } }
                 });
 
-                recentPayments = myPayments.slice(0, 20).map((p: any) => ({
+                recentPayments = myPayments.slice(0, 20).filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => ({
                     id: p.id,
                     amount: p.amount,
                     date: p.date,
@@ -339,7 +340,7 @@ export const DashboardController = {
                 }));
 
                 const myDueComms = myPayments.filter(p => !p.isCommissionPaid);
-                detailedDueCommissions = myDueComms.map((p: any) => ({
+                detailedDueCommissions = myDueComms.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => ({
                     id: p.id,
                     amount: p.amount,
                     commission: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0),
@@ -350,7 +351,7 @@ export const DashboardController = {
                 }));
 
                 const myPaidComms = myPayments.filter(p => p.isCommissionPaid);
-                detailedPaidCommissions = myPaidComms.map((p: any) => ({
+                detailedPaidCommissions = myPaidComms.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => ({
                     id: p.id,
                     amount: p.amount,
                     commission: ((p.amount * commissionRate) / 100) - (p.virtualLoanAmount || 0),
@@ -370,7 +371,7 @@ export const DashboardController = {
                     include: { sale: { include: { lead: true, marketer: true, plot: { include: { estate: true } } } } }
                 });
                 
-                detailedDueCommissions = accDueCommsMatch.map((p: any) => {
+                detailedDueCommissions = accDueCommsMatch.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => {
                     const commRate = p.sale.marketerCommissionRate || p.sale.marketer?.commissionRate || 5;
                     let tag = "[DIRECT SALE]";
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;
@@ -405,7 +406,7 @@ export const DashboardController = {
                     include: { sale: { include: { lead: true, marketer: true, plot: { include: { estate: true } } } } }
                 });
 
-                detailedPaidCommissions = accPaidCommsMatch.map((p: any) => {
+                detailedPaidCommissions = accPaidCommsMatch.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => {
                     const commRate = p.sale.marketerCommissionRate || p.sale.marketer?.commissionRate || 5;
                     let tag = "[DIRECT SALE]";
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;

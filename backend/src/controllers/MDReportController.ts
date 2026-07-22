@@ -167,6 +167,7 @@ export const MDReportController = {
             let totalCommissionsCleared = 0;
 
             paymentsWithMarketer.forEach(p => {
+                if (!p.sale || !p.sale.marketer) return;
                 // The marketer who owns the sale gets the credit & commission
                 const marketer = p.sale.marketer;
                 const marketerId = marketer?.id || 'unassigned';
