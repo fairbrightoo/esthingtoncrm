@@ -38,6 +38,7 @@ interface Payment {
     recordedByUser: { fullName: string; email: string; role: string };
     notes?: string;
     rejectionReason?: string;
+    isReadOnly?: boolean;
 }
 
 interface PendingData {
@@ -403,6 +404,12 @@ export const ManagingDirectorDashboard = () => {
                                                 <div className="text-center text-gray-500 font-medium text-xs">
                                                     <div className="bg-gray-100 px-3 py-1.5 rounded w-full mb-1">Pending Selling MD</div>
                                                     <div className="bg-gray-100 px-3 py-1.5 rounded w-full">Approval</div>
+                                                </div>
+                                            ) : p.isReadOnly ? (
+                                                <div className="text-center text-gray-500 font-medium text-xs">
+                                                    <div className="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-2 rounded w-full flex items-center justify-center">
+                                                        <AlertCircle size={14} className="mr-1" /> Pending GMD
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <>

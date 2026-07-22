@@ -356,9 +356,9 @@ export const SaleController = {
                 isUserHeadOffice = branch?.isHeadOffice || false;
             }
 
+            let isHeadOfficeMDReadOnly = false;
             if (user?.role === 'MANAGING_DIRECTOR' && isUserHeadOffice && !hoDelegatesPayments) {
-                // If MD of Head Office and GMD hasn't delegated payments, they see nothing
-                return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+                isHeadOfficeMDReadOnly = true;
             }
 
             // Respect Cross-Company & Branch boundaries
@@ -460,23 +460,28 @@ export const SaleController = {
                     const isSelling = isCompanyLevel ? isSellingBranch : isSellingBranch;
                     const isManaging = isCompanyLevel ? isManagingBranch : isManagingBranch;
                     
+                    const formattedPayment = {
+                        ...payment,
+                        isReadOnly: isHeadOfficeMDReadOnly
+                    };
+
                     // Direct Sale: We sold it AND we manage it
                     if (isSelling && isManaging) {
-                        directSales.push(payment);
+                        directSales.push(formattedPayment);
                     }
                     // Outbound Cross-Sale: We sold it, but someone else manages it
                     else if (isSelling && !isManaging) {
-                        outboundCrossSales.push(payment);
+                        outboundCrossSales.push(formattedPayment);
                     }
 
                     // Inbound Cross-Sale: Someone else sold it, but we manage it
                     if (!isSelling && isManaging) {
-                        inboundCrossSales.push(payment);
+                        inboundCrossSales.push(formattedPayment);
                     }
 
                     // Bank Confirmation: We hold the cash
                     if (isReceivingBank && !isSelling) {
-                        bankConfirmations.push(payment);
+                        bankConfirmations.push(formattedPayment);
                     }
                 });
             }
