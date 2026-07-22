@@ -77,6 +77,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [viewState, setViewState] = useState<'LIST' | 'NEW_SALE' | 'NEW_PAYMENT'>('LIST');
     const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
     const [documentToPrint, setDocumentToPrint] = useState<{sale: any, type: 'OFFER'|'PROVISIONAL_ALLOCATION'|'FINAL_ALLOCATION'} | null>(null);
+    const [receiptModal, setReceiptModal] = useState<{isOpen: boolean, url: string | null, isPdf: boolean}>({
+        isOpen: false, url: null, isPdf: false
+    });
 
     // Plot Exchange Component State
     const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
@@ -859,6 +862,39 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                     </div>
                                                     <div className="flex flex-col items-end">
                                                         <span className="text-gray-400">{new Date(p.date).toLocaleDateString()}</span>
+                                                        {p.proofOfPaymentUrl && (() => {
+                                                            let url = p.proofOfPaymentUrl;
+                                                            try {
+                                                                const parsed = JSON.parse(p.proofOfPaymentUrl);
+                                                                if (Array.isArray(parsed) && parsed.length > 0) url = parsed[0];
+                                                            } catch(e) {}
+                                                            let fullUrl = url;
+                                                            if (!url.startsWith('http')) {
+                                                                const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                                                                fullUrl = `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+                                                            }
+                                                            const isPdf = url.toLowerCase().endsWith('.pdf');
+                                                            
+                                                            return isPdf ? (
+                                                                <button
+                                                                    onClick={() => setReceiptModal({ isOpen: true, url: fullUrl, isPdf: true })}
+                                                                    className="text-[10px] text-gray-500 hover:text-indigo-600 mt-1 flex items-center transition"
+                                                                >
+                                                                    <FileText size={10} className="mr-1" />
+                                                                    View PDF
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => setReceiptModal({ isOpen: true, url: fullUrl, isPdf: false })}
+                                                                    className="text-[10px] text-gray-500 hover:text-indigo-600 mt-1 flex items-center transition relative group w-6 h-6 rounded overflow-hidden ml-auto border border-gray-200"
+                                                                >
+                                                                    <img src={fullUrl} className="w-full h-full object-cover group-hover:scale-110 transition" alt="Receipt" />
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })()}
                                                         {p.status === 'APPROVED' && (
                                                             <button
                                                                 onClick={() => triggerPrint({ ...p, sale })}
@@ -1001,6 +1037,29 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 </div>
             )}
 
+            {/* Receipt Modal */}
+            {receiptModal.isOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 className="font-bold text-slate-800 flex items-center">
+                                <FileText size={18} className="mr-2 text-indigo-500" /> 
+                                Payment Receipt
+                            </h3>
+                            <button onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })} className="text-slate-400 hover:text-rose-500 transition">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-100/50">
+                            {receiptModal.isPdf ? (
+                                <iframe src={receiptModal.url || ''} className="w-full h-[70vh] rounded-xl border border-slate-200 bg-white" title="PDF Receipt" />
+                            ) : (
+                                <img src={receiptModal.url || ''} alt="Full Receipt" className="max-w-full rounded-xl shadow-sm border border-slate-200" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };

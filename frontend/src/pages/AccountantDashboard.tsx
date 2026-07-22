@@ -58,6 +58,9 @@ export const AccountantDashboard = () => {
     const [payPage, setPayPage] = useState(1);
     const [payRows, setPayRows] = useState(10);
     const [commPage, setCommPage] = useState(1);
+    const [receiptModal, setReceiptModal] = useState<{isOpen: boolean, url: string | null, isPdf: boolean}>({
+        isOpen: false, url: null, isPdf: false
+    });
     const [commRows, setCommRows] = useState(10);
     const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, type: 'fund'|'commission', id: string, title: string, message: string, commissionType?: 'DIRECT' | 'REFERRAL'}>({isOpen: false, type: 'fund', id: '', title: '', message: ''});
     
@@ -507,32 +510,35 @@ export const AccountantDashboard = () => {
 
                                                                                 return proofs.map((url, idx) => {
                                                                                     const isImage = url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/);
-                                                                                    const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${url}`;
+                                                                                    let fullUrl = url;
+                                                                                    if (!url.startsWith('http')) {
+                                                                                        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                                                                                        fullUrl = `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+                                                                                    }
                                                                                     return isImage ? (
-                                                                                        <a 
+                                                                                        <button 
                                                                                             key={idx}
-                                                                                            href={fullUrl}
-                                                                                            target="_blank"
-                                                                                            rel="noopener noreferrer"
-                                                                                            className="relative group overflow-hidden rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0 inline-block"
+                                                                                            onClick={() => setReceiptModal({ isOpen: true, url: fullUrl, isPdf: false })}
+                                                                                            className="relative group overflow-hidden rounded-lg border border-gray-200 focus:outline-none flex-shrink-0"
                                                                                         >
                                                                                             <img 
                                                                                                 src={fullUrl} 
                                                                                                 alt="Receipt Thumbnail" 
-                                                                                                className="w-16 h-16 object-cover transition-transform duration-300 group-hover:scale-110"
+                                                                                                className="w-16 h-16 object-cover group-hover:scale-110 transition duration-300"
                                                                                             />
-                                                                                        </a>
+                                                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                                                                <Eye size={20} className="text-white opacity-0 group-hover:opacity-100" />
+                                                                                            </div>
+                                                                                        </button>
                                                                                     ) : (
-                                                                                        <a
+                                                                                        <button 
                                                                                             key={idx}
-                                                                                            href={fullUrl}
-                                                                                            target="_blank"
-                                                                                            rel="noopener noreferrer"
+                                                                                            onClick={() => setReceiptModal({ isOpen: true, url: fullUrl, isPdf: true })} 
                                                                                             className="flex flex-col items-center justify-center w-16 h-16 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group flex-shrink-0"
                                                                                         >
                                                                                             <FileText size={24} className="text-gray-400 group-hover:text-blue-500 transition-colors mb-1" />
                                                                                             <span className="text-[10px] font-medium text-gray-500 uppercase">Document</span>
-                                                                                        </a>
+                                                                                        </button>
                                                                                     );
                                                                                 });
                                                                             })()}
@@ -875,6 +881,32 @@ export const AccountantDashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* Receipt Modal */}
+            {receiptModal.isOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 className="font-bold text-slate-800 flex items-center">
+                                <FileText size={18} className="mr-2 text-indigo-500" /> 
+                                Payment Receipt
+                            </h3>
+                            <button onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })} className="text-slate-400 hover:text-rose-500 transition">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-100/50">
+                            {receiptModal.isPdf ? (
+                                <iframe src={receiptModal.url || ''} className="w-full h-[70vh] rounded-xl border border-slate-200 bg-white" title="PDF Receipt" />
+                            ) : (
+                                <img src={receiptModal.url || ''} alt="Full Receipt" className="max-w-full rounded-xl shadow-sm border border-slate-200" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
+export default AccountantDashboard;
