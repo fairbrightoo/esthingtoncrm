@@ -6,5 +6,5 @@ const {join} = require('path');
 module.exports = {
   // Changes the cache location for Puppeteer to the project directory
   // This is required for Render deployments to ensure the browser binary is not lost
-  cacheDirectory: join(__dirname, '.cache', 'puppeteer'),
+  cacheDirectory: join(__dirname, 'puppeteer-cache'),
 };
