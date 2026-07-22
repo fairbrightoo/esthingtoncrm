@@ -11,9 +11,9 @@ export class GlobalTreasuryController {
         try {
             const { companyId, branchId } = req.query;
 
-            const baseFilter: any = {};
-            if (companyId) baseFilter.companyId = companyId;
-            if (branchId) baseFilter.branchId = branchId;
+            const paymentEstateFilter: any = {};
+            if (companyId) paymentEstateFilter.companyId = companyId;
+            if (branchId) paymentEstateFilter.managingBranchId = branchId;
 
             // Fetch Pending Customer Payments
             const payments = await prisma.payment.findMany({
@@ -22,7 +22,7 @@ export class GlobalTreasuryController {
                     sale: {
                         plot: {
                             estate: {
-                                ...baseFilter
+                                ...paymentEstateFilter
                             }
                         }
                     }
@@ -31,7 +31,7 @@ export class GlobalTreasuryController {
                     sale: {
                         include: {
                             plot: {
-                                include: { estate: true }
+                                include: { estate: { include: { company: true, branch: true } } }
                             },
                             lead: true,
                             marketer: true
@@ -43,7 +43,10 @@ export class GlobalTreasuryController {
             });
 
             // Fetch Pending Requisitions
-            const requisitionsFilter = { ...baseFilter };
+            const requisitionsFilter: any = {};
+            if (companyId) requisitionsFilter.companyId = companyId;
+            if (branchId) requisitionsFilter.branchId = branchId;
+
             const requisitions = await prisma.requisition.findMany({
                 where: {
                     status: 'PENDING_MD_APPROVAL',
@@ -122,7 +125,7 @@ export class GlobalTreasuryController {
 
             const estateFilter: any = {};
             if (companyId) estateFilter.companyId = companyId;
-            if (branchId) estateFilter.branchId = branchId;
+            if (branchId) estateFilter.managingBranchId = branchId;
 
             const dateFilter: any = {};
             if (startDate) dateFilter.gte = new Date(startDate as string);
