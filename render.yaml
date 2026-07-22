@@ -27,7 +27,7 @@ services:
         sync: false
 
   - type: web
-    name: esthington-os-backend-main
+    name: esthington-os-prod-backend
     branch: main
     env: node
     buildCommand: cd backend && npm install --include=dev && npx puppeteer browsers install chrome && npx prisma generate && npx prisma db push && npm run build
@@ -44,7 +44,7 @@ services:
 
   - type: web
     env: static
-    name: esthington-os-frontend-main
+    name: esthington-os-frontend-prod
     branch: main
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
