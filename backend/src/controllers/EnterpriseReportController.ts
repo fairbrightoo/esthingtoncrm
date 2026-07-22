@@ -44,6 +44,9 @@ export const EnterpriseReportController = {
                                     company: true,
                                     branch: true
                                 }
+                            },
+                            marketer: {
+                                select: { fullName: true }
                             }
                         }
                     }
