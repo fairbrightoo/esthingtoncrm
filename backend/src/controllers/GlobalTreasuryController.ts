@@ -68,6 +68,71 @@ export class GlobalTreasuryController {
         }
     }
 
+    // 1b. Get Approval History
+    static async getApprovalHistory(req: Request, res: Response) {
+        try {
+            const { companyId, branchId } = req.query;
+            const user = (req as any).user;
+
+            const paymentEstateFilter: any = {};
+            if (companyId) paymentEstateFilter.companyId = companyId;
+            if (branchId) paymentEstateFilter.managingBranchId = branchId;
+
+            // Fetch History of Customer Payments
+            const payments = await prisma.payment.findMany({
+                where: {
+                    status: 'APPROVED',
+                    approvedByUserId: user.id, // Only fetch those approved by this user
+                    sale: {
+                        plot: {
+                            estate: {
+                                ...paymentEstateFilter
+                            }
+                        }
+                    }
+                },
+                include: {
+                    sale: {
+                        include: {
+                            plot: {
+                                include: { estate: { include: { company: true, branch: true } } }
+                            },
+                            lead: true,
+                            marketer: true
+                        }
+                    },
+                    recordedByUser: true
+                },
+                orderBy: { date: 'desc' }
+            });
+
+            const requisitionsFilter: any = {};
+            if (companyId) requisitionsFilter.companyId = companyId;
+            if (branchId) requisitionsFilter.branchId = branchId;
+
+            // Fetch History of Requisitions
+            const requisitions = await prisma.requisition.findMany({
+                where: {
+                    status: { in: ['APPROVED_BY_MD', 'DISBURSED'] },
+                    approvedByUserId: user.id,
+                    ...requisitionsFilter
+                },
+                include: {
+                    requestedByUser: true,
+                    company: true,
+                    branch: true,
+                    items: true
+                },
+                orderBy: { requestDate: 'desc' }
+            });
+
+            res.json({ payments, requisitions });
+        } catch (error) {
+            console.error("GlobalTreasury getApprovalHistory Error:", error);
+            res.status(500).json({ error: "Failed to fetch approval history" });
+        }
+    }
+
     // 2. Approve Customer Payment (Override)
     static async approvePaymentOverride(req: Request, res: Response) {
         try {

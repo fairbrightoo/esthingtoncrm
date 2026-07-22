@@ -10,6 +10,7 @@ router.use(requireRole(['SUPER_ADMIN', 'GLOBAL_CHAIRMAN']));
 
 // Get combined pending approvals (Payments and Requisitions)
 router.get('/pending-approvals', GlobalTreasuryController.getPendingApprovals);
+router.get('/approval-history', GlobalTreasuryController.getApprovalHistory);
 
 // Overrides
 router.post('/payments/:paymentId/approve', GlobalTreasuryController.approvePaymentOverride);

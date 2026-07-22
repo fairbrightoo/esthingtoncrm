@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
     Building2, CheckCircle2, Search, Filter,
-    Download, Clock, CheckSquare, XSquare, Briefcase, Landmark, AlertCircle
+    Download, Clock, CheckSquare, XSquare, Briefcase, Landmark, AlertCircle, Paperclip
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -14,7 +14,7 @@ export default function GlobalTreasuryDashboard() {
     const { token, user } = useAuth();
     const { addToast } = useToast();
 
-    const [activeTab, setActiveTab] = useState<'APPROVALS' | 'COMMISSIONS'>('APPROVALS');
+    const [activeTab, setActiveTab] = useState<'APPROVALS' | 'COMMISSIONS' | 'HISTORY'>('APPROVALS');
     const [companies, setCompanies] = useState<any[]>([]);
     const [branches, setBranches] = useState<any[]>([]);
     
@@ -24,7 +24,8 @@ export default function GlobalTreasuryDashboard() {
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
     // Data
-    const [approvals, setApprovals] = useState({ payments: [], requisitions: [] });
+    const [approvals, setApprovals] = useState<{ payments: any[], requisitions: any[] }>({ payments: [], requisitions: [] });
+    const [history, setHistory] = useState<{ payments: any[], requisitions: any[] }>({ payments: [], requisitions: [] });
     const [commissions, setCommissions] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -56,7 +57,8 @@ export default function GlobalTreasuryDashboard() {
     useEffect(() => {
         if (token) {
             if (activeTab === 'APPROVALS') fetchApprovals();
-            else fetchCommissions();
+            else if (activeTab === 'COMMISSIONS') fetchCommissions();
+            else if (activeTab === 'HISTORY') fetchHistory();
         }
     }, [token, activeTab, selectedCompanyId, selectedBranchId, dateRange]);
 
@@ -84,6 +86,24 @@ export default function GlobalTreasuryDashboard() {
             setApprovals(res.data);
         } catch (error) {
             addToast("Failed to fetch pending approvals", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchHistory = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (selectedCompanyId) params.append('companyId', selectedCompanyId);
+            if (selectedBranchId) params.append('branchId', selectedBranchId);
+
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/global-treasury/approval-history?${params.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setHistory(res.data);
+        } catch (error) {
+            addToast("Failed to fetch approval history", "error");
         } finally {
             setLoading(false);
         }
@@ -278,19 +298,27 @@ export default function GlobalTreasuryDashboard() {
             <div className="flex space-x-2 mb-6 bg-slate-100 p-1.5 rounded-xl w-fit">
                 <button
                     onClick={() => setActiveTab('APPROVALS')}
-                    className={`px-5 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
                         activeTab === 'APPROVALS' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                     }`}
                 >
                     Pending Approvals
                 </button>
-                <button
+                <button 
                     onClick={() => setActiveTab('COMMISSIONS')}
-                    className={`px-5 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
                         activeTab === 'COMMISSIONS' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                     }`}
                 >
                     Commission Payouts
+                </button>
+                <button 
+                    onClick={() => setActiveTab('HISTORY')}
+                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
+                        activeTab === 'HISTORY' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                >
+                    Approval History
                 </button>
             </div>
 
@@ -311,7 +339,7 @@ export default function GlobalTreasuryDashboard() {
                                             <div>
                                                 <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md uppercase tracking-wider">{p.sale?.plot?.estate?.company?.name || 'HQ'}{p.sale?.plot?.estate?.branch ? ` - ${p.sale.plot.estate.branch.name}` : ''}</span>
                                                 <h3 className="font-bold text-lg text-slate-800 mt-2">₦{p.amount.toLocaleString()}</h3>
-                                                <p className="text-sm text-slate-500">Recorded by: {p.recordedByUser?.name}</p>
+                                                <p className="text-sm text-slate-500">Recorded by: {p.recordedByUser?.fullName}</p>
                                             </div>
                                             <span className="flex items-center text-xs font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full"><Clock size={12} className="mr-1"/> PENDING</span>
                                         </div>
@@ -319,6 +347,12 @@ export default function GlobalTreasuryDashboard() {
                                             <p><span className="font-medium text-slate-800">Client:</span> {p.sale?.lead?.name}</p>
                                             <p><span className="font-medium text-slate-800">Plot:</span> {p.sale?.plotNumber || p.sale?.plot?.plotNumber}</p>
                                             <p><span className="font-medium text-slate-800">Method:</span> {p.method} | <span className="font-medium text-slate-800">Ref:</span> {p.reference || 'N/A'}</p>
+                                            <p><span className="font-medium text-slate-800">Bank Paid To:</span> {p.accountPaidTo || 'N/A'}</p>
+                                            {p.proofOfPaymentUrl && (
+                                                <a href={p.proofOfPaymentUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline text-xs inline-flex items-center mt-2">
+                                                    <Paperclip size={12} className="mr-1" /> View Receipt
+                                                </a>
+                                            )}
                                         </div>
                                         <button 
                                             onClick={() => setOverrideModal({ isOpen: true, type: 'PAYMENT', data: p, isLoading: false })}
@@ -443,6 +477,75 @@ export default function GlobalTreasuryDashboard() {
                                 })}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-8">
+                    {/* Customer Payments History Grid */}
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center"><Briefcase className="mr-2 text-emerald-500" size={24}/> Approved Customer Payments</h2>
+                        {history.payments.length === 0 ? (
+                            <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm text-slate-500">No payment history found.</div>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {history.payments.map((p: any) => (
+                                    <div key={p.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm transition">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md uppercase tracking-wider">{p.sale?.plot?.estate?.company?.name || 'HQ'}{p.sale?.plot?.estate?.branch ? ` - ${p.sale.plot.estate.branch.name}` : ''}</span>
+                                                <h3 className="font-bold text-lg text-slate-800 mt-2">₦{p.amount.toLocaleString()}</h3>
+                                                <p className="text-sm text-slate-500">Recorded by: {p.recordedByUser?.fullName}</p>
+                                            </div>
+                                            <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} className="mr-1"/> APPROVED</span>
+                                        </div>
+                                        <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
+                                            <p><span className="font-medium text-slate-800">Client:</span> {p.sale?.lead?.name}</p>
+                                            <p><span className="font-medium text-slate-800">Plot:</span> {p.sale?.plotNumber || p.sale?.plot?.plotNumber}</p>
+                                            <p><span className="font-medium text-slate-800">Method:</span> {p.method} | <span className="font-medium text-slate-800">Ref:</span> {p.reference || 'N/A'}</p>
+                                            <p><span className="font-medium text-slate-800">Bank Paid To:</span> {p.accountPaidTo || 'N/A'}</p>
+                                            {p.proofOfPaymentUrl && (
+                                                <a href={p.proofOfPaymentUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline text-xs inline-flex items-center mt-2">
+                                                    <Paperclip size={12} className="mr-1" /> View Receipt
+                                                </a>
+                                            )}
+                                            <p className="mt-2 text-xs text-slate-400">Approved on {new Date(p.date).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Expense Requisitions History Grid */}
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center"><Landmark className="mr-2 text-emerald-500" size={24}/> Approved Expense Requisitions</h2>
+                        {history.requisitions.length === 0 ? (
+                            <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm text-slate-500">No requisition history found.</div>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {history.requisitions.map((req: any) => {
+                                    const totalAmount = req.items?.reduce((sum: number, item: any) => sum + item.totalPrice, 0) || 0;
+                                    return (
+                                        <div key={req.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm transition">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md uppercase tracking-wider">{req.company?.name || 'HQ'}{req.branch ? ` - ${req.branch.name}` : ''}</span>
+                                                    <h3 className="font-bold text-lg text-slate-800 mt-2">{req.title}</h3>
+                                                    <p className="text-sm text-slate-500">Total: ₦{totalAmount.toLocaleString()}</p>
+                                                </div>
+                                                <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} className="mr-1"/> APPROVED</span>
+                                            </div>
+                                            <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
+                                                <p><span className="font-medium text-slate-800">Category:</span> {req.category}</p>
+                                                <p><span className="font-medium text-slate-800">Requested By:</span> {req.requestedByUser?.name}</p>
+                                                <p className="mt-1 line-clamp-2"><span className="font-medium text-slate-800">Desc:</span> {req.description}</p>
+                                                <p className="mt-2 text-xs text-slate-400">Requested on {new Date(req.requestDate).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
