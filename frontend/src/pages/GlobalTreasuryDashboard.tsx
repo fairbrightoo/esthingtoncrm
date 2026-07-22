@@ -637,6 +637,7 @@ export default function GlobalTreasuryDashboard() {
                                 <button onClick={handleApproveOverride} disabled={overrideModal.isLoading} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl hover:bg-amber-700 font-medium shadow-md shadow-amber-200 transition disabled:opacity-50 flex items-center">
                                     {overrideModal.isLoading ? 'Processing...' : 'Confirm Override'}
                                 </button>
+                            </div>
                         </div>
                     </div>
                 </div>
