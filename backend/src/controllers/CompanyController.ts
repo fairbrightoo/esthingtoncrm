@@ -52,6 +52,26 @@ export const CompanyController = {
     },
 
     /**
+     * Get all companies with their branches (for admin dashboards)
+     */
+    async getCompaniesWithBranches(req: Request, res: Response) {
+        try {
+            const companies = await prisma.company.findMany({
+                where: {
+                    name: { not: 'Esthington Group HQ' }
+                },
+                include: {
+                    branches: true
+                }
+            });
+            res.json(companies);
+        } catch (error) {
+            console.error("Fetch Companies With Branches Error", error);
+            res.status(500).json({ error: 'Failed to fetch companies with branches' });
+        }
+    },
+
+    /**
      * Get WhatsApp Templates from Meta (Protected)
      */
     async getWhatsAppTemplates(req: Request, res: Response) {

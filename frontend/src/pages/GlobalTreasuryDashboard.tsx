@@ -345,7 +345,7 @@ export default function GlobalTreasuryDashboard() {
                                         <div key={req.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition">
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
-                                                    <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md uppercase tracking-wider">{req.company?.name || 'HQ'}</span>
+                                                    <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md uppercase tracking-wider">{req.company?.name || 'HQ'}{req.branch ? ` - ${req.branch.name}` : ''}</span>
                                                     <h3 className="font-bold text-lg text-slate-800 mt-2">{req.title}</h3>
                                                     <p className="text-sm text-slate-500">Total: ₦{totalAmount.toLocaleString()}</p>
                                                 </div>

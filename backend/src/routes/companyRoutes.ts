@@ -9,6 +9,7 @@ import { TaskController } from '../controllers/TaskController.js';
 const router = express.Router();
 
 router.get('/', CompanyController.getAllCompanies);
+router.get('/with-branches', CompanyController.getCompaniesWithBranches);
 router.get('/:companyId/branches', CompanyController.getBranchesByCompany);
 router.get('/:id/whatsapp-templates', CompanyController.getWhatsAppTemplates);
 router.get('/:companyId/branches/:branchId/users', CompanyController.getBranchUsers);
