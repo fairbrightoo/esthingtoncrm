@@ -359,14 +359,19 @@ export const GlobalUserManagement = () => {
                                             className="w-full rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 font-bold text-sm bg-blue-50 text-blue-800"
                                         >
                                             <option value="SUPER_ADMIN">SUPER ADMIN</option>
+                                            <option value="GLOBAL_CHAIRMAN">GLOBAL CHAIRMAN</option>
+                                            <option value="GROUP_MANAGING_DIRECTOR">GROUP MANAGING DIRECTOR</option>
                                             <option value="GENERAL_MANAGER">GENERAL MANAGER</option>
                                             <option value="MANAGING_DIRECTOR">MANAGING DIRECTOR</option>
                                             <option value="BRANCH_ADMIN">BRANCH ADMIN</option>
+                                            <option value="BRANCH_HR">BRANCH HR</option>
+                                            <option value="HEAD_BDD">HEAD OF BDD</option>
+                                            <option value="BDM">BUSINESS DEVELOPMENT MGR</option>
+                                            <option value="TEAM_LEAD">TEAM LEAD</option>
                                             <option value="MARKETER">MARKETER</option>
                                             <option value="SITE_EXPERT">SITE EXPERT</option>
                                             <option value="ICT_ORACLE">ICT ORACLE</option>
                                             <option value="CUSTOMER_CARE">CUSTOMER CARE</option>
-                                            <option value="HR">HR REPRESENTATIVE</option>
                                             <option value="ACCOUNTANT">ACCOUNTANT</option>
                                         </select>
                                     </div>
