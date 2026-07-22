@@ -120,7 +120,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     useEffect(() => {
         if (viewState === 'LIST') fetchSales();
-        if (viewState === 'NEW_SALE' && plots.length === 0) {
+        if (viewState === 'NEW_SALE') {
             fetchPlots();
             if (user?.role !== 'MARKETER') {
                 fetchBranchUsers();
