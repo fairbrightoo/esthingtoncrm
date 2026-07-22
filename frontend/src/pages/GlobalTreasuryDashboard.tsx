@@ -344,7 +344,7 @@ export default function GlobalTreasuryDashboard() {
                                             <span className="flex items-center text-xs font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full"><Clock size={12} className="mr-1"/> PENDING</span>
                                         </div>
                                         <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl mb-4">
-                                            <p><span className="font-medium text-slate-800">Client:</span> {p.sale?.lead?.name}</p>
+                                            <p><span className="font-medium text-slate-800">Client:</span> {p.sale?.lead?.fullName}</p>
                                             <p><span className="font-medium text-slate-800">Plot:</span> {p.sale?.plotNumber || p.sale?.plot?.plotNumber}</p>
                                             <p><span className="font-medium text-slate-800">Method:</span> {p.method} | <span className="font-medium text-slate-800">Ref:</span> {p.reference || 'N/A'}</p>
                                             <p><span className="font-medium text-slate-800">Bank Paid To:</span> {p.accountPaidTo || 'N/A'}</p>
@@ -499,7 +499,7 @@ export default function GlobalTreasuryDashboard() {
                                             <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} className="mr-1"/> APPROVED</span>
                                         </div>
                                         <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
-                                            <p><span className="font-medium text-slate-800">Client:</span> {p.sale?.lead?.name}</p>
+                                            <p><span className="font-medium text-slate-800">Client:</span> {p.sale?.lead?.fullName}</p>
                                             <p><span className="font-medium text-slate-800">Plot:</span> {p.sale?.plotNumber || p.sale?.plot?.plotNumber}</p>
                                             <p><span className="font-medium text-slate-800">Method:</span> {p.method} | <span className="font-medium text-slate-800">Ref:</span> {p.reference || 'N/A'}</p>
                                             <p><span className="font-medium text-slate-800">Bank Paid To:</span> {p.accountPaidTo || 'N/A'}</p>
@@ -565,7 +565,7 @@ export default function GlobalTreasuryDashboard() {
                             <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-700">
                                 {overrideModal.type === 'PAYMENT' ? (
                                     <>
-                                        <p><span className="font-bold">Client:</span> {overrideModal.data?.sale?.lead?.name}</p>
+                                        <p><span className="font-bold">Client:</span> {overrideModal.data?.sale?.lead?.fullName}</p>
                                         <p><span className="font-bold">Amount:</span> ₦{overrideModal.data?.amount?.toLocaleString()}</p>
                                     </>
                                 ) : (
