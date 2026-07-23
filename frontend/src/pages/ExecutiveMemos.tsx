@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Send, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Send, FileText, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 
 export const ExecutiveMemos = () => {
     const { token, user } = useAuth();
@@ -20,6 +20,7 @@ export const ExecutiveMemos = () => {
     const [processing, setProcessing] = useState(false);
     
     const [roleFilter, setRoleFilter] = useState('ALL');
+    const [searchQuery, setSearchQuery] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     
     const isGmd = user?.role === 'GROUP_MANAGING_DIRECTOR';
@@ -86,7 +87,11 @@ export const ExecutiveMemos = () => {
     const displayMemos = activeTab === 'INBOX' ? inboxMemos : sentMemos;
 
     const availableRoles = ['ALL', ...Array.from(new Set(contacts.map(c => c.role)))];
-    const filteredContacts = roleFilter === 'ALL' ? contacts : contacts.filter(c => c.role === roleFilter);
+    const filteredContacts = contacts.filter(c => {
+        const matchesRole = roleFilter === 'ALL' || c.role === roleFilter;
+        const matchesSearch = c.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesRole && matchesSearch;
+    });
 
     if (loading) return <div className="p-10 flex justify-center"><div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full" /></div>;
 
@@ -165,9 +170,24 @@ export const ExecutiveMemos = () => {
                                                 </button>
                                             ))}
                                         </div>
+
+                                        {/* Search Input */}
+                                        <div className="p-2 border-b bg-white">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search recipient name..."
+                                                    className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
                                         
                                         {/* Select All Actions */}
-                                        <div className="p-2 border-b flex justify-between bg-white items-center">
+                                        <div className="p-2 border-b flex justify-between bg-gray-50/50 items-center">
                                             <button 
                                                 type="button"
                                                 className="text-xs text-blue-600 font-medium hover:underline px-2 py-1"
