@@ -21,6 +21,7 @@ export const ExecutiveMemos = () => {
     
     const [roleFilter, setRoleFilter] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
+    const [branchFilter, setBranchFilter] = useState('ALL_BRANCHES');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     
     const isGmd = user?.role === 'GROUP_MANAGING_DIRECTOR';
@@ -87,10 +88,13 @@ export const ExecutiveMemos = () => {
     const displayMemos = activeTab === 'INBOX' ? inboxMemos : sentMemos;
 
     const availableRoles = ['ALL', ...Array.from(new Set(contacts.map(c => c.role)))];
+    const availableBranches = ['ALL_BRANCHES', ...Array.from(new Set(contacts.map(c => c.branch?.name).filter(Boolean)))];
+    
     const filteredContacts = contacts.filter(c => {
         const matchesRole = roleFilter === 'ALL' || c.role === roleFilter;
         const matchesSearch = c.fullName.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesRole && matchesSearch;
+        const matchesBranch = branchFilter === 'ALL_BRANCHES' || c.branch?.name === branchFilter || !c.branch; // Include global staff if any
+        return matchesRole && matchesSearch && matchesBranch;
     });
 
     if (loading) return <div className="p-10 flex justify-center"><div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full" /></div>;
@@ -157,8 +161,26 @@ export const ExecutiveMemos = () => {
                                 {/* Dropdown Content */}
                                 {dropdownOpen && (
                                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ maxHeight: '350px' }}>
+                                        {/* GMD Branch Filter */}
+                                        {isGmd && availableBranches.length > 1 && (
+                                            <div className="px-4 py-2 bg-indigo-50/50 border-b flex items-center justify-between rounded-t-xl">
+                                                <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider">Branch Filter</span>
+                                                <select 
+                                                    className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-1 pl-3 pr-8 bg-white text-gray-700 font-medium outline-none"
+                                                    value={branchFilter}
+                                                    onChange={(e) => setBranchFilter(e.target.value)}
+                                                >
+                                                    {availableBranches.map(branch => (
+                                                        <option key={branch} value={branch}>
+                                                            {branch === 'ALL_BRANCHES' ? 'All Branches' : branch}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
                                         {/* Filter Header */}
-                                        <div className="px-4 py-3 bg-gray-50/80 border-b flex items-center gap-2 overflow-x-auto rounded-t-xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                        <div className={`px-4 py-3 bg-gray-50/80 border-b flex items-center gap-2 overflow-x-auto ${!(isGmd && availableBranches.length > 1) ? 'rounded-t-xl' : ''}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                             {availableRoles.map(role => (
                                                 <button 
                                                     key={role} 
