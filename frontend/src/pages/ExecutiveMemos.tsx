@@ -23,6 +23,7 @@ export const ExecutiveMemos = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     
     const isGmd = user?.role === 'GROUP_MANAGING_DIRECTOR';
+    const isExec = ['GROUP_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user?.role || '');
 
     useEffect(() => {
         fetchData();
@@ -263,7 +264,7 @@ export const ExecutiveMemos = () => {
                             {confirmAction.status === 'APPROVED' ? <CheckCircle size={24} /> : <XCircle size={24} />}
                         </div>
                         <h2 className="text-xl font-bold text-gray-800 mb-2">Confirm Action</h2>
-                        <p className="text-gray-500 mb-6">Are you sure you want to mark this memo as <strong>{confirmAction.status}</strong>? This action cannot be undone.</p>
+                        <p className="text-gray-500 mb-6">Are you sure you want to {confirmAction.status === 'APPROVED' && !isExec ? 'acknowledge' : `mark this memo as ${confirmAction.status}`}? This action cannot be undone.</p>
                         <div className="flex justify-center space-x-3">
                             <button 
                                 onClick={() => setConfirmAction({ isOpen: false, memoId: '', status: null })}
@@ -275,7 +276,7 @@ export const ExecutiveMemos = () => {
                                 onClick={handleRespond}
                                 className={`px-5 py-2 text-white rounded-lg font-medium shadow-sm ${confirmAction.status === 'APPROVED' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
                             >
-                                Yes, {confirmAction.status === 'APPROVED' ? 'Approve' : 'Decline'}
+                                {confirmAction.status === 'APPROVED' ? (isExec ? 'Yes, Approve' : 'Yes, Acknowledge') : 'Yes, Decline'}
                             </button>
                         </div>
                     </div>
@@ -336,17 +337,19 @@ export const ExecutiveMemos = () => {
 
                                 {activeTab === 'INBOX' && memo.status === 'PENDING' && (
                                     <div className="flex justify-end space-x-3 mt-4 pt-4 border-t border-gray-100">
-                                        <button 
-                                            onClick={() => setConfirmAction({ isOpen: true, memoId: memo.id, status: 'DECLINED' })}
-                                            className="px-4 py-2 border border-red-200 text-red-600 rounded flex items-center hover:bg-red-50 font-medium text-sm transition"
-                                        >
-                                            <XCircle size={16} className="mr-1" /> Decline
-                                        </button>
+                                        {isExec && (
+                                            <button 
+                                                onClick={() => setConfirmAction({ isOpen: true, memoId: memo.id, status: 'DECLINED' })}
+                                                className="px-4 py-2 border border-red-200 text-red-600 rounded flex items-center hover:bg-red-50 font-medium text-sm transition"
+                                            >
+                                                <XCircle size={16} className="mr-1" /> Decline
+                                            </button>
+                                        )}
                                         <button 
                                             onClick={() => setConfirmAction({ isOpen: true, memoId: memo.id, status: 'APPROVED' })}
                                             className="px-4 py-2 bg-green-600 text-white rounded flex items-center hover:bg-green-700 font-medium text-sm transition shadow-sm"
                                         >
-                                            <CheckCircle size={16} className="mr-1" /> Approve
+                                            <CheckCircle size={16} className="mr-1" /> {isExec ? 'Approve' : 'Acknowledge'}
                                         </button>
                                     </div>
                                 )}

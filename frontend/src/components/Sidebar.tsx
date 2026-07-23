@@ -116,6 +116,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -137,6 +138,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions" />
                         <NavItem to={`${basePath}/announcements`} icon={<Megaphone size={20} />} label="Announcements" />
                         <NavItem to={`${basePath}/events`} icon={<Calendar size={20} />} label="Events & Calendar" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                     </>
                 )}
@@ -156,6 +158,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/tickets`} icon={<MessageCircle size={20} />} label="Helpdesk Tickets" />
                         <NavItem to={`${basePath}/communications`} icon={<MessageCircle size={20} />} label="Communication Logs" />
                         
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -168,6 +171,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -181,6 +185,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -193,6 +198,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -205,6 +211,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -238,6 +245,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -250,6 +258,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -261,6 +270,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/inspection-tracking`} icon={<CheckCircle size={20} />} label="Inspection Hub" />
                         <NavItem to={`${basePath}/announcements`} icon={<Megaphone size={20} />} label="Announcements" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>
@@ -274,6 +284,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/production-scripts`} icon={<FileText size={20} />} label="Production Scripts" />
                         <NavItem to={`${basePath}/social-analytics`} icon={<LayoutDashboard size={20} />} label="Social Analytics" />
                         <NavItem to={`${basePath}/training-hub`} icon={<BookOpen size={20} />} label="Staff Training Hub" />
+                        <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
                     </>

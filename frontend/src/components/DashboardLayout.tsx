@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from './Sidebar';
 import { AICoachWidget } from './AICoachWidget';
-import { Menu, UserCog } from 'lucide-react';
+import { Menu, UserCog, FileText } from 'lucide-react';
+import axios from 'axios';
 
 export const DashboardLayout = ({ children }: { children: ReactNode }) => {
-    const { isAuthenticated, user, isLoading, isAdminImpersonating, returnToAdmin } = useAuth();
+    const { isAuthenticated, user, token, isLoading, isAdminImpersonating, returnToAdmin } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [unreadMemosCount, setUnreadMemosCount] = useState(0);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -15,6 +17,26 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
+
+    // Fetch unread memos
+    useEffect(() => {
+        if (!user || !token) return;
+        
+        const fetchUnreadCount = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/memos/unread-count`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setUnreadMemosCount(res.data.unreadCount || 0);
+            } catch (error) {
+                console.error('Failed to fetch unread memo count', error);
+            }
+        };
+
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 60000); // Poll every minute
+        return () => clearInterval(interval);
+    }, [user, token, location.pathname]);
 
     useEffect(() => {
         // If not authenticated and not loading, redirect to Landing Page. 
@@ -50,6 +72,25 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
                         className="bg-white text-red-600 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-red-50 transition-colors shadow-sm"
                     >
                         Return to Admin
+                    </button>
+                </div>
+            )}
+
+            {/* Unread Memos Banner */}
+            {unreadMemosCount > 0 && !location.pathname.includes('/memos') && (
+                <div className="bg-blue-600 text-white px-4 py-3 flex flex-col sm:flex-row items-center justify-center text-sm font-medium z-40 shadow-sm">
+                    <div className="flex items-center mb-2 sm:mb-0 sm:mr-4">
+                        <FileText size={18} className="mr-2 animate-bounce" />
+                        <span>You have <strong>{unreadMemosCount} unread {unreadMemosCount === 1 ? 'Memo' : 'Memos'}</strong> requiring your attention.</span>
+                    </div>
+                    <button 
+                        onClick={() => {
+                            const basePath = user?.branch ? `/dashboard/${user.branch.name.toLowerCase().replace(/\s+/g, '-')}` : '/dashboard';
+                            navigate(`${basePath}/memos`);
+                        }}
+                        className="bg-white text-blue-600 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-blue-50 transition-colors shadow-sm"
+                    >
+                        View Memos
                     </button>
                 </div>
             )}

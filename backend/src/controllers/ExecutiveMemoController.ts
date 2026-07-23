@@ -146,5 +146,24 @@ export const ExecutiveMemoController = {
         } catch (error) {
             res.status(500).json({ error: 'Failed to fetch contacts' });
         }
+    },
+
+    /**
+     * Get unread (PENDING) memo count for the current user
+     */
+    async getUnreadCount(req: Request, res: Response) {
+        const { userId } = (req as AuthRequest).user!;
+        try {
+            const count = await prisma.executiveMemo.count({
+                where: {
+                    recipientId: userId,
+                    status: 'PENDING'
+                }
+            });
+            res.json({ unreadCount: count });
+        } catch (error) {
+            console.error('Error fetching unread memo count:', error);
+            res.status(500).json({ error: 'Failed to fetch unread memo count.' });
+        }
     }
 };
