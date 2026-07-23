@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "dev": "concurrently \"npx tsc -w\" \"nodemon dist/server.js\"",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "update-ai": "npx tsx scripts/updateKnowledgeBase.ts"
   },
   "keywords": [],
   "author": "",
