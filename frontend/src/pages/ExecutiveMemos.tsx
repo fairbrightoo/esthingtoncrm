@@ -153,13 +153,13 @@ export const ExecutiveMemos = () => {
                                 {dropdownOpen && (
                                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ maxHeight: '350px' }}>
                                         {/* Filter Header */}
-                                        <div className="p-3 bg-gray-50 border-b flex space-x-2 overflow-x-auto rounded-t-xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                        <div className="px-4 py-3 bg-gray-50/80 border-b flex items-center gap-2 overflow-x-auto rounded-t-xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                             {availableRoles.map(role => (
                                                 <button 
                                                     key={role} 
                                                     type="button" 
                                                     onClick={() => setRoleFilter(role)}
-                                                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${roleFilter === role ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${roleFilter === role ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-600 ring-offset-1' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:border-gray-300 shadow-sm'}`}
                                                 >
                                                     {role.replace(/_/g, ' ')}
                                                 </button>
