@@ -100,7 +100,7 @@ export const AICoachWidget: React.FC = () => {
     useEffect(() => {
         if (messages.length === 0) {
             setMessages([
-                { id: '1', role: 'assistant', content: "Hello! I am your AI Sales Director. What objection are you facing right now?" }
+                { id: '1', role: 'assistant', content: "Hello! I am your Esthington CRM Assistant. How can I help you navigate the system today?" }
             ]);
         }
     }, [messages.length]);
@@ -156,7 +156,7 @@ export const AICoachWidget: React.FC = () => {
     };
 
     const handleReset = async () => {
-        setMessages([{ id: '1', role: 'assistant', content: "Conversation resetted. What's the new client objection?" }]);
+        setMessages([{ id: '1', role: 'assistant', content: "Conversation resetted. How else can I assist you today?" }]);
         try {
             const token = localStorage.getItem('token');
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/chat/reset`, {}, {
@@ -182,7 +182,7 @@ export const AICoachWidget: React.FC = () => {
                         <div className="flex items-center space-x-2">
                             <Sparkles size={20} className="text-yellow-300" />
                             <div>
-                                <h3 className="font-bold text-sm tracking-wide">Elite Sales Coach</h3>
+                                <h3 className="font-bold text-sm tracking-wide">Esthington AI Assistant</h3>
                                 <p className="text-xs text-indigo-200">AI Knowledge Base</p>
                             </div>
                         </div>
@@ -244,7 +244,7 @@ export const AICoachWidget: React.FC = () => {
                             <div className="relative">
                                 <textarea
                                     className="w-full bg-gray-100 text-sm border-none rounded-xl pl-4 pr-12 py-3 focus:ring-2 focus:ring-indigo-500 resize-none"
-                                    placeholder="Type client objection here..."
+                                    placeholder="Ask me anything about your role..."
                                     rows={2}
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
