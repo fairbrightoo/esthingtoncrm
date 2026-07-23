@@ -38,36 +38,28 @@ export const ExecutiveMemoController = {
      */
     async sendMemo(req: Request, res: Response) {
         const { userId, companyId, branchId, role } = (req as AuthRequest).user!;
-        const { subject, message, recipientId } = req.body;
+        const { subject, message, recipientIds } = req.body;
+
+        if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
+            return res.status(400).json({ error: 'Please select at least one recipient' });
+        }
 
         try {
-            // Validate Recipient exists in company
-            const recipient = await prisma.user.findFirst({
-                where: { id: recipientId, companyId: companyId! }
+            const memosToCreate = recipientIds.map(id => ({
+                companyId: companyId!,
+                branchId: branchId || null,
+                senderId: userId,
+                recipientId: id,
+                subject,
+                message,
+                status: 'PENDING'
+            }));
+
+            await prisma.executiveMemo.createMany({
+                data: memosToCreate
             });
 
-            if (!recipient) {
-                return res.status(404).json({ error: 'Recipient not found in your company' });
-            }
-
-            const memo = await prisma.executiveMemo.create({
-                data: {
-                    companyId: companyId!,
-                    branchId: branchId || null,
-                    senderId: userId,
-                    recipientId: recipientId,
-                    subject,
-                    message,
-                    status: 'PENDING'
-                },
-                include: {
-                    sender: { select: { id: true, fullName: true, role: true } },
-                    recipient: { select: { id: true, fullName: true, role: true } },
-                    branch: { select: { name: true } }
-                }
-            });
-
-            res.json(memo);
+            res.json({ success: true, count: recipientIds.length });
         } catch (error) {
             console.error('Error sending memo:', error);
             res.status(500).json({ error: 'Failed to send memo.' });
@@ -113,24 +105,42 @@ export const ExecutiveMemoController = {
     },
 
     /**
-     * Get GMDs/MDs Directory for dropdown to target a memo
+     * Get Contacts Directory for dropdown to target a memo
      */
     async getMemoContacts(req: Request, res: Response) {
-        const { companyId, userId } = (req as AuthRequest).user!;
+        const { companyId, branchId, userId, role } = (req as AuthRequest).user!;
         
         try {
+            let whereClause: any = {
+                companyId: companyId!,
+                id: { not: userId },
+                isActive: true
+            };
+
+            if (role === 'GROUP_MANAGING_DIRECTOR') {
+                // GMD can see everyone in the company
+            } else if (role === 'MANAGING_DIRECTOR') {
+                // MD can see everyone in their branch, PLUS GMDs
+                whereClause.OR = [
+                    { branchId: branchId },
+                    { role: 'GROUP_MANAGING_DIRECTOR' }
+                ];
+            } else {
+                whereClause.OR = [
+                    { branchId: branchId },
+                    { role: { in: ['GROUP_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR'] } }
+                ];
+            }
+
             const users = await prisma.user.findMany({
-                where: {
-                    companyId: companyId!,
-                    role: { in: ['GROUP_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR'] },
-                    id: { not: userId } // Don't message yourself
-                },
+                where: whereClause,
                 select: {
                     id: true,
                     fullName: true,
                     role: true,
                     branch: { select: { name: true } }
-                }
+                },
+                orderBy: { fullName: 'asc' }
             });
             res.json(users);
         } catch (error) {

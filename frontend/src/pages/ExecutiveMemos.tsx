@@ -16,8 +16,11 @@ export const ExecutiveMemos = () => {
     const [showCompose, setShowCompose] = useState(false);
     const [confirmAction, setConfirmAction] = useState<{ isOpen: boolean, memoId: string, status: 'APPROVED' | 'DECLINED' | null }>({ isOpen: false, memoId: '', status: null });
     
-    const [formData, setFormData] = useState({ subject: '', message: '', recipientId: '' });
+    const [formData, setFormData] = useState<{ subject: string, message: string, recipientIds: string[] }>({ subject: '', message: '', recipientIds: [] });
     const [processing, setProcessing] = useState(false);
+    
+    const [roleFilter, setRoleFilter] = useState('ALL');
+    const [dropdownOpen, setDropdownOpen] = useState(false);
     
     const isGmd = user?.role === 'GROUP_MANAGING_DIRECTOR';
 
@@ -49,7 +52,8 @@ export const ExecutiveMemos = () => {
             });
             addToast('Memo sent successfully', 'success');
             setShowCompose(false);
-            setFormData({ subject: '', message: '', recipientId: '' });
+            setFormData({ subject: '', message: '', recipientIds: [] });
+            setDropdownOpen(false);
             fetchData();
         } catch (error: any) {
             addToast(error.response?.data?.error || 'Failed to send memo', 'error');
@@ -80,6 +84,9 @@ export const ExecutiveMemos = () => {
     
     const displayMemos = activeTab === 'INBOX' ? inboxMemos : sentMemos;
 
+    const availableRoles = ['ALL', ...Array.from(new Set(contacts.map(c => c.role)))];
+    const filteredContacts = roleFilter === 'ALL' ? contacts : contacts.filter(c => c.role === roleFilter);
+
     if (loading) return <div className="p-10 flex justify-center"><div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full" /></div>;
 
     return (
@@ -103,22 +110,117 @@ export const ExecutiveMemos = () => {
                             <h2 className="text-xl font-bold text-gray-800 flex items-center"><FileText className="mr-2 text-blue-600" /> New Executive Memo</h2>
                             <button onClick={() => setShowCompose(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
                         </div>
-                        <form onSubmit={handleSendMemo} className="space-y-4">
-                            <div>
+                        <form onSubmit={(e) => {
+                            if (formData.recipientIds.length === 0) {
+                                e.preventDefault();
+                                addToast('Please select at least one recipient', 'error');
+                                return;
+                            }
+                            handleSendMemo(e);
+                        }} className="space-y-4">
+                            <div className="relative">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-                                <select 
-                                    required 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none bg-white"
-                                    value={formData.recipientId}
-                                    onChange={e => setFormData({...formData, recipientId: e.target.value})}
+                                
+                                {/* Selected Chips */}
+                                {formData.recipientIds.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-2">
+                                        {formData.recipientIds.map(id => {
+                                            const contact = contacts.find(c => c.id === id);
+                                            if (!contact) return null;
+                                            return (
+                                                <div key={id} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full flex items-center text-sm border border-blue-100">
+                                                    <span className="truncate max-w-[150px]">{contact.fullName}</span>
+                                                    <button type="button" onClick={() => setFormData({...formData, recipientIds: formData.recipientIds.filter(rid => rid !== id)})} className="ml-2 hover:text-blue-900">&times;</button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {/* Dropdown Trigger */}
+                                <div 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer bg-white"
+                                    onClick={() => setDropdownOpen(!dropdownOpen)}
                                 >
-                                    <option value="" disabled>Select Recipient</option>
-                                    {contacts.map(c => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.fullName} - {c.role.replace(/_/g, ' ')} {c.branch ? `(${c.branch.name})` : '(Global)'}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <span className={formData.recipientIds.length === 0 ? "text-gray-400" : "text-gray-700"}>
+                                        {formData.recipientIds.length === 0 ? 'Select Recipients...' : `${formData.recipientIds.length} recipient(s) selected`}
+                                    </span>
+                                    <span className={`text-gray-400 transform transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+                                </div>
+
+                                {/* Dropdown Content */}
+                                {dropdownOpen && (
+                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ maxHeight: '350px' }}>
+                                        {/* Filter Header */}
+                                        <div className="p-3 bg-gray-50 border-b flex space-x-2 overflow-x-auto rounded-t-xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                            {availableRoles.map(role => (
+                                                <button 
+                                                    key={role} 
+                                                    type="button" 
+                                                    onClick={() => setRoleFilter(role)}
+                                                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${roleFilter === role ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                                >
+                                                    {role.replace(/_/g, ' ')}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        
+                                        {/* Select All Actions */}
+                                        <div className="p-2 border-b flex justify-between bg-white items-center">
+                                            <button 
+                                                type="button"
+                                                className="text-xs text-blue-600 font-medium hover:underline px-2 py-1"
+                                                onClick={() => {
+                                                    const newIds = Array.from(new Set([...formData.recipientIds, ...filteredContacts.map(c => c.id)]));
+                                                    setFormData({...formData, recipientIds: newIds});
+                                                }}
+                                            >
+                                                Select All Displayed
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                className="text-xs text-red-600 font-medium hover:underline px-2 py-1"
+                                                onClick={() => {
+                                                    const idsToRemove = filteredContacts.map(c => c.id);
+                                                    setFormData({...formData, recipientIds: formData.recipientIds.filter(id => !idsToRemove.includes(id))});
+                                                }}
+                                            >
+                                                Deselect All Displayed
+                                            </button>
+                                        </div>
+
+                                        {/* Contact List */}
+                                        <div className="overflow-y-auto flex-1 p-2 space-y-1 rounded-b-xl">
+                                            {filteredContacts.length === 0 ? (
+                                                <div className="text-sm text-gray-500 text-center py-4">No contacts found for this role</div>
+                                            ) : (
+                                                filteredContacts.map(c => {
+                                                    const isSelected = formData.recipientIds.includes(c.id);
+                                                    return (
+                                                        <label key={c.id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors border border-transparent hover:border-gray-100">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="mr-3 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setFormData({...formData, recipientIds: [...formData.recipientIds, c.id]});
+                                                                    } else {
+                                                                        setFormData({...formData, recipientIds: formData.recipientIds.filter(id => id !== c.id)});
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <div className="flex-1">
+                                                                <div className="text-sm font-medium text-gray-800">{c.fullName}</div>
+                                                                <div className="text-xs text-gray-500 mt-0.5">{c.role.replace(/_/g, ' ')} {c.branch ? `(${c.branch.name})` : '(Global)'}</div>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Subject / Requisition Theme</label>
