@@ -318,7 +318,8 @@ export const Kiosk = () => {
                                 audio={false}
                                 ref={webcamRef}
                                 screenshotFormat="image/jpeg"
-                                videoConstraints={{ width: 400, height: 400, facingMode: "user" }}
+                                videoConstraints={{ facingMode: "user" }}
+                                onUserMediaError={() => setStatus({ type: 'error', message: 'Camera access denied or unavailable.' })}
                                 className="w-full h-full object-cover transform -scale-x-100"
                             />
                         ) : (
