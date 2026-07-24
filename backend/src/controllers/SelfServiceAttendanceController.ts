@@ -193,7 +193,12 @@ export const SelfServiceAttendanceController = {
             const kioskUser = (req as any).user;
             
             const staff = await prisma.user.findFirst({
-                where: { attendancePin: pin, isActive: true },
+                where: { 
+                    attendancePin: pin, 
+                    isActive: true,
+                    companyId: kioskUser.companyId,
+                    branchId: kioskUser.branchId
+                },
                 include: { branch: true }
             });
 
@@ -271,8 +276,15 @@ export const SelfServiceAttendanceController = {
         try {
             const { pin, photoBase64 } = req.body;
 
+            const kioskUser = (req as any).user;
+
             const staff = await prisma.user.findFirst({
-                where: { attendancePin: pin, isActive: true }
+                where: { 
+                    attendancePin: pin, 
+                    isActive: true,
+                    companyId: kioskUser.companyId,
+                    branchId: kioskUser.branchId
+                }
             });
 
             if (!staff) {
