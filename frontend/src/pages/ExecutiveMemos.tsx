@@ -114,8 +114,8 @@ export const ExecutiveMemos = () => {
 
             {/* Compose Modal */}
             {showCompose && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-5 sm:p-6 my-auto mt-4 sm:mt-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-gray-800 flex items-center"><FileText className="mr-2 text-blue-600" /> New Executive Memo</h2>
                             <button onClick={() => setShowCompose(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
@@ -133,7 +133,7 @@ export const ExecutiveMemos = () => {
                                 
                                 {/* Selected Chips */}
                                 {formData.recipientIds.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mb-2">
+                                    <div className="flex flex-wrap gap-2 mb-2 max-h-32 overflow-y-auto p-1 scrollbar-thin">
                                         {formData.recipientIds.map(id => {
                                             const contact = contacts.find(c => c.id === id);
                                             if (!contact) return null;
