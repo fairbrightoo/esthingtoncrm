@@ -13,6 +13,7 @@ router.post('/clock-in', SelfServiceAttendanceController.clockIn);
 router.post('/clock-out', SelfServiceAttendanceController.clockOut);
 
 // Kiosk Routes
+router.get('/kiosk/proxy-image', SelfServiceAttendanceController.proxyImage);
 router.post('/kiosk/verify-id', authenticateToken, SelfServiceAttendanceController.verifyKioskId);
 router.post('/kiosk/clock-in', authenticateToken, SelfServiceAttendanceController.kioskClockIn);
 router.post('/kiosk/clock-out', authenticateToken, SelfServiceAttendanceController.kioskClockOut);

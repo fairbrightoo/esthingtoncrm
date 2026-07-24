@@ -157,7 +157,7 @@ export const Kiosk = () => {
 
             const refImg = new Image();
             refImg.crossOrigin = "anonymous";
-            refImg.src = targetUser.referencePhotoUrl;
+            refImg.src = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/attendance/kiosk/proxy-image?url=${encodeURIComponent(targetUser.referencePhotoUrl)}`;
             await new Promise((resolve, reject) => {
                 refImg.onload = resolve;
                 refImg.onerror = () => reject(new Error("Failed to load reference photo"));

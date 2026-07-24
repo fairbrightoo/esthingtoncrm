@@ -225,6 +225,35 @@ export const SelfServiceAttendanceController = {
     },
 
     /**
+     * Proxy external image to bypass CORS for face-api
+     */
+    async proxyImage(req: Request, res: Response) {
+        try {
+            const imageUrl = req.query.url as string;
+            if (!imageUrl) {
+                return res.status(400).json({ error: 'URL is required' });
+            }
+
+            // Using native node fetch
+            const imageResponse = await fetch(imageUrl);
+            if (!imageResponse.ok) {
+                return res.status(imageResponse.status).send('Failed to fetch image');
+            }
+
+            const contentType = imageResponse.headers.get('content-type') || 'application/octet-stream';
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+            const arrayBuffer = await imageResponse.arrayBuffer();
+            res.send(Buffer.from(arrayBuffer));
+        } catch (error) {
+            console.error('Proxy Image Error:', error);
+            res.status(500).json({ error: 'Failed to proxy image' });
+        }
+    },
+
+    /**
      * Handle Kiosk Clock-In (Using Verified ID & Photo)
      */
     async kioskClockIn(req: Request, res: Response) {
