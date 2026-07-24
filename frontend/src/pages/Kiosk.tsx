@@ -113,7 +113,7 @@ export const Kiosk = () => {
         setMatchedUsers([]);
     };
 
-    const handlePunch = async (type: 'CLOCK_IN' | 'CLOCK_OUT') => {
+    const handleVerifyStaff = async () => {
         if (pin.length !== 3) {
             setStatus({ type: 'error', message: 'Please enter exactly 3 digits' });
             return;
@@ -131,17 +131,15 @@ export const Kiosk = () => {
 
             const users = verifyRes.data.users;
             
-            if (users.length === 1) {
-                await performFacialVerification(users[0], type);
-            } else if (users.length > 1) {
+            if (users.length > 0) {
                 setMatchedUsers(users);
-                setStatus({ type: 'info', message: 'Multiple users found. Please select your name.' });
+                setStatus(null);
             }
         } catch (error: any) {
-            setStatus({ type: 'error', message: error.response?.data?.error || 'Verification Failed' });
+            setStatus({ type: 'error', message: error.response?.data?.error || 'Staff not found. Please try again.' });
             setPin('');
         } finally {
-            if (matchedUsers.length === 0) setIsVerifying(false);
+            setIsVerifying(false);
         }
     };
 
@@ -336,32 +334,48 @@ export const Kiosk = () => {
                 {/* Right Side - Numpad */}
                 <div className="w-full lg:w-1/2 p-8 bg-gray-900 flex flex-col items-center justify-center relative">
                     {matchedUsers.length > 0 ? (
-                        <div className="w-full max-w-md animate-fade-in">
-                            <h2 className="text-2xl font-bold text-white mb-6 text-center">Select Your Identity</h2>
-                            <div className="space-y-3">
+                        <div className="w-full max-w-md animate-fade-in flex flex-col items-center">
+                            <h2 className="text-3xl font-black text-white mb-8 text-center">Verify Identity</h2>
+                            <div className="space-y-6 w-full">
                                 {matchedUsers.map(u => (
-                                    <button
+                                    <div
                                         key={u.id}
-                                        className="w-full bg-gray-800 border border-gray-700 p-4 rounded-xl flex items-center justify-between hover:border-indigo-500 transition group"
+                                        className="w-full bg-gray-800 border border-gray-700 p-6 rounded-3xl flex flex-col items-center justify-center hover:border-indigo-500 transition-all shadow-2xl group relative overflow-hidden"
                                     >
-                                        <div className="text-left">
-                                            <div className="font-bold text-white text-lg group-hover:text-indigo-400 transition">{u.fullName}</div>
-                                            <div className="text-gray-400 text-sm">{u.employeeId} • {u.role.replace(/_/g, ' ')}</div>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                        
+                                        <div className="w-28 h-28 rounded-full border-4 border-gray-700 overflow-hidden mb-5 shadow-2xl group-hover:border-indigo-400 transition-colors duration-300 relative z-10">
+                                            {u.referencePhotoUrl ? (
+                                                <img src={u.referencePhotoUrl} alt={u.fullName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                                                    <Camera className="text-gray-500" size={32} />
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="flex flex-col space-y-2">
-                                            <div 
-                                                className="bg-green-600/20 text-green-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-600 hover:text-white transition text-center"
+
+                                        <div className="text-center mb-8 relative z-10 w-full">
+                                            <div className="font-black text-white text-2xl group-hover:text-indigo-400 transition-colors">{u.fullName}</div>
+                                            <div className="text-indigo-300 text-sm font-bold mt-2 bg-indigo-500/20 px-4 py-1.5 rounded-full inline-block border border-indigo-500/30">
+                                                {u.employeeId}
+                                            </div>
+                                            <div className="text-gray-400 text-xs mt-3 uppercase tracking-widest font-semibold">{u.role.replace(/_/g, ' ')}</div>
+                                        </div>
+
+                                        <div className="flex space-x-4 w-full relative z-10">
+                                            <button 
+                                                className="flex-1 bg-green-600/10 border border-green-500/30 text-green-400 py-3.5 rounded-2xl font-black hover:bg-green-600 hover:text-white hover:border-green-600 transition-all shadow-sm flex items-center justify-center group/btn"
                                                 onClick={(e) => { e.stopPropagation(); setMatchedUsers([]); performFacialVerification(u, 'CLOCK_IN'); }}
-                                            >IN</div>
-                                            <div 
-                                                className="bg-red-600/20 text-red-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition text-center"
+                                            ><LogIn size={20} className="mr-2 group-hover/btn:scale-110 transition-transform" /> CLOCK IN</button>
+                                            <button 
+                                                className="flex-1 bg-red-600/10 border border-red-500/30 text-red-400 py-3.5 rounded-2xl font-black hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm flex items-center justify-center group/btn"
                                                 onClick={(e) => { e.stopPropagation(); setMatchedUsers([]); performFacialVerification(u, 'CLOCK_OUT'); }}
-                                            >OUT</div>
+                                            ><LogOut size={20} className="mr-2 group-hover/btn:scale-110 transition-transform" /> CLOCK OUT</button>
                                         </div>
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
-                            <button onClick={handleClear} className="w-full mt-6 text-gray-400 hover:text-white text-sm font-semibold">Cancel</button>
+                            <button onClick={handleClear} className="mt-8 text-gray-400 hover:text-white text-sm font-semibold flex items-center transition-colors"><KeyRound size={16} className="mr-2" /> Use a different PIN</button>
                         </div>
                     ) : (
                         <>
@@ -416,20 +430,13 @@ export const Kiosk = () => {
                             </div>
 
                             {/* Actions */}
-                            <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]">
+                            <div className="w-full max-w-[320px]">
                                 <button 
-                                    onClick={() => handlePunch('CLOCK_IN')}
+                                    onClick={handleVerifyStaff}
                                     disabled={isVerifying || pin.length !== 3}
-                                    className="h-16 rounded-xl bg-green-600 text-white font-black text-lg flex items-center justify-center hover:bg-green-500 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_0_rgba(22,163,74,0.39)]"
+                                    className="w-full h-16 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center hover:bg-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_20px_0_rgba(79,70,229,0.4)] hover:shadow-[0_4px_25px_0_rgba(79,70,229,0.6)]"
                                 >
-                                    <LogIn size={24} className="mr-2" /> IN
-                                </button>
-                                <button 
-                                    onClick={() => handlePunch('CLOCK_OUT')}
-                                    disabled={isVerifying || pin.length !== 3}
-                                    className="h-16 rounded-xl bg-red-600 text-white font-black text-lg flex items-center justify-center hover:bg-red-500 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_0_rgba(220,38,38,0.39)]"
-                                >
-                                    <LogOut size={24} className="mr-2" /> OUT
+                                    Verify Staff
                                 </button>
                             </div>
                         </>
