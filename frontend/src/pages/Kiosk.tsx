@@ -33,7 +33,7 @@ export const Kiosk = () => {
     // Verification State
     const [matchedUsers, setMatchedUsers] = useState<any[]>([]);
 
-    const isAuthorizedAdmin = user && ['BRANCH_ADMIN', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(user.role);
+    const isAuthorizedAdmin = user && ['BRANCH_ADMIN', 'BRANCH_HR', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR'].includes(user.role);
 
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
@@ -83,8 +83,8 @@ export const Kiosk = () => {
             });
 
             const loggedInUser = res.data.user;
-            if (!['BRANCH_ADMIN', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(loggedInUser.role)) {
-                addToast("Only Branch Admin, HR, or Customer Care can activate Attendance mode.", "error");
+            if (!['BRANCH_ADMIN', 'BRANCH_HR', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR'].includes(loggedInUser.role)) {
+                addToast("Only Branch Admin, HR, Customer Care, or Managing Director can activate Attendance mode.", "error");
                 return;
             }
 
@@ -218,7 +218,7 @@ export const Kiosk = () => {
                             <Building2 size={40} className="text-indigo-400" />
                         </div>
                         <h1 className="text-2xl font-black text-white">Attendance Setup</h1>
-                        <p className="text-gray-400 text-sm mt-2">Login as Branch Admin, HR, or Customer Care to activate this device.</p>
+                        <p className="text-gray-400 text-sm mt-2">Login as Branch Admin, HR, Customer Care, or Managing Director to activate this device.</p>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-4">
