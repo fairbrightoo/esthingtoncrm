@@ -20,6 +20,7 @@ router.delete('/global/chairman', requireRole(['SUPER_ADMIN']), GlobalUserContro
 router.get('/profile/:id', GlobalUserController.getProfile);
 router.put('/profile/:id', upload.any(), GlobalUserController.updateProfile);
 router.post('/change-password', GlobalUserController.changePassword);
+router.post('/update-pin', GlobalUserController.updatePin);
 
 // Impersonation (Super Admin only)
 router.post('/global/:id/impersonate', requireRole(['SUPER_ADMIN']), GlobalUserController.impersonateUser);

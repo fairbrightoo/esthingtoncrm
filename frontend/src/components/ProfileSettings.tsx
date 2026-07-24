@@ -34,6 +34,10 @@ export const ProfileSettings = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     
+    // Attendance PIN
+    const [newPin, setNewPin] = useState('');
+    const [updatingPin, setUpdatingPin] = useState(false);
+    
     // Tabs
     const [activeTab, setActiveTab] = useState<'SECURITY' | 'ID_CARD' | 'REFERRAL'>('ID_CARD');
     const [idCardData, setIdCardData] = useState<any>(null);
@@ -94,38 +98,56 @@ export const ProfileSettings = () => {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        
         if (newPassword !== confirmPassword) {
-            addToast("New passwords do not match!", "error");
+            addToast('New passwords do not match', 'error');
             return;
         }
 
-        if (newPassword.length < 6) {
-            addToast("Password must be at least 6 characters.", "error");
+        if (newPassword.length < 8) {
+            addToast('Password must be at least 8 characters long', 'error');
             return;
         }
 
         setLoading(true);
         try {
-            // Note: If you don't have a change-password route yet, this acts as a placeholder
-            // for the UI. Usually it maps to /api/users/change-password
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/change-password`, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/change-password`, {
                 userId: user?.id,
                 currentPassword,
                 newPassword
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            addToast("Password updated successfully!", "success");
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            addToast(res.data.message || 'Password updated successfully', 'success');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (error: any) {
-            console.error("Password update failed", error);
-            addToast(error.response?.data?.error || "Failed to update password", "error");
+            addToast(error.response?.data?.error || 'Failed to update password', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handlePinChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!/^\d{4}$/.test(newPin)) {
+            addToast('PIN must be exactly 4 digits', 'error');
+            return;
+        }
+
+        setUpdatingPin(true);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/update-pin`, {
+                userId: user?.id,
+                newPin
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            addToast(res.data.message || 'Attendance PIN updated successfully', 'success');
+            setNewPin('');
+        } catch (error: any) {
+            addToast(error.response?.data?.error || 'Failed to update PIN', 'error');
+        } finally {
+            setUpdatingPin(false);
         }
     };
 
@@ -322,6 +344,48 @@ export const ProfileSettings = () => {
                                         >
                                             <Save size={18} />
                                             <span>{loading ? 'Updating Security...' : 'Update Password'}</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            {/* Security Settings (Attendance PIN) */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                                <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
+                                    <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600">
+                                        <KeyRound size={24} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900">Attendance PIN</h2>
+                                        <p className="text-sm text-gray-500">Set your 4-digit PIN for the office Kiosk.</p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handlePinChange} className="space-y-5">
+                                    <div className="max-w-xs">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">New 4-Digit PIN</label>
+                                        <input
+                                            type="text"
+                                            maxLength={4}
+                                            required
+                                            value={newPin}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 4) setNewPin(val);
+                                            }}
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-mono font-bold tracking-[0.5em] text-center text-lg"
+                                            placeholder="••••"
+                                        />
+                                    </div>
+
+                                    <div className="pt-2 flex justify-start">
+                                        <button
+                                            type="submit"
+                                            disabled={updatingPin || newPin.length !== 4}
+                                            className="flex items-center space-x-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition disabled:opacity-70"
+                                        >
+                                            <Save size={18} />
+                                            <span>{updatingPin ? 'Saving...' : 'Set New PIN'}</span>
                                         </button>
                                     </div>
                                 </form>

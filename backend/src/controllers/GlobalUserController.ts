@@ -193,6 +193,51 @@ export const GlobalUserController = {
         }
     },
 
+    // 3.5. Update Attendance PIN
+    updatePin: async (req: Request, res: Response) => {
+        try {
+            const { userId, newPin } = req.body;
+
+            if (!userId || !newPin) {
+                return res.status(400).json({ error: 'Missing required fields.' });
+            }
+
+            if (!/^\d{4}$/.test(newPin)) {
+                return res.status(400).json({ error: 'PIN must be exactly 4 digits.' });
+            }
+
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (!user) {
+                return res.status(404).json({ error: 'User not found.' });
+            }
+
+            // Verify if PIN is already in use by someone else in the same branch/company
+            const existingPinUser = await prisma.user.findFirst({
+                where: {
+                    attendancePin: newPin,
+                    id: { not: userId },
+                    companyId: user.companyId,
+                    branchId: user.branchId,
+                    isActive: true
+                }
+            });
+
+            if (existingPinUser) {
+                return res.status(400).json({ error: 'This PIN is already in use by another staff member. Please choose a different one.' });
+            }
+
+            await prisma.user.update({
+                where: { id: userId },
+                data: { attendancePin: newPin }
+            });
+
+            res.json({ success: true, message: 'Attendance PIN updated successfully!' });
+        } catch (error) {
+            console.error('Failed to update PIN:', error);
+            res.status(500).json({ error: 'An error occurred while updating the PIN.' });
+        }
+    },
+
     // 4. God-Mode Impersonation
     impersonateUser: async (req: Request, res: Response) => {
         try {
