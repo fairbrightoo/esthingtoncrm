@@ -138,7 +138,11 @@ export const HRLeaveManagement = () => {
                                                 <span>{new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 max-w-xs truncate text-gray-500" title={leave.reason}>{leave.reason}</td>
+                                        <td className="px-6 py-4 min-w-[200px] whitespace-normal text-gray-500 leading-relaxed text-sm">
+                                            <div className="max-h-32 overflow-y-auto pr-1">
+                                                {leave.reason}
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4">{getStatusBadge(leave.status)}</td>
                                         <td className="px-6 py-4 text-right space-x-2">
                                             {(user?.role === 'BRANCH_HR' && leave.status === 'PENDING_HR_APPROVAL') && (
