@@ -183,18 +183,59 @@ export const SelfServiceAttendanceController = {
     },
 
     /**
-     * Handle Kiosk Clock-In (Using PIN & Photo)
+     * Handle Kiosk ID Verification (Pre-Clock In/Out)
+     */
+    async verifyKioskId(req: Request, res: Response) {
+        try {
+            const { employeeIdSuffix } = req.body;
+            
+            const kioskUser = (req as any).user;
+            
+            if (!employeeIdSuffix || employeeIdSuffix.length !== 3) {
+                return res.status(400).json({ error: 'Please enter exactly 3 digits' });
+            }
+
+            const staffList = await prisma.user.findMany({
+                where: { 
+                    isActive: true,
+                    companyId: kioskUser.companyId,
+                    branchId: kioskUser.branchId,
+                    employeeId: {
+                        endsWith: `/${employeeIdSuffix}`
+                    }
+                },
+                select: {
+                    id: true,
+                    fullName: true,
+                    referencePhotoUrl: true,
+                    employeeId: true,
+                    role: true
+                }
+            });
+
+            if (staffList.length === 0) {
+                return res.status(404).json({ error: 'No staff found with that Employee ID' });
+            }
+
+            res.json({ success: true, users: staffList });
+        } catch (error) {
+            console.error('Kiosk ID Verify Error:', error);
+            res.status(500).json({ error: 'Verification failed' });
+        }
+    },
+
+    /**
+     * Handle Kiosk Clock-In (Using Verified ID & Photo)
      */
     async kioskClockIn(req: Request, res: Response) {
         try {
-            const { pin, photoBase64 } = req.body;
+            const { userId, photoBase64 } = req.body;
             
-            // The request is authenticated by the admin/tablet session, but we identify user by PIN
             const kioskUser = (req as any).user;
             
             const staff = await prisma.user.findFirst({
                 where: { 
-                    attendancePin: pin, 
+                    id: userId,
                     isActive: true,
                     companyId: kioskUser.companyId,
                     branchId: kioskUser.branchId
@@ -203,7 +244,7 @@ export const SelfServiceAttendanceController = {
             });
 
             if (!staff || !staff.branchId || !staff.companyId) {
-                return res.status(400).json({ error: 'Invalid PIN or unassigned staff' });
+                return res.status(400).json({ error: 'Invalid user or unassigned staff' });
             }
 
             const today = new Date();
@@ -274,13 +315,13 @@ export const SelfServiceAttendanceController = {
      */
     async kioskClockOut(req: Request, res: Response) {
         try {
-            const { pin, photoBase64 } = req.body;
+            const { userId, photoBase64 } = req.body;
 
             const kioskUser = (req as any).user;
 
             const staff = await prisma.user.findFirst({
                 where: { 
-                    attendancePin: pin, 
+                    id: userId,
                     isActive: true,
                     companyId: kioskUser.companyId,
                     branchId: kioskUser.branchId
@@ -288,7 +329,7 @@ export const SelfServiceAttendanceController = {
             });
 
             if (!staff) {
-                return res.status(400).json({ error: 'Invalid PIN' });
+                return res.status(400).json({ error: 'Invalid user' });
             }
 
             const today = new Date();

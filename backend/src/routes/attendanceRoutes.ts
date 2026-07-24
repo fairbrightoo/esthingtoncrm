@@ -13,7 +13,8 @@ router.post('/clock-in', SelfServiceAttendanceController.clockIn);
 router.post('/clock-out', SelfServiceAttendanceController.clockOut);
 
 // Kiosk Routes
-router.post('/kiosk/clock-in', SelfServiceAttendanceController.kioskClockIn);
-router.post('/kiosk/clock-out', SelfServiceAttendanceController.kioskClockOut);
+router.post('/kiosk/verify-id', authenticateToken, SelfServiceAttendanceController.verifyKioskId);
+router.post('/kiosk/clock-in', authenticateToken, SelfServiceAttendanceController.kioskClockIn);
+router.post('/kiosk/clock-out', authenticateToken, SelfServiceAttendanceController.kioskClockOut);
 
 export default router;
