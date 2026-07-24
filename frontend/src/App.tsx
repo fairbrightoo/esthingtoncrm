@@ -195,7 +195,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/select-branch" element={<BranchSelection />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/kiosk" element={<Kiosk />} />
+            <Route path="/attendance" element={<Kiosk />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Super Admin Routes */}

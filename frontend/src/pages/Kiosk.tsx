@@ -84,12 +84,12 @@ export const Kiosk = () => {
 
             const loggedInUser = res.data.user;
             if (!['BRANCH_ADMIN', 'BRANCH_HR', 'CUSTOMER_CARE'].includes(loggedInUser.role)) {
-                addToast("Only Branch Admin, HR, or Customer Care can activate Kiosk mode.", "error");
+                addToast("Only Branch Admin, HR, or Customer Care can activate Attendance mode.", "error");
                 return;
             }
 
             login(res.data.token, loggedInUser);
-            addToast("Kiosk Activated Successfully", "success");
+            addToast("Attendance Station Activated Successfully", "success");
         } catch (err: any) {
             addToast(err.response?.data?.error || "Login failed", "error");
         } finally {
@@ -217,7 +217,7 @@ export const Kiosk = () => {
                         <div className="bg-indigo-500/20 p-4 rounded-2xl inline-block mb-4">
                             <Building2 size={40} className="text-indigo-400" />
                         </div>
-                        <h1 className="text-2xl font-black text-white">Kiosk Setup</h1>
+                        <h1 className="text-2xl font-black text-white">Attendance Setup</h1>
                         <p className="text-gray-400 text-sm mt-2">Login as Branch Admin, HR, or Customer Care to activate this device.</p>
                     </div>
 
@@ -280,7 +280,7 @@ export const Kiosk = () => {
                             disabled={isLoggingIn || !selectedBranchId}
                             className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50 mt-4"
                         >
-                            {isLoggingIn ? 'Authenticating...' : 'Activate Kiosk'}
+                            {isLoggingIn ? 'Authenticating...' : 'Activate Attendance Station'}
                         </button>
                     </form>
                 </div>
@@ -302,7 +302,7 @@ export const Kiosk = () => {
                         onClick={() => navigate('/dashboard')}
                         className="absolute top-6 left-6 text-gray-400 hover:text-white transition flex items-center text-sm font-semibold"
                     >
-                        Exit Kiosk
+                        Exit Attendance
                     </button>
                     <div className="text-center mb-8 mt-6">
                         <Clock size={48} className="text-indigo-400 mx-auto mb-4" />
