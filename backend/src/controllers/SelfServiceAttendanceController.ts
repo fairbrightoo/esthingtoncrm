@@ -234,9 +234,23 @@ export const SelfServiceAttendanceController = {
                 return res.status(400).json({ error: 'URL is required' });
             }
 
-            // Using native node fetch
-            const imageResponse = await fetch(imageUrl);
+            let fetchUrl = imageUrl;
+            if (imageUrl.startsWith('/')) {
+                const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+                const host = req.headers.host;
+                fetchUrl = `${protocol}://${host}${imageUrl}`;
+            }
+
+            // Using native node fetch with spoofed headers to prevent Cloudflare bot blocking
+            const imageResponse = await fetch(fetchUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
+                }
+            });
+
             if (!imageResponse.ok) {
+                console.error('Proxy Image Failed:', imageResponse.status, imageResponse.statusText, fetchUrl);
                 return res.status(imageResponse.status).send('Failed to fetch image');
             }
 

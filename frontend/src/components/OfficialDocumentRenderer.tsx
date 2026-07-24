@@ -275,8 +275,17 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                         <style>{`
                             @media print {
                                 @page { size: A4; margin: 0; }
-                                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                                .print-content { padding: 20mm !important; }
+                                body * { visibility: hidden; }
+                                body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                                .print-content, .print-content * { visibility: visible; }
+                                .print-content { 
+                                    position: absolute !important; 
+                                    left: 0 !important; 
+                                    top: 0 !important; 
+                                    padding: 20mm !important; 
+                                    width: 210mm !important; 
+                                    background: white !important;
+                                }
                             }
                             .document-prose p { margin-bottom: 1rem; text-align: justify; }
                             .document-prose ol { padding-left: 1.5rem; margin-bottom: 1rem; list-style-type: decimal; }
