@@ -16,6 +16,10 @@ export const ReferralController = {
                 return res.status(403).json({ error: "External marketers cannot generate referral codes." });
             }
 
+            if (user.role === 'SUPER_ADMIN') {
+                return res.status(403).json({ error: "Super Admins cannot generate referral codes." });
+            }
+
             if (percentage >= (user.commissionRate || 10)) {
                 return res.status(400).json({ error: `Percentage must be strictly less than your base commission rate (${user.commissionRate}%).` });
             }

@@ -213,7 +213,7 @@ export const ProfileSettings = () => {
                             <span>Security</span>
                         </div>
                     </button>
-                    {!user?.referralCodeId && (
+                    {user?.role !== 'SUPER_ADMIN' && !user?.referralCodeId && (
                         <button
                             onClick={() => setActiveTab('REFERRAL')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'REFERRAL' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
