@@ -49,8 +49,8 @@ export const ProfileSettings = () => {
     const [newCodePercentage, setNewCodePercentage] = useState(3.0);
 
     React.useEffect(() => {
-        if (activeTab === 'ID_CARD' && !idCardData && user) {
-            // Fetch full profile to get templates and employeeId
+        if (!idCardData && user) {
+            // Fetch full profile to get templates, employeeId, and fresh commissionRate
             axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile/${user.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             }).then(res => {
@@ -681,7 +681,7 @@ export const ProfileSettings = () => {
                             
                             <form onSubmit={handleGenerateCode} className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-xl">
                                 <h3 className="font-semibold text-blue-900 mb-2">Generate New Referral Code</h3>
-                                <p className="text-sm text-blue-800 mb-4">Set the commission percentage that the external marketer will receive for their sales. You will receive the remaining portion of your base commission ({user?.commissionRate || 10}%).</p>
+                                <p className="text-sm text-blue-800 mb-4">Set the commission percentage that the external marketer will receive for their sales. You will receive the remaining portion of your base commission ({idCardData?.commissionRate ?? user?.commissionRate ?? 10}%).</p>
                                 
                                 <div className="flex flex-col sm:flex-row items-start sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
                                     <div className="w-full sm:flex-1">
@@ -690,7 +690,7 @@ export const ProfileSettings = () => {
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            max={(user?.commissionRate || 10) - 0.01}
+                                            max={(idCardData?.commissionRate ?? user?.commissionRate ?? 10) - 0.01}
                                             required
                                             value={newCodePercentage}
                                             onChange={(e) => setNewCodePercentage(parseFloat(e.target.value) || 0)}
