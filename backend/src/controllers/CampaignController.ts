@@ -9,7 +9,14 @@ const buildCampaignWhereClause = async (companyId: string, filters: any, userId:
 
     // Apply Filters
     if (filters.gender && filters.gender !== 'All') {
-        whereClause.gender = filters.gender.toUpperCase();
+        if (filters.gender === 'Unspecified') {
+            whereClause.AND = [
+                ...(whereClause.AND || []),
+                { OR: [{ gender: null }, { gender: '' }] }
+            ];
+        } else {
+            whereClause.gender = filters.gender.toUpperCase();
+        }
     }
     if (filters.status && filters.status !== 'All') {
         whereClause.status = filters.status.toUpperCase();
