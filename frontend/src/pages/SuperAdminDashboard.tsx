@@ -258,7 +258,7 @@ export const SuperAdminDashboard = () => {
 
             {/* Hierarchical Data Grid */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center">
                         <Building2 className="mr-2 text-indigo-500" size={20} />
                         Group Performance Matrix
@@ -358,7 +358,7 @@ export const SuperAdminDashboard = () => {
 
             {/* Live Activity Feed */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center">
                         <Activity className="mr-2 text-red-500 animate-pulse" size={20} />
                         Live Employee Activity

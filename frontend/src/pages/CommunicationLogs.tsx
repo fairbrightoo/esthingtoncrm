@@ -42,7 +42,7 @@ export const CommunicationLogs = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center mb-6 border-b pb-4 border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 border-b pb-4 border-gray-100">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                         <History className="text-purple-600" />
@@ -79,7 +79,7 @@ export const CommunicationLogs = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[600px]">
-                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50/50">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input

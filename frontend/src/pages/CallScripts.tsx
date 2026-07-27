@@ -104,7 +104,7 @@ export const CallScripts = () => {
         <div className="flex h-[calc(100vh-120px)] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             {/* Sidebar List */}
             <div className="w-1/3 border-r border-gray-200 flex flex-col">
-                <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                     <h2 className="font-bold text-gray-700 flex items-center">
                         <BookOpen size={18} className="mr-2" /> Scripts
                     </h2>

@@ -94,7 +94,7 @@ export const ChairmanExpenses = () => {
 
             {/* Expenses List */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50/50">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center">
                         <ArrowUpRight className="mr-2 text-indigo-500" size={20} />
                         Expense Ledger

@@ -571,14 +571,14 @@ export const ManagingDirectorDashboard = () => {
             {messageModal.isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col h-[600px]">
-                        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                        <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                             <h3 className="font-bold">Payment Messages</h3>
                             <button onClick={() => setMessageModal({ isOpen: false, paymentId: '' })}><X size={20}/></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {messages.map((msg: any) => (
                                 <div key={msg.id} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <div className="flex justify-between items-center mb-1">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-1">
                                         <span className="font-bold text-sm">{msg.sender?.fullName} <span className="text-xs text-gray-400 font-normal">({msg.sender?.role})</span></span>
                                         <span className="text-[10px] text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                                     </div>

@@ -157,7 +157,7 @@ export const StaffSelfService = () => {
                     {/* LEAVES TAB */}
                     {activeTab === 'LEAVES' && (
                         <div>
-                            <div className="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                            <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                                 <h3 className="font-semibold text-gray-800">Leave History</h3>
                                 <button onClick={() => setShowLeaveModal(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Request Time Off</button>
                             </div>
@@ -240,7 +240,7 @@ export const StaffSelfService = () => {
                                 ) : (
                                     appraisals.map(app => (
                                         <div key={app.id} className="border border-purple-100 bg-gradient-to-br from-white to-purple-50/50 p-5 rounded-xl shadow-sm">
-                                            <div className="flex justify-between items-center mb-4">
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4">
                                                 <h4 className="font-bold text-gray-900">{app.period}</h4>
                                                 <span className={`text-lg font-black ${app.score >= 80 ? 'text-green-600' : 'text-orange-500'}`}>{app.score.toFixed(1)}%</span>
                                             </div>
@@ -299,7 +299,7 @@ export const StaffSelfService = () => {
             {replyModalData.isOpen && (
                 <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <form onSubmit={submitQueryReply} className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col transform transition-all">
-                        <div className="p-6 border-b border-red-100 bg-red-50 flex justify-between items-center">
+                        <div className="p-6 border-b border-red-100 bg-red-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <h3 className="text-lg font-bold text-red-900 flex items-center">
                                 <AlertTriangle size={20} className="mr-2 text-red-600" /> Official Explanation Form
                             </h3>

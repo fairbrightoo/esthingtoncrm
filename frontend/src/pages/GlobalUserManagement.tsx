@@ -291,7 +291,7 @@ export const GlobalUserManagement = () => {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm shadow flex justify-center items-center z-50 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                         
-                        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 p-6 border-b border-gray-100 bg-gray-50">
                             <div>
                                 <h2 className="text-xl font-bold flex items-center text-gray-800">
                                     <ShieldAlert size={20} className="mr-2 text-primary-600 text-xl" />
@@ -304,7 +304,7 @@ export const GlobalUserManagement = () => {
 
                         <div className="p-6 overflow-y-auto space-y-6 flex-1">
                             {/* Account Status Switch */}
-                            <div className={`p-4 rounded-xl border-2 flex justify-between items-center transition-colors ${formData.isActive ? 'border-primary-100 bg-primary-50/50' : 'border-red-200 bg-red-50'}`}>
+                            <div className={`p-4 rounded-xl border-2 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 transition-colors ${formData.isActive ? 'border-primary-100 bg-primary-50/50' : 'border-red-200 bg-red-50'}`}>
                                 <div>
                                     <h3 className={`font-bold ${formData.isActive ? 'text-primary-800' : 'text-red-800'}`}>
                                         {formData.isActive ? 'Account Active' : 'Account Suspended'}

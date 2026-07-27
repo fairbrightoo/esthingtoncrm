@@ -97,7 +97,7 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
             <div className="flex flex-col md:flex-row flex-1">
                 {/* Mobile Header */}
-                <div className="md:hidden bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30 px-4 py-3 flex justify-between items-center">
+                <div className="md:hidden bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30 px-4 py-3 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                     <div className="font-black text-gray-900 text-lg tracking-tight">Esthington CRM</div>
                     <button 
                         onClick={() => setIsMobileMenuOpen(true)}

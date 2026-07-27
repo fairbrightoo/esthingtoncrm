@@ -360,7 +360,7 @@ export const SalesPerformanceTab = ({ stats, user }: { stats: any; user: any }) 
             {isMessageModalOpen && selectedClient && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <h3 className="text-lg font-bold text-gray-900 truncate" title={`Message ${selectedClient.fullName}`}>Message {selectedClient.fullName}</h3>
                             <button onClick={() => setIsMessageModalOpen(false)} className="text-gray-400 hover:text-gray-600 shrink-0 ml-2">×</button>
                         </div>

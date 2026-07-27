@@ -445,7 +445,7 @@ export default function GlobalTreasuryDashboard() {
                 </div>
             ) : activeTab === 'COMMISSIONS' ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-wrap gap-4">
+                    <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-slate-50/50 flex-wrap gap-4">
                         <div className="flex items-center space-x-3">
                             <h2 className="font-bold text-slate-800 text-lg">Pending Commission Payouts</h2>
                             <span className="bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-full text-xs font-bold">{commissions.length} items</span>
@@ -648,7 +648,7 @@ export default function GlobalTreasuryDashboard() {
             {receiptModal.isOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden relative" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-slate-50">
                             <h3 className="font-bold text-slate-800 flex items-center">
                                 <Paperclip className="mr-2 text-indigo-500" size={18} />
                                 Payment Receipt

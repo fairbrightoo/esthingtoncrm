@@ -238,7 +238,7 @@ export const AccountantPayroll = () => {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8 flex flex-col max-h-[90vh]">
                         {/* Modal Header */}
-                        <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl sticky top-0 z-10">
+                        <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50 rounded-t-xl sticky top-0 z-10">
                             <h2 className="font-bold text-gray-800">Digital Salary Slip</h2>
                             <div className="flex space-x-3">
                                 <button onClick={() => setSelectedSlip(null)} className="px-3 py-1.5 text-gray-600 bg-white border rounded hover:bg-gray-100 text-sm font-medium">Close</button>

@@ -97,7 +97,7 @@ export const HRDisciplinary = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center space-x-4">
                     <div className="p-3 bg-red-50 rounded-lg text-red-600">
                         <AlertTriangle size={28} />
@@ -184,7 +184,7 @@ export const HRDisciplinary = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <form onSubmit={handleIssueQuery} className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                             <h3 className="text-lg font-bold text-gray-900">Issue Disciplinary Query</h3>
                             <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <XCircle size={24} />
@@ -231,7 +231,7 @@ export const HRDisciplinary = () => {
             {viewReplyModal.isOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col transform transition-all overflow-hidden">
-                        <div className="p-6 border-b border-indigo-100 bg-indigo-50 flex justify-between items-center text-indigo-900">
+                        <div className="p-6 border-b border-indigo-100 bg-indigo-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 text-indigo-900">
                             <h3 className="text-lg font-bold flex items-center">
                                 <AlertTriangle size={20} className="mr-2 text-indigo-600" /> Staff Explanation
                             </h3>

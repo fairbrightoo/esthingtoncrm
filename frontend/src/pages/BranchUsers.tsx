@@ -249,7 +249,7 @@ export const BranchUsers = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">{branchName} Staff</h1>
                     <p className="text-gray-500">Manage Marketers and Customer Care agents.</p>
@@ -378,7 +378,7 @@ export const BranchUsers = () => {
             {selectedStaffDocs && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-800">{selectedStaffDocs.fullName}</h2>
                                 <p className="text-sm text-gray-500 flex items-center mt-1">
@@ -510,7 +510,7 @@ export const BranchUsers = () => {
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                         {/* Header */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                        <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50/50 shrink-0">
                             <h2 className="text-xl font-bold text-gray-800">
                                 {editingUser ? 'Edit Staff Member' : 'Add New Staff Member'}
                             </h2>
@@ -723,7 +723,7 @@ export const BranchUsers = () => {
             {isBulkModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4">
                             <h2 className="text-xl font-bold">Bulk Upload Staff</h2>
                             <button onClick={closeModals} className="text-gray-500 hover:text-gray-700">✕</button>
                         </div>

@@ -359,7 +359,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                 </div>
             )}
 
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">
                         {scope === 'cross-sales' ? 'Cross-Branch Clients' : (scope === 'my' || isMarketer ? 'My Leads' : 'All Branch Leads')}
@@ -639,7 +639,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
                 isAddLeadModalOpen && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4">
                                 <h2 className="text-lg font-bold">Add New Lead</h2>
                                 {'contacts' in navigator && 'ContactsManager' in window && (
                                     <button 
@@ -877,7 +877,7 @@ export const MyLeads = ({ scope }: { scope?: 'my' | 'all' | 'cross-sales' }) => 
             {
                 selectedLead && !isAssignModalOpen && (
                     <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform transition-transform duration-300 z-40 flex flex-col">
-                        <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 p-4 border-b bg-gray-50">
                             <div>
                                 <h2 className="font-bold text-gray-800">{selectedLead.fullName}</h2>
                                 <p className="text-xs text-gray-500">{selectedLead.phone}</p>

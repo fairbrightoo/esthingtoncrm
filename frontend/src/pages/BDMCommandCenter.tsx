@@ -123,7 +123,7 @@ export const BDMCommandCenter = () => {
 
             {/* Team Leaderboard */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center">
                         <Trophy size={20} className="text-amber-500 mr-2" /> 
                         Team Performance Leaderboard

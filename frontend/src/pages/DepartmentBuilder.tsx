@@ -212,7 +212,7 @@ export const DepartmentBuilder = () => {
             {isCreateModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                        <div className="flex justify-between items-center mb-5">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-5">
                             <h2 className="text-xl font-bold text-gray-900">Create New Team</h2>
                             <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
                         </div>
@@ -263,7 +263,7 @@ export const DepartmentBuilder = () => {
             {isManageRosterOpen && selectedTeam && (
                 <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50 rounded-t-2xl">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900">Manage Roster: {selectedTeam.name}</h2>
                                 <p className="text-sm text-gray-500 mt-1">Assign floating marketers to this team or remove existing ones.</p>
@@ -381,7 +381,7 @@ export const DepartmentBuilder = () => {
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-gray-100 bg-white rounded-b-2xl flex justify-between items-center">
+                        <div className="p-6 border-t border-gray-100 bg-white rounded-b-2xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <div className="text-sm text-gray-500">
                                 {rosterMemberIdsToAdd.length > 0 && <span className="text-green-600 font-medium mr-3">+{rosterMemberIdsToAdd.length} Adding</span>}
                                 {rosterMemberIdsToRemove.length > 0 && <span className="text-red-500 font-medium">-{rosterMemberIdsToRemove.length} Removing</span>}

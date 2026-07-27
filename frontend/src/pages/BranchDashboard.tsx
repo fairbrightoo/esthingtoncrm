@@ -169,7 +169,7 @@ export const BranchDashboard = () => {
             <div className="grid grid-cols-1 gap-6">
                 
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <h3 className="font-bold text-slate-800 flex items-center">
                             <FileSpreadsheet className="text-amber-500 mr-2" size={20} />
                             Branch Funding Requisitions

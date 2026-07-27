@@ -167,7 +167,7 @@ export const CustomerCareInbox = () => {
                                     {lead.fullName.charAt(0)}
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <div className="flex justify-between items-center mb-1">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-1">
                                         <p className="font-bold truncate">{lead.fullName}</p>
                                         {lead.status === 'PROSPECT' && (
                                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wide ${selectedLead?.id === lead.id ? 'bg-white/30' : 'bg-emerald-100 text-emerald-700'}`}>

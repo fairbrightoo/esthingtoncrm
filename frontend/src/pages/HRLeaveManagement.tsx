@@ -73,7 +73,7 @@ export const HRLeaveManagement = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center space-x-4">
                     <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
                         <CalendarClock size={28} />
@@ -178,7 +178,7 @@ export const HRLeaveManagement = () => {
             {vetModalData.isOpen && (
                 <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <form onSubmit={submitVetLeave} className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col transform transition-all">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <h3 className="text-lg font-bold text-gray-900">
                                 {vetModalData.status === 'APPROVED' ? 'Approve Leave' : vetModalData.status === 'REJECTED' ? 'Reject Leave' : 'Recommend Leave'}
                             </h3>

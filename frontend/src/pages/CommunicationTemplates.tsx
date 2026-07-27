@@ -91,7 +91,7 @@ export const CommunicationTemplates = () => {
 
     return (
         <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold mb-2 text-gray-800">Communication Templates</h1>
                     <p className="text-gray-500">Manage reusable message templates for your campaigns.</p>

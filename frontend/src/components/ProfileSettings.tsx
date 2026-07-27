@@ -440,7 +440,7 @@ export const ProfileSettings = () => {
 
                     {activeTab === 'ID_CARD' && idCardData && (
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-100">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 pb-6 border-b border-gray-100">
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">Digital ID Card</h2>
                                     <p className="text-sm text-gray-500">Your official corporate identification.</p>
@@ -672,7 +672,7 @@ export const ProfileSettings = () => {
 
                     {activeTab === 'REFERRAL' && !user?.referralCodeId && (
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-100">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 pb-6 border-b border-gray-100">
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">My Referral Network</h2>
                                     <p className="text-sm text-gray-500">Generate codes to onboard external marketers to your downline.</p>

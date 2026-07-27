@@ -101,7 +101,7 @@ export const ExecutiveMemos = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Executive Memos</h1>
                     <p className="text-gray-500 mt-1">Official communication channel for Director-level authorization.</p>
@@ -116,7 +116,7 @@ export const ExecutiveMemos = () => {
             {showCompose && (
                 <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-5 sm:p-6 my-auto mt-4 sm:mt-auto">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                             <h2 className="text-xl font-bold text-gray-800 flex items-center"><FileText className="mr-2 text-blue-600" /> New Executive Memo</h2>
                             <button onClick={() => setShowCompose(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
                         </div>

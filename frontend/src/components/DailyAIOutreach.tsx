@@ -85,7 +85,7 @@ export const DailyAIOutreach = () => {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                     <h3 className="font-bold text-gray-800">Dispatch History</h3>
                     <span className="text-xs font-semibold bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full flex items-center">
                         <CheckCircle size={12} className="mr-1" /> Fully Automated

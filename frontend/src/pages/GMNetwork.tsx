@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Globe, Send, User, Search, MapPin } from 'lucide-react';
+import { Globe, Send, User, Search, MapPin, ArrowLeft } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 export const GMNetwork = () => {
@@ -81,7 +81,7 @@ export const GMNetwork = () => {
             <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex overflow-hidden">
                 
                 {/* Directory Sidebar */}
-                <div className="w-80 border-r border-gray-100 bg-gray-50/50 flex flex-col">
+                <div className={`w-full md:w-80 border-r border-gray-100 bg-gray-50/50 flex-col ${selectedGM ? 'hidden md:flex' : 'flex'}`}>
                     <div className="p-4 border-b border-gray-100">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -118,12 +118,18 @@ export const GMNetwork = () => {
                 </div>
 
                 {/* Chat Area */}
-                <div className="flex-1 flex flex-col bg-white">
+                <div className={`flex-1 flex-col bg-white ${selectedGM ? 'flex' : 'hidden md:flex'}`}>
                     {selectedGM ? (
                         <>
                             {/* Chat Header */}
-                            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                            <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white z-10">
                                 <div className="flex items-center space-x-3">
+                                    <button 
+                                        onClick={() => setSelectedGM(null)} 
+                                        className="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                                    >
+                                        <ArrowLeft size={20} />
+                                    </button>
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
                                         {selectedGM.fullName.charAt(0)}
                                     </div>

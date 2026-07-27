@@ -42,7 +42,7 @@ export const GMDashboard = () => {
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-2">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">General Manager Desk</h1>
                     <p className="text-gray-500 mt-2">Operational oversight for {branchName?.replace(/-/g, ' ')}</p>
@@ -119,7 +119,7 @@ export const GMDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Advisory Queue Shortcut */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <div className="flex items-center space-x-3">
                             <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                                 <CheckCircle size={20} />
@@ -138,7 +138,7 @@ export const GMDashboard = () => {
 
                 {/* Broadcast Shortcut */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <div className="flex items-center space-x-3">
                             <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
                                 <Megaphone size={20} />

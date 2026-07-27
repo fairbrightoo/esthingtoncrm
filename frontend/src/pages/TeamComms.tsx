@@ -97,7 +97,7 @@ export const TeamComms = () => {
     return (
         <div className="p-6 flex flex-col h-[calc(100vh-80px)]">
             {/* Header */}
-            <div className="bg-white rounded-t-2xl shadow-sm border border-gray-200 p-4 flex justify-between items-center z-10 relative">
+            <div className="bg-white rounded-t-2xl shadow-sm border border-gray-200 p-4 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 z-10 relative">
                 <div>
                     <h1 className="text-xl font-bold text-gray-900 flex items-center">
                         <MessageCircle size={20} className="mr-2 text-blue-600" />

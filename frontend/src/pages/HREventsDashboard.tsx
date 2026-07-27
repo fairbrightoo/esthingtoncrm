@@ -79,7 +79,7 @@ export const HREventsDashboard = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-2xl text-white shadow-sm relative overflow-hidden">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-2xl text-white shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold flex items-center">
                         <Calendar className="mr-3" size={32} />
@@ -98,7 +98,7 @@ export const HREventsDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* UPCOMING BIRTHDAYS COLUMN */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <h2 className="text-xl font-bold text-gray-800 flex items-center">
                             <Gift className="mr-2 text-pink-500" size={24} />
                             Upcoming Birthdays
@@ -161,7 +161,7 @@ export const HREventsDashboard = () => {
 
                 {/* HOLIDAY CALENDAR COLUMN */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <h2 className="text-xl font-bold text-gray-800 flex items-center">
                             <Calendar className="mr-2 text-indigo-500" size={24} />
                             Holiday Planner

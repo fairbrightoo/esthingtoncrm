@@ -178,7 +178,7 @@ export const LeadTimeline = ({ leadId, onClose, initialTab = 'ACTIVITY', onLeadU
     return (
         <div className="h-full flex flex-col relative"> {/* Relative for modal */}
             <div className="flex-1 overflow-y-auto p-6">
-                <div className="sticky top-0 bg-white z-10 border-b mb-4 pb-2 flex justify-between items-center flex-wrap gap-2">
+                <div className="sticky top-0 bg-white z-10 border-b mb-4 pb-2 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 flex-wrap gap-2">
                     <div className="flex space-x-6">
                         <button
                             onClick={() => setActiveTab('ACTIVITY')}

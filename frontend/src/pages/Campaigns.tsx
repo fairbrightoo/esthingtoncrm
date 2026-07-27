@@ -275,7 +275,7 @@ export const Campaigns = () => {
 
     return (
         <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold mb-2">Campaigns</h1>
                     <p className="text-gray-500">Manage and send bulk communications to your leads.</p>
@@ -410,7 +410,7 @@ export const Campaigns = () => {
 
                             {/* Audience Filters */}
                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                <div className="flex justify-between items-center mb-3">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-3">
                                     <h3 className="text-sm font-semibold text-gray-900 flex items-center">
                                         <Filter size={16} className="mr-2" /> Target Audience
                                     </h3>
@@ -509,7 +509,7 @@ export const Campaigns = () => {
 
                             {/* Message Content */}
                             <div>
-                                <div className="flex justify-between items-center mb-1">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-1">
                                     <label className="block text-sm font-medium text-gray-700">Message Content</label>
                                     <div className="flex items-center space-x-2">
                                         <select

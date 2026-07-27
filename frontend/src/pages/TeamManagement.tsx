@@ -132,7 +132,7 @@ export const TeamManagement = () => {
 
             {/* Team Roster */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                     <h2 className="text-lg font-bold text-gray-800">Team Roster & Performance</h2>
                     <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Current Month</span>
                 </div>
@@ -199,7 +199,7 @@ export const TeamManagement = () => {
             {pulseUser && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-indigo-50">
+                        <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-indigo-50">
                             <div>
                                 <h3 className="font-bold text-gray-900 flex items-center">
                                     <Activity size={18} className="text-indigo-600 mr-2" />

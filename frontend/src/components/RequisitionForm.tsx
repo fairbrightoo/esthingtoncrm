@@ -90,7 +90,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto pt-24 pb-12">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl overflow-hidden animate-fadeIn relative">
-                <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10 w-full">
+                <div className="px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50 sticky top-0 z-10 w-full">
                     <div className="flex items-center gap-3">
                         <FileText className="text-blue-500" size={24} />
                         <div>
@@ -140,7 +140,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
 
                     {/* Line Items Table Section */}
                     <div>
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4">
                             <h4 className="text-lg font-bold text-gray-800">Requisition Items</h4>
                             <button type="button" onClick={addItem} className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:bg-blue-50 px-3 py-1.5 rounded-lg transition">
                                 <Plus size={16} /> Add Row

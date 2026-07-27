@@ -91,7 +91,7 @@ export const ChairmanExpenseForm: React.FC<ChairmanExpenseFormProps> = ({ onClos
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto pt-24 pb-12">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden animate-fadeIn relative">
-                <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-900 to-indigo-900 sticky top-0 z-10 w-full">
+                <div className="px-8 py-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gradient-to-r from-gray-900 to-indigo-900 sticky top-0 z-10 w-full">
                     <div className="flex items-center gap-4">
                         <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm">
                             <FileText className="text-white" size={28} />
@@ -141,7 +141,7 @@ export const ChairmanExpenseForm: React.FC<ChairmanExpenseFormProps> = ({ onClos
 
                     {/* Line Items Table Section */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                             <h4 className="text-lg font-bold text-gray-800 flex items-center">
                                 <span className="w-1.5 h-6 bg-indigo-500 rounded-full mr-3"></span>
                                 Expense Items

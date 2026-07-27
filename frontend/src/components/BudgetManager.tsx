@@ -75,7 +75,7 @@ export const BudgetManager = () => {
 
             {isCreating && (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 animate-fadeIn">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                         <h3 className="text-lg font-bold text-gray-800">Prepare Budget Submission</h3>
                         <button onClick={() => setIsCreating(false)} className="text-gray-400 hover:text-gray-600">Cancel</button>
                     </div>
@@ -105,7 +105,7 @@ export const BudgetManager = () => {
                         </div>
 
                         <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                                 <span className="font-bold text-gray-700 text-sm">Budget Categories / Items</span>
                                 <button type="button" onClick={handleAddItem} className="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-50 text-blue-600 font-bold">
                                     + Add Category

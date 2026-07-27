@@ -42,7 +42,7 @@ export const MDBudgetReview = () => {
 
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+            <div className="px-6 py-4 border-b bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                 <h3 className="font-bold text-gray-800 flex items-center gap-2">
                     <Calculator className="text-blue-600" size={20} /> Pending Branch Budgets
                 </h3>

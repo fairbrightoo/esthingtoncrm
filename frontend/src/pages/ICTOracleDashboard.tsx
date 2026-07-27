@@ -50,7 +50,7 @@ export const ICTOracleDashboard = () => {
     
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-2">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 tracking-tight">ICT Oracle Console</h1>
                     <p className="text-gray-500 mt-1">Welcome, {user?.fullName}. Direct the branch's digital media and training.</p>

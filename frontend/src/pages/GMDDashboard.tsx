@@ -41,7 +41,7 @@ export const GMDDashboard = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Global Executive Oversight (God View)</h1>
                     <p className="text-gray-500 mt-1">Real-time aggregate performance across all company branches.</p>

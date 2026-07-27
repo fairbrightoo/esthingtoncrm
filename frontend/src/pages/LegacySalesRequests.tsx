@@ -316,7 +316,7 @@ export const LegacySalesRequests = () => {
             {isCreateModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
-                        <div className="p-6 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                        <div className="p-6 bg-gray-50 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-800">Submit Legacy Sale Request</h2>
                                 <p className="text-sm text-gray-500 mt-1">Request onboarding for a sale on an estate managed by another branch.</p>

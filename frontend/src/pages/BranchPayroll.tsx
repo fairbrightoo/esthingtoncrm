@@ -86,7 +86,7 @@ export const BranchPayroll = () => {
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center">
                         <FileSpreadsheet className="mr-3 text-green-600" size={32} />

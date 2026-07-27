@@ -123,7 +123,7 @@ export const HRAppraisals = () => {
             
             {/* Header & Award Banner */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="md:col-span-2 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex items-center space-x-4">
                         <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
                             <Target size={28} />
@@ -212,7 +212,7 @@ export const HRAppraisals = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <form onSubmit={handlePublishAppraisal} className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                             <h3 className="text-lg font-bold text-gray-900 flex items-center"><Target size={20} className="mr-2 text-purple-600"/> Build KPI Appraisal</h3>
                             <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <CheckCircle size={24} className="opacity-0" /> {/* Spacer */}

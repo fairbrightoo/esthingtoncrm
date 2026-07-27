@@ -186,7 +186,7 @@ export const HRReports = () => {
             {/* Top Sales Staff Widget */}
             {data.topSalesStaff && (
                 <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mt-6">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                         <h3 className="text-lg font-bold text-gray-800 font-display flex items-center">
                             <span className="bg-green-100 text-green-700 p-2 rounded-lg mr-3">💰</span>
                             Top Performing Staff (Approved Sales)

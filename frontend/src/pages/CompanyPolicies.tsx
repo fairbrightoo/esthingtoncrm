@@ -107,7 +107,7 @@ export const CompanyPolicies = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center space-x-4">
                     <div className="p-3 bg-slate-50 rounded-lg text-slate-600">
                         <BookOpen size={28} />
@@ -234,7 +234,7 @@ export const CompanyPolicies = () => {
             {readingDoc && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]">
-                        <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center rounded-t-2xl">
+                        <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 rounded-t-2xl">
                             <h3 className="text-lg font-bold text-gray-900 flex items-center">
                                 <BookOpen size={20} className="mr-2 text-indigo-600" />
                                 {readingDoc.title}

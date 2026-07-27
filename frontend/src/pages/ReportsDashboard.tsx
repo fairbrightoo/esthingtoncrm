@@ -368,7 +368,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     {/* Header Actions */}
-                    <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                    <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                         <div className="flex flex-col">
                             <h3 className="font-semibold text-gray-700 flex items-center">
                                 {activeTab === 'SALES' ? 'Sales Report Data' : 'Payroll Report Data'}

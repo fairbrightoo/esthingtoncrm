@@ -49,7 +49,7 @@ export const BulkLeadUploadModal: React.FC<BulkLeadUploadModalProps> = ({ onClos
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50/50">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <Upload size={20} className="text-blue-600" />
                         Bulk Lead Upload (CSV)

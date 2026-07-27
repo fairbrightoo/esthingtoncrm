@@ -160,7 +160,7 @@ export const MDStaffAnalytics = () => {
                         className="bg-gray-50 w-full max-w-2xl h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
                     >
                         {/* Header */}
-                        <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center z-10 shrink-0">
+                        <div className="bg-white px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 z-10 shrink-0">
                             <div className="flex items-center space-x-3">
                                 {selectedStaff.passportUrl ? (
                                     <img src={selectedStaff.passportUrl} alt={selectedStaff.fullName} className="w-10 h-10 rounded-full object-cover" />
@@ -270,7 +270,7 @@ export const MDStaffAnalytics = () => {
 
                                     {/* Attendance Raw Logs */}
                                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                        <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                        <div className="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50/50">
                                             <div className="flex items-center">
                                                 <Clock size={18} className="text-gray-500 mr-2" />
                                                 <h3 className="font-bold text-gray-900">Daily Clock-ins</h3>

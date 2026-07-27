@@ -348,7 +348,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         const price = getSelectedPlotPrice();
         return (
             <div className="p-6 h-full flex flex-col">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                     <h3 className="font-bold text-lg text-gray-800">New Purchase</h3>
                     <button onClick={() => setViewState('LIST')} className="text-sm text-gray-500">Cancel</button>
                 </div>
@@ -532,7 +532,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
         return (
             <div className="p-6 h-full flex flex-col">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                     <h3 className="font-bold text-lg text-gray-800">Record Payment</h3>
                     <button onClick={() => setViewState('LIST')} className="text-sm text-gray-500">Cancel</button>
                 </div>
@@ -698,7 +698,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 </div>
             ) : (
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-2">
                         <h3 className="font-bold text-gray-700">Property Portfolio</h3>
                         <button onClick={() => setViewState('NEW_SALE')} className="text-sm text-blue-600 flex items-center hover:underline"><Plus size={14} className="mr-1" /> Add Another</button>
                     </div>
@@ -1041,7 +1041,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             {receiptModal.isOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setReceiptModal({ isOpen: false, url: null, isPdf: false })}>
                     <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-slate-50/50">
                             <h3 className="font-bold text-slate-800 flex items-center">
                                 <FileText size={18} className="mr-2 text-indigo-500" /> 
                                 Payment Receipt

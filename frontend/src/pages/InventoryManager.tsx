@@ -641,7 +641,7 @@ export const InventoryManager = () => {
     if (viewMode === 'LIST') {
         return (
             <div className="space-y-6">
-                <header className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Global Inventory</h1>
                         <p className="text-gray-500 mt-1">Manage estates and bulk-generate properties across all branches.</p>
@@ -1201,7 +1201,7 @@ export const InventoryManager = () => {
 
                 {/* Data Grid */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-4 bg-gray-50/80 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+                    <div className="p-4 bg-gray-50/80 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 flex-wrap gap-4">
                         <div className="flex items-center space-x-3">
                             <h3 className="font-bold text-gray-700">Generated Plots ({estatePlots.length})</h3>
                             {['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role || '') && estatePlots.length > 0 && (
@@ -1425,7 +1425,7 @@ export const InventoryManager = () => {
                 {/* Site Layout Fullscreen Viewer */}
                 {isViewerOpen && selectedEstate.siteLayoutUrl && (
                     <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col z-[70] transition-opacity">
-                        <header className="flex justify-between items-center p-6 border-b border-slate-800 shrink-0">
+                        <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 p-6 border-b border-slate-800 shrink-0">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-100 flex items-center"><MapPin className="mr-2 text-teal-400" /> {selectedEstate.name} Site Layout</h3>
                                 <p className="text-sm text-slate-400 mt-1">Confidential viewing restricted to Management layers</p>
@@ -1560,7 +1560,7 @@ export const InventoryManager = () => {
                 {historyModal.isOpen && historyModal.plot && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all flex flex-col max-h-[80vh]">
-                            <div className="p-6 bg-purple-50 border-b border-purple-100 flex justify-between items-center shrink-0">
+                            <div className="p-6 bg-purple-50 border-b border-purple-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 shrink-0">
                                 <div>
                                     <h2 className="text-xl font-bold text-purple-900 flex items-center"><Activity className="mr-2" /> Price History</h2>
                                     <p className="text-sm text-purple-700/70 mt-1 font-mono">{historyModal.plot.plotNumber}</p>

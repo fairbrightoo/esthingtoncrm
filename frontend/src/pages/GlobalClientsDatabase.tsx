@@ -213,7 +213,7 @@ export const GlobalClientsDatabase = () => {
                 </div>
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <h3 className="font-bold text-gray-700">Records Database</h3>
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
                             Total Found: {filteredLeads.length}

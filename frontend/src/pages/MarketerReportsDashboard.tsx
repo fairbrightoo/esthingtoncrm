@@ -199,7 +199,7 @@ export const MarketerReportsDashboard = () => {
             {/* 1. SALES LOG */}
             {activeTab === 'SALES' && (
                 <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                    <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+                    <div className="px-6 py-4 border-b bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <h3 className="font-bold text-gray-800">Approved Sales & Commissions</h3>
                     </div>
                     <div className="overflow-x-auto">
@@ -388,7 +388,7 @@ export const MarketerReportsDashboard = () => {
             {/* 5. ATTENDANCE */}
             {activeTab === 'ATTENDANCE' && (
                 <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                    <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+                    <div className="px-6 py-4 border-b bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <h3 className="font-bold text-gray-800">Attendance Log</h3>
                         <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded border">Showing max 30 days</span>
                     </div>

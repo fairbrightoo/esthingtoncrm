@@ -90,7 +90,7 @@ export const PlotExchangeModal = ({ isOpen, onClose, originalSale, onSuccess }: 
     return (
         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm shadow-2xl">
             <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-gray-100">
-                <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50/50">
                     <div>
                         <h2 className="text-xl font-bold flex items-center text-gray-800">
                             <ArrowRightLeft className="mr-2 text-blue-600" size={20} />
@@ -148,7 +148,7 @@ export const PlotExchangeModal = ({ isOpen, onClose, originalSale, onSuccess }: 
                                         <div 
                                             key={plot.id} 
                                             onClick={() => setSelectedPlotId(plot.id)}
-                                            className={`p-3 cursor-pointer flex justify-between items-center transition-colors ${selectedPlotId === plot.id ? 'bg-blue-50 border-l-4 border-blue-600 pl-2' : 'hover:bg-gray-100 pl-3'}`}
+                                            className={`p-3 cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 transition-colors ${selectedPlotId === plot.id ? 'bg-blue-50 border-l-4 border-blue-600 pl-2' : 'hover:bg-gray-100 pl-3'}`}
                                         >
                                             <div>
                                                 <p className="font-semibold text-gray-800 text-sm">{plot.plotNumber} - {plot.prototype}</p>
@@ -166,11 +166,11 @@ export const PlotExchangeModal = ({ isOpen, onClose, originalSale, onSuccess }: 
                     {selectedPlot && (
                          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
                             <h4 className="font-bold text-gray-900 text-sm mb-3 border-b border-green-200 pb-2">Financial Projection</h4>
-                            <div className="flex justify-between items-center mb-1">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-1">
                                 <span className="text-xs text-gray-600">New Plot Price:</span>
                                 <span className="font-medium text-gray-800">₦{selectedPlot.price.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between items-center mb-3">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-3">
                                 <span className="text-xs text-gray-600">Transferred Equity:</span>
                                 <span className="font-medium text-red-600">- ₦{Math.min(existingEquity, selectedPlot.price).toLocaleString()}</span>
                             </div>

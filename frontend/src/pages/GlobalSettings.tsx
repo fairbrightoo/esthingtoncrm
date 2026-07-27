@@ -410,7 +410,7 @@ export const GlobalSettings = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Global System Settings</h1>
                     <p className="text-gray-500 mt-1">Manage network branches, templates, and corporate identities.</p>
@@ -530,7 +530,7 @@ export const GlobalSettings = () => {
             {(showCompanyModal || showBranchModal) && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 flex flex-col max-h-[90vh]">
-                        <div className="flex justify-between items-center mb-6 shrink-0">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 shrink-0">
                             <h2 className="text-xl font-bold">{showCompanyModal ? (editingCompany ? 'Edit Company' : 'New Company') : (editingBranch ? 'Edit Branch' : 'New Branch')}</h2>
                             <button onClick={() => { setShowCompanyModal(false); setShowBranchModal(false); }}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
@@ -746,7 +746,7 @@ export const GlobalSettings = () => {
             {showAdminModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                             <h2 className="text-xl font-bold">Manage Branch Leaders</h2>
                             <button onClick={() => setShowAdminModal(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
@@ -829,7 +829,7 @@ export const GlobalSettings = () => {
             {showGroupMDModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                             <h2 className="text-xl font-bold">Manage Group MDs</h2>
                             <button onClick={() => { setShowGroupMDModal(false); setEditingAdmin(null); }}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
@@ -905,7 +905,7 @@ export const GlobalSettings = () => {
             {showChairmanModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                             <h2 className="text-xl font-bold">Manage Global Chairman</h2>
                             <button onClick={() => setShowChairmanModal(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
@@ -991,7 +991,7 @@ export const GlobalSettings = () => {
             {showBulkUploadModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
                             <h2 className="text-xl font-bold">Bulk Upload Branch Admins</h2>
                             <button onClick={() => setShowBulkUploadModal(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
                         </div>
@@ -1061,7 +1061,7 @@ export const GlobalSettings = () => {
             {confirmDialog && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform transition-all">
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4">
                             <h3 className="text-lg font-bold text-gray-900">{confirmDialog.title}</h3>
                             <button onClick={() => setConfirmDialog(null)} className="text-gray-400 hover:text-gray-500">
                                 <X size={20} />

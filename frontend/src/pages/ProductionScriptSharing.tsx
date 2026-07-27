@@ -33,7 +33,7 @@ export const ProductionScriptSharing = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Production Scripts</h1>
                     <p className="text-gray-500 mt-1">Author and assign drama/video scripts to staff actors.</p>
