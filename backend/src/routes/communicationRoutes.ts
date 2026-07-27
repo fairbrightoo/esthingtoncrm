@@ -39,6 +39,7 @@ router.get('/templates', CommunicationController.getTemplates);
 router.get('/whatsapp-templates', CommunicationController.getWhatsAppTemplates);
 
 // Campaign Routes
+router.post('/campaigns/audience-count', CampaignController.countAudience); // Count Audience
 router.post('/campaigns', CampaignController.createCampaign); // Create Draft
 router.get('/campaigns', CampaignController.getCampaigns);   // List All
 router.post('/campaigns/:id/send', CampaignController.sendCampaign); // Execute

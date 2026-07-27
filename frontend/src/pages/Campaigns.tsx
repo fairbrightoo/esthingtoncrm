@@ -61,6 +61,9 @@ export const Campaigns = () => {
     const [scopeFilter, setScopeFilter] = useState('BRANCH');
     const [estates, setEstates] = useState<any[]>([]);
 
+    const [audienceCount, setAudienceCount] = useState<number | null>(null);
+    const [isCountingAudience, setIsCountingAudience] = useState(false);
+
     const [isSending, setIsSending] = useState(false);
     const [mediaFile, setMediaFile] = useState<File | null>(null);
     const [waMessageType, setWaMessageType] = useState<'TEMPLATE' | 'CUSTOM'>('TEMPLATE');
@@ -79,6 +82,28 @@ export const Campaigns = () => {
         fetchWhatsAppTemplates();
         fetchEstates();
     }, []);
+
+    useEffect(() => {
+        // Debounce audience counting
+        const handler = setTimeout(async () => {
+            if (!isModalOpen) return;
+            setIsCountingAudience(true);
+            try {
+                const filters = { gender: genderFilter, status: statusFilter, source: sourceFilter, scope: scopeFilter, estateId: estateFilter !== 'All' ? estateFilter : undefined };
+                const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns/audience-count`, { filters }, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                });
+                setAudienceCount(res.data.count);
+            } catch (error) {
+                console.error("Failed to count audience", error);
+                setAudienceCount(null);
+            } finally {
+                setIsCountingAudience(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(handler);
+    }, [genderFilter, statusFilter, sourceFilter, estateFilter, scopeFilter, isModalOpen]);
 
     const fetchWhatsAppTemplates = async () => {
         try {
@@ -385,9 +410,36 @@ export const Campaigns = () => {
 
                             {/* Audience Filters */}
                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                                    <Filter size={16} className="mr-2" /> Target Audience
-                                </h3>
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 flex items-center">
+                                        <Filter size={16} className="mr-2" /> Target Audience
+                                    </h3>
+                                    
+                                    {/* Dynamic Lead Counter */}
+                                    <div className={`flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                                        isCountingAudience 
+                                            ? 'bg-gray-200 text-gray-500 animate-pulse' 
+                                            : audienceCount === null 
+                                                ? 'bg-gray-100 text-gray-500'
+                                                : audienceCount > 0 
+                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                                    : 'bg-red-50 text-red-700 border border-red-200'
+                                    }`}>
+                                        {isCountingAudience ? (
+                                            <>
+                                                <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-1.5"></div>
+                                                Calculating...
+                                            </>
+                                        ) : audienceCount !== null ? (
+                                            <>
+                                                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                                {audienceCount.toLocaleString()} {audienceCount === 1 ? 'Lead' : 'Leads'}
+                                            </>
+                                        ) : (
+                                            'Wait...'
+                                        )}
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Gender</label>

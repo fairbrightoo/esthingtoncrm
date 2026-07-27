@@ -4,6 +4,57 @@ import { SmsService } from '../services/SmsService.js';
 import { WhatsAppService } from '../services/WhatsAppService.js';
 import prisma from '../config/prisma.js';
 
+const buildCampaignWhereClause = async (companyId: string, filters: any, userId: string) => {
+    const whereClause: any = { companyId };
+
+    // Apply Filters
+    if (filters.gender && filters.gender !== 'All') {
+        whereClause.gender = filters.gender.toUpperCase();
+    }
+    if (filters.status && filters.status !== 'All') {
+        whereClause.status = filters.status.toUpperCase();
+    }
+    if (filters.source && typeof filters.source === 'string' && filters.source.trim() !== '') {
+        whereClause.source = { contains: filters.source, mode: 'insensitive' };
+    }
+    if (filters.estateId) {
+        whereClause.sales = {
+            some: {
+                plot: {
+                    estateId: filters.estateId
+                }
+            }
+        };
+    }
+
+    // Role-Based Isolation to prevent leaking to entire company
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User not found");
+
+    if (user.role === 'SUPER_ADMIN') {
+        // Super Admins can see all leads, delete companyId constraint
+        delete whereClause.companyId;
+    } else if (filters.scope === 'PERSONAL' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ACCOUNTANT', 'BRANCH_HR'].includes(user.role)) {
+        // Personal Scope or roles limited to their own leads
+        whereClause.AND = [
+            ...(whereClause.AND || []),
+            {
+                OR: [
+                    { assignedToUserId: user.id },
+                    { sales: { some: { marketerId: user.id } } }
+                ]
+            }
+        ];
+    } else if (['BRANCH_ADMIN', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user.role)) {
+        if (user.branchId) {
+            whereClause.branchId = user.branchId;
+        }
+    } else if (user.role === 'ICT_ORACLE') {
+        // ICT_ORACLE can send to their entire company
+    }
+
+    return whereClause;
+};
 
 export const CampaignController = {
     // Create new campaign (Draft)
@@ -101,52 +152,11 @@ export const CampaignController = {
 
             // 1. Parse Filters and Build Query
             const filters = JSON.parse(campaign.filters);
-            const whereClause: any = { companyId };
-
-            // Apply Filters
-            if (filters.gender && filters.gender !== 'All') {
-                whereClause.gender = filters.gender.toUpperCase();
-            }
-            if (filters.status && filters.status !== 'All') {
-                whereClause.status = filters.status.toUpperCase();
-            }
-            if (filters.source && typeof filters.source === 'string' && filters.source.trim() !== '') {
-                whereClause.source = { contains: filters.source, mode: 'insensitive' };
-            }
-            if (filters.estateId) {
-                whereClause.sales = {
-                    some: {
-                        plot: {
-                            estateId: filters.estateId
-                        }
-                    }
-                };
-            }
-
-            // Role-Based Isolation to prevent leaking to entire company
-            const user = await prisma.user.findUnique({ where: { id: userId } });
-            if (!user) return res.status(401).json({ error: "User not found" });
-
-            if (user.role === 'SUPER_ADMIN') {
-                // Super Admins can see all leads, delete companyId constraint
-                delete whereClause.companyId;
-            } else if (filters.scope === 'PERSONAL' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ACCOUNTANT', 'BRANCH_HR'].includes(user.role)) {
-                // Personal Scope or roles limited to their own leads
-                whereClause.AND = [
-                    ...(whereClause.AND || []),
-                    {
-                        OR: [
-                            { assignedToUserId: user.id },
-                            { sales: { some: { marketerId: user.id } } }
-                        ]
-                    }
-                ];
-            } else if (['BRANCH_ADMIN', 'CUSTOMER_CARE', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(user.role)) {
-                if (user.branchId) {
-                    whereClause.branchId = user.branchId;
-                }
-            } else if (user.role === 'ICT_ORACLE') {
-                // ICT_ORACLE can send to their entire company
+            let whereClause: any;
+            try {
+                whereClause = await buildCampaignWhereClause(companyId, filters, userId);
+            } catch (err: any) {
+                return res.status(401).json({ error: err.message });
             }
 
 
@@ -296,6 +306,28 @@ export const CampaignController = {
         } catch (error) {
             console.error("Get Campaign Logs Error:", error);
             res.status(500).json({ error: "Failed to fetch campaign logs" });
+        }
+    },
+
+    // Count Audience Reach based on active filters
+    async countAudience(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const { companyId, userId } = req.user as any;
+            const { filters } = req.body;
+
+            let whereClause: any;
+            try {
+                whereClause = await buildCampaignWhereClause(companyId, filters, userId);
+            } catch (err: any) {
+                return res.status(401).json({ error: err.message });
+            }
+
+            const count = await prisma.lead.count({ where: whereClause });
+            res.json({ count });
+        } catch (error) {
+            console.error('Count Audience Error:', error);
+            res.status(500).json({ error: 'Failed to count audience' });
         }
     },
 
