@@ -83,6 +83,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'GLOBAL_CHAIRMAN' && (
                     <>
                         <NavItem to="/dashboard/chairman/crm" icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to="/dashboard/chairman/campaigns" icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to="/dashboard/chairman/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/dashboard/chairman/expenses" icon={<FileSpreadsheet size={20} />} label="My Expenses" />
                         <NavItem to="/dashboard/chairman/broadcasts" icon={<Megaphone size={20} />} label="Broadcasts" />
@@ -99,6 +100,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/leaves" icon={<CalendarClock size={20} />} label="Leave Approvals" />
                         <NavItem to="/dashboard/staff-analytics" icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to="/dashboard/my-leads" icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to="/dashboard/campaigns" icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to="/dashboard/settings" icon={<Settings size={20} />} label="Settings" />
                     </>

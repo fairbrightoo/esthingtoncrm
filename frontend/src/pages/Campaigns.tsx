@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Send, Filter, CheckCircle, Mail, MessageSquare, Phone, RefreshCcw, AlertCircle, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 // @ts-ignore
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -43,6 +44,7 @@ export const Campaigns = () => {
     const [waTemplates, setWaTemplates] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { toast } = useToast();
+    const { user } = useAuth();
 
     // New Campaign Form State
     const [name, setName] = useState('');
@@ -56,6 +58,7 @@ export const Campaigns = () => {
     const [statusFilter, setStatusFilter] = useState('All');
     const [sourceFilter, setSourceFilter] = useState('');
     const [estateFilter, setEstateFilter] = useState('All');
+    const [scopeFilter, setScopeFilter] = useState('BRANCH');
     const [estates, setEstates] = useState<any[]>([]);
 
     const [isSending, setIsSending] = useState(false);
@@ -194,7 +197,7 @@ export const Campaigns = () => {
             }
 
             // 3. Create Campaign Draft
-            const filters: any = { gender: genderFilter, status: statusFilter, source: sourceFilter };
+            const filters: any = { gender: genderFilter, status: statusFilter, source: sourceFilter, scope: scopeFilter };
             if (statusFilter === 'CLIENT' && estateFilter !== 'All') {
                 filters.estateId = estateFilter;
                 const est = estates.find(e => e.id === estateFilter);
@@ -230,6 +233,7 @@ export const Campaigns = () => {
             setStatusFilter('All');
             setSourceFilter('');
             setEstateFilter('All');
+            setScopeFilter('BRANCH');
             setSaveAsTemplate(false);
             setSelectedTemplateId('');
             setMediaFile(null);
@@ -430,6 +434,20 @@ export const Campaigns = () => {
                                                 {estates.map(e => (
                                                     <option key={e.id} value={e.id}>{e.name}</option>
                                                 ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                    {user && !['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ACCOUNTANT', 'BRANCH_HR'].includes(user.role) && (
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Campaign Scope</label>
+                                            <select
+                                                value={scopeFilter} onChange={e => setScopeFilter(e.target.value)}
+                                                className="w-full text-sm border rounded p-1.5"
+                                            >
+                                                <option value="BRANCH">Entire Branch/Company</option>
+                                                <option value="PERSONAL">My Personal Leads Only</option>
                                             </select>
                                         </div>
                                     )}

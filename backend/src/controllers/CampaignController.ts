@@ -105,13 +105,13 @@ export const CampaignController = {
 
             // Apply Filters
             if (filters.gender && filters.gender !== 'All') {
-                whereClause.gender = filters.gender;
+                whereClause.gender = filters.gender.toUpperCase();
             }
             if (filters.status && filters.status !== 'All') {
-                whereClause.status = filters.status;
+                whereClause.status = filters.status.toUpperCase();
             }
             if (filters.source && typeof filters.source === 'string' && filters.source.trim() !== '') {
-                whereClause.source = { contains: filters.source };
+                whereClause.source = { contains: filters.source, mode: 'insensitive' };
             }
             if (filters.estateId) {
                 whereClause.sales = {
@@ -127,8 +127,11 @@ export const CampaignController = {
             const user = await prisma.user.findUnique({ where: { id: userId } });
             if (!user) return res.status(401).json({ error: "User not found" });
 
-            if (['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT', 'BRANCH_HR'].includes(user.role)) {
+            if (user.role === 'SUPER_ADMIN') {
+                // Super Admins can see all leads, delete companyId constraint
                 delete whereClause.companyId;
+            } else if (filters.scope === 'PERSONAL' || ['MARKETER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ACCOUNTANT', 'BRANCH_HR'].includes(user.role)) {
+                // Personal Scope or roles limited to their own leads
                 whereClause.AND = [
                     ...(whereClause.AND || []),
                     {
@@ -142,7 +145,10 @@ export const CampaignController = {
                 if (user.branchId) {
                     whereClause.branchId = user.branchId;
                 }
+            } else if (user.role === 'ICT_ORACLE') {
+                // ICT_ORACLE can send to their entire company
             }
+
 
             // 2. Fetch Audience
             const leads = await prisma.lead.findMany({ where: whereClause });
