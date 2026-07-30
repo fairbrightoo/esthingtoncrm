@@ -6,7 +6,7 @@ import Papa from 'papaparse';
 import { 
     Map, Upload, Plus, AlertCircle, CheckCircle, Search, 
     ChevronDown, Edit2, Link, Unlink, FileSpreadsheet,
-    Loader2
+    Loader2, X
 } from 'lucide-react';
 
 export const SitePlotMapping = () => {
@@ -25,6 +25,16 @@ export const SitePlotMapping = () => {
     // For mapping
     const [mappingSystemPlot, setMappingSystemPlot] = useState<any>(null); // Plot being mapped
     const [showMappingModal, setShowMappingModal] = useState(false);
+
+    // For Add/Edit
+    const [showAddEditModal, setShowAddEditModal] = useState(false);
+    const [editingPlot, setEditingPlot] = useState<any>(null);
+    const [formData, setFormData] = useState({
+        physicalPlotNumber: '',
+        size: '',
+        isCornerPiece: false,
+        coordinates: ''
+    });
     
     const canEdit = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'].includes(user?.role || '');
 
@@ -144,6 +154,47 @@ export const SitePlotMapping = () => {
         }
     };
 
+    const handleOpenAddEdit = (plot: any = null) => {
+        setEditingPlot(plot);
+        if (plot) {
+            setFormData({
+                physicalPlotNumber: plot.physicalPlotNumber,
+                size: plot.size.toString(),
+                isCornerPiece: plot.isCornerPiece,
+                coordinates: plot.coordinates || ''
+            });
+        } else {
+            setFormData({
+                physicalPlotNumber: '',
+                size: '',
+                isCornerPiece: false,
+                coordinates: ''
+            });
+        }
+        setShowAddEditModal(true);
+    };
+
+    const handleSavePlot = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                ...formData,
+                size: parseFloat(formData.size),
+                id: editingPlot?.id
+            };
+            await axios.post(
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstateId}/physical-plots`,
+                payload,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            addToast(`Successfully ${editingPlot ? 'updated' : 'added'} plot`, "success");
+            setShowAddEditModal(false);
+            fetchData();
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to save plot", "error");
+        }
+    };
+
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-10">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
@@ -211,7 +262,10 @@ export const SitePlotMapping = () => {
                                         >
                                             <Upload size={16} className="mr-2 text-indigo-600" /> Upload CSV
                                         </button>
-                                        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center font-semibold text-sm shadow-sm shadow-indigo-200">
+                                        <button 
+                                            onClick={() => handleOpenAddEdit()}
+                                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center font-semibold text-sm shadow-sm shadow-indigo-200"
+                                        >
                                             <Plus size={16} className="mr-2" /> Add Plot
                                         </button>
                                     </div>
@@ -284,7 +338,10 @@ export const SitePlotMapping = () => {
                                                                 <Unlink size={16} />
                                                             </button>
                                                         ) : (
-                                                            <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                            <button 
+                                                                onClick={() => handleOpenAddEdit(plot)}
+                                                                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                            >
                                                                 <Edit2 size={16} />
                                                             </button>
                                                         )}
@@ -411,6 +468,68 @@ export const SitePlotMapping = () => {
                                 Cancel
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Add/Edit Modal */}
+            {showAddEditModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+                        <form onSubmit={handleSavePlot}>
+                            <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                <h3 className="font-black text-xl text-gray-900">{editingPlot ? 'Edit Plot' : 'Add New Plot'}</h3>
+                                <button type="button" onClick={() => setShowAddEditModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Physical Plot Number <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        required 
+                                        value={formData.physicalPlotNumber} 
+                                        onChange={e => setFormData({...formData, physicalPlotNumber: e.target.value})}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="e.g. P1, Block A - Plot 4"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Size (sqm) <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="number" 
+                                        required 
+                                        value={formData.size} 
+                                        onChange={e => setFormData({...formData, size: e.target.value})}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="e.g. 500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Is this a Corner Piece?</label>
+                                    <select 
+                                        value={formData.isCornerPiece ? 'Yes' : 'No'} 
+                                        onChange={e => setFormData({...formData, isCornerPiece: e.target.value === 'Yes'})}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Coordinates (Optional)</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.coordinates} 
+                                        onChange={e => setFormData({...formData, coordinates: e.target.value})}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                                        placeholder="e.g. 6.4531° N, 3.3958° E"
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end space-x-3">
+                                <button type="button" onClick={() => setShowAddEditModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold transition-colors">Cancel</button>
+                                <button type="submit" className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm">Save Plot</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
