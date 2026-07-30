@@ -35,6 +35,8 @@ export const SitePlotMapping = () => {
         isCornerPiece: false,
         coordinates: ''
     });
+
+    const [sizeFilter, setSizeFilter] = useState<string>('ALL');
     
     const canEdit = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'].includes(user?.role || '');
 
@@ -320,7 +322,7 @@ export const SitePlotMapping = () => {
                                                         <div>
                                                             <div className="font-bold text-gray-800">{plot.mappedSystemPlot.plotNumber}</div>
                                                             <div className="text-xs text-gray-500 mt-0.5">
-                                                                {plot.mappedSystemPlot.sales?.[0]?.lead?.firstName} {plot.mappedSystemPlot.sales?.[0]?.lead?.lastName}
+                                                                {plot.mappedSystemPlot.sales?.[0]?.lead?.fullName || 'Client'}
                                                             </div>
                                                         </div>
                                                     ) : (
@@ -362,10 +364,23 @@ export const SitePlotMapping = () => {
                                     <h3 className="font-bold text-indigo-900 text-lg">Unmapped Client Plots</h3>
                                     <p className="text-sm text-indigo-600/70">These system plots have been purchased or reserved, but lack a physical geographical mapping.</p>
                                 </div>
+                                <div className="mt-4 md:mt-0 bg-white p-1 rounded-lg border border-indigo-100 flex items-center shadow-sm">
+                                    <span className="text-xs font-bold text-gray-500 px-3 uppercase tracking-wide">Size Filter:</span>
+                                    <select 
+                                        value={sizeFilter}
+                                        onChange={e => setSizeFilter(e.target.value)}
+                                        className="bg-transparent border-none focus:outline-none text-indigo-700 font-bold py-1.5 px-2 text-sm pr-6 cursor-pointer"
+                                    >
+                                        <option value="ALL">All Sizes</option>
+                                        {Array.from(new Set(unmappedPlots.map(p => p.size))).sort((a,b) => a-b).map(size => (
+                                            <option key={size} value={size}>{size} sqm</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                             
                             <div className="p-6">
-                                {unmappedPlots.length === 0 ? (
+                                {unmappedPlots.filter(p => sizeFilter === 'ALL' || p.size.toString() === sizeFilter).length === 0 ? (
                                     <div className="text-center text-gray-400 py-10">
                                         <CheckCircle size={48} className="mx-auto mb-3 text-green-400 opacity-50" />
                                         <h3 className="text-gray-900 font-bold mb-1">All Caught Up!</h3>
@@ -373,7 +388,7 @@ export const SitePlotMapping = () => {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {unmappedPlots.map(plot => (
+                                        {unmappedPlots.filter(p => sizeFilter === 'ALL' || p.size.toString() === sizeFilter).map(plot => (
                                             <div key={plot.id} className="border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all bg-white relative group flex flex-col justify-between">
                                                 <div>
                                                     <div className="absolute top-4 right-4 text-xs font-bold px-2 py-1 rounded bg-blue-50 text-blue-700">
@@ -386,7 +401,7 @@ export const SitePlotMapping = () => {
                                                     <div className="p-3 bg-gray-50 rounded-lg mb-4">
                                                         <div className="text-xs text-gray-500 mb-1">Purchased By</div>
                                                         <div className="font-bold text-gray-800">
-                                                            {plot.sales?.[0]?.lead?.firstName} {plot.sales?.[0]?.lead?.lastName}
+                                                            {plot.sales?.[0]?.lead?.fullName || 'Client'}
                                                         </div>
                                                     </div>
                                                 </div>
