@@ -37,6 +37,7 @@ export const SitePlotMapping = () => {
     });
 
     const [sizeFilter, setSizeFilter] = useState<string>('ALL');
+    const [unmapPlotId, setUnmapPlotId] = useState<string | null>(null);
     
     const canEdit = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'].includes(user?.role || '');
 
@@ -141,15 +142,20 @@ export const SitePlotMapping = () => {
         }
     };
 
-    const handleUnmap = async (physicalPlotId: string) => {
-        if (!window.confirm("Are you sure you want to decouple this client's plot from its physical location?")) return;
+    const handleUnmap = (physicalPlotId: string) => {
+        setUnmapPlotId(physicalPlotId);
+    };
+
+    const confirmUnmap = async () => {
+        if (!unmapPlotId) return;
         try {
             await axios.post(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstateId}/physical-plots/${physicalPlotId}/unmap`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstateId}/physical-plots/${unmapPlotId}/unmap`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             addToast("Plot unmapped successfully", "success");
+            setUnmapPlotId(null);
             fetchData();
         } catch (error: any) {
             addToast("Failed to unmap", "error");
@@ -545,6 +551,35 @@ export const SitePlotMapping = () => {
                                 <button type="submit" className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm">Save Plot</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Unmap Confirmation Modal */}
+            {unmapPlotId && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Unlink className="text-red-600" size={32} />
+                        </div>
+                        <h3 className="font-black text-xl text-gray-900 mb-2">Decouple Plot?</h3>
+                        <p className="text-sm text-gray-500 mb-6">
+                            Are you sure you want to decouple this client's plot from its physical location? This action can be undone by remapping it later.
+                        </p>
+                        <div className="flex space-x-3">
+                            <button 
+                                onClick={() => setUnmapPlotId(null)} 
+                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmUnmap} 
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm shadow-red-200"
+                            >
+                                Unmap Plot
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
