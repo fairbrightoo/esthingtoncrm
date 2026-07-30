@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map } from 'lucide-react';
 
 
 
@@ -75,6 +75,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/global-clients" icon={<Globe size={20} />} label="Global Clients" />
                         <NavItem to="/admin/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/admin/inventory" icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to="/admin/site-mapping" icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to="/admin/legacy-requests" icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
                     </>
@@ -116,6 +117,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/leads`} icon={<FileText size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to={`${basePath}/site-mapping`} icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
@@ -238,8 +240,10 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
+                        <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
+                        <NavItem to={`${basePath}/site-mapping`} icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Legacy Requests" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/hr-recommendations`} icon={<Users size={20} />} label="HR Recommendations" />

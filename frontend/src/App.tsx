@@ -75,6 +75,7 @@ import { MarketingMediaHub } from './pages/MarketingMediaHub';
 import { ProductionScriptSharing } from './pages/ProductionScriptSharing';
 import { StaffTrainingHub } from './pages/StaffTrainingHub';
 import { SocialMediaAnalytics } from './pages/SocialMediaAnalytics';
+import { SitePlotMapping } from './pages/SitePlotMapping';
 
 import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { ChairmanExpenses } from './pages/ChairmanExpenses';
@@ -205,6 +206,7 @@ function App() {
             <Route path="/admin/global-clients" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
             <Route path="/admin/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
             <Route path="/admin/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
+            <Route path="/admin/site-mapping" element={<DashboardLayout><SitePlotMapping /></DashboardLayout>} />
             <Route path="/admin/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
             <Route path="/admin/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
@@ -263,6 +265,7 @@ function App() {
             <Route path="/dashboard/:branchName/command-center" element={<DashboardLayout><BDMCommandCenter /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/department" element={<DashboardLayout><DepartmentBuilder /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/site-mapping" element={<DashboardLayout><SitePlotMapping /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/templates" element={<DashboardLayout><CommunicationTemplates /></DashboardLayout>} />

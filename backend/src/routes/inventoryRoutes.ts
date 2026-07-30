@@ -1,6 +1,7 @@
 import express from 'express';
 import { EstateController } from '../controllers/EstateController.js';
 import { PlotController } from '../controllers/PlotController.js';
+import { PhysicalPlotController } from '../controllers/PhysicalPlotController.js';
 import { SaleController } from '../controllers/SaleController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
@@ -26,6 +27,14 @@ router.put('/plots/:plotId/toggle-cp', authenticateToken, PlotController.toggleC
 router.get('/plots/:plotId/history', authenticateToken, PlotController.getPlotHistory);
 router.put('/estates/:estateId/plots/bulk-price', authenticateToken, PlotController.updateBulkPlotPrices);
 router.put('/estates/:estateId/plots/bulk-edit-attributes', authenticateToken, PlotController.updateBulkPlotAttributes);
+
+// --- INVENTORY / PHYSICAL PLOTS (SITE LAYOUT) ROUTES ---
+router.post('/estates/:estateId/physical-plots/bulk', authenticateToken, PhysicalPlotController.bulkUpload);
+router.post('/estates/:estateId/physical-plots', authenticateToken, PhysicalPlotController.savePlot);
+router.get('/estates/:estateId/physical-plots', authenticateToken, PhysicalPlotController.getPhysicalPlots);
+router.get('/estates/:estateId/plots/unmapped', authenticateToken, PhysicalPlotController.getUnmappedSystemPlots);
+router.post('/estates/:estateId/physical-plots/:physicalPlotId/map', authenticateToken, PhysicalPlotController.mapPlot);
+router.post('/estates/:estateId/physical-plots/:physicalPlotId/unmap', authenticateToken, PhysicalPlotController.unmapPlot);
 
 // --- SALES & PAYMENTS ROUTES ---
 router.post('/sales', authenticateToken, SaleController.createSale);
