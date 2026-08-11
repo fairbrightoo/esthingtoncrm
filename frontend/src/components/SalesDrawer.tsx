@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Tag, CreditCard, Plus, Building, MapPin, Clock, X } from 'lucide-react';
+import { Tag, CreditCard, Plus, Building, MapPin, Clock, X, Filter } from 'lucide-react';
 
 interface Plot {
     id: string;
@@ -102,6 +102,14 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [branchUsers, setBranchUsers] = useState<any[]>([]);
     const [plotSearchQuery, setPlotSearchQuery] = useState('');
     const [isPlotDropdownOpen, setIsPlotDropdownOpen] = useState(false);
+    
+    // Advanced Filters State
+    const [showFilters, setShowFilters] = useState(false);
+    const [filterEstate, setFilterEstate] = useState('');
+    const [filterPrototype, setFilterPrototype] = useState('');
+    const [filterMinPrice, setFilterMinPrice] = useState('');
+    const [filterMaxPrice, setFilterMaxPrice] = useState('');
+    const [filterCornerPiece, setFilterCornerPiece] = useState(false);
     
     // Purchase Specific Document Details
     const [nameOnDocument, setNameOnDocument] = useState('');
@@ -308,7 +316,6 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     const resetForms = () => {
         setSelectedPlotId('');
-        setSelectedPlotId('');
         setNameOnDocument('');
         setPhoneOnDocument('');
         setAddressOnDocument('');
@@ -322,6 +329,13 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         setPaymentNotes('');
         setProofFiles([]);
         setSelectedSaleId(null);
+        setPlotSearchQuery('');
+        setFilterEstate('');
+        setFilterPrototype('');
+        setFilterMinPrice('');
+        setFilterMaxPrice('');
+        setFilterCornerPiece(false);
+        setShowFilters(false);
     };
 
     const getSelectedPlotPrice = () => {
@@ -375,40 +389,148 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                 {/* Invisible backdrop to close dropdown when clicking outside */}
                                 <div className="fixed inset-0 z-40" onClick={() => setIsPlotDropdownOpen(false)}></div>
                                 
-                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-72 overflow-y-auto">
-                                    <div className="sticky top-0 bg-white p-2 border-b z-10">
-                                        <input 
-                                            type="text" 
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
-                                            placeholder="Search by plot number, prototype or estate..."
-                                            value={plotSearchQuery}
-                                            onChange={(e) => setPlotSearchQuery(e.target.value)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div className="p-1">
-                                        {plots.filter(p => `${p.plotNumber} ${p.prototype} ${p.estate.name}`.toLowerCase().includes(plotSearchQuery.toLowerCase())).length === 0 ? (
-                                            <div className="p-4 text-sm text-gray-500 text-center flex flex-col items-center">
-                                                <Tag size={20} className="text-gray-300 mb-2" />
-                                                No properties matched your search.
+                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[28rem] flex flex-col">
+                                    <div className="sticky top-0 bg-white p-2 border-b z-20 shadow-sm flex flex-col gap-2 rounded-t-lg">
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                                                placeholder="Search by plot number, prototype or estate..."
+                                                value={plotSearchQuery}
+                                                onChange={(e) => setPlotSearchQuery(e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                autoFocus
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setShowFilters(!showFilters); }}
+                                                className={`px-3 py-2 border rounded-md flex items-center justify-center transition-colors ${showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                                            >
+                                                <Filter size={16} />
+                                            </button>
+                                        </div>
+                                        
+                                        {/* Advanced Filters Panel */}
+                                        {showFilters && (
+                                            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 space-y-3 mt-1" onClick={(e) => e.stopPropagation()}>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Estate</label>
+                                                        <select
+                                                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                                            value={filterEstate}
+                                                            onChange={(e) => setFilterEstate(e.target.value)}
+                                                        >
+                                                            <option value="">All Estates</option>
+                                                            {Array.from(new Set(plots.map(p => p.estate.name))).sort().map(estate => (
+                                                                <option key={estate} value={estate}>{estate}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Prototype</label>
+                                                        <select
+                                                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                                            value={filterPrototype}
+                                                            onChange={(e) => setFilterPrototype(e.target.value)}
+                                                        >
+                                                            <option value="">All Prototypes</option>
+                                                            {Array.from(new Set(plots.map(p => p.prototype))).sort().map(proto => (
+                                                                <option key={proto} value={proto}>{proto}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Min Price (₦)</label>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="0"
+                                                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                                            value={filterMinPrice}
+                                                            onChange={(e) => setFilterMinPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Max Price (₦)</label>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="No Limit"
+                                                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                                            value={filterMaxPrice}
+                                                            onChange={(e) => setFilterMaxPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between pt-1">
+                                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                                            checked={filterCornerPiece}
+                                                            onChange={(e) => setFilterCornerPiece(e.target.checked)}
+                                                        />
+                                                        <span className="text-sm text-gray-700">Corner Piece Only</span>
+                                                    </label>
+                                                    
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => {
+                                                            setFilterEstate(''); setFilterPrototype(''); setFilterMinPrice(''); setFilterMaxPrice(''); setFilterCornerPiece(false);
+                                                        }}
+                                                        className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                                    >
+                                                        Clear Filters
+                                                    </button>
+                                                </div>
                                             </div>
-                                        ) : (
-                                            plots.filter(p => `${p.plotNumber} ${p.prototype} ${p.estate.name}`.toLowerCase().includes(plotSearchQuery.toLowerCase())).map(p => (
+                                        )}
+                                    </div>
+                                    <div className="p-2 overflow-y-auto flex-1">
+                                        {(() => {
+                                            const filteredPlots = plots.filter(p => {
+                                                const matchesSearch = `${p.plotNumber} ${p.prototype} ${p.estate.name}`.toLowerCase().includes(plotSearchQuery.toLowerCase());
+                                                const matchesEstate = filterEstate ? p.estate.name === filterEstate : true;
+                                                const matchesPrototype = filterPrototype ? p.prototype === filterPrototype : true;
+                                                const matchesMinPrice = filterMinPrice ? p.price >= Number(filterMinPrice) : true;
+                                                const matchesMaxPrice = filterMaxPrice ? p.price <= Number(filterMaxPrice) : true;
+                                                const matchesCornerPiece = filterCornerPiece ? p.isCornerPiece === true : true;
+                                                return matchesSearch && matchesEstate && matchesPrototype && matchesMinPrice && matchesMaxPrice && matchesCornerPiece;
+                                            });
+
+                                            if (filteredPlots.length === 0) {
+                                                return (
+                                                    <div className="p-8 text-sm text-gray-500 text-center flex flex-col items-center">
+                                                        <Tag size={24} className="text-gray-300 mb-3" />
+                                                        No properties matched your search/filters.
+                                                    </div>
+                                                );
+                                            }
+
+                                            return filteredPlots.map(p => (
                                                 <div 
                                                     key={p.id} 
-                                                    className={`p-2 hover:bg-blue-50 cursor-pointer rounded-md text-sm transition-colors ${selectedPlotId === p.id ? 'bg-blue-50 text-blue-700 border-blue-100 border' : 'text-gray-700 border border-transparent'}`}
+                                                    className={`p-3 hover:bg-blue-50 cursor-pointer rounded-md text-sm transition-colors mb-1 ${selectedPlotId === p.id ? 'bg-blue-50 text-blue-700 border-blue-100 border shadow-sm' : 'text-gray-700 border border-transparent hover:border-gray-200'}`}
                                                     onClick={() => {
                                                         setSelectedPlotId(p.id);
                                                         setIsPlotDropdownOpen(false);
-                                                        setPlotSearchQuery('');
                                                     }}
                                                 >
-                                                    <div className={`font-bold ${selectedPlotId === p.id ? 'text-blue-700' : 'text-gray-900'}`}>{p.plotNumber}</div>
-                                                    <div className="text-xs text-gray-500 mt-0.5">{p.prototype} <span className="mx-1">•</span> {p.estate.name}</div>
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <div className={`font-bold ${selectedPlotId === p.id ? 'text-blue-700' : 'text-gray-900'}`}>{p.plotNumber}</div>
+                                                        <div className="font-semibold text-blue-600">₦{p.price.toLocaleString()}</div>
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 flex flex-col gap-0.5">
+                                                        <div className="truncate">{p.prototype}</div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="flex items-center"><Building size={10} className="mr-1 inline"/>{p.estate.name}</span>
+                                                            {p.isCornerPiece && <span className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0.5 rounded uppercase font-bold">Corner</span>}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            ))
-                                        )}
+                                            ));
+                                        })()}
                                     </div>
                                 </div>
                             </>
