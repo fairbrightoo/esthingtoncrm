@@ -419,7 +419,10 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                         <select
                                                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                                                             value={filterEstate}
-                                                            onChange={(e) => setFilterEstate(e.target.value)}
+                                                            onChange={(e) => {
+                                                                setFilterEstate(e.target.value);
+                                                                setFilterPrototype('');
+                                                            }}
                                                         >
                                                             <option value="">All Estates</option>
                                                             {Array.from(new Set(plots.map(p => p.estate.name))).sort().map(estate => (
@@ -428,14 +431,17 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Prototype</label>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Prototype (Plot Size)</label>
                                                         <select
                                                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                                                             value={filterPrototype}
                                                             onChange={(e) => setFilterPrototype(e.target.value)}
                                                         >
                                                             <option value="">All Prototypes</option>
-                                                            {Array.from(new Set(plots.map(p => p.prototype))).sort().map(proto => (
+                                                            {Array.from(new Set(
+                                                                (filterEstate ? plots.filter(p => p.estate.name === filterEstate) : plots)
+                                                                .map(p => `${p.prototype} (${p.size}sqm)`)
+                                                            )).sort().map(proto => (
                                                                 <option key={proto} value={proto}>{proto}</option>
                                                             ))}
                                                         </select>
@@ -492,7 +498,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                             const filteredPlots = plots.filter(p => {
                                                 const matchesSearch = `${p.plotNumber} ${p.prototype} ${p.estate.name}`.toLowerCase().includes(plotSearchQuery.toLowerCase());
                                                 const matchesEstate = filterEstate ? p.estate.name === filterEstate : true;
-                                                const matchesPrototype = filterPrototype ? p.prototype === filterPrototype : true;
+                                                const matchesPrototype = filterPrototype ? `${p.prototype} (${p.size}sqm)` === filterPrototype : true;
                                                 const matchesMinPrice = filterMinPrice ? p.price >= Number(filterMinPrice) : true;
                                                 const matchesMaxPrice = filterMaxPrice ? p.price <= Number(filterMaxPrice) : true;
                                                 const matchesCornerPiece = filterCornerPiece ? p.isCornerPiece === true : true;
