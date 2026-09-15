@@ -151,6 +151,7 @@ export const InventoryManager = () => {
     // Legacy Imports & Edits
     const [plotCreationMode, setPlotCreationMode] = useState<'AUTO' | 'LEGACY' | 'LEGACY_SALES'>('AUTO');
     const [legacyTab, setLegacyTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
+    const [legacySaleTab, setLegacySaleTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
     const [legacyPlotForm, setLegacyPlotForm] = useState({ plotNumber: '', prototype: '', size: '', price: '', isCornerPiece: false });
     const [legacySaleForm, setLegacySaleForm] = useState({ 
         clientName: '', phone: '', email: '', 
@@ -182,6 +183,7 @@ export const InventoryManager = () => {
             // Reset state
             setPlotCreationMode('AUTO');
             setLegacyTab('SINGLE');
+            setLegacySaleTab('SINGLE');
         }
     }, [viewMode]);
 
