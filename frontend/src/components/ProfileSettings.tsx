@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { User, Lock, Save, ShieldCheck, Smartphone, Bell, Mail, CreditCard, Download, Printer } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck, Smartphone, Bell, Mail, CreditCard, Download, Printer, KeyRound } from 'lucide-react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import { toPng } from 'html-to-image';
