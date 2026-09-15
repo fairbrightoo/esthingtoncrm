@@ -191,6 +191,17 @@ export const SaleController = {
                 return;
             }
 
+            // AUTO-SYNC: If this is the VERY FIRST payment, sync the commission rate
+            if (sale.totalPaid === 0 && sale.lead.assignedToUser && sale.lead.assignedToUser.commissionRate !== null) {
+                if (sale.marketerCommissionRate !== sale.lead.assignedToUser.commissionRate) {
+                    await prisma.sale.update({
+                        where: { id: sale.id },
+                        data: { marketerCommissionRate: sale.lead.assignedToUser.commissionRate }
+                    });
+                    sale.marketerCommissionRate = sale.lead.assignedToUser.commissionRate;
+                }
+            }
+
             // --- VIRTUAL LOAN VALIDATION ---
             const numericAmount = Number(amount);
             const loanAmount = Number(virtualLoanAmount) || 0;
