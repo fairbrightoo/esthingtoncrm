@@ -166,6 +166,7 @@ export const SaleController = {
                         }
                     },
                     lead: { include: { branch: true } },
+                    marketer: { select: { commissionRate: true } },
                     payments: { orderBy: { date: 'desc' } }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -184,7 +185,7 @@ export const SaleController = {
 
             const sale = await prisma.sale.findUnique({
                 where: { id: String(saleId) },
-                include: { lead: { include: { assignedToUser: true } } }
+                include: { marketer: { select: { commissionRate: true } }, lead: { include: { assignedToUser: true } } }
             });
             if (!sale) {
                 res.status(404).json({ error: "Sale not found" });
@@ -196,7 +197,7 @@ export const SaleController = {
             const loanAmount = Number(virtualLoanAmount) || 0;
             
             if (loanAmount > 0) {
-                const commissionRate = sale.marketerCommissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
+                const commissionRate = sale.marketer?.commissionRate || sale.marketerCommissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
                 const maxLoan = (numericAmount * commissionRate) / 100;
                 if (loanAmount > maxLoan) {
                     return res.status(400).json({ error: `Virtual loan exceeds maximum eligible amount of ₦${maxLoan.toLocaleString()}` });
