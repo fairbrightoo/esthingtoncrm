@@ -161,6 +161,7 @@ export const InventoryManager = () => {
     
     // Bulk Modals
     const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
+    const [isUpdatingBulkPrice, setIsUpdatingBulkPrice] = useState(false);
     const [bulkPriceForm, setBulkPriceForm] = useState({ prototype: '', size: '', newPrice: '' });
     const [legacySaleCsvFile, setLegacySaleCsvFile] = useState<File | null>(null);
     const [isLegacySaleLoading, setIsLegacySaleLoading] = useState(false);
