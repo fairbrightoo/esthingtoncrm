@@ -39,7 +39,7 @@ export const SitePlotMapping = () => {
     const [sizeFilter, setSizeFilter] = useState<string>('ALL');
     const [unmapPlotId, setUnmapPlotId] = useState<string | null>(null);
     
-    const canEdit = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'].includes(user?.role || '');
+    const canEdit = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'].includes(user?.role || '');
 
     useEffect(() => {
         fetchEstates();

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 // Only specific roles can edit or map plots
 const canEditMappings = (user: any) => {
-    const roles = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'];
+    const roles = ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'MANAGING_DIRECTOR', 'BRANCH_ADMIN'];
     return roles.includes(user.role);
 };
 
