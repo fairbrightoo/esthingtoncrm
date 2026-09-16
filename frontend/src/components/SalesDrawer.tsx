@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Tag, CreditCard, Plus, Building, MapPin, Clock, X, Filter } from 'lucide-react';
+import { Tag, CreditCard, Plus, Building, MapPin, Clock, X, Filter, CheckCircle } from 'lucide-react';
 
 interface Plot {
     id: string;
@@ -96,7 +96,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [isCancellingOffer, setIsCancellingOffer] = useState(false);
 
     // Form: New Sale
+    const [isReviewingPayment, setIsReviewingPayment] = useState(false);
     const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
+    const [isSubmittingSale, setIsSubmittingSale] = useState(false);
     const [selectedPlotId, setSelectedPlotId] = useState('');
     const [marketerId, setMarketerId] = useState('');
     const [branchUsers, setBranchUsers] = useState<any[]>([]);
@@ -259,8 +261,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         }
     };
 
-    const handleRecordPayment = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleRecordPayment = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         if (!selectedSaleId || !paymentAmount || isSubmittingPayment) return;
         setIsSubmittingPayment(true);
         try {
@@ -315,6 +317,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     };
 
     const resetForms = () => {
+        setIsReviewingPayment(false);
         setSelectedPlotId('');
         setNameOnDocument('');
         setPhoneOnDocument('');
@@ -696,7 +699,82 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     </div>
                 </div>
 
-                <form onSubmit={handleRecordPayment} className="space-y-4 flex-1">
+                {isReviewingPayment ? (
+                    <div className="space-y-4 flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-100 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center space-x-2 text-blue-800 mb-2">
+                            <CheckCircle size={20} />
+                            <h4 className="font-bold text-lg">Review Payment Details</h4>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">Please confirm the details below before finalizing your submission.</p>
+                        
+                        <div className="space-y-3 flex-1 overflow-y-auto">
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span className="text-gray-500 text-sm">Amount Paid</span>
+                                <span className="font-bold text-gray-900">₦{Number(paymentAmount).toLocaleString()}</span>
+                            </div>
+                            
+                            {paymentMethod !== 'EQUITY_WALLET' && virtualLoanAmount && Number(virtualLoanAmount) > 0 && (
+                                <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg">
+                                    <span className="text-orange-800 text-sm">Virtual Loan</span>
+                                    <span className="font-bold text-orange-900">₦{Number(virtualLoanAmount).toLocaleString()}</span>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span className="text-gray-500 text-sm">Method</span>
+                                <span className="font-bold text-gray-900">{paymentMethod.replace('_', ' ')}</span>
+                            </div>
+
+                            {paymentRef && (
+                                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                    <span className="text-gray-500 text-sm">Reference</span>
+                                    <span className="font-bold text-gray-900">{paymentRef}</span>
+                                </div>
+                            )}
+
+                            {paymentMethod !== 'EQUITY_WALLET' && accountPaidTo && (
+                                <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                    <span className="text-gray-500 text-sm mb-1">Account Paid To</span>
+                                    <span className="font-bold text-gray-900 text-sm">{accountPaidTo}</span>
+                                </div>
+                            )}
+
+                            {paymentNotes && (
+                                <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                    <span className="text-gray-500 text-sm mb-1">Notes</span>
+                                    <span className="font-bold text-gray-900 text-sm">{paymentNotes}</span>
+                                </div>
+                            )}
+
+                            {paymentMethod !== 'EQUITY_WALLET' && (
+                                <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <span className="text-blue-800 text-sm">Proof of Payment</span>
+                                    <span className="font-bold text-blue-900">{proofFiles.length} file(s) attached</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex space-x-3 mt-auto pt-4 border-t border-gray-100">
+                            <button 
+                                type="button" 
+                                onClick={() => setIsReviewingPayment(false)} 
+                                disabled={isSubmittingPayment}
+                                className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition disabled:opacity-50"
+                            >
+                                Edit / Back
+                            </button>
+                            <button 
+                                type="button" 
+                                onClick={() => handleRecordPayment()} 
+                                disabled={isSubmittingPayment}
+                                className="flex-1 py-3 px-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md shadow-green-200 transition disabled:opacity-50"
+                            >
+                                {isSubmittingPayment ? 'Submitting...' : 'Confirm & Submit'}
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                <form onSubmit={(e) => { e.preventDefault(); setIsReviewingPayment(true); }} className="space-y-4 flex-1">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₦)</label>
                         <input
@@ -803,10 +881,11 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             )}
                         </div>
                     )}
-                    <button disabled={isSubmittingPayment} type="submit" className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 mt-auto disabled:opacity-50">
-                        {isSubmittingPayment ? 'Submitting...' : 'Submit for Approval'}
+                    <button disabled={isSubmittingPayment} type="submit" className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 mt-auto disabled:opacity-50">
+                        {isSubmittingPayment ? 'Submitting...' : 'Review Payment Details'}
                     </button>
                 </form>
+                )}
             </div>
         );
     }
