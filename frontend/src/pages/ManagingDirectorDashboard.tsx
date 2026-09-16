@@ -439,7 +439,7 @@ export const ManagingDirectorDashboard = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
-                        {user?.role === 'GROUP_MANAGING_DIRECTOR' ? 'Group Approvals Portal' : 'Managing Director Portal'}
+                        {user?.role === 'GROUP_MANAGING_DIRECTOR' ? 'Global Approvals Portal' : 'Managing Director Portal'}
                     </h1>
                     <p className="text-gray-500">Approve payments and issue promotional discounts.</p>
                 </div>
