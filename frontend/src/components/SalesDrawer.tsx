@@ -912,6 +912,21 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     </button>
                 </form>
                 )}
+                
+                {/* Preview Image Modal */}
+                {previewImage && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setPreviewImage(null)}>
+                        <div className="relative max-w-4xl max-h-full" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                                onClick={() => setPreviewImage(null)}
+                                className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+                            >
+                                <X size={32} />
+                            </button>
+                            <img src={previewImage} alt="Receipt Preview" className="max-w-full max-h-[85vh] rounded-lg object-contain shadow-2xl" />
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -1270,20 +1285,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 </div>
             )}
 
-            {/* Preview Image Modal */}
-            {previewImage && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setPreviewImage(null)}>
-                    <div className="relative max-w-4xl max-h-full" onClick={(e) => e.stopPropagation()}>
-                        <button 
-                            onClick={() => setPreviewImage(null)}
-                            className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
-                        >
-                            <X size={32} />
-                        </button>
-                        <img src={previewImage} alt="Receipt Preview" className="max-w-full max-h-[85vh] rounded-lg object-contain shadow-2xl" />
-                    </div>
-                </div>
-            )}
+
 
             {/* Receipt Modal */}
             {receiptModal.isOpen && (
