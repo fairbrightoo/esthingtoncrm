@@ -1183,9 +1183,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             </div>
 
             <PlotExchangeModal
-                isOpen={exchangeModal.isOpen}
-                onClose={() => setExchangeModal({ isOpen: false, sale: null })}
-                sale={exchangeModal.sale}
+                isOpen={isExchangeModalOpen}
+                onClose={() => setIsExchangeModalOpen(false)}
+                originalSale={saleToExchange}
                 onSuccess={() => {
                     fetchSales();
                     if (onLeadUpdate) onLeadUpdate();
