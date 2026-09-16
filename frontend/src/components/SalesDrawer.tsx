@@ -130,6 +130,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [corporateAccounts, setCorporateAccounts] = useState<any[]>([]);
     const [proofFiles, setProofFiles] = useState<File[]>([]);
     const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     useEffect(() => {
         if (viewState === 'LIST') fetchSales();
@@ -747,9 +748,34 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             )}
 
                             {paymentMethod !== 'EQUITY_WALLET' && (
-                                <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                    <span className="text-blue-800 text-sm">Proof of Payment</span>
-                                    <span className="font-bold text-blue-900">{proofFiles.length} file(s) attached</span>
+                                <div className="flex flex-col bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-blue-800 text-sm font-medium">Proof of Payment</span>
+                                        <span className="font-bold text-blue-900 text-sm">{proofFiles.length} file(s) attached</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {proofFiles.map((file, idx) => (
+                                            <div key={idx} className="relative group cursor-pointer" onClick={() => {
+                                                if (file.type.startsWith('image/')) {
+                                                    setPreviewImage(URL.createObjectURL(file));
+                                                }
+                                            }}>
+                                                {file.type.startsWith('image/') ? (
+                                                    <img src={URL.createObjectURL(file)} alt="Receipt Thumbnail" className="w-16 h-16 object-cover rounded shadow-sm border border-blue-200" />
+                                                ) : (
+                                                    <div className="w-16 h-16 flex flex-col items-center justify-center bg-white rounded shadow-sm border border-blue-200 text-blue-500">
+                                                        <FileText size={20} />
+                                                        <span className="text-[10px] mt-1 font-bold">PDF</span>
+                                                    </div>
+                                                )}
+                                                {file.type.startsWith('image/') && (
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                                                        <span className="text-white text-[10px] font-bold tracking-wide">VIEW</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -1157,9 +1183,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             </div>
 
             <PlotExchangeModal
-                isOpen={isExchangeModalOpen}
-                onClose={() => setIsExchangeModalOpen(false)}
-                originalSale={saleToExchange}
+                isOpen={exchangeModal.isOpen}
+                onClose={() => setExchangeModal({ isOpen: false, sale: null })}
+                sale={exchangeModal.sale}
                 onSuccess={() => {
                     fetchSales();
                     if (onLeadUpdate) onLeadUpdate();
@@ -1240,6 +1266,21 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Preview Image Modal */}
+            {previewImage && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setPreviewImage(null)}>
+                    <div className="relative max-w-4xl max-h-full" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                            onClick={() => setPreviewImage(null)}
+                            className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+                        >
+                            <X size={32} />
+                        </button>
+                        <img src={previewImage} alt="Receipt Preview" className="max-w-full max-h-[85vh] rounded-lg object-contain shadow-2xl" />
                     </div>
                 </div>
             )}
