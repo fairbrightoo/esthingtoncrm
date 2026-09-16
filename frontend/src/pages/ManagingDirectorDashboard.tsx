@@ -289,23 +289,7 @@ export const ManagingDirectorDashboard = () => {
                                     <div className="text-sm text-gray-500 mt-1 flex flex-col space-y-1">
                                         <div className="flex gap-2 items-center flex-wrap">
                                             <span className="text-xs font-semibold text-gray-700">Plot Price: ₦{(p.sale.agreedPrice || 0).toLocaleString()}</span>
-                                            {(() => {
-                                                let balance = (p.sale.agreedPrice || 0) - (p.sale.totalPaid || 0);
-                                                // Always subtract pending amounts when viewing pending approvals
-                                                if (p.status === 'PENDING' || activeTab === 'APPROVALS') {
-                                                    balance -= (p.amount || 0);
-                                                    balance -= (p.virtualLoanAmount || 0);
-                                                }
-                                                return balance > 0 ? (
-                                                    <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 font-bold">
-                                                        Bal: ₦{balance.toLocaleString()}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded border border-green-100 font-bold">
-                                                        Fully Paid
-                                                    </span>
-                                                );
-                                            })()}
+
                                             {(() => {
                                                 const label = getPaymentTypeLabel(p as any);
                                                 return (
@@ -314,6 +298,17 @@ export const ManagingDirectorDashboard = () => {
                                                     </span>
                                                 );
                                             })()}
+                                        </div>
+                                        <div className="flex gap-1.5 items-center flex-wrap mt-1">
+                                            <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
+                                                Prev. Paid: ₦{(p.sale.totalPaid || 0).toLocaleString()}
+                                            </span>
+                                            <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                                                This Payment: ₦{(p.amount + (p.virtualLoanAmount || 0)).toLocaleString()}
+                                            </span>
+                                            <span className="text-[10px] font-semibold text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+                                                New Balance: ₦{Math.max(0, (p.sale.agreedPrice || 0) - ((p.sale.totalPaid || 0) + p.amount + (p.virtualLoanAmount || 0))).toLocaleString()}
+                                            </span>
                                         </div>
                                         <span>Method: {p.method}</span>
                                         {p.accountPaidTo && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-max border border-blue-100">{p.accountPaidTo}</span>}
