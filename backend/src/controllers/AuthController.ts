@@ -71,10 +71,6 @@ export const AuthController = {
             }
 
             // Strict Validation for Multi-Tenancy
-            // Strict Validation for Multi-Tenancy
-            const reqCompanyId = req.body.companyId;
-            const reqBranchId = req.body.branchId;
-
             if (user.role !== 'SUPER_ADMIN' && user.role !== 'GLOBAL_CHAIRMAN') {
                 // 1. Mandatory Company Check
                 if (!reqCompanyId) {
