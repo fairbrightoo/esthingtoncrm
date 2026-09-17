@@ -21,6 +21,7 @@ router.get('/profile/:id', GlobalUserController.getProfile);
 router.put('/profile/:id', upload.any(), GlobalUserController.updateProfile);
 router.post('/change-password', GlobalUserController.changePassword);
 router.post('/update-pin', GlobalUserController.updatePin);
+router.post('/update-mobile-passcode', GlobalUserController.updateMobilePasscode);
 
 // Impersonation (Super Admin only)
 router.post('/global/:id/impersonate', requireRole(['SUPER_ADMIN']), GlobalUserController.impersonateUser);

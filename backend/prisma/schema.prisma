@@ -133,6 +133,7 @@ model User {
   isActive               Boolean              @default(true)
   passwordResetRequired  Boolean              @default(true)
   attendancePin          String?
+  mobilePasscode         String?
   referencePhotoUrl      String?
   companyId              String?
   branchId               String?

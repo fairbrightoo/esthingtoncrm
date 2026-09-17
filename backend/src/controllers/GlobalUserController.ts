@@ -238,6 +238,51 @@ export const GlobalUserController = {
         }
     },
 
+    // 3.6. Update Mobile App Passcode (6-digit)
+    updateMobilePasscode: async (req: Request, res: Response) => {
+        try {
+            const { userId, newPasscode } = req.body;
+
+            if (!userId || !newPasscode) {
+                return res.status(400).json({ error: 'Missing required fields.' });
+            }
+
+            if (!/^\d{6}$/.test(newPasscode)) {
+                return res.status(400).json({ error: 'Mobile Passcode must be exactly 6 digits.' });
+            }
+
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (!user) {
+                return res.status(404).json({ error: 'User not found.' });
+            }
+
+            // Verify if Passcode is already in use by someone else in the same branch/company
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    mobilePasscode: newPasscode,
+                    id: { not: userId },
+                    companyId: user.companyId,
+                    branchId: user.branchId,
+                    isActive: true
+                }
+            });
+
+            if (existingUser) {
+                return res.status(400).json({ error: 'This passcode is already in use by another staff member in your branch. Please choose a different one.' });
+            }
+
+            await prisma.user.update({
+                where: { id: userId },
+                data: { mobilePasscode: newPasscode }
+            });
+
+            res.json({ success: true, message: 'Mobile Passcode updated successfully!' });
+        } catch (error) {
+            console.error('Failed to update mobile passcode:', error);
+            res.status(500).json({ error: 'An error occurred while updating the passcode.' });
+        }
+    },
+
     // 4. God-Mode Impersonation
     impersonateUser: async (req: Request, res: Response) => {
         try {

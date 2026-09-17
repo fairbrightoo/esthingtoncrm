@@ -38,6 +38,10 @@ export const ProfileSettings = () => {
     const [newPin, setNewPin] = useState('');
     const [updatingPin, setUpdatingPin] = useState(false);
     
+    // Mobile App Passcode
+    const [newMobilePasscode, setNewMobilePasscode] = useState('');
+    const [updatingMobilePasscode, setUpdatingMobilePasscode] = useState(false);
+    
     // Tabs
     const [activeTab, setActiveTab] = useState<'SECURITY' | 'ID_CARD' | 'REFERRAL'>('ID_CARD');
     const [idCardData, setIdCardData] = useState<any>(null);
@@ -148,6 +152,30 @@ export const ProfileSettings = () => {
             addToast(error.response?.data?.error || 'Failed to update PIN', 'error');
         } finally {
             setUpdatingPin(false);
+        }
+    };
+
+    const handleMobilePasscodeChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!/^\d{6}$/.test(newMobilePasscode)) {
+            addToast('Mobile Passcode must be exactly 6 digits', 'error');
+            return;
+        }
+
+        setUpdatingMobilePasscode(true);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/update-mobile-passcode`, {
+                userId: user?.id,
+                newPasscode: newMobilePasscode
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            addToast(res.data.message || 'Mobile Passcode updated successfully', 'success');
+            setNewMobilePasscode('');
+        } catch (error: any) {
+            addToast(error.response?.data?.error || 'Failed to update passcode', 'error');
+        } finally {
+            setUpdatingMobilePasscode(false);
         }
     };
 
@@ -386,6 +414,48 @@ export const ProfileSettings = () => {
                                         >
                                             <Save size={18} />
                                             <span>{updatingPin ? 'Saving...' : 'Set New PIN'}</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            {/* Security Settings (Mobile App Passcode) */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                                <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
+                                    <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
+                                        <Smartphone size={24} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900">Mobile App Passcode</h2>
+                                        <p className="text-sm text-gray-500">Set your 6-digit passcode for quick login on the Mobile App.</p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleMobilePasscodeChange} className="space-y-5">
+                                    <div className="max-w-xs">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">New 6-Digit Passcode</label>
+                                        <input
+                                            type="text"
+                                            maxLength={6}
+                                            required
+                                            value={newMobilePasscode}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 6) setNewMobilePasscode(val);
+                                            }}
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono font-bold tracking-[0.5em] text-center text-lg"
+                                            placeholder="••••••"
+                                        />
+                                    </div>
+
+                                    <div className="pt-2 flex justify-start">
+                                        <button
+                                            type="submit"
+                                            disabled={updatingMobilePasscode || newMobilePasscode.length !== 6}
+                                            className="flex items-center space-x-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-700 transition disabled:opacity-70"
+                                        >
+                                            <Save size={18} />
+                                            <span>{updatingMobilePasscode ? 'Saving...' : 'Set Mobile Passcode'}</span>
                                         </button>
                                     </div>
                                 </form>

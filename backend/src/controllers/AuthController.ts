@@ -10,31 +10,64 @@ export const AuthController = {
     async login(req: Request, res: Response) {
         try {
             console.log('Login attempt:', req.body);
-            let { email, password } = req.body;
-            if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
+            let { email, password, passcode, companyId: reqCompanyId, branchId: reqBranchId } = req.body;
+            
+            let user = null;
 
-            const user = await prisma.user.findFirst({
-                where: { email: { equals: email, mode: 'insensitive' } },
-                include: {
-                    company: true,
-                    branch: true
+            if (passcode) {
+                // Passcode login flow
+                if (!reqCompanyId) {
+                    res.status(400).json({ error: 'Company ID is required for passcode login' });
+                    return;
                 }
-            });
+                
+                // Find user by passcode, company, and optionally branch
+                const whereClause: any = { 
+                    mobilePasscode: passcode,
+                    companyId: reqCompanyId,
+                    isActive: true
+                };
+                if (reqBranchId) whereClause.branchId = reqBranchId;
 
-            if (!user) {
-                res.status(401).json({ error: 'Invalid credentials' });
-                return;
-            }
+                user = await prisma.user.findFirst({
+                    where: whereClause,
+                    include: {
+                        company: true,
+                        branch: true
+                    }
+                });
 
-            if (!user.isActive) {
-                res.status(403).json({ error: 'Your account has been suspended. Please contact the administrator.' });
-                return;
-            }
+                if (!user) {
+                    res.status(401).json({ error: 'Invalid passcode or you do not have a passcode set' });
+                    return;
+                }
+            } else {
+                // Standard Email/Password login flow
+                if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
-            const isValid = await bcrypt.compare(password, user.passwordHash);
-            if (!isValid) {
-                res.status(401).json({ error: 'Invalid credentials' });
-                return;
+                user = await prisma.user.findFirst({
+                    where: { email: { equals: email, mode: 'insensitive' } },
+                    include: {
+                        company: true,
+                        branch: true
+                    }
+                });
+
+                if (!user) {
+                    res.status(401).json({ error: 'Invalid credentials' });
+                    return;
+                }
+
+                if (!user.isActive) {
+                    res.status(403).json({ error: 'Your account has been suspended. Please contact the administrator.' });
+                    return;
+                }
+
+                const isValid = await bcrypt.compare(password, user.passwordHash);
+                if (!isValid) {
+                    res.status(401).json({ error: 'Invalid credentials' });
+                    return;
+                }
             }
 
             // Strict Validation for Multi-Tenancy
