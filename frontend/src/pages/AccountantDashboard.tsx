@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { BudgetManager } from '../components/BudgetManager';
-import { DollarSign, Wallet, AlertTriangle, ArrowRightLeft , Eye, FileText, AlertCircle, Clock, CreditCard } from 'lucide-react';
+import { DollarSign, Wallet, AlertTriangle, ArrowRightLeft , Eye, FileText, AlertCircle, Clock, CreditCard, X } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
 import { Pagination } from '../components/Pagination';
 import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
