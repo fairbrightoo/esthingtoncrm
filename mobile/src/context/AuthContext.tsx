@@ -105,7 +105,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearRecentWorkspace = async () => {
     try {
       await AsyncStorage.removeItem('recentWorkspace');
+      await AsyncStorage.removeItem('userToken');
+      await AsyncStorage.removeItem('userData');
+      
       setRecentWorkspace(null);
+      setToken(null);
+      setUser(null);
+      
       router.replace('/(workspace)/companies');
     } catch (e) {
       console.error(e);

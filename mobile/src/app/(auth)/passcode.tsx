@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api/axios';
 
 export default function LoginScreen() {
   const { recentWorkspace, clearRecentWorkspace, login } = useAuth();
+  const params = useLocalSearchParams();
+  const router = useRouter();
   
   // Login modes: 'email' (default) or 'passcode'
   const [loginMode, setLoginMode] = useState<'email' | 'passcode'>('email');
@@ -20,8 +23,23 @@ export default function LoginScreen() {
   
   const [isLoading, setIsLoading] = useState(false);
 
-  // If no recent workspace, redirect back to companies (handled by AuthContext mostly, but safety here)
-  if (!recentWorkspace) {
+  const getParam = (val: string | string[] | undefined, fallback?: string) => {
+    if (Array.isArray(val)) return val[0] || fallback;
+    if (typeof val === 'string') return val;
+    return fallback;
+  };
+
+  // Construct workspace info from either params or recentWorkspace
+  const workspaceInfo = {
+    companyId: getParam(params.companyId, recentWorkspace?.companyId),
+    companyName: getParam(params.companyName, recentWorkspace?.companyName),
+    companyColor: getParam(params.companyColor, recentWorkspace?.companyColor),
+    branchId: getParam(params.branchId, recentWorkspace?.branchId),
+    branchName: getParam(params.branchName, recentWorkspace?.branchName),
+  };
+
+  // If no workspace info is available, redirect to companies
+  if (!workspaceInfo.companyId || !workspaceInfo.branchId) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#2563EB" />
@@ -29,7 +47,7 @@ export default function LoginScreen() {
     );
   }
 
-  const { companyColor, companyName, branchName, companyId, branchId } = recentWorkspace;
+  const { companyColor, companyName, branchName, companyId, branchId } = workspaceInfo;
 
   // --- PASSCODE LOGIC ---
   const handleKeyPress = (num: string) => {
@@ -50,14 +68,14 @@ export default function LoginScreen() {
   const verifyPasscode = async (code: string) => {
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/login', {
+      const response = await api.post('/api/auth/login', {
         passcode: code,
         companyId,
         branchId
       });
       
       const { token, user } = response.data;
-      await login(token, user, recentWorkspace);
+      await login(token, user, workspaceInfo as any);
     } catch (error: any) {
       Alert.alert('Login Failed', error.response?.data?.error || 'Invalid passcode or you do not have a passcode set.');
       setPasscode('');
@@ -75,7 +93,7 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/login', {
+      const response = await api.post('/api/auth/login', {
         email,
         password,
         companyId,
@@ -83,7 +101,7 @@ export default function LoginScreen() {
       });
       
       const { token, user } = response.data;
-      await login(token, user, recentWorkspace);
+      await login(token, user, workspaceInfo as any);
     } catch (error: any) {
       Alert.alert('Login Failed', error.response?.data?.error || 'Invalid credentials.');
     } finally {

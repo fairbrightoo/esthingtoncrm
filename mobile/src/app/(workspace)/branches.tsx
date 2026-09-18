@@ -18,18 +18,25 @@ export default function BranchesScreen() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const color = typeof companyColor === 'string' ? companyColor : '#2563EB';
-  const name = typeof companyName === 'string' ? companyName : 'Selected Company';
+  const getParam = (val: string | string[] | undefined, defaultVal: string = '') => {
+    if (Array.isArray(val)) return val[0] || defaultVal;
+    if (typeof val === 'string') return val;
+    return defaultVal;
+  };
+
+  const color = getParam(companyColor, '#2563EB');
+  const name = getParam(companyName, 'Selected Company');
+  const cId = getParam(companyId, '');
 
   useEffect(() => {
     const fetchBranches = async () => {
-      if (!companyId) {
+      if (!cId) {
         setLoading(false);
         return;
       }
       
       try {
-        const response = await api.get(`/api/companies/${companyId}/branches`);
+        const response = await api.get(`/api/companies/${cId}/branches`);
         setBranches(response.data);
       } catch (error) {
         console.error('Failed to fetch branches', error);
@@ -40,7 +47,7 @@ export default function BranchesScreen() {
     };
 
     fetchBranches();
-  }, [companyId]);
+  }, [cId]);
 
   const handleBranchSelect = (branch: Branch) => {
     // Navigate to login with branch info
@@ -49,8 +56,8 @@ export default function BranchesScreen() {
       params: { 
         branchId: branch.id, 
         branchName: branch.name,
-        companyId,
-        companyName,
+        companyId: cId,
+        companyName: name,
         companyColor: color
       }
     });

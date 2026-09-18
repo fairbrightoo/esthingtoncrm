@@ -372,7 +372,7 @@ export const DashboardController = {
                 });
                 
                 detailedDueCommissions = accDueCommsMatch.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => {
-                    const commRate = p.sale.marketerCommissionRate || p.sale.marketer?.commissionRate || 5;
+                    const commRate = p.sale.marketerCommissionRate || p.sale.marketer?.commissionRate || p.sale.lead?.assignedToUser?.commissionRate || 5;
                     let tag = "[DIRECT SALE]";
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;
                     const isManagingCompany = p.sale.plot.estate.companyId === companyId;
@@ -407,7 +407,7 @@ export const DashboardController = {
                 });
 
                 detailedPaidCommissions = accPaidCommsMatch.filter((p: any) => p.sale && p.sale.lead && p.sale.plot && p.sale.plot.estate).map((p: any) => {
-                    const commRate = p.sale.marketerCommissionRate || p.sale.marketer?.commissionRate || 5;
+                    const commRate = p.sale.marketerCommissionRate || p.sale.marketer?.commissionRate || p.sale.lead?.assignedToUser?.commissionRate || 5;
                     let tag = "[DIRECT SALE]";
                     const isSellingCompany = p.sale.marketer?.companyId === companyId;
                     const isManagingCompany = p.sale.plot.estate.companyId === companyId;

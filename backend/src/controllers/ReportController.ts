@@ -108,7 +108,7 @@ export const ReportController = {
             if (mBranchId !== branchId && estBranchId === branchId) saleType = 'Inbound Cross-Sale';
         }
 
-        const commissionRate = sale.marketer?.commissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
+        const commissionRate = sale.marketerCommissionRate || sale.marketer?.commissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
         const commissionAccrued = (payment.amount * (commissionRate / 100)) - (payment.virtualLoanAmount || 0);
 
         let referrerName = 'N/A';

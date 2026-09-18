@@ -13,7 +13,17 @@ export default function LoginScreen() {
   const router = useRouter();
   const { branchId, branchName, companyId, companyName, companyColor } = useLocalSearchParams();
 
-  const color = typeof companyColor === 'string' ? companyColor : '#2563EB';
+  const getParam = (val: string | string[] | undefined, defaultVal: string = '') => {
+    if (Array.isArray(val)) return val[0] || defaultVal;
+    if (typeof val === 'string') return val;
+    return defaultVal;
+  };
+
+  const cId = getParam(companyId, 'unknown');
+  const cName = getParam(companyName, 'Selected Company');
+  const color = getParam(companyColor, '#2563EB');
+  const bId = getParam(branchId, 'unknown');
+  const bName = getParam(branchName, 'Selected Branch');
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -26,13 +36,13 @@ export default function LoginScreen() {
       // Simulate API call and login
       setTimeout(async () => {
         // Pass the workspace context to login so it saves it as recentWorkspace
-        await login('dummy-token', { name: 'Demo User', role: 'MARKETER' }, {
-          companyId: typeof companyId === 'string' ? companyId : 'unknown',
-          companyName: typeof companyName === 'string' ? companyName : 'Selected Company',
-          companyColor: typeof companyColor === 'string' ? companyColor : '#2563EB',
-          branchId: typeof branchId === 'string' ? branchId : 'unknown',
-          branchName: typeof branchName === 'string' ? branchName : 'Selected Branch'
-        });
+          await login('dummy-token', { name: 'Demo User', role: 'MARKETER' }, {
+            companyId: cId,
+            companyName: cName,
+            companyColor: color,
+            branchId: bId,
+            branchName: bName
+          });
         setIsLoading(false);
       }, 500);
     } catch (error: any) {
@@ -51,7 +61,7 @@ export default function LoginScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.companyName} numberOfLines={1}>{companyName}</Text>
+          <Text style={styles.companyName} numberOfLines={1}>{cName}</Text>
         </View>
 
         <View style={styles.content}>
@@ -59,7 +69,7 @@ export default function LoginScreen() {
             <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
               <Ionicons name="location" size={32} color={color} />
             </View>
-            <Text style={styles.title}>{branchName}</Text>
+            <Text style={styles.title}>{bName}</Text>
             <Text style={styles.subtitle}>Enter your credentials to access this branch</Text>
 
             <View style={styles.form}>
