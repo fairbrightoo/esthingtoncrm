@@ -219,6 +219,9 @@ export class GlobalTreasuryController {
                             referrer: true,
                             plot: {
                                 include: { estate: { include: { company: true, branch: true } } }
+                            },
+                            lead: {
+                                include: { assignedToUser: true }
                             }
                         }
                     }
