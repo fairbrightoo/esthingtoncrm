@@ -774,7 +774,9 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <td className="p-3 text-gray-600">{comm.property}</td>
                                                 <td className="p-3">{formatCurrency(comm.amountPaid)}</td>
                                                 <td className="p-3 font-medium text-gray-800">{comm.marketerName}</td>
-                                                <td className="p-3 text-gray-500">{comm.marketerBranchName}</td>
+                                                <td className="p-3 text-gray-500">
+                                                    {comm.marketerCompanyName !== 'Unknown' ? `${comm.marketerCompanyName} - ${comm.marketerBranchName}` : comm.marketerBranchName}
+                                                </td>
                                                 <td className="p-3 text-gray-500">
                                                     <div>{comm.bankName}</div>
                                                     <div className="text-xs text-gray-400">{comm.accountName}</div>
