@@ -107,8 +107,9 @@ export const MDReportController = {
             const cashWhere: any = { status: 'APPROVED', OR: [] };
             if (startDate || endDate) cashWhere.date = dateFilter;
             
+            let companyBranches: {id: string}[] = [];
             if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {
-                const companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
+                companyBranches = await prisma.branch.findMany({ where: { companyId }, select: { id: true } });
                 const branchIds = companyBranches.map(b => b.id);
                 cashWhere.OR.push({ receivingBranchId: { in: branchIds } });
                 cashWhere.OR.push({ receivingBranchId: null, sale: { plot: { estate: { managingBranchId: { in: branchIds } } } } });
