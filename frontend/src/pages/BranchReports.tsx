@@ -194,30 +194,60 @@ export const BranchReports = () => {
                         <p className="text-sm text-gray-500">Report Generated: {new Date().toLocaleString()}</p>
                 </div>
 
-                {/* Main Split-View Revenue Banners */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+                {/* --- LIQUIDITY METRICS --- */}
+                <h3 className="text-lg font-bold text-gray-800 mb-3 px-1">Liquidity & Cash Flow</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                     <div className="bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Banknote size={100} /></div>
                         <div className="relative z-10">
-                            <p className="text-blue-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><ArrowDownRight size={14} className="mr-1"/> Direct Cash Inflow</p>
-                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.grossCashReceived || 0).toLocaleString()}</h2>
-                            <p className="text-xs text-blue-200 mt-2">Cash deposited to this branch's bank accounts.</p>
+                            <p className="text-blue-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><ArrowDownRight size={14} className="mr-1"/> Gross Collected Revenue</p>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.grossRevenue || 0).toLocaleString()}</h2>
+                            <p className="text-xs text-blue-200 mt-2">Total cash deposited to this branch's bank accounts.</p>
+                        </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-900 to-emerald-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={100} /></div>
+                        <div className="relative z-10">
+                            <p className="text-emerald-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><Activity size={14} className="mr-1"/> Net Retained Revenue</p>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.netRetainedRevenue || 0).toLocaleString()}</h2>
+                            <p className="text-xs text-emerald-200 mt-2">Gross Collected Revenue minus Outbound & Transit funds.</p>
+                        </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-900 to-orange-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Banknote size={100} /></div>
+                        <div className="relative z-10">
+                            <p className="text-orange-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><PieIcon size={14} className="mr-1"/> Outstanding Client Debt</p>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.outstandingDebt || 0).toLocaleString()}</h2>
+                            <p className="text-xs text-orange-200 mt-2">Scheduled equity payments not yet routed through your accounts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- PERFORMANCE METRICS --- */}
+                <h3 className="text-lg font-bold text-gray-800 mb-3 px-1">Sales Performance Volume</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Users size={100} /></div>
+                        <div className="relative z-10">
+                            <p className="text-gray-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><Users size={14} className="mr-1"/> Total Staff Volume</p>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.totalSalesGenerated || 0).toLocaleString()}</h2>
+                            <p className="text-xs text-gray-200 mt-2">Combined total sales volume of your staff.</p>
+                        </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-cyan-900 to-cyan-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Activity size={100} /></div>
+                        <div className="relative z-10">
+                            <p className="text-cyan-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><TrendingUp size={14} className="mr-1"/> Direct Sales Volume</p>
+                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.directSalesVolume || 0).toLocaleString()}</h2>
+                            <p className="text-xs text-cyan-200 mt-2">Volume of your branch's properties sold by your staff.</p>
                         </div>
                     </div>
                     <div className="bg-gradient-to-br from-purple-900 to-purple-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Activity size={100} /></div>
                         <div className="relative z-10">
-                            <p className="text-purple-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><TrendingUp size={14} className="mr-1"/> Cross-Branch Value</p>
+                            <p className="text-purple-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><ArrowDownRight size={14} className="mr-1"/> Cross-Branch Value</p>
                             <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.outboundSalesVolume || 0).toLocaleString()}</h2>
-                            <p className="text-xs text-purple-200 mt-2">Value your staff generated for other branches.</p>
-                        </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10"><Users size={100} /></div>
-                        <div className="relative z-10">
-                            <p className="text-gray-100 font-semibold tracking-widest uppercase text-xs mb-1 opacity-90 flex items-center"><PieIcon size={14} className="mr-1"/> Total Staff Volume</p>
-                            <h2 className="text-3xl font-black tracking-tight">₦{(stats.kpis?.totalSalesGenerated || 0).toLocaleString()}</h2>
-                            <p className="text-xs text-gray-200 mt-2">Combined total sales volume of your staff.</p>
+                            <p className="text-xs text-purple-200 mt-2">Volume your staff generated for other branches.</p>
                         </div>
                     </div>
                 </div>
