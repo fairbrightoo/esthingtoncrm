@@ -248,7 +248,8 @@ export const MDReportController = {
             const taxes = await prisma.taxRemittance.findMany({ where: taxWhere });
             const totalTaxesRemitted = taxes.reduce((sum, t) => sum + t.amount, 0);
 
-            const netBranchProfit = grossRevenue - totalCommissionsCleared - totalPayrollOverhead - totalRequisitionExpenses - totalTaxesRemitted;
+            const netRetainedRevenue = directCashReceived + inboundCashReceived;
+            const netBranchProfit = netRetainedRevenue - totalCommissionsCleared - totalPayrollOverhead - totalRequisitionExpenses - totalTaxesRemitted;
 
             // --- 6. 6-Month Cashflow Trend ---
             const sixMonthsAgo = new Date();
@@ -315,6 +316,7 @@ export const MDReportController = {
                     inboundCashReceived,
                     outboundCashReceived,
                     transitCashReceived,
+                    netRetainedRevenue,
                     outstandingDebt,
                     totalCommissionsCleared,
                     salesCount: periodSales.length,

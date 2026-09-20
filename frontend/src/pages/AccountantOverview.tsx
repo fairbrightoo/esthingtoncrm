@@ -43,6 +43,7 @@ export const AccountantOverview = () => {
     const inboundCashReceived = kpis.inboundCashReceived || 0;
     const outboundCashReceived = kpis.outboundCashReceived || 0;
     const transitCashReceived = kpis.transitCashReceived || 0;
+    const netRetainedRevenue = kpis.netRetainedRevenue || 0;
     const outstandingDebt = kpis.outstandingDebt || 0;
     const netProfit = kpis.netBranchProfit || 0;
     
@@ -59,7 +60,7 @@ export const AccountantOverview = () => {
             </header>
 
             {/* Primary KPI Hero Board */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 
                 {/* Collected Revenue */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden">
@@ -78,6 +79,23 @@ export const AccountantOverview = () => {
                         <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-teal-700">₦{inboundCashReceived.toLocaleString()}</span> Inbound</div>
                         <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-blue-700">₦{outboundCashReceived.toLocaleString()}</span> Outbound</div>
                         <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-purple-700">₦{transitCashReceived.toLocaleString()}</span> Transit</div>
+                    </div>
+                </div>
+
+                {/* Net Retained Revenue */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-emerald-100 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none text-emerald-600">
+                        <TrendingUp size={120} />
+                    </div>
+                    <div>
+                        <div className="flex items-center space-x-2 text-emerald-600 mb-2">
+                            <CheckCircle size={20} />
+                            <span className="font-bold text-sm tracking-wide">NET RETAINED REVENUE</span>
+                        </div>
+                        <h2 className="text-4xl font-black text-gray-900 mt-1 tracking-tight">₦{netRetainedRevenue.toLocaleString()}</h2>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-50">
+                        <p className="text-xs text-gray-500">Gross Collected Revenue minus Outbound & Transit funds.</p>
                     </div>
                 </div>
 
