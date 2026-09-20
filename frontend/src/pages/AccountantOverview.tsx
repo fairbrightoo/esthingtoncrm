@@ -39,6 +39,10 @@ export const AccountantOverview = () => {
     // Safely extract stats
     const kpis = analytics?.kpis || {};
     const totalCollected = kpis.grossRevenue || 0;
+    const directSalesVolume = kpis.directSalesVolume || 0;
+    const inboundSalesVolume = kpis.inboundSalesVolume || 0;
+    const outboundSalesVolume = kpis.outboundSalesVolume || 0;
+    const transitFundVolume = kpis.transitFundVolume || 0;
     const outstandingDebt = kpis.outstandingDebt || 0;
     const netProfit = kpis.netBranchProfit || 0;
     
@@ -69,8 +73,11 @@ export const AccountantOverview = () => {
                         </div>
                         <h2 className="text-4xl font-black text-gray-900 mt-1 tracking-tight">₦{totalCollected.toLocaleString()}</h2>
                     </div>
-                    <div className="mt-6 pt-4 border-t border-gray-50">
-                        <p className="text-xs text-gray-500">Total cash injected into the branch accounts.</p>
+                    <div className="mt-6 pt-4 border-t border-gray-50 flex flex-wrap gap-2 text-xs">
+                        <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-emerald-700">₦{directSalesVolume.toLocaleString()}</span> Direct</div>
+                        <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-teal-700">₦{inboundSalesVolume.toLocaleString()}</span> Inbound</div>
+                        <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-blue-700">₦{outboundSalesVolume.toLocaleString()}</span> Outbound</div>
+                        <div className="text-gray-500 bg-gray-50 px-2 py-1 rounded"><span className="font-medium text-purple-700">₦{transitFundVolume.toLocaleString()}</span> Transit</div>
                     </div>
                 </div>
 

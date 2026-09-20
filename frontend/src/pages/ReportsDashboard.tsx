@@ -17,15 +17,22 @@ interface ReportsDashboardProps {
 }
 
 export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) => {
-    const [activeTab, setActiveTab] = useState<'SALES' | 'PAYROLL'>('SALES');
+    const [activeTab, setActiveTab] = useState<'SALES' | 'PAYROLL' | 'WEEKLY_COMMISSION'>('SALES');
     const [loading, setLoading] = useState(false);
     const [salesData, setSalesData] = useState<any[]>([]);
     const [payrollData, setPayrollData] = useState<any[]>([]);
+    const [weeklyCommissionData, setWeeklyCommissionData] = useState<any[]>([]);
     
     const [filterMode, setFilterMode] = useState<'MONTHLY' | 'CUSTOM'>('MONTHLY');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [exactDateRange, setExactDateRange] = useState<{start: string, end: string} | null>(null);
+
+    // Weekly Commission specific states
+    const [filterCycle, setFilterCycle] = useState<'WEDNESDAY' | 'FRIDAY' | 'CUSTOM'>('WEDNESDAY');
+    const [cycleDate, setCycleDate] = useState('');
+    const [commissionBeneficiary, setCommissionBeneficiary] = useState<'ALL' | 'INTERNAL' | 'EXTERNAL'>('ALL');
+    const [commissionStatus, setCommissionStatus] = useState<'ALL' | 'PAID' | 'UNPAID'>('ALL');
     
     const [filters, setFilters] = useState<ReportData>({
         month: new Date().getMonth() + 1,
@@ -48,11 +55,13 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         if (filters.branchId) {
             if (activeTab === 'SALES') {
                 fetchSalesReport();
-            } else {
+            } else if (activeTab === 'PAYROLL') {
                 fetchPayrollReport();
+            } else if (activeTab === 'WEEKLY_COMMISSION') {
+                fetchWeeklyCommission();
             }
         }
-    }, [activeTab, filters.month, filters.year, filters.branchId, filterMode, startDate, endDate]);
+    }, [activeTab, filters.month, filters.year, filters.branchId, filterMode, startDate, endDate, filterCycle, cycleDate]);
 
     const fetchSalesReport = async () => {
         if (filterMode === 'CUSTOM' && (!startDate || !endDate)) return;
@@ -94,6 +103,36 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
             setPayrollData(res.data);
         } catch (error: any) {
             addToast(error.response?.data?.error || 'Failed to fetch payroll report', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchWeeklyCommission = async () => {
+        if (filterCycle === 'CUSTOM' && (!startDate || !endDate)) return;
+        if (filterCycle !== 'CUSTOM' && !cycleDate) return;
+        setLoading(true);
+        try {
+            const params: any = { branchId: filters.branchId, filterCycle };
+            if (filterCycle === 'CUSTOM') {
+                params.startDate = startDate;
+                params.endDate = endDate;
+            } else {
+                params.cycleDate = cycleDate;
+            }
+            
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/weekly-commissions`, {
+                params,
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setWeeklyCommissionData(res.data.data || res.data);
+            if (res.data.exactStartDate && res.data.exactEndDate) {
+                setExactDateRange({ start: res.data.exactStartDate, end: res.data.exactEndDate });
+            } else {
+                setExactDateRange(null);
+            }
+        } catch (error: any) {
+            addToast(error.response?.data?.error || 'Failed to fetch weekly commission report', 'error');
         } finally {
             setLoading(false);
         }
@@ -284,23 +323,191 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
         document.body.removeChild(link);
     };
 
+    // Filter weekly commissions locally based on toggles
+    const getFilteredCommissions = () => {
+        return weeklyCommissionData.filter(comm => {
+            let passBeneficiary = true;
+            if (commissionBeneficiary === 'INTERNAL') {
+                passBeneficiary = comm.marketerBranchId === filters.branchId;
+            } else if (commissionBeneficiary === 'EXTERNAL') {
+                passBeneficiary = comm.marketerBranchId !== filters.branchId;
+            }
+
+            let passStatus = true;
+            if (commissionStatus === 'PAID') {
+                passStatus = comm.isCommissionPaid === true;
+            } else if (commissionStatus === 'UNPAID') {
+                passStatus = comm.isCommissionPaid === false;
+            }
+
+            return passBeneficiary && passStatus;
+        });
+    };
+
+    const handleMarkCommissionPaid = async (paymentId: string) => {
+        if (!confirm('Mark this commission as paid? This cannot be undone.')) return;
+        try {
+            setLoading(true);
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pay-commission/${paymentId}`, { type: 'DIRECT' }, { headers: { Authorization: `Bearer ${token}` } });
+            addToast('Commission marked as paid!', 'success');
+            fetchWeeklyCommission();
+        } catch (error) {
+            addToast('Failed to mark as paid', 'error');
+            setLoading(false);
+        }
+    };
+
+    const exportWeeklyCommissionPDF = () => {
+        const doc = new jsPDF('landscape');
+        
+        let headline = 'WEEKLY COMMISSION REPORT';
+        if (filterCycle === 'CUSTOM') {
+            headline = `COMMISSION FOR ${startDate} TO ${endDate}`;
+        } else if (cycleDate) {
+            headline = `COMMISSION FOR ${filterCycle} ${new Date(cycleDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}`;
+        }
+        doc.text(headline, 14, 15);
+        
+        const filteredData = getFilteredCommissions();
+        const tableColumn = ["Date", "Client", "Property", "Amount Paid", "Marketer", "Branch", "Bank", "Account Name", "Account No", "Comm. Payable", "Status"];
+        const tableRows: any[] = [];
+
+        let totalAmount = 0;
+        let totalCommission = 0;
+
+        filteredData.forEach((comm) => {
+            totalAmount += comm.amountPaid;
+            totalCommission += comm.commissionPayable;
+            const rowData = [
+                formatDate(comm.date),
+                comm.clientName,
+                comm.property,
+                formatCurrencyForExport(comm.amountPaid),
+                comm.marketerName,
+                comm.marketerBranchName,
+                comm.bankName,
+                comm.accountName,
+                comm.accountNumber,
+                formatCurrencyForExport(comm.commissionPayable),
+                comm.isCommissionPaid ? 'PAID' : 'UNPAID'
+            ];
+            tableRows.push(rowData);
+        });
+
+        tableRows.push(["", "", "GRAND TOTAL", formatCurrencyForExport(totalAmount), "", "", "", "", "", formatCurrencyForExport(totalCommission), ""]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [37, 99, 235] }
+        });
+
+        doc.save(`weekly_commission_${filterCycle}.pdf`);
+    };
+
+    const exportWeeklyCommissionCSV = () => {
+        const filteredData = getFilteredCommissions();
+        const csvData = filteredData.map(comm => ({
+            "Date": formatDate(comm.date),
+            "Client": comm.clientName,
+            "Property": comm.property,
+            "Amount Paid (N)": comm.amountPaid,
+            "Marketer Name": comm.marketerName,
+            "Marketer Branch": comm.marketerBranchName,
+            "Bank Name": comm.bankName,
+            "Account Name": comm.accountName,
+            "Account Number": comm.accountNumber,
+            "Comm. Payable (N)": comm.commissionPayable,
+            "Status": comm.isCommissionPaid ? 'PAID' : 'UNPAID'
+        }));
+        
+        const totalAmount = filteredData.reduce((sum, c) => sum + c.amountPaid, 0);
+        const totalCommission = filteredData.reduce((sum, c) => sum + c.commissionPayable, 0);
+        
+        csvData.push({
+            "Date": "",
+            "Client": "",
+            "Property": "GRAND TOTAL",
+            "Amount Paid (N)": totalAmount as any,
+            "Marketer Name": "",
+            "Marketer Branch": "",
+            "Bank Name": "",
+            "Account Name": "",
+            "Account Number": "",
+            "Comm. Payable (N)": totalCommission as any,
+            "Status": ""
+        });
+
+        const csv = Papa.unparse(csvData);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `weekly_commission_${filterCycle}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className={embedded ? "space-y-6" : "p-6 max-w-7xl mx-auto space-y-6"}>
             <div className={`flex items-center ${embedded ? "justify-end mb-4" : "justify-between"}`}>
                 {!embedded && <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>}
                 
                 <div className="flex space-x-4 items-center">
-                        {activeTab === 'SALES' && (
-                            <select
-                                value={filterMode}
-                                onChange={(e) => setFilterMode(e.target.value as any)}
-                                className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
-                            >
-                                <option value="MONTHLY">Monthly Cycle</option>
-                                <option value="CUSTOM">Custom Date</option>
-                            </select>
-                        )}
-                        {filterMode === 'MONTHLY' || activeTab === 'PAYROLL' ? (
+                            {activeTab === 'SALES' && (
+                                <select
+                                    value={filterMode}
+                                    onChange={(e) => setFilterMode(e.target.value as any)}
+                                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                                >
+                                    <option value="MONTHLY">Monthly Cycle</option>
+                                    <option value="CUSTOM">Custom Date</option>
+                                </select>
+                            )}
+                            {activeTab === 'WEEKLY_COMMISSION' && (
+                                <>
+                                    <select
+                                        value={filterCycle}
+                                        onChange={(e) => setFilterCycle(e.target.value as any)}
+                                        className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                                    >
+                                        <option value="WEDNESDAY">Wednesday Cycle</option>
+                                        <option value="FRIDAY">Friday Cycle</option>
+                                        <option value="CUSTOM">Custom Date</option>
+                                    </select>
+                                    {filterCycle !== 'CUSTOM' && (
+                                        <input
+                                            type="date"
+                                            value={cycleDate}
+                                            onChange={(e) => setCycleDate(e.target.value)}
+                                            className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                        />
+                                    )}
+                                    <select
+                                        value={commissionBeneficiary}
+                                        onChange={(e) => setCommissionBeneficiary(e.target.value as any)}
+                                        className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                                    >
+                                        <option value="ALL">All Staff</option>
+                                        <option value="INTERNAL">Internal Staff</option>
+                                        <option value="EXTERNAL">External Staff</option>
+                                    </select>
+                                    <select
+                                        value={commissionStatus}
+                                        onChange={(e) => setCommissionStatus(e.target.value as any)}
+                                        className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
+                                    >
+                                        <option value="ALL">All Status</option>
+                                        <option value="PAID">Paid</option>
+                                        <option value="UNPAID">Unpaid</option>
+                                    </select>
+                                </>
+                            )}
+                            {(activeTab === 'SALES' && filterMode === 'MONTHLY') || activeTab === 'PAYROLL' ? (
                             <>
                                 <select 
                                     value={filters.month} 
@@ -322,7 +529,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                     ))}
                                 </select>
                             </>
-                        ) : (
+                        ) : activeTab === 'SALES' && filterMode === 'CUSTOM' ? (
                             <>
                                 <input
                                     type="date"
@@ -338,7 +545,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                     className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 />
                             </>
-                        )}
+                        ) : null}
                 </div>
             </div>
 
@@ -359,6 +566,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                 >
                     Staff Payroll
                 </button>
+                <button
+                    onClick={() => setActiveTab('WEEKLY_COMMISSION')}
+                    className={`pb-3 px-4 text-sm font-medium transition-colors ${
+                        activeTab === 'WEEKLY_COMMISSION' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Weekly Commission
+                </button>
             </div>
 
             {loading ? (
@@ -371,9 +586,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                     <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-50">
                         <div className="flex flex-col">
                             <h3 className="font-semibold text-gray-700 flex items-center">
-                                {activeTab === 'SALES' ? 'Sales Report Data' : 'Payroll Report Data'}
+                                {activeTab === 'SALES' ? 'Sales Report Data' : activeTab === 'PAYROLL' ? 'Payroll Report Data' : 'Weekly Commission Data'}
                             </h3>
                             {activeTab === 'SALES' && exactDateRange && (
+                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 w-max mt-1">
+                                    ({new Date(exactDateRange.start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(exactDateRange.end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })})
+                                </span>
+                            )}
+                            {activeTab === 'WEEKLY_COMMISSION' && exactDateRange && (
                                 <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 w-max mt-1">
                                     ({new Date(exactDateRange.start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(exactDateRange.end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })})
                                 </span>
@@ -383,7 +603,10 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                             {activeTab === 'SALES' && (
                                 <div className="flex gap-4">
                                     <div className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-sm flex items-center">
-                                        Total Sales: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
+                                        Total Sales: <span className="ml-2">{formatCurrency(salesData.filter(s => s.saleType !== 'Transit Fund').reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
+                                    </div>
+                                    <div className="text-sm font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200 shadow-sm flex items-center">
+                                        Total Transit: <span className="ml-2">{formatCurrency(salesData.filter(s => s.saleType === 'Transit Fund').reduce((sum, sale) => sum + sale.amountPaid, 0))}</span>
                                     </div>
                                     <div className="text-sm font-bold text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200 shadow-sm flex items-center">
                                         Total Virtual Loans: <span className="ml-2">{formatCurrency(salesData.reduce((sum, sale) => sum + (sale.virtualLoanAmount || 0), 0))}</span>
@@ -395,14 +618,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                             )}
                             <div className="flex space-x-3">
                                 <button 
-                                    onClick={activeTab === 'SALES' ? exportSalesCSV : exportPayrollCSV}
+                                    onClick={activeTab === 'SALES' ? exportSalesCSV : activeTab === 'PAYROLL' ? exportPayrollCSV : exportWeeklyCommissionCSV}
                                     className="flex items-center space-x-2 px-3 py-1.5 bg-green-50 text-green-700 rounded hover:bg-green-100 transition border border-green-200"
                                 >
                                     <FileSpreadsheet size={16} />
                                     <span className="text-sm font-medium">Export CSV</span>
                                 </button>
                                 <button 
-                                    onClick={activeTab === 'SALES' ? exportSalesPDF : exportPayrollPDF}
+                                    onClick={activeTab === 'SALES' ? exportSalesPDF : activeTab === 'PAYROLL' ? exportPayrollPDF : exportWeeklyCommissionPDF}
                                     className="flex items-center space-x-2 px-3 py-1.5 bg-red-50 text-red-700 rounded hover:bg-red-100 transition border border-red-200"
                                 >
                                     <FileText size={16} />
@@ -484,7 +707,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                     )}
                                 </tbody>
                             </table>
-                        ) : (
+                        ) : activeTab === 'PAYROLL' ? (
                             <table className="w-full text-left text-sm whitespace-nowrap">
                                 <thead className="bg-gray-100 text-gray-600">
                                     <tr>
@@ -494,8 +717,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                         <th className="p-3">Bank Name</th>
                                         <th className="p-3">Account No.</th>
                                         <th className="p-3">Gross</th>
-                                        <th className="p-3">Deductions</th>
-                                        <th className="p-3">Net Salary</th>
+                                        <th className="p-3 text-red-600 bg-red-50/50">Deductions</th>
+                                        <th className="p-3 font-bold text-gray-800">Net Salary</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -507,12 +730,12 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <tr key={i} className="hover:bg-gray-50">
                                                     <td className="p-3 text-gray-500">{i + 1}</td>
                                                     <td className="p-3 font-medium text-gray-800">{pay.staffName}</td>
-                                                    <td className="p-3 text-gray-600">{pay.staffRole}</td>
-                                                    <td className="p-3">{pay.staff?.bankName || 'N/A'}</td>
-                                                    <td className="p-3">{pay.staff?.accountNumber || 'N/A'}</td>
-                                                    <td className="p-3 text-gray-600">{formatCurrency(pay.baseSalary)}</td>
-                                                    <td className="p-3 text-red-500">{formatCurrency(pay.deductions)}</td>
-                                                    <td className="p-3 font-bold text-emerald-600">{formatCurrency(pay.netPay)}</td>
+                                                    <td className="p-3">{pay.staffRole}</td>
+                                                    <td className="p-3 text-gray-500">{pay.staff?.bankName || <span className="text-gray-300">N/A</span>}</td>
+                                                    <td className="p-3 text-gray-500">{pay.staff?.accountNumber || <span className="text-gray-300">N/A</span>}</td>
+                                                    <td className="p-3">{formatCurrency(pay.baseSalary)}</td>
+                                                    <td className="p-3 text-red-600 bg-red-50/50">{formatCurrency(pay.deductions)}</td>
+                                                    <td className="p-3 font-bold text-gray-800">{formatCurrency(pay.netPay)}</td>
                                                 </tr>
                                             ))}
                                             <tr className="bg-gray-50 border-t-2">
@@ -520,6 +743,65 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                                 <td className="p-3 font-bold text-emerald-700">{formatCurrency(payrollData.reduce((sum, p) => sum + p.netPay, 0))}</td>
                                             </tr>
                                         </>
+                                    )}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead className="bg-gray-100 text-gray-600">
+                                    <tr>
+                                        <th className="p-3">Date</th>
+                                        <th className="p-3">Client</th>
+                                        <th className="p-3">Property</th>
+                                        <th className="p-3">Amount Paid</th>
+                                        <th className="p-3">Marketer</th>
+                                        <th className="p-3">Branch</th>
+                                        <th className="p-3">Bank Name</th>
+                                        <th className="p-3">Account No.</th>
+                                        <th className="p-3 font-bold">Comm. Payable</th>
+                                        <th className="p-3 text-center">Status</th>
+                                        <th className="p-3 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {getFilteredCommissions().length === 0 ? (
+                                        <tr><td colSpan={11} className="p-6 text-center text-gray-500">No commission records found matching the filters.</td></tr>
+                                    ) : (
+                                        getFilteredCommissions().map((comm, i) => (
+                                            <tr key={i} className="hover:bg-gray-50">
+                                                <td className="p-3 text-gray-500">{formatDate(comm.date)}</td>
+                                                <td className="p-3 font-medium text-gray-800">{comm.clientName}</td>
+                                                <td className="p-3 text-gray-600">{comm.property}</td>
+                                                <td className="p-3">{formatCurrency(comm.amountPaid)}</td>
+                                                <td className="p-3 font-medium text-gray-800">{comm.marketerName}</td>
+                                                <td className="p-3 text-gray-500">{comm.marketerBranchName}</td>
+                                                <td className="p-3 text-gray-500">
+                                                    <div>{comm.bankName}</div>
+                                                    <div className="text-xs text-gray-400">{comm.accountName}</div>
+                                                </td>
+                                                <td className="p-3 font-mono text-gray-600">{comm.accountNumber}</td>
+                                                <td className="p-3 font-bold text-emerald-600">{formatCurrency(comm.commissionPayable)}</td>
+                                                <td className="p-3 text-center">
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                                        comm.isCommissionPaid ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                                                    }`}>
+                                                        {comm.isCommissionPaid ? 'PAID' : 'UNPAID'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 text-center">
+                                                    {!comm.isCommissionPaid ? (
+                                                        <button 
+                                                            onClick={() => handleMarkCommissionPaid(comm.id)}
+                                                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition"
+                                                        >
+                                                            Mark Paid
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-300 text-xs">-</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
                                     )}
                                 </tbody>
                             </table>

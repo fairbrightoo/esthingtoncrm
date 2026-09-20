@@ -119,9 +119,40 @@ export const MDReportController = {
 
             const cashPayments = await prisma.payment.findMany({
                 where: cashWhere,
-                select: { amount: true }
+                include: {
+                    sale: {
+                        include: {
+                            plot: { include: { estate: true } },
+                            marketer: true
+                        }
+                    }
+                }
             });
-            const grossCashReceived = cashPayments.reduce((sum, p) => sum + p.amount, 0);
+            let grossCashReceived = 0;
+            let transitFundVolume = 0;
+
+            cashPayments.forEach(p => {
+                grossCashReceived += p.amount;
+                const s = p.sale;
+                const isSellingCompany = s.marketer?.companyId === companyId;
+                const isManagingCompany = s.plot?.estate?.companyId === companyId;
+                const isSellingBranch = s.marketer?.branchId === branchId;
+                const isManagingBranch = s.plot?.estate?.managingBranchId === branchId;
+                
+                if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {
+                    if (!isSellingCompany && !isManagingCompany && p.receivingBranchId) {
+                        // For company level, if another company's staff sold another company's property but paid into our branch
+                        // (This implies companyId is different. We assume transit if neither marketer nor property belongs to this company)
+                        const receivingBranch = companyBranches.find(b => b.id === p.receivingBranchId);
+                        if (receivingBranch) transitFundVolume += p.amount;
+                    }
+                } else {
+                    if (!isSellingBranch && !isManagingBranch && p.receivingBranchId === branchId) {
+                        transitFundVolume += p.amount;
+                    }
+                }
+            });
+            
             const grossRevenue = grossCashReceived;
 
             // Fetch ALL ongoing sales for Total Debt (ignores date filter because old debt is still debt)
@@ -267,6 +298,7 @@ export const MDReportController = {
                     directSalesVolume,
                     inboundSalesVolume,
                     outboundSalesVolume,
+                    transitFundVolume,
                     outstandingDebt,
                     totalCommissionsCleared,
                     salesCount: periodSales.length,

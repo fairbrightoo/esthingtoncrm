@@ -53,7 +53,8 @@ export const ReportController = {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
           { sale: { marketer: { branchId: branchId } } },
-          { sale: { plot: { estate: { managingBranchId: branchId } } } }
+          { sale: { plot: { estate: { managingBranchId: branchId } } } },
+          { receivingBranchId: branchId }
         ];
       }
 
@@ -104,8 +105,10 @@ export const ReportController = {
         if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && branchId) {
             const mBranchId = sale.marketer?.branchId;
             const estBranchId = sale.plot.estate.managingBranchId;
+            const recBranchId = payment.receivingBranchId;
             if (mBranchId === branchId && estBranchId !== branchId) saleType = 'Outbound Cross-Sale';
-            if (mBranchId !== branchId && estBranchId === branchId) saleType = 'Inbound Cross-Sale';
+            else if (mBranchId !== branchId && estBranchId === branchId) saleType = 'Inbound Cross-Sale';
+            else if (mBranchId !== branchId && estBranchId !== branchId && recBranchId === branchId) saleType = 'Transit Fund';
         }
 
         const commissionRate = sale.marketerCommissionRate || sale.marketer?.commissionRate || sale.lead.assignedToUser?.commissionRate || 5.0;
@@ -148,6 +151,109 @@ export const ReportController = {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to generate sales report." });
+    }
+  },
+
+  async getWeeklyCommissions(req: AuthRequest, res: Response) {
+    try {
+      const branchId = req.user?.branchId;
+      const role = req.user?.role;
+      const { filterCycle, cycleDate, startDate: customStartDate, endDate: customEndDate } = req.query;
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (filterCycle === 'CUSTOM' && customStartDate && customEndDate) {
+        startDate = new Date(customStartDate as string);
+        endDate = new Date(customEndDate as string);
+      } else if ((filterCycle === 'WEDNESDAY' || filterCycle === 'FRIDAY') && cycleDate) {
+        const baseDate = new Date(cycleDate as string);
+        if (filterCycle === 'WEDNESDAY') {
+          // Wednesday: Previous Friday 00:00:00 to Current Tuesday 23:59:59
+          startDate = new Date(baseDate);
+          startDate.setDate(baseDate.getDate() - 5);
+          startDate.setHours(0, 0, 0, 0);
+
+          endDate = new Date(baseDate);
+          endDate.setDate(baseDate.getDate() - 1);
+          endDate.setHours(23, 59, 59, 999);
+        } else {
+          // Friday: Current Wednesday 00:00:00 to Current Thursday 23:59:59
+          startDate = new Date(baseDate);
+          startDate.setDate(baseDate.getDate() - 2);
+          startDate.setHours(0, 0, 0, 0);
+
+          endDate = new Date(baseDate);
+          endDate.setDate(baseDate.getDate() - 1);
+          endDate.setHours(23, 59, 59, 999);
+        }
+      } else {
+        return res.status(400).json({ error: "Missing required parameters for cycle filtering" });
+      }
+
+      const whereClause: any = {
+        date: {
+          gte: startDate,
+          lte: endDate
+        },
+        status: 'APPROVED'
+      };
+
+      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
+        if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
+        whereClause.OR = [
+          { receivingBranchId: branchId },
+          { receivingBranchId: null, sale: { plot: { estate: { managingBranchId: branchId } } } }
+        ];
+      }
+
+      const payments = await prisma.payment.findMany({
+        where: whereClause,
+        include: {
+          sale: {
+            include: {
+              plot: { include: { estate: true } },
+              lead: { include: { assignedToUser: true } },
+              marketer: { include: { branch: true, company: true } },
+              referrer: true
+            }
+          }
+        },
+        orderBy: { date: 'asc' }
+      });
+
+      const reportData = payments.map((payment) => {
+        const sale = payment.sale;
+        const commissionRate = sale.marketerCommissionRate || sale.marketer?.commissionRate || sale.lead?.assignedToUser?.commissionRate || 5.0;
+        const commissionPayable = (payment.amount * (commissionRate / 100)) - (payment.virtualLoanAmount || 0);
+
+        return {
+          id: payment.id,
+          date: payment.date,
+          clientName: sale.lead?.fullName || 'Unknown',
+          property: `${sale.plot?.plotNumber || ''} - ${sale.plot?.estate?.name || ''}`,
+          amountPaid: payment.amount,
+          virtualLoanAmount: payment.virtualLoanAmount || 0,
+          marketerName: sale.marketer?.fullName || sale.lead?.assignedToUser?.fullName || 'Unassigned',
+          marketerBranchId: sale.marketer?.branchId,
+          marketerBranchName: sale.marketer?.branch?.name || 'Unknown',
+          marketerCompanyName: sale.marketer?.company?.name || 'Unknown',
+          bankName: sale.marketer?.bankName || 'N/A',
+          accountName: sale.marketer?.accountName || 'N/A',
+          accountNumber: sale.marketer?.accountNumber || 'N/A',
+          commissionPayable: commissionPayable > 0 ? commissionPayable : 0,
+          isCommissionPaid: payment.isCommissionPaid
+        };
+      });
+
+      res.json({
+        data: reportData,
+        exactStartDate: startDate.toISOString(),
+        exactEndDate: endDate.toISOString()
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to generate weekly commission report." });
     }
   }
 };
