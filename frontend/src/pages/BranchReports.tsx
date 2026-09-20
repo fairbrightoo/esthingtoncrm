@@ -107,7 +107,7 @@ export const BranchReports = () => {
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
     const debtData = [
-        { name: 'Collected Revenue', value: stats.kpis?.grossRevenue || 0 },
+        { name: 'Collected Revenue', value: stats.kpis?.netRetainedRevenue || 0 },
         { name: 'Outstanding Debt', value: stats.kpis?.outstandingDebt || 0 }
     ];
 
@@ -229,8 +229,8 @@ export const BranchReports = () => {
                             <h2 className="text-4xl font-black tracking-tight">₦{(stats.kpis?.netBranchProfit || 0).toLocaleString()}</h2>
                         </div>
                         <div className="text-sm font-medium opacity-90 text-right">
-                            <div><span className="opacity-75">Gross Cash Revenue:</span> ₦{(stats.kpis?.grossRevenue || 0).toLocaleString()}</div>
-                            <div><span className="opacity-75">Total Deductions:</span> ₦{((stats.kpis?.grossRevenue || 0) - (stats.kpis?.netBranchProfit || 0)).toLocaleString()}</div>
+                            <div><span className="opacity-75">Net Retained Revenue:</span> ₦{(stats.kpis?.netRetainedRevenue || 0).toLocaleString()}</div>
+                            <div><span className="opacity-75">Total Deductions:</span> ₦{((stats.kpis?.netRetainedRevenue || 0) - (stats.kpis?.netBranchProfit || 0)).toLocaleString()}</div>
                         </div>
                     </div>
                 </div>
