@@ -529,7 +529,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
                                     ))}
                                 </select>
                             </>
-                        ) : activeTab === 'SALES' && filterMode === 'CUSTOM' ? (
+                        ) : (activeTab === 'SALES' && filterMode === 'CUSTOM') || (activeTab === 'WEEKLY_COMMISSION' && filterCycle === 'CUSTOM') ? (
                             <>
                                 <input
                                     type="date"
