@@ -130,7 +130,10 @@ export const MDReportController = {
                 }
             });
             let grossCashReceived = 0;
-            let transitFundVolume = 0;
+            let directCashReceived = 0;
+            let inboundCashReceived = 0;
+            let outboundCashReceived = 0;
+            let transitCashReceived = 0;
 
             cashPayments.forEach(p => {
                 grossCashReceived += p.amount;
@@ -141,15 +144,24 @@ export const MDReportController = {
                 const isManagingBranch = s.plot?.estate?.managingBranchId === branchId;
                 
                 if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {
-                    if (!isSellingCompany && !isManagingCompany && p.receivingBranchId) {
-                        // For company level, if another company's staff sold another company's property but paid into our branch
-                        // (This implies companyId is different. We assume transit if neither marketer nor property belongs to this company)
-                        const receivingBranch = companyBranches.find(b => b.id === p.receivingBranchId);
-                        if (receivingBranch) transitFundVolume += p.amount;
+                    if (isSellingCompany && isManagingCompany) {
+                        directCashReceived += p.amount;
+                    } else if (!isSellingCompany && isManagingCompany) {
+                        inboundCashReceived += p.amount;
+                    } else if (isSellingCompany && !isManagingCompany) {
+                        outboundCashReceived += p.amount;
+                    } else {
+                        transitCashReceived += p.amount;
                     }
                 } else {
-                    if (!isSellingBranch && !isManagingBranch && p.receivingBranchId === branchId) {
-                        transitFundVolume += p.amount;
+                    if (isSellingBranch && isManagingBranch) {
+                        directCashReceived += p.amount;
+                    } else if (!isSellingBranch && isManagingBranch) {
+                        inboundCashReceived += p.amount;
+                    } else if (isSellingBranch && !isManagingBranch) {
+                        outboundCashReceived += p.amount;
+                    } else {
+                        transitCashReceived += p.amount;
                     }
                 }
             });
@@ -299,7 +311,10 @@ export const MDReportController = {
                     directSalesVolume,
                     inboundSalesVolume,
                     outboundSalesVolume,
-                    transitFundVolume,
+                    directCashReceived,
+                    inboundCashReceived,
+                    outboundCashReceived,
+                    transitCashReceived,
                     outstandingDebt,
                     totalCommissionsCleared,
                     salesCount: periodSales.length,
