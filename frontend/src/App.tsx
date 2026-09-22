@@ -241,12 +241,7 @@ function App() {
             <Route path="/dashboard/global-accountant" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/disbursements" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/payroll" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/global-accountant/my-leads" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/global-accountant/campaigns" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/global-accountant/memos" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/global-accountant/my-hr" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/global-accountant/policies" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/global-accountant/*" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/reports" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />

@@ -6,6 +6,7 @@ import { Globe, Building2, MapPin } from 'lucide-react';
 import { AccountantDashboard } from './AccountantDashboard';
 import { AccountantPayroll } from './AccountantPayroll';
 import GlobalTreasuryDashboard from './GlobalTreasuryDashboard';
+import { BranchReports } from './BranchReports';
 
 export const GlobalAccountantDashboard = () => {
     const { token, user } = useAuth();
@@ -94,6 +95,9 @@ export const GlobalAccountantDashboard = () => {
                     }
                     if (location.pathname.endsWith('/payroll') || location.pathname.endsWith('/payroll/')) {
                         return <AccountantPayroll targetBranchId={selectedBranchId} />;
+                    }
+                    if (location.pathname.endsWith('/reports') || location.pathname.endsWith('/reports/')) {
+                        return <BranchReports targetBranchId={selectedBranchId} />;
                     }
                     // Add other global accountant pages here later if needed
                     return <GlobalTreasuryDashboard />;

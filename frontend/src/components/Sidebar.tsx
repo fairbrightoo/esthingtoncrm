@@ -276,6 +276,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/global-accountant" icon={<Globe size={20} />} label="Global Overview" />
                         <NavItem to="/dashboard/global-accountant/disbursements" icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to="/dashboard/global-accountant/payroll" icon={<FileSpreadsheet size={20} />} label="Global Payroll" />
+                        <NavItem to="/dashboard/global-accountant/reports" icon={<FileText size={20} />} label="Reports" />
                         
                         <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 mt-4 px-4">Personal Operations</div>
                         <NavItem to="/dashboard/global-accountant/my-leads" icon={<Users size={20} />} label="My Leads" />
@@ -283,6 +284,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/global-accountant/memos" icon={<FileText size={20} />} label="Memos" />
                         <NavItem to="/dashboard/global-accountant/my-hr" icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to="/dashboard/global-accountant/policies" icon={<BookOpen size={20} />} label="Company Policies" />
+                        <NavItem to="/dashboard/global-accountant/archive" icon={<BookOpen size={20} />} label="Notice Archive" />
+                        <NavItem to="/dashboard/global-accountant/settings" icon={<Settings size={20} />} label="Settings" />
                     </>
                 )}
 
@@ -312,7 +315,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     </>
                 )}
                 
-                {user?.role !== 'GROUP_MANAGING_DIRECTOR' && (
+                {user?.role !== 'GROUP_MANAGING_DIRECTOR' && user?.role !== 'GLOBAL_ACCOUNTANT' && (
                     <>
                         <NavItem to={`${basePath}/archive`} icon={<BookOpen size={20} />} label="Notice Archive" />
                         <NavItem to={`${basePath}/reports`} icon={<FileText size={20} />} label="Reports" />

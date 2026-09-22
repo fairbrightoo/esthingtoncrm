@@ -13,6 +13,18 @@ export const BranchSettings = () => {
     const [activeAdminTab, setActiveAdminTab] = useState<'BRANCH_CONFIG' | 'PROFILE'>('BRANCH_CONFIG');
     const [loading, setLoading] = useState(false);
     
+    if (user?.role === 'GLOBAL_ACCOUNTANT') {
+        return (
+            <div className="max-w-4xl mx-auto space-y-6">
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold text-gray-800">Account Settings</h1>
+                    <p className="text-gray-500">Manage your personal profile and security preferences.</p>
+                </div>
+                <ProfileSettings />
+            </div>
+        );
+    }
+    
     // Branch Config
     const [branchName, setBranchName] = useState('');
     const [address, setAddress] = useState('');

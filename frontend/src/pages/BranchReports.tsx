@@ -10,7 +10,7 @@ import { useReactToPrint } from 'react-to-print';
 import { CustomerCareReport } from '../components/CustomerCareReport';
 import { ReportsDashboard } from './ReportsDashboard';
 
-export const BranchReports = () => {
+export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) => {
     const { user, token } = useAuth();
     const [activeMainTab, setActiveMainTab] = useState<'BI' | 'FINANCIAL'>('BI');
     const [stats, setStats] = useState<any>(null);
@@ -31,16 +31,16 @@ export const BranchReports = () => {
             return;
         }
         
-        const targetBranchId = user?.branchId || user?.branch?.id;
-        if (targetBranchId) {
+        const effectiveBranchId = targetBranchId || user?.branchId || user?.branch?.id;
+        if (effectiveBranchId) {
             if (dateRange === 'CUSTOM' && (!customStart || !customEnd)) {
                 return; // Wait for both dates
             }
-            fetchStats(targetBranchId);
+            fetchStats(effectiveBranchId);
         } else {
              setLoading(false);
         }
-    }, [user, dateRange, customStart, customEnd]);
+    }, [user, dateRange, customStart, customEnd, targetBranchId]);
 
     const fetchStats = async (branchId: string) => {
         setLoading(true);
