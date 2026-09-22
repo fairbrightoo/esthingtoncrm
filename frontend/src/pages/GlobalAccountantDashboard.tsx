@@ -83,6 +83,7 @@ export const GlobalAccountantDashboard = () => {
                         ))}
                     </select>
                 </div>
+            </div>
             )}
 
             {/* Main Content Area */}
