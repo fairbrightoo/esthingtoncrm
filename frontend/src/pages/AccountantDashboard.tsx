@@ -596,7 +596,7 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
                                                             
                                                             // 1. Direct Commission
                                                             if (payment.isCommissionPaid === false) {
-                                                                const rate = payment.sale?.marketer?.commissionRate || 5;
+                                                                const rate = payment.sale?.marketer?.commissionRate || 10;
                                                                 const commissionAmount = ((payment.amount * rate) / 100) - (payment.virtualLoanAmount || 0);
                                                                 rows.push(
                                                                     <tr key={`${payment.id}-direct`} className="hover:bg-emerald-50/30">
@@ -797,7 +797,7 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
                                                         {historyData.commissions.length === 0 ? (
                                                             <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-400">No records found.</td></tr>
                                                         ) : getPaginatedData(historyData.commissions, historyCommissionsPage, historyRowsPerPage).map((p: any, i: number) => {
-                                                            const rate = p.sale?.marketer?.commissionRate || 5;
+                                                            const rate = p.sale?.marketer?.commissionRate || 10;
                                                             const commissionAmount = ((p.amount * rate) / 100) - (p.virtualLoanAmount || 0);
                                                             return (
                                                             <tr key={i} className="hover:bg-gray-50/50">

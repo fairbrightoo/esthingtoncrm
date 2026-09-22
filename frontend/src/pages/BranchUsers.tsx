@@ -191,7 +191,7 @@ export const BranchUsers = () => {
             dateOfBirth: u.dateOfBirth ? new Date(u.dateOfBirth).toISOString().split('T')[0] : '',
             password: '',
             monthlySalary: u.monthlySalary || 0,
-            commissionRate: u.commissionRate !== undefined ? u.commissionRate : 5.0,
+            commissionRate: u.commissionRate !== undefined ? u.commissionRate : 10.0,
             bankName: u.bankName || '',
             accountName: u.accountName || '',
             accountNumber: u.accountNumber || '',
@@ -213,7 +213,7 @@ export const BranchUsers = () => {
         setSelectedStaffDocs(null);
         setBulkFile(null);
         setBulkReport(null);
-        setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 5.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '', referralCode: '' });
+        setFormData({ fullName: '', email: '', phone: '', password: '', monthlySalary: 0, commissionRate: 10.0, role: 'MARKETER', dateOfBirth: '', bankName: '', accountName: '', accountNumber: '', confirmAccountNumber: '', nextOfKinName: '', nextOfKinPhone: '', referralCode: '' });
         setHasReferralCode(false);
         setReferralInfo(null);
         setReferralError('');

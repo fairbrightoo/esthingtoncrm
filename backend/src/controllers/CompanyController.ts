@@ -716,7 +716,7 @@ export const CompanyController = {
             const passwordHash = await bcrypt.hash(password, 10);
             const employeeId = await generateEmployeeId(companyId, branchId, role);
 
-            let finalCommissionRate = commissionRate ? parseFloat(commissionRate) : 5.0;
+            let finalCommissionRate = commissionRate ? parseFloat(commissionRate) : 10.0;
             let referralCodeId = null;
             let referredById = null;
 

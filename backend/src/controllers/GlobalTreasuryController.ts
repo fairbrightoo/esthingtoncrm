@@ -238,7 +238,7 @@ export class GlobalTreasuryController {
 
                 // Marketer Payout
                 if (!p.isCommissionPaid && sale.marketerId && sale.marketer) {
-                    const commissionRate = sale.marketerCommissionRate || sale.marketer?.commissionRate || sale.lead?.assignedToUser?.commissionRate || 5.0;
+                    const commissionRate = sale.marketerCommissionRate || sale.marketer?.commissionRate || sale.lead?.assignedToUser?.commissionRate || 10.0;
                     const commissionAmount = (p.amount * commissionRate) / 100;
                     payouts.push({
                         type: 'MARKETER',
