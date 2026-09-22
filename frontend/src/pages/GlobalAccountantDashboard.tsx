@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Globe, Building2, MapPin } from 'lucide-react';
 import { AccountantDashboard } from './AccountantDashboard';
@@ -10,6 +10,7 @@ import GlobalTreasuryDashboard from './GlobalTreasuryDashboard';
 export const GlobalAccountantDashboard = () => {
     const { token, user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [companies, setCompanies] = useState<any[]>([]);
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
@@ -17,7 +18,7 @@ export const GlobalAccountantDashboard = () => {
     useEffect(() => {
         const fetchCompanies = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/with-branches`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCompanies(res.data);
@@ -44,8 +45,9 @@ export const GlobalAccountantDashboard = () => {
                 </div>
             </div>
 
-            {/* Branch Selector Toolbar */}
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4">
+            {/* Branch Selector Toolbar (Hidden on Global Overview since GlobalTreasuryDashboard has its own) */}
+            {!location.pathname.endsWith('/global-accountant') && !location.pathname.endsWith('/global-accountant/') && (
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
                         <Building2 size={14} className="mr-1" /> Select Subsidiary
@@ -81,7 +83,7 @@ export const GlobalAccountantDashboard = () => {
                         ))}
                     </select>
                 </div>
-            </div>
+            )}
 
             {/* Main Content Area */}
             <div className="mt-6">
