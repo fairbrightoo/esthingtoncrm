@@ -103,6 +103,57 @@ export const GlobalUserController = {
         }
     },
 
+    // 1.5 The God-Mode Create Command
+    createUser: async (req: Request, res: Response) => {
+        try {
+            const {
+                fullName,
+                email,
+                phone,
+                password,
+                role,
+                companyId,
+                branchId,
+                monthlySalary,
+                commissionRate,
+                isActive
+            } = req.body;
+
+            if (!email || !fullName || !password) {
+                return res.status(400).json({ error: 'Missing required fields' });
+            }
+
+            const existingUser = await prisma.user.findUnique({ where: { email } });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Email already exists' });
+            }
+
+            const passwordHash = await bcrypt.hash(password, 10);
+            const createData: any = {
+                fullName,
+                email,
+                phone,
+                passwordHash,
+                role: role || 'MARKETER',
+                isActive: isActive !== undefined ? isActive : true,
+                monthlySalary: parseFloat(monthlySalary) || 0,
+                commissionRate: parseFloat(commissionRate) || 0
+            };
+
+            if (companyId && companyId !== 'REMOVE') createData.companyId = companyId;
+            if (branchId && branchId !== 'REMOVE') createData.branchId = branchId;
+
+            const newUser = await prisma.user.create({
+                data: createData
+            });
+
+            res.status(201).json({ message: 'User created successfully', user: { id: newUser.id } });
+        } catch (error) {
+            console.error('Failed to create global user:', error);
+            res.status(500).json({ error: 'Failed to create global user' });
+        }
+    },
+
     // 2. The God-Mode Update Command
     updateUser: async (req: Request, res: Response) => {
         try {

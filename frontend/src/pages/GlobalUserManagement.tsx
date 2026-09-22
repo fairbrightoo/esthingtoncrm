@@ -30,10 +30,16 @@ export const GlobalUserManagement = () => {
     const [editingUser, setEditingUser] = useState<any>(null);
     const [impersonationTarget, setImpersonationTarget] = useState<any>(null);
 
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
+
     // Form State for editing
     const [formData, setFormData] = useState({
-        role: '',
-        companyId: '',
+        fullName: '',
+        email: '',
+        phone: '',
+        role: 'MARKETER',
+        companyId: 'REMOVE',
+        branchId: 'REMOVE',
         monthlySalary: 0,
         commissionRate: 0,
         isActive: true,
@@ -76,8 +82,12 @@ export const GlobalUserManagement = () => {
     };
 
     const openEditModal = (user: any) => {
+        setIsCreatingUser(false);
         setEditingUser(user);
         setFormData({
+            fullName: user.fullName || '',
+            email: user.email || '',
+            phone: user.phone || '',
             role: user.role,
             companyId: user.company?.id || 'REMOVE',
             branchId: user.branch?.id || 'REMOVE',
@@ -89,17 +99,43 @@ export const GlobalUserManagement = () => {
         setIsEditModalOpen(true);
     };
 
+    const openCreateModal = () => {
+        setIsCreatingUser(true);
+        setEditingUser(null);
+        setFormData({
+            fullName: '',
+            email: '',
+            phone: '',
+            role: 'GLOBAL_ACCOUNTANT',
+            companyId: 'REMOVE',
+            branchId: 'REMOVE',
+            monthlySalary: 0,
+            commissionRate: 0,
+            isActive: true,
+            password: ''
+        });
+        setIsEditModalOpen(true);
+    };
+
     const handleSaveUpdate = async () => {
-        if (!editingUser) return;
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/${editingUser.id}`, formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            if (isCreatingUser) {
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                addToast('User created successfully!', 'success');
+            } else {
+                if (!editingUser) return;
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/global/${editingUser.id}`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                addToast('User profile updated successfully!', 'success');
+            }
             
             setIsEditModalOpen(false);
             fetchUsers(); // Refresh grid
-        } catch (error) {
-            alert('Failed to update User Profile');
+        } catch (error: any) {
+            addToast(error.response?.data?.error || 'Failed to save User Profile', 'error');
             console.error(error);
         }
     };
@@ -146,8 +182,13 @@ export const GlobalUserManagement = () => {
                     <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Global User Management</h1>
                     <p className="text-gray-500 mt-1">Super Admin God-Mode Access Control.</p>
                 </div>
-                <div className="mt-4 md:mt-0 px-4 py-2 bg-primary-50 rounded-lg text-primary-700 font-bold border border-primary-100 flex items-center shadow-sm">
-                    <ShieldAlert size={18} className="mr-2" /> TOTAL SYSTEM USERS: {users.length}
+                <div className="mt-4 md:mt-0 flex gap-3">
+                    <button onClick={openCreateModal} className="px-4 py-2 bg-primary-600 text-white rounded-lg font-bold shadow hover:bg-primary-700 transition">
+                        + Create Global User
+                    </button>
+                    <div className="px-4 py-2 bg-primary-50 rounded-lg text-primary-700 font-bold border border-primary-100 flex items-center shadow-sm">
+                        <ShieldAlert size={18} className="mr-2" /> TOTAL SYSTEM USERS: {users.length}
+                    </div>
                 </div>
             </div>
 
@@ -288,22 +329,42 @@ export const GlobalUserManagement = () => {
             )}
 
             {/* Editing Modal */}
-            {isEditModalOpen && editingUser && (
+            {isEditModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm shadow flex justify-center items-center z-50 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                         
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 p-6 border-b border-gray-100 bg-gray-50">
                             <div>
-                                <h2 className="text-xl font-bold flex items-center text-gray-800">
-                                    <ShieldAlert size={20} className="mr-2 text-primary-600 text-xl" />
-                                    Employee Root Protocol
+                                <h2 className="text-xl font-extrabold text-gray-900 tracking-tight flex items-center">
+                                    <ShieldAlert size={20} className="mr-2 text-primary-600" />
+                                    {isCreatingUser ? 'CREATE NEW SYSTEM USER' : 'GLOBAL IDENTITY OVERRIDE'}
                                 </h2>
-                                <p className="text-sm text-gray-500 mt-1">Modifying identity parameters for: <strong>{editingUser.fullName}</strong></p>
+                                <p className="text-sm text-gray-500 mt-1">{isCreatingUser ? 'Provision a new identity.' : <>Modifying identity parameters for: <strong>{editingUser?.fullName}</strong></>}</p>
                             </div>
                             <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2"><X size={20} /></button>
                         </div>
 
                         <div className="p-6 overflow-y-auto space-y-6 flex-1">
+                            {isCreatingUser && (
+                                <div className="space-y-4 col-span-1 border p-4 rounded-xl border-gray-100 bg-gray-50/50">
+                                    <h4 className="font-semibold text-sm text-gray-800 flex items-center mb-3"><User size={16} className="mr-2 text-gray-500" /> Basic Identity</h4>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
+                                        <input type="text" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Email Address</label>
+                                            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Phone Number</label>
+                                            <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Account Status Switch */}
                             <div className={`p-4 rounded-xl border-2 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 transition-colors ${formData.isActive ? 'border-primary-100 bg-primary-50/50' : 'border-red-200 bg-red-50'}`}>
                                 <div>
@@ -441,8 +502,8 @@ export const GlobalUserManagement = () => {
                                 onClick={handleSaveUpdate}
                                 className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white rounded-xl font-medium flex items-center transition-transform hover:scale-[1.02] shadow-md shadow-gray-200"
                             >
-                                <Save size={18} className="mr-2" />
-                                Commit Protocol Updates
+                                <CheckCircle size={18} className="mr-2" />
+                                {isCreatingUser ? 'Create User Profile' : 'Commit Configuration Payload'}
                             </button>
                         </div>
                     </div>
