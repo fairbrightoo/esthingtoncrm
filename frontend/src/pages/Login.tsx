@@ -82,6 +82,8 @@ export const Login = () => {
 
             if (user.role === 'SUPER_ADMIN') {
                 navigate('/admin');
+            } else if (user.role === 'GLOBAL_ACCOUNTANT') {
+                navigate('/dashboard/global-accountant');
             } else if (user.role === 'BRANCH_ADMIN' || user.role === 'BRANCH_HR' || user.role === 'MARKETER' || user.role === 'CUSTOMER_CARE' || user.role === 'MANAGING_DIRECTOR' || user.role === 'ACCOUNTANT') {
                 // Redirect to dynamic URL: /dashboard/garki
                 const branchSlug = user.branch?.name?.toLowerCase().replace(/\s+/g, '-') || 'branch-home';

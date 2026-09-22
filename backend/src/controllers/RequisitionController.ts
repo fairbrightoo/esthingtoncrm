@@ -93,7 +93,7 @@ export const RequisitionController = {
                     lte: new Date(endDate as string)
                 };
             }
-            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && companyId) {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && companyId) {
                 whereClause.companyId = companyId;
             }
 
@@ -106,12 +106,12 @@ export const RequisitionController = {
                     res.status(200).json([]);
                     return;
                 }
-            } else if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role) && branchId) {
+            } else if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && branchId) {
                 whereClause.branchId = branchId;
             }
 
             // Normal users should only see their own requests
-            if (role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "ACCOUNTANT" && role !== "BRANCH_HR" && role !== "GENERAL_MANAGER") {
+            if (role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "ACCOUNTANT" && role !== "GLOBAL_ACCOUNTANT" && role !== "BRANCH_HR" && role !== "GENERAL_MANAGER") {
                 whereClause.requestedByUserId = userId;
             }
 
@@ -243,7 +243,7 @@ export const RequisitionController = {
     async disburseFunds(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { userId, role } = req.user!;
-            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "GLOBAL_CHAIRMAN") {
+            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "GLOBAL_CHAIRMAN" && role !== "GLOBAL_ACCOUNTANT") {
                 res.status(403).json({ error: "Insufficient permission to disburse funds." });
                 return;
             }

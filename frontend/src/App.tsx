@@ -81,6 +81,7 @@ import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { ChairmanExpenses } from './pages/ChairmanExpenses';
 import { NoticeArchive } from './pages/NoticeArchive';
 import { Kiosk } from './pages/Kiosk';
+import { GlobalAccountantDashboard } from './pages/GlobalAccountantDashboard';
 import { useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -88,6 +89,7 @@ const DashboardHome = () => {
     const { user } = useAuth();
     if (user?.role === 'SUPER_ADMIN') return <Navigate to="/admin" replace />;
     if (user?.role === 'GLOBAL_CHAIRMAN') return <Navigate to="/dashboard/chairman" replace />;
+    if (user?.role === 'GLOBAL_ACCOUNTANT') return <Navigate to="/dashboard/global-accountant" replace />;
     if (user?.role === 'GROUP_MANAGING_DIRECTOR') return <GMDDashboardReal />;
     
     if (user?.branch?.name) {
@@ -167,6 +169,7 @@ const PayrollRouter = () => {
 import { ToastProvider } from './context/ToastContext';
 import { useEffect } from 'react';
 import { AutoLogout } from './components/AutoLogout';
+import { GlobalAccountantDashboard } from './pages/GlobalAccountantDashboard';
 
 function App() {
   // DOM Dump logic
@@ -234,6 +237,9 @@ function App() {
             <Route path="/dashboard/chairman/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/chairman/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
             <Route path="/dashboard/chairman/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
+
+            {/* Global Accountant Routes */}
+            <Route path="/dashboard/global-accountant/*" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />

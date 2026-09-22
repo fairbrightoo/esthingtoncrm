@@ -187,6 +187,7 @@ export const GlobalUserManagement = () => {
                         <option value="ALL">All Roles</option>
                         <option value="SUPER_ADMIN">Super Admins</option>
                         <option value="GLOBAL_CHAIRMAN">Global Chairman</option>
+                        <option value="GLOBAL_ACCOUNTANT">Global Accountant</option>
                         <option value="GROUP_MANAGING_DIRECTOR">Group Managing Directors</option>
                         <option value="GENERAL_MANAGER">General Managers</option>
                         <option value="MANAGING_DIRECTOR">Managing Directors</option>
@@ -360,6 +361,7 @@ export const GlobalUserManagement = () => {
                                         >
                                             <option value="SUPER_ADMIN">SUPER ADMIN</option>
                                             <option value="GLOBAL_CHAIRMAN">GLOBAL CHAIRMAN</option>
+                                            <option value="GLOBAL_ACCOUNTANT">GLOBAL ACCOUNTANT</option>
                                             <option value="GROUP_MANAGING_DIRECTOR">GROUP MANAGING DIRECTOR</option>
                                             <option value="GENERAL_MANAGER">GENERAL MANAGER</option>
                                             <option value="MANAGING_DIRECTOR">MANAGING DIRECTOR</option>

@@ -41,8 +41,12 @@ export const getPaymentTypeLabel = (payment: any) => {
     return { text: 'Continuous Payment', bg: 'bg-blue-100', textCol: 'text-blue-700', border: 'border-blue-300' };
 };
 
-export const AccountantDashboard = () => {
+export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: string }) => {
     const { token, user } = useAuth();
+    
+    // Fallback to user's branch if no target provided (for normal accountants)
+    const effectiveBranchId = targetBranchId || user?.branchId;
+    
     const [personalStats, setPersonalStats] = useState<any>(null);
 
     const [activeTab, setActiveTab] = useState<'DISBURSEMENTS' | 'BUDGETS' | 'REFUNDS' | 'PAYMENTS_COMMISSIONS' | 'HISTORY' | 'PERFORMANCE'>('DISBURSEMENTS');
@@ -110,10 +114,11 @@ export const AccountantDashboard = () => {
     const fetchHistory = async () => {
         try {
             setHistoryLoading(true);
+            const branchQuery = targetBranchId ? `&branchId=${targetBranchId}` : '';
             const [reqRes, commRes, payRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions?startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions?isPaid=true&startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/processed?startDate=${historyStartDate}&endDate=${historyEndDate}`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions?startDate=${historyStartDate}&endDate=${historyEndDate}${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions?isPaid=true&startDate=${historyStartDate}&endDate=${historyEndDate}${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/processed?startDate=${historyStartDate}&endDate=${historyEndDate}${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             
             const addCommissionTag = (payment: any) => {
@@ -157,15 +162,16 @@ export const AccountantDashboard = () => {
         if (activeTab === 'HISTORY') {
             fetchHistory();
         }
-    }, [activeTab, historyStartDate, historyEndDate]);
+    }, [activeTab, historyStartDate, historyEndDate, targetBranchId]);
     
     const fetchData = async (isBackground = false) => {
         try {
             if (!isBackground) setLoading(true);
+            const branchQuery = targetBranchId ? `?branchId=${targetBranchId}` : '';
             const [reqRes, commRes, pendRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
 
             const approvedReqs = reqRes.data.filter((r: any) => r.status === 'APPROVED_BY_MD' || r.status === 'DISBURSED');
@@ -209,7 +215,7 @@ export const AccountantDashboard = () => {
         fetchData();
         const intv = setInterval(() => fetchData(true), 15000); // Poll every 15s in background
         return () => clearInterval(intv);
-    }, []);
+    }, [token, targetBranchId]);
 
     const openDisburseFundModal = (reqId: string) => {
         setConfirmModal({ isOpen: true, type: 'fund', id: reqId, title: 'Confirm Disbursement', message: 'Mark this requisition as successfully disbursed and funds transferred?' });

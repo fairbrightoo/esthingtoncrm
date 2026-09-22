@@ -49,7 +49,7 @@ export const ReportController = {
         }
       };
 
-      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
+      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && role !== 'GLOBAL_ACCOUNTANT') {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
           { sale: { marketer: { branchId: branchId } } },
@@ -102,7 +102,7 @@ export const ReportController = {
 
         // Commission Accrued (Using Sale's marketer commission rate or 5%)
         let saleType = 'Direct Sale';
-        if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && branchId) {
+        if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && role !== 'GLOBAL_ACCOUNTANT' && branchId) {
             const mBranchId = sale.marketer?.branchId;
             const estBranchId = sale.plot.estate.managingBranchId;
             const recBranchId = payment.receivingBranchId;
@@ -199,7 +199,7 @@ export const ReportController = {
         status: 'APPROVED'
       };
 
-      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
+      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && role !== 'GLOBAL_ACCOUNTANT') {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
           { receivingBranchId: branchId },

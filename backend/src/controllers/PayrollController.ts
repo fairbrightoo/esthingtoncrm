@@ -7,7 +7,11 @@ export const PayrollController = {
   // Compute or Retrieve Payroll for a specific month/year
   async getBranchPayroll(req: AuthRequest, res: Response) {
     try {
-      const branchId = req.user?.branchId;
+      let branchId = req.user?.branchId;
+      const role = req.user?.role;
+      if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && req.query.branchId) {
+          branchId = req.query.branchId as string;
+      }
       const { month, year } = req.query;
 
       if (!branchId || !month || !year) {
@@ -107,8 +111,13 @@ export const PayrollController = {
   
   async disburseAllPending(req: AuthRequest, res: Response) {
       try {
-          const { month, year } = req.body;
-          const branchId = req.user?.branchId;
+          const { month, year, branchId: reqBranchId } = req.body;
+          let branchId = req.user?.branchId;
+          const role = req.user?.role;
+          
+          if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && reqBranchId) {
+              branchId = reqBranchId as string;
+          }
           
           await prisma.payrollRecord.updateMany({
                 // @ts-ignore

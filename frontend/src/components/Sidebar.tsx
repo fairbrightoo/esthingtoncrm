@@ -270,6 +270,22 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     </>
                 )}
 
+                {user?.role === 'GLOBAL_ACCOUNTANT' && (
+                    <>
+                        <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 mt-4 px-4">Group Financials</div>
+                        <NavItem to="/dashboard/global-accountant" icon={<Globe size={20} />} label="Global Overview" />
+                        <NavItem to="/dashboard/global-accountant/disbursements" icon={<CheckCircle size={20} />} label="Disbursement Center" />
+                        <NavItem to="/dashboard/global-accountant/payroll" icon={<FileSpreadsheet size={20} />} label="Global Payroll" />
+                        
+                        <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 mt-4 px-4">Personal Operations</div>
+                        <NavItem to="/dashboard/global-accountant/my-leads" icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to="/dashboard/global-accountant/campaigns" icon={<FileText size={20} />} label="My Campaigns" />
+                        <NavItem to="/dashboard/global-accountant/memos" icon={<FileText size={20} />} label="Memos" />
+                        <NavItem to="/dashboard/global-accountant/my-hr" icon={<CalendarClock size={20} />} label="My HR Desk" />
+                        <NavItem to="/dashboard/global-accountant/policies" icon={<BookOpen size={20} />} label="Company Policies" />
+                    </>
+                )}
+
                 {user?.role === 'SITE_EXPERT' && (
                     <>
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />

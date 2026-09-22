@@ -5,9 +5,13 @@ import { useToast } from '../context/ToastContext';
 import { Banknote, Users, CheckCircle, Printer, Download, Wallet } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 
-export const AccountantPayroll = () => {
+export const AccountantPayroll = ({ targetBranchId }: { targetBranchId?: string }) => {
     const { token, user } = useAuth();
     const { addToast } = useToast();
+    
+    // Fallback to user's branch if no target provided
+    const effectiveBranchId = targetBranchId || user?.branchId;
+
     const [loading, setLoading] = useState(true);
     const [records, setRecords] = useState<any[]>([]);
     
@@ -31,12 +35,13 @@ export const AccountantPayroll = () => {
     const fetchPayroll = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll?month=${month}&year=${year}`, {
+            const branchQuery = effectiveBranchId ? `&branchId=${effectiveBranchId}` : '';
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll?month=${month}&year=${year}${branchQuery}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRecords(res.data);
 
-            // Fetch live context context to ensure up-to-date logos and signatures
+            // Fetch live context to ensure up-to-date logos and signatures
             if (user?.companyId) {
                 const compRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -44,12 +49,12 @@ export const AccountantPayroll = () => {
                 const myCompany = compRes.data.find((c: any) => c.id === user.companyId);
                 setCompanyInfo(myCompany || null);
 
-                if (user?.branchId) {
+                if (effectiveBranchId) {
                     try {
                         const branchRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${user.companyId}/branches`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
-                        const myBranch = branchRes.data.find((b: any) => b.id === user.branchId);
+                        const myBranch = branchRes.data.find((b: any) => b.id === effectiveBranchId);
                         setBranchInfo(myBranch || null);
                     } catch (e) { console.warn("Failed to fetch branch details"); }
                 }
@@ -64,7 +69,7 @@ export const AccountantPayroll = () => {
 
     useEffect(() => {
         fetchPayroll();
-    }, [month, year, token]);
+    }, [month, year, token, effectiveBranchId]);
 
     const handleDisburseSingle = async (id: string) => {
         try {
@@ -81,7 +86,7 @@ export const AccountantPayroll = () => {
     const handleMassDisburse = async () => {
         if (!confirm("Are you sure you want to mass-disburse all pending salaries for this month?")) return;
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll/disburse-mass`, { month, year }, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll/disburse-mass`, { month, year, branchId: effectiveBranchId }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast("Mass disbursement successful!", "success");
