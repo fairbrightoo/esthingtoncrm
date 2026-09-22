@@ -7,8 +7,11 @@ export const MDReportController = {
             const { branchId, startDate, endDate } = req.query;
 
             const user = (req as any).user;
-            const companyId = user?.companyId;
             const isGlobalRole = ['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN', 'GLOBAL_ACCOUNTANT'].includes(user?.role);
+            let companyId = user?.companyId;
+            if (isGlobalRole && req.query.companyId) {
+                companyId = req.query.companyId as string;
+            }
 
             if (!branchId && !isGlobalRole) {
                 res.status(400).json({ error: 'Branch ID is required for MD Analytics' });

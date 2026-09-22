@@ -51,11 +51,17 @@ export const ReportController = {
 
       if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN' || role === 'GLOBAL_ACCOUNTANT') {
         const queryBranchId = req.query.branchId as string;
+        const queryCompanyId = req.query.companyId as string;
         if (queryBranchId) {
           whereClause.OR = [
             { sale: { marketer: { branchId: queryBranchId } } },
             { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
             { receivingBranchId: queryBranchId }
+          ];
+        } else if (queryCompanyId) {
+          whereClause.OR = [
+            { sale: { marketer: { companyId: queryCompanyId } } },
+            { sale: { plot: { estate: { companyId: queryCompanyId } } } }
           ];
         }
       } else {
@@ -210,11 +216,17 @@ export const ReportController = {
 
       if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN' || role === 'GLOBAL_ACCOUNTANT') {
         const queryBranchId = req.query.branchId as string;
+        const queryCompanyId = req.query.companyId as string;
         if (queryBranchId) {
           whereClause.OR = [
             { sale: { marketer: { branchId: queryBranchId } } },
             { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
             { receivingBranchId: queryBranchId }
+          ];
+        } else if (queryCompanyId) {
+          whereClause.OR = [
+            { sale: { marketer: { companyId: queryCompanyId } } },
+            { sale: { plot: { estate: { companyId: queryCompanyId } } } }
           ];
         }
       } else {
