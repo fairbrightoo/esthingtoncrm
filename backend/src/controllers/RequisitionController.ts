@@ -285,7 +285,7 @@ export const RequisitionController = {
             const { companyId, branchId, role } = req.user!;
             const { isPaid, startDate, endDate } = req.query;
 
-            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR") {
+            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "GLOBAL_ACCOUNTANT") {
                 res.status(403).json({ error: "Forbidden." }); return;
             }
 
@@ -305,7 +305,9 @@ export const RequisitionController = {
                 ];
             }
 
-            if (role !== "SUPER_ADMIN") {
+            const queryBranchId = req.query.branchId as string;
+
+            if (role !== "SUPER_ADMIN" && role !== "GLOBAL_ACCOUNTANT") {
                 if (role === "ACCOUNTANT" && branchId) {
                     whereClause.receivingBranchId = branchId;
                 } else if (role === "MANAGING_DIRECTOR") {
@@ -313,6 +315,8 @@ export const RequisitionController = {
                     const branchIds = companyBranches.map(b => b.id);
                     whereClause.receivingBranchId = { in: branchIds };
                 }
+            } else if (queryBranchId) {
+                whereClause.receivingBranchId = queryBranchId;
             }
 
             const payments = await prisma.payment.findMany({
@@ -334,7 +338,7 @@ export const RequisitionController = {
     async payCommission(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { role } = req.user!;
-            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR") {
+            if (role !== "ACCOUNTANT" && role !== "SUPER_ADMIN" && role !== "MANAGING_DIRECTOR" && role !== "GLOBAL_ACCOUNTANT") {
                 res.status(403).json({ error: "Forbidden." }); return;
             }
 

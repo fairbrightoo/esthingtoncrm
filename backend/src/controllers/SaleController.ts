@@ -372,8 +372,10 @@ export const SaleController = {
                 isHeadOfficeMDReadOnly = true;
             }
 
+            const queryBranchId = req.query.branchId as string;
+
             // Respect Cross-Company & Branch boundaries
-            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role)) {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(user?.role)) {
                 if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
                     // Restricted to their specific BRANCH
                     whereClause.OR = [
@@ -397,6 +399,14 @@ export const SaleController = {
                     companyBranchIds = [hoBranch.id]; // For receiving bank logic
                 } else {
                     return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+                }
+            } else if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(user?.role)) {
+                if (queryBranchId) {
+                    whereClause.OR = [
+                        { sale: { marketer: { branchId: queryBranchId } } },
+                        { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
+                        { receivingBranchId: queryBranchId }
+                    ];
                 }
             }
 
@@ -547,8 +557,10 @@ export const SaleController = {
                 return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
             }
 
+            const queryBranchId = req.query.branchId as string;
+
             // Respect Cross-Company & Branch boundaries
-            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role)) {
+            if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(user?.role)) {
                 if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
                     // Restricted to their specific BRANCH
                     whereClause.OR = [
@@ -572,6 +584,14 @@ export const SaleController = {
                     companyBranchIds = [hoBranch.id]; // For receiving bank logic
                 } else {
                     return res.json({ directSales: [], outboundCrossSales: [], inboundCrossSales: [], bankConfirmations: [] });
+                }
+            } else if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(user?.role)) {
+                if (queryBranchId) {
+                    whereClause.OR = [
+                        { sale: { marketer: { branchId: queryBranchId } } },
+                        { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
+                        { receivingBranchId: queryBranchId }
+                    ];
                 }
             }
 
