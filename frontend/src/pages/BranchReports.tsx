@@ -25,13 +25,14 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
         documentTitle: `Financial_Report_${new Date().getTime()}`
     });
 
+    const effectiveBranchId = targetBranchId !== undefined ? targetBranchId : (user?.branchId || user?.branch?.id || '');
+
     useEffect(() => {
         if (user?.role === 'CUSTOMER_CARE') {
             setLoading(false);
             return;
         }
         
-        const effectiveBranchId = targetBranchId !== undefined ? targetBranchId : (user?.branchId || user?.branch?.id || '');
         if (effectiveBranchId !== undefined) {
             if (dateRange === 'CUSTOM' && (!customStart || !customEnd)) {
                 return; // Wait for both dates
@@ -40,7 +41,7 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
         } else {
              setLoading(false);
         }
-    }, [user, dateRange, customStart, customEnd, targetBranchId]);
+    }, [user, dateRange, customStart, customEnd, targetBranchId, effectiveBranchId]);
 
     const fetchStats = async (branchId: string) => {
         setLoading(true);
