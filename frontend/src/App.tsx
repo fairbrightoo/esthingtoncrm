@@ -169,7 +169,6 @@ const PayrollRouter = () => {
 import { ToastProvider } from './context/ToastContext';
 import { useEffect } from 'react';
 import { AutoLogout } from './components/AutoLogout';
-import { GlobalAccountantDashboard } from './pages/GlobalAccountantDashboard';
 
 function App() {
   // DOM Dump logic
