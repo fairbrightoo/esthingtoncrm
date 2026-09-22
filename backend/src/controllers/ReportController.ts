@@ -49,7 +49,16 @@ export const ReportController = {
         }
       };
 
-      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && role !== 'GLOBAL_ACCOUNTANT') {
+      if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN' || role === 'GLOBAL_ACCOUNTANT') {
+        const queryBranchId = req.query.branchId as string;
+        if (queryBranchId) {
+          whereClause.OR = [
+            { sale: { marketer: { branchId: queryBranchId } } },
+            { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
+            { receivingBranchId: queryBranchId }
+          ];
+        }
+      } else {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
           { sale: { marketer: { branchId: branchId } } },
@@ -199,11 +208,21 @@ export const ReportController = {
         status: 'APPROVED'
       };
 
-      if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && role !== 'GLOBAL_ACCOUNTANT') {
+      if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN' || role === 'GLOBAL_ACCOUNTANT') {
+        const queryBranchId = req.query.branchId as string;
+        if (queryBranchId) {
+          whereClause.OR = [
+            { sale: { marketer: { branchId: queryBranchId } } },
+            { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
+            { receivingBranchId: queryBranchId }
+          ];
+        }
+      } else {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
-          { receivingBranchId: branchId },
-          { receivingBranchId: null, sale: { plot: { estate: { managingBranchId: branchId } } } }
+          { sale: { marketer: { branchId: branchId } } },
+          { sale: { plot: { estate: { managingBranchId: branchId } } } },
+          { receivingBranchId: branchId }
         ];
       }
 

@@ -14,9 +14,10 @@ interface ReportData {
 
 interface ReportsDashboardProps {
     embedded?: boolean;
+    targetBranchId?: string;
 }
 
-export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) => {
+export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded, targetBranchId }) => {
     const [activeTab, setActiveTab] = useState<'SALES' | 'PAYROLL' | 'WEEKLY_COMMISSION'>('SALES');
     const [loading, setLoading] = useState(false);
     const [salesData, setSalesData] = useState<any[]>([]);
@@ -46,20 +47,19 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded }) 
     const userBranchId = JSON.parse(atob(token?.split('.')[1] || '{}'))?.branchId || '';
 
     useEffect(() => {
-        if (!filters.branchId) {
-            setFilters(prev => ({ ...prev, branchId: userBranchId }));
+        const branchIdToUse = targetBranchId !== undefined ? targetBranchId : userBranchId;
+        if (filters.branchId !== branchIdToUse) {
+            setFilters(prev => ({ ...prev, branchId: branchIdToUse }));
         }
-    }, [userBranchId]);
+    }, [targetBranchId, userBranchId]);
 
     useEffect(() => {
-        if (filters.branchId) {
-            if (activeTab === 'SALES') {
-                fetchSalesReport();
-            } else if (activeTab === 'PAYROLL') {
-                fetchPayrollReport();
-            } else if (activeTab === 'WEEKLY_COMMISSION') {
-                fetchWeeklyCommission();
-            }
+        if (activeTab === 'SALES') {
+            fetchSalesReport();
+        } else if (activeTab === 'PAYROLL') {
+            fetchPayrollReport();
+        } else if (activeTab === 'WEEKLY_COMMISSION') {
+            fetchWeeklyCommission();
         }
     }, [activeTab, filters.month, filters.year, filters.branchId, filterMode, startDate, endDate, filterCycle, cycleDate]);
 

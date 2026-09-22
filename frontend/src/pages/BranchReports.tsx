@@ -161,7 +161,7 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
                 )}
             </header>
 
-            {(user?.role === 'ACCOUNTANT' || user?.role === 'BRANCH_ADMIN' || user?.role === 'MANAGING_DIRECTOR') && (
+            {['ACCOUNTANT', 'BRANCH_ADMIN', 'MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(user?.role || '') && (
                 <div className="flex space-x-1 border-b border-gray-200 mb-6">
                     <button
                         onClick={() => setActiveMainTab('BI')}
@@ -183,7 +183,7 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
             )}
 
             {activeMainTab === 'FINANCIAL' ? (
-                <ReportsDashboard embedded />
+                <ReportsDashboard embedded targetBranchId={effectiveBranchId} />
             ) : (
                 <div ref={reportRef} className="space-y-6 print:p-8 print:bg-white print:min-h-screen">
                     {/* Print Context Header */}
