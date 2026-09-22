@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network, Eye } from 'lucide-react';
+import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network, Eye, User, CheckCircle } from 'lucide-react';
 import { Pagination, getPaginatedData } from '../components/Pagination';
 
 export const GlobalUserManagement = () => {
@@ -183,7 +183,7 @@ export const GlobalUserManagement = () => {
                     <p className="text-gray-500 mt-1">Super Admin God-Mode Access Control.</p>
                 </div>
                 <div className="mt-4 md:mt-0 flex gap-3">
-                    <button onClick={openCreateModal} className="px-4 py-2 bg-primary-600 text-white rounded-lg font-bold shadow hover:bg-primary-700 transition">
+                    <button onClick={openCreateModal} className="px-4 py-2 bg-gray-900 text-white rounded-lg font-bold shadow-md hover:bg-black transition">
                         + Create Global User
                     </button>
                     <div className="px-4 py-2 bg-primary-50 rounded-lg text-primary-700 font-bold border border-primary-100 flex items-center shadow-sm">
