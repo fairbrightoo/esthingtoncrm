@@ -5,8 +5,8 @@ import { authenticateToken, requireRole } from '../middleware/authMiddleware.js'
 const router = express.Router();
 
 router.use(authenticateToken);
-// Only Accountant, Branch Admin, Super Admin, MD can view/run payroll
-router.use(requireRole(['ACCOUNTANT', 'BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR']));
+// Only Accountant, Branch Admin, Super Admin, MD, Global Accountant can view/run payroll
+router.use(requireRole(['ACCOUNTANT', 'BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR']));
 
 router.get('/', PayrollController.getBranchPayroll);
 router.post('/disburse/:id', PayrollController.disbursePayroll);

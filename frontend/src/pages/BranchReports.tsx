@@ -31,8 +31,8 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
             return;
         }
         
-        const effectiveBranchId = targetBranchId || user?.branchId || user?.branch?.id;
-        if (effectiveBranchId) {
+        const effectiveBranchId = targetBranchId !== undefined ? targetBranchId : (user?.branchId || user?.branch?.id || '');
+        if (effectiveBranchId !== undefined) {
             if (dateRange === 'CUSTOM' && (!customStart || !customEnd)) {
                 return; // Wait for both dates
             }

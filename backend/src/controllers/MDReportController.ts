@@ -6,7 +6,11 @@ export const MDReportController = {
         try {
             const { branchId, startDate, endDate } = req.query;
 
-            if (!branchId) {
+            const user = (req as any).user;
+            const companyId = user?.companyId;
+            const isGlobalRole = ['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN', 'GLOBAL_ACCOUNTANT'].includes(user?.role);
+
+            if (!branchId && !isGlobalRole) {
                 res.status(400).json({ error: 'Branch ID is required for MD Analytics' });
                 return;
             }
@@ -20,30 +24,33 @@ export const MDReportController = {
                 dateFilter.lte = new Date(endDate as string);
             }
 
-            const user = (req as any).user;
-            const companyId = user?.companyId;
+
 
             const paymentWhere: any = { status: 'APPROVED' };
             if (startDate || endDate) paymentWhere.date = dateFilter;
 
             const saleWhere: any = {};
-            if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN', 'GLOBAL_ACCOUNTANT'].includes(user?.role) || !branchId) {
-                paymentWhere.OR = [
-                    { sale: { marketer: { companyId } } },
-                    { sale: { plot: { estate: { companyId } } } }
-                ];
-                saleWhere.OR = [
-                    { marketer: { companyId } },
-                    { plot: { estate: { companyId } } }
-                ];
+            if (isGlobalRole && !branchId) {
+                if (companyId) {
+                    paymentWhere.OR = [
+                        { sale: { marketer: { companyId } } },
+                        { sale: { plot: { estate: { companyId } } } }
+                    ];
+                    saleWhere.OR = [
+                        { marketer: { companyId } },
+                        { plot: { estate: { companyId } } }
+                    ];
+                }
+                // If no companyId (e.g. SUPER_ADMIN viewing all), don't filter by company or branch
             } else {
+                const targetBranchId = (branchId as string) || (user?.branchId as string);
                 paymentWhere.OR = [
-                    { sale: { marketer: { branchId: branchId as string } } },
-                    { sale: { plot: { estate: { managingBranchId: branchId as string } } } }
+                    { sale: { marketer: { branchId: targetBranchId } } },
+                    { sale: { plot: { estate: { managingBranchId: targetBranchId } } } }
                 ];
                 saleWhere.OR = [
-                    { marketer: { branchId: branchId as string } },
-                    { plot: { estate: { managingBranchId: branchId as string } } }
+                    { marketer: { branchId: targetBranchId } },
+                    { plot: { estate: { managingBranchId: targetBranchId } } }
                 ];
             }
 

@@ -97,9 +97,12 @@ export const CampaignController = {
             // @ts-ignore
             const { companyId, userId, branchId, role } = req.user as any;
             
-            let whereClause: any = { companyId };
+            let whereClause: any = {};
+            if (companyId) {
+                whereClause.companyId = companyId;
+            }
             
-            if (['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT'].includes(role)) {
+            if (['MARKETER', 'CUSTOMER_CARE', 'BRANCH_HR', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'SITE_EXPERT', 'ICT_ORACLE', 'ACCOUNTANT', 'GLOBAL_ACCOUNTANT', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR'].includes(role)) {
                 whereClause.creatorId = userId;
             } else if (['BRANCH_ADMIN', 'MANAGING_DIRECTOR', 'GENERAL_MANAGER'].includes(role)) {
                 whereClause.branchId = branchId;
