@@ -66,12 +66,18 @@ export const RefundController = {
             const user = (req as any).user;
             const whereClause: any = {};
 
-            if (user.role !== 'SUPER_ADMIN') {
+            const queryBranchId = req.query.branchId as string;
+
+            if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(user.role)) {
+                if (queryBranchId) {
+                    whereClause.branchId = queryBranchId;
+                }
+            } else {
                 whereClause.companyId = user.companyId;
 
                 if (user.role === 'MARKETER') {
                     whereClause.marketerId = user.userId;
-                } else if (user.role === 'BRANCH_ADMIN' || user.role === 'CUSTOMER_CARE') {
+                } else if (user.role !== 'GROUP_MANAGING_DIRECTOR') {
                     whereClause.branchId = user.branchId;
                 }
             }

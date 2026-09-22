@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Plus, Trash2, Calculator, CheckCircle, XCircle } from 'lucide-react';
 
-export const BudgetManager = () => {
+export const BudgetManager = ({ targetBranchId }: { targetBranchId?: string }) => {
     const [budgets, setBudgets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
@@ -18,7 +18,8 @@ export const BudgetManager = () => {
 
     const fetchBudgets = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/budgets`, { headers: { Authorization: `Bearer ${token}` } });
+            const branchQuery = targetBranchId ? `?branchId=${targetBranchId}` : '';
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/budgets${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } });
             setBudgets(res.data);
         } catch (err) {
             console.error("Error fetching budgets");
@@ -29,7 +30,7 @@ export const BudgetManager = () => {
 
     useEffect(() => {
         fetchBudgets();
-    }, []);
+    }, [targetBranchId]);
 
     const handleAddItem = () => {
         setItems([...items, { category: '', amountAllocated: 0, notes: '' }]);

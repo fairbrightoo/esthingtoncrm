@@ -283,12 +283,14 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
                 >
                     <ArrowRightLeft className="w-4 h-4 mr-2" /> Refunds
                 </button>
-                <button
-                    onClick={() => setActiveTab('PERFORMANCE')}
-                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'PERFORMANCE' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
-                >
-                    <CreditCard className="w-4 h-4 mr-2" /> My Sales Performance
-                </button>
+                {user?.role !== 'GLOBAL_ACCOUNTANT' && (
+                    <button
+                        onClick={() => setActiveTab('PERFORMANCE')}
+                        className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'PERFORMANCE' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <CreditCard className="w-4 h-4 mr-2" /> My Sales Performance
+                    </button>
+                )}
                 <button
                     onClick={() => setActiveTab('PAYMENTS_COMMISSIONS')}
                     className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'PAYMENTS_COMMISSIONS' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
@@ -305,8 +307,8 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
             
             <main className="space-y-8">
                     <>
-                        {activeTab === 'REFUNDS' && <RefundQueue roleContext="ACCOUNTANT" />}
-                        {activeTab === 'BUDGETS' && <BudgetManager />}
+                        {activeTab === 'REFUNDS' && <RefundQueue roleContext="ACCOUNTANT" targetBranchId={targetBranchId} />}
+                        {activeTab === 'BUDGETS' && <BudgetManager targetBranchId={targetBranchId} />}
                         
                         {activeTab === 'DISBURSEMENTS' && (
                             <>

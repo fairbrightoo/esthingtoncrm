@@ -21,7 +21,7 @@ interface RefundRequest {
     };
 }
 
-export const RefundQueue = ({ roleContext }: { roleContext: 'BRANCH_ADMIN' | 'MANAGING_DIRECTOR' | 'ACCOUNTANT' | 'CUSTOMER_CARE' }) => {
+export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRANCH_ADMIN' | 'MANAGING_DIRECTOR' | 'ACCOUNTANT' | 'CUSTOMER_CARE', targetBranchId?: string }) => {
     const { token } = useAuth();
     const { addToast } = useToast();
     const [refunds, setRefunds] = useState<RefundRequest[]>([]);
@@ -31,7 +31,8 @@ export const RefundQueue = ({ roleContext }: { roleContext: 'BRANCH_ADMIN' | 'MA
     const fetchRefunds = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/refunds`, {
+            const branchQuery = targetBranchId ? `?branchId=${targetBranchId}` : '';
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/refunds${branchQuery}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -47,7 +48,7 @@ export const RefundQueue = ({ roleContext }: { roleContext: 'BRANCH_ADMIN' | 'MA
 
     useEffect(() => {
         fetchRefunds();
-    }, [roleContext]);
+    }, [roleContext, targetBranchId]);
 
     const handleActionClick = (action: 'approve' | 'reject' | 'disburse', refundId: string) => {
         let confirmMessage = "";

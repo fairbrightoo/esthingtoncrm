@@ -97,7 +97,13 @@ export const RequisitionController = {
                 whereClause.companyId = companyId;
             }
 
-            if (role === 'GROUP_MANAGING_DIRECTOR' && companyId) {
+            const queryBranchId = req.query.branchId as string;
+
+            if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(role)) {
+                if (queryBranchId) {
+                    whereClause.branchId = queryBranchId;
+                }
+            } else if (role === 'GROUP_MANAGING_DIRECTOR' && companyId) {
                 // GMD only oversees requisitions for the Head Office branch
                 const hoBranch = await prisma.branch.findFirst({ where: { companyId, isHeadOffice: true } });
                 if (hoBranch) {
@@ -106,7 +112,7 @@ export const RequisitionController = {
                     res.status(200).json([]);
                     return;
                 }
-            } else if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && branchId) {
+            } else if (branchId) {
                 whereClause.branchId = branchId;
             }
 

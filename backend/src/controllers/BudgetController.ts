@@ -58,12 +58,20 @@ export const BudgetController = {
         try {
             const { companyId, branchId, role } = req.user!;
             
+            const queryBranchId = req.query.branchId as string;
             const whereClause: any = {};
-            if (role !== "SUPER_ADMIN" && companyId) {
-                whereClause.companyId = companyId;
-            }
-            if ((role === "ACCOUNTANT" || role === "BRANCH_HR") && branchId) {
-                whereClause.branchId = branchId;
+
+            if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(role)) {
+                if (queryBranchId) {
+                    whereClause.branchId = queryBranchId;
+                }
+            } else {
+                if (companyId) {
+                    whereClause.companyId = companyId;
+                }
+                if ((role === "ACCOUNTANT" || role === "BRANCH_HR" || role === "MANAGING_DIRECTOR" || role === "GENERAL_MANAGER" || role === "BRANCH_ADMIN") && branchId) {
+                    whereClause.branchId = branchId;
+                }
             }
 
             const budgets = await prisma.branchBudget.findMany({
