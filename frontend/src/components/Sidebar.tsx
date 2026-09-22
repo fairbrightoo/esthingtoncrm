@@ -42,7 +42,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
         )}
 
         <div
-            className={`fixed inset-y-0 left-0 z-50 transform md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 min-h-screen text-white flex flex-col shadow-2xl md:shadow-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`fixed inset-y-0 left-0 z-50 transform md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 min-h-screen text-white flex flex-col shadow-2xl md:shadow-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${!branding.color.startsWith('#') ? branding.color : ''}`}
             style={{ backgroundColor: branding.color.startsWith('#') ? branding.color : undefined }}
         >
             {/* Mobile Close Button */}
