@@ -46,7 +46,7 @@ export const GlobalAccountantDashboard = () => {
             </div>
 
             {/* Branch Selector Toolbar (Hidden on Global Overview since GlobalTreasuryDashboard has its own) */}
-            {!location.pathname.endsWith('/global-accountant') && !location.pathname.endsWith('/global-accountant/') && (
+            {(!location.pathname.endsWith('/global-accountant') && !location.pathname.endsWith('/global-accountant/')) && (
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
