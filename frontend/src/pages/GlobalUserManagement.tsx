@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Search, Save, X, Edit, ShieldAlert, BadgeCheck, PowerOff, Building, Network, Eye, User, CheckCircle } from 'lucide-react';
 import { Pagination, getPaginatedData } from '../components/Pagination';
+import { useToast } from '../context/ToastContext';
 
 export const GlobalUserManagement = () => {
     const { token, impersonate, user: currentUser } = useAuth();
+    const { addToast } = useToast();
     const navigate = useNavigate();
     
     if (currentUser && !['SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(currentUser.role)) {
@@ -476,15 +478,15 @@ export const GlobalUserManagement = () => {
                                 <div className="space-y-4 col-span-1 border p-4 rounded-xl border-gray-100 bg-gray-50/50 mt-4 md:mt-0 md:col-span-2">
                                     <h4 className="font-semibold text-sm text-gray-800 flex items-center mb-3"><ShieldAlert size={16} className="mr-2 text-red-500" /> Security Override</h4>
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Force New Password (Optional)</label>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">{isCreatingUser ? 'Initial Password (Required)' : 'Force New Password (Optional)'}</label>
                                         <input 
                                             type="text" 
                                             value={formData.password} 
                                             onChange={e => setFormData({...formData, password: e.target.value})}
                                             className="w-full rounded-lg border-gray-300 focus:ring-red-500 focus:border-red-500 text-sm font-mono tracking-wide px-4 py-2"
-                                            placeholder="Leave blank to keep current password"
+                                            placeholder={isCreatingUser ? "Enter initial password" : "Leave blank to keep current password"}
                                         />
-                                        <p className="text-[10px] text-gray-400 mt-1">If filled, the user's password will be instantly overwritten with this value.</p>
+                                        <p className="text-[10px] text-gray-400 mt-1">{isCreatingUser ? 'This password will be required for their first login.' : 'If filled, the user\'s password will be instantly overwritten with this value.'}</p>
                                     </div>
                                 </div>
                             </div>
