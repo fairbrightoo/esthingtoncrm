@@ -15,9 +15,10 @@ interface ReportData {
 interface ReportsDashboardProps {
     embedded?: boolean;
     targetBranchId?: string;
+    targetCompanyId?: string;
 }
 
-export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded, targetBranchId }) => {
+export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded, targetBranchId, targetCompanyId }) => {
     const [activeTab, setActiveTab] = useState<'SALES' | 'PAYROLL' | 'WEEKLY_COMMISSION'>('SALES');
     const [loading, setLoading] = useState(false);
     const [salesData, setSalesData] = useState<any[]>([]);
@@ -68,6 +69,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded, ta
         setLoading(true);
         try {
             const params: any = { branchId: filters.branchId };
+            if (targetCompanyId) params.companyId = targetCompanyId;
             if (filterMode === 'MONTHLY') {
                 params.month = filters.month;
                 params.year = filters.year;
@@ -96,8 +98,10 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded, ta
     const fetchPayrollReport = async () => {
         setLoading(true);
         try {
+            const params: any = { month: filters.month, year: filters.year, branchId: filters.branchId };
+            if (targetCompanyId) params.companyId = targetCompanyId;
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll`, {
-                params: { month: filters.month, year: filters.year, branchId: filters.branchId },
+                params,
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPayrollData(res.data);
@@ -114,6 +118,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ embedded, ta
         setLoading(true);
         try {
             const params: any = { branchId: filters.branchId, filterCycle };
+            if (targetCompanyId) params.companyId = targetCompanyId;
             if (filterCycle === 'CUSTOM') {
                 params.startDate = startDate;
                 params.endDate = endDate;

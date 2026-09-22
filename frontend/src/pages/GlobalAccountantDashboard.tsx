@@ -94,10 +94,10 @@ export const GlobalAccountantDashboard = () => {
                         return <AccountantDashboard targetBranchId={selectedBranchId} />;
                     }
                     if (location.pathname.endsWith('/payroll') || location.pathname.endsWith('/payroll/')) {
-                        return <AccountantPayroll targetBranchId={selectedBranchId} />;
+                        return <AccountantPayroll targetBranchId={selectedBranchId} targetCompanyId={selectedCompanyId} />;
                     }
                     if (location.pathname.endsWith('/reports') || location.pathname.endsWith('/reports/')) {
-                        return <BranchReports targetBranchId={selectedBranchId} />;
+                        return <BranchReports targetBranchId={selectedBranchId} targetCompanyId={selectedCompanyId} />;
                     }
                     // Add other global accountant pages here later if needed
                     return <GlobalTreasuryDashboard />;

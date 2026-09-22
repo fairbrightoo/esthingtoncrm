@@ -10,7 +10,7 @@ import { useReactToPrint } from 'react-to-print';
 import { CustomerCareReport } from '../components/CustomerCareReport';
 import { ReportsDashboard } from './ReportsDashboard';
 
-export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) => {
+export const BranchReports = ({ targetBranchId, targetCompanyId }: { targetBranchId?: string, targetCompanyId?: string }) => {
     const { user, token } = useAuth();
     const [activeMainTab, setActiveMainTab] = useState<'BI' | 'FINANCIAL'>('BI');
     const [stats, setStats] = useState<any>(null);
@@ -86,7 +86,8 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
                 }
             }
 
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/reports/md?branchId=${branchId}${startParams}`, {
+            const companyQuery = targetCompanyId ? `&companyId=${targetCompanyId}` : '';
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/reports/md?branchId=${branchId}${companyQuery}${startParams}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStats(res.data);
@@ -184,7 +185,7 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
             )}
 
             {activeMainTab === 'FINANCIAL' ? (
-                <ReportsDashboard embedded targetBranchId={effectiveBranchId} />
+                <ReportsDashboard embedded targetBranchId={effectiveBranchId} targetCompanyId={targetCompanyId} />
             ) : (
                 <div ref={reportRef} className="space-y-6 print:p-8 print:bg-white print:min-h-screen">
                     {/* Print Context Header */}
@@ -338,7 +339,7 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
                             {(stats.kpis?.grossRevenue === 0 && stats.kpis?.outstandingDebt === 0) ? (
                                 <div className="text-gray-400">No collection records exist yet.</div>
                             ) : (
-                                <ResponsiveContainer width="100%" height={240}>
+                                <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
                                     <PieChart>
                                         <Pie
                                             data={debtData}
@@ -372,7 +373,7 @@ export const BranchReports = ({ targetBranchId }: { targetBranchId?: string }) =
                             {stats.charts?.estateDistribution?.length === 0 ? (
                                 <div className="h-full flex items-center justify-center text-gray-400">No estate sales in this period.</div>
                             ) : (
-                                <ResponsiveContainer width="100%" height={240}>
+                                <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
                                     <BarChart data={stats.charts?.estateDistribution || []} layout="vertical" margin={{ left: 50, right: 10 }}>
                                         <defs>
                                             <linearGradient id="colorBar" x1="0" y1="0" x2="1" y2="0">

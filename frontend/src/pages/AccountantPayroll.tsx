@@ -5,12 +5,25 @@ import { useToast } from '../context/ToastContext';
 import { Banknote, Users, CheckCircle, Printer, Download, Wallet } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 
-export const AccountantPayroll = ({ targetBranchId }: { targetBranchId?: string }) => {
+export const AccountantPayroll = ({ targetBranchId, targetCompanyId }: { targetBranchId?: string, targetCompanyId?: string }) => {
     const { token, user } = useAuth();
     const { addToast } = useToast();
     
+    const [branchId, setBranchId] = useState<string>(targetBranchId || user?.branchId || '');
+    const [companyId, setCompanyId] = useState<string>(targetCompanyId || user?.companyId || '');
+
+    useEffect(() => {
+        if (targetBranchId !== undefined) {
+            setBranchId(targetBranchId);
+        }
+        if (targetCompanyId !== undefined) {
+            setCompanyId(targetCompanyId);
+        }
+    }, [targetBranchId, targetCompanyId]);
+
     // Fallback to user's branch if no target provided
-    const effectiveBranchId = targetBranchId || user?.branchId;
+    const effectiveBranchId = branchId || user?.branchId;
+    const effectiveCompanyId = companyId || user?.companyId;
 
     const [loading, setLoading] = useState(true);
     const [records, setRecords] = useState<any[]>([]);
@@ -35,23 +48,27 @@ export const AccountantPayroll = ({ targetBranchId }: { targetBranchId?: string 
     const fetchPayroll = async () => {
         setLoading(true);
         try {
-            const branchQuery = effectiveBranchId ? `&branchId=${effectiveBranchId}` : '';
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll?month=${month}&year=${year}${branchQuery}`, {
+            const params: any = { month, year };
+            if (effectiveBranchId) params.branchId = effectiveBranchId;
+            if (effectiveCompanyId) params.companyId = effectiveCompanyId;
+
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payroll`, {
+                params,
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRecords(res.data);
 
             // Fetch live context to ensure up-to-date logos and signatures
-            if (user?.companyId) {
+            if (effectiveCompanyId) {
                 const compRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                const myCompany = compRes.data.find((c: any) => c.id === user.companyId);
+                const myCompany = compRes.data.find((c: any) => c.id === effectiveCompanyId);
                 setCompanyInfo(myCompany || null);
 
                 if (effectiveBranchId) {
                     try {
-                        const branchRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${user.companyId}/branches`, {
+                        const branchRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${effectiveCompanyId}/branches`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
                         const myBranch = branchRes.data.find((b: any) => b.id === effectiveBranchId);

@@ -13,6 +13,7 @@ export const PayrollController = {
       if (isGlobalRole && req.query.branchId !== undefined) {
           branchId = req.query.branchId as string;
       }
+      let companyId = req.query.companyId as string | undefined;
       const { month, year } = req.query;
 
       if ((!branchId && !isGlobalRole) || !month || !year) {
@@ -22,13 +23,17 @@ export const PayrollController = {
       const m = parseInt(month as string);
       const y = parseInt(year as string);
 
-      // Get Active Staff
+      // Get Active Staff (Must have a branchId to generate a payroll record)
       const staffWhere: any = {
         isActive: true,
-        role: { not: 'MANAGING_DIRECTOR' }
+        role: { not: 'MANAGING_DIRECTOR' },
+        branchId: { not: null }
       };
       if (branchId) {
         staffWhere.branchId = branchId;
+      }
+      if (companyId) {
+        staffWhere.companyId = companyId;
       }
 
       const staffList = await prisma.user.findMany({
