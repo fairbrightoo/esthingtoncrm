@@ -6,7 +6,7 @@ const router = Router();
 
 // Protect all treasury routes to Super Admin and Global Chairman
 router.use(authenticateToken);
-router.use(requireRole(['SUPER_ADMIN', 'GLOBAL_CHAIRMAN']));
+router.use(requireRole(['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT']));
 
 // Get combined pending approvals (Payments and Requisitions)
 router.get('/pending-approvals', GlobalTreasuryController.getPendingApprovals);
