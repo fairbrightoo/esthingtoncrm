@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Globe, Building2, MapPin } from 'lucide-react';
 import { AccountantDashboard } from './AccountantDashboard';
@@ -88,16 +88,16 @@ export const GlobalAccountantDashboard = () => {
 
             {/* Main Content Area */}
             <div className="mt-6">
-                <Routes>
-                    <Route path="/" element={<GlobalTreasuryDashboard />} />
-                    
-                    {/* Re-use existing dashboards by passing target branch down */}
-                    <Route path="/disbursements" element={<AccountantDashboard targetBranchId={selectedBranchId} />} />
-                    <Route path="/payroll" element={<AccountantPayroll targetBranchId={selectedBranchId} />} />
-                    
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/dashboard/global-accountant" replace />} />
-                </Routes>
+                {(() => {
+                    if (location.pathname.endsWith('/disbursements') || location.pathname.endsWith('/disbursements/')) {
+                        return <AccountantDashboard targetBranchId={selectedBranchId} />;
+                    }
+                    if (location.pathname.endsWith('/payroll') || location.pathname.endsWith('/payroll/')) {
+                        return <AccountantPayroll targetBranchId={selectedBranchId} />;
+                    }
+                    // Add other global accountant pages here later if needed
+                    return <GlobalTreasuryDashboard />;
+                })()}
             </div>
         </div>
     );
