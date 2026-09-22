@@ -9,7 +9,7 @@ export const PayrollController = {
     try {
       let branchId = req.user?.branchId;
       const role = req.user?.role;
-      if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && req.query.branchId) {
+      if (role && ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && req.query.branchId) {
           branchId = req.query.branchId as string;
       }
       const { month, year } = req.query;
@@ -115,7 +115,7 @@ export const PayrollController = {
           let branchId = req.user?.branchId;
           const role = req.user?.role;
           
-          if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && reqBranchId) {
+          if (role && ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(role) && reqBranchId) {
               branchId = reqBranchId as string;
           }
           
