@@ -39,6 +39,7 @@ router.post('/estates/:estateId/physical-plots/:physicalPlotId/unmap', authentic
 // --- SALES & PAYMENTS ROUTES ---
 router.post('/sales', authenticateToken, SaleController.createSale);
 router.delete('/sales/:id', authenticateToken, SaleController.deleteSale);
+router.get('/sales/deletions/history', authenticateToken, SaleController.getDeletionHistory);
 router.post('/sales/legacy-onboard', authenticateToken, SaleController.onboardLegacySales);
 router.get('/leads/:leadId/sales', authenticateToken, SaleController.getLeadSales);
 router.post('/sales/:saleId/payments', authenticateToken, upload.array('proofs', 10), SaleController.recordPayment);

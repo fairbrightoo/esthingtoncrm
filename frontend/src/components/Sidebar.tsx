@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2 } from 'lucide-react';
 
 
 
@@ -74,6 +74,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Global User Mgmt" />
                         <NavItem to="/admin/global-clients" icon={<Globe size={20} />} label="Global Clients" />
                         <NavItem to="/admin/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
+                        <NavItem to="/admin/deletion-history" icon={<Trash2 size={20} />} label="Deletion History" />
                         <NavItem to="/admin/inventory" icon={<Home size={20} />} label="Inventory" />
                         <NavItem to="/admin/site-mapping" icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to="/admin/legacy-requests" icon={<FileText size={20} />} label="Legacy Requests" />

@@ -1188,5 +1188,28 @@ export const SaleController = {
             console.error("Delete Sale Error", error);
             res.status(500).json({ error: "Failed to delete the sale." });
         }
+    },
+
+    // 16. Get Deletion History (Super Admin Only)
+    getDeletionHistory: async (req: Request, res: Response) => {
+        try {
+            // @ts-ignore
+            const user = req.user;
+            if (user?.role !== 'SUPER_ADMIN') {
+                return res.status(403).json({ error: "Unauthorized." });
+            }
+
+            const history = await prisma.saleDeletionLog.findMany({
+                orderBy: { deletedAt: 'desc' },
+                include: {
+                    deletedByUser: { select: { fullName: true, email: true } },
+                    sale: { select: { id: true, status: true, totalPaid: true } }
+                }
+            });
+            res.json(history);
+        } catch (error) {
+            console.error("Get Deletion History Error", error);
+            res.status(500).json({ error: "Failed to fetch deletion history." });
+        }
     }
 };

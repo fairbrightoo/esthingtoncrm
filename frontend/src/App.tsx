@@ -76,7 +76,7 @@ import { ProductionScriptSharing } from './pages/ProductionScriptSharing';
 import { StaffTrainingHub } from './pages/StaffTrainingHub';
 import { SocialMediaAnalytics } from './pages/SocialMediaAnalytics';
 import { SitePlotMapping } from './pages/SitePlotMapping';
-
+import { DeletionHistory } from './pages/DeletionHistory';
 import { GlobalBroadcasts } from './pages/GlobalBroadcasts';
 import { ChairmanExpenses } from './pages/ChairmanExpenses';
 import { NoticeArchive } from './pages/NoticeArchive';
@@ -206,6 +206,7 @@ function App() {
             <Route path="/admin/onboarding" element={<DashboardLayout><BulkOnboarding /></DashboardLayout>} />
             <Route path="/admin/users" element={<DashboardLayout><GlobalUserManagement /></DashboardLayout>} />
             <Route path="/admin/global-clients" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
+            <Route path="/admin/deletion-history" element={<DashboardLayout><DeletionHistory /></DashboardLayout>} />
             <Route path="/admin/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
             <Route path="/admin/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
             <Route path="/admin/site-mapping" element={<DashboardLayout><SitePlotMapping /></DashboardLayout>} />
