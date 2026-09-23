@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Search, Download, FileText, FileSpreadsheet, Building, Network, Globe } from 'lucide-react';
 import { Pagination, getPaginatedData } from '../components/Pagination';
+import { SalesDrawer } from '../components/SalesDrawer';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -22,6 +23,10 @@ export const GlobalClientsDatabase = () => {
     // Pagination
     const [page, setPage] = useState(1);
     const [rows, setRows] = useState(20);
+
+    // Sales Drawer State
+    const [isSalesDrawerOpen, setIsSalesDrawerOpen] = useState(false);
+    const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchMetadata();
@@ -239,7 +244,14 @@ export const GlobalClientsDatabase = () => {
                                     </tr>
                                 ) : (
                                     getPaginatedData(filteredLeads, page, rows).map((l) => (
-                                        <tr key={l.id} className="transition-colors hover:bg-blue-50/30">
+                                        <tr 
+                                            key={l.id} 
+                                            onClick={() => {
+                                                setSelectedLeadId(l.id);
+                                                setIsSalesDrawerOpen(true);
+                                            }}
+                                            className="transition-colors hover:bg-blue-50/30 cursor-pointer"
+                                        >
                                             <td className="px-6 py-4">
                                                 <div className="font-bold text-gray-900">{l.fullName}</div>
                                                 <div className="text-xs text-gray-500 mt-1 flex items-center">
@@ -281,6 +293,39 @@ export const GlobalClientsDatabase = () => {
                         </table>
                     </div>
                     {filteredLeads.length > 0 && <Pagination dataLength={filteredLeads.length} currentPage={page} rowsPerPage={rows} setPage={setPage} setRowsPerPage={setRows} />}
+                </div>
+            )}
+
+            {/* Slide-over Sales Drawer */}
+            {isSalesDrawerOpen && selectedLeadId && (
+                <div className="fixed inset-0 z-[60] flex justify-end">
+                    {/* Backdrop */}
+                    <div 
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+                        onClick={() => {
+                            setIsSalesDrawerOpen(false);
+                            setSelectedLeadId(null);
+                        }}
+                    ></div>
+                    
+                    {/* Drawer Panel */}
+                    <div className="relative w-full max-w-xl bg-white shadow-2xl flex flex-col h-full animate-slide-in-right z-10 border-l border-slate-200">
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white sticky top-0 z-20">
+                            <h2 className="text-xl font-bold text-slate-800">Sales & Payments</h2>
+                            <button 
+                                onClick={() => {
+                                    setIsSalesDrawerOpen(false);
+                                    setSelectedLeadId(null);
+                                }}
+                                className="p-2 hover:bg-rose-50 rounded-full text-slate-400 hover:text-rose-500 transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6">
+                            <SalesDrawer leadId={selectedLeadId} onLeadUpdate={fetchLeads} />
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
