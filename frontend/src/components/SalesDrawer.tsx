@@ -44,7 +44,7 @@ import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { ReceiptTemplate } from './ReceiptTemplate';
 import { OfficialDocumentRenderer } from './OfficialDocumentRenderer';
-import { FileText, ArrowRightLeft } from 'lucide-react';
+import { FileText, ArrowRightLeft, Trash2 } from 'lucide-react';
 import { PlotExchangeModal } from './PlotExchangeModal';
 
 // ... (keep existing types)
@@ -94,6 +94,11 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     // Cancel Offer Logic
     const [saleToCancel, setSaleToCancel] = useState<string | null>(null);
     const [isCancellingOffer, setIsCancellingOffer] = useState(false);
+
+    // Super Admin Delete Sale Logic
+    const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
+    const [deleteReason, setDeleteReason] = useState('');
+    const [isDeletingSale, setIsDeletingSale] = useState(false);
 
     // Form: New Sale
     const [isReviewingPayment, setIsReviewingPayment] = useState(false);
@@ -239,6 +244,27 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             addToast(error.response?.data?.error || "Failed to cancel offer", "error");
         } finally {
             setIsCancellingOffer(false);
+        }
+    };
+
+    const confirmDeleteSale = async () => {
+        if (!saleToDelete) return;
+        setIsDeletingSale(true);
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${saleToDelete.id}`, { 
+                headers: { Authorization: `Bearer ${token}` },
+                data: { reason: deleteReason }
+            });
+            addToast("Sale & Payments fully deleted and reversed.", "success");
+            fetchSales();
+            setSaleToDelete(null);
+            setDeleteReason('');
+            if (onLeadUpdate) onLeadUpdate();
+        } catch (error: any) {
+            console.error("Failed to delete sale", error);
+            addToast(error.response?.data?.error || "Failed to delete sale", "error");
+        } finally {
+            setIsDeletingSale(false);
         }
     };
 
@@ -1076,6 +1102,15 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                         </span>
                                     )}
 
+                                    {user?.role === 'SUPER_ADMIN' && (
+                                        <button
+                                            onClick={() => setSaleToDelete(sale)}
+                                            className="text-[11px] bg-red-100 text-red-700 px-3 py-1.5 rounded font-bold hover:bg-red-200 flex items-center shadow-sm border border-red-200 ml-2"
+                                        >
+                                            <Trash2 size={12} className="mr-1.5" /> Delete Sale
+                                        </button>
+                                    )}
+
                                     <button
                                         disabled={isInactive || sale.status === 'COMPLETED' || sale.status === 'EXCHANGED'}
                                         onClick={() => { setSelectedSaleId(sale.id); setViewState('NEW_PAYMENT'); }}
@@ -1285,6 +1320,56 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 </div>
             )}
 
+            {/* Super Admin Delete Sale Modal */}
+            {saleToDelete && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border-t-4 border-red-600">
+                        <div className="p-6">
+                            <div className="flex items-center text-red-600 mb-4">
+                                <Trash2 size={24} className="mr-2" />
+                                <h3 className="text-xl font-bold">Delete Sale & Payments</h3>
+                            </div>
+                            <p className="text-gray-700 text-sm mb-4">
+                                You are about to <span className="font-bold text-red-600">permanently delete</span> this sale. This will:
+                            </p>
+                            <ul className="list-disc pl-5 text-sm text-gray-600 mb-4 space-y-1">
+                                <li>Reverse all EsthCoin ledger commissions</li>
+                                <li>Delete all recorded payments and messages</li>
+                                <li>Return the plot to <span className="font-bold text-green-600">AVAILABLE</span> inventory</li>
+                                <li>Log this action in the deletion history</li>
+                            </ul>
+                            
+                            <div className="mb-4">
+                                <label className="block text-xs font-bold text-gray-700 mb-1">Reason for Deletion (Required)</label>
+                                <textarea
+                                    required
+                                    value={deleteReason}
+                                    onChange={(e) => setDeleteReason(e.target.value)}
+                                    className="w-full border border-gray-300 rounded p-2 text-sm h-20 focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                                    placeholder="e.g., Mistakenly approved by MD"
+                                />
+                            </div>
+
+                            <div className="mt-6 flex justify-end space-x-3">
+                                <button
+                                    onClick={() => { setSaleToDelete(null); setDeleteReason(''); }}
+                                    className="px-4 py-2 font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                    disabled={isDeletingSale}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDeleteSale}
+                                    disabled={isDeletingSale || !deleteReason.trim()}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 flex items-center"
+                                >
+                                    {isDeletingSale ? 'Deleting...' : 'Confirm Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
             {/* Receipt Modal */}

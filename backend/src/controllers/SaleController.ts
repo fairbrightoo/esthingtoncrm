@@ -1094,5 +1094,99 @@ export const SaleController = {
             console.error("Cancel Sale Error", error);
             res.status(500).json({ error: "Failed to cancel the sale." });
         }
+    },
+
+    // 15. Super Admin Delete Sale (and all related records)
+    deleteSale: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params; // Sale ID
+            const { reason } = req.body;
+            // @ts-ignore
+            const user = req.user;
+
+            if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'GLOBAL_CHAIRMAN') {
+                return res.status(403).json({ error: "Only Super Admin or Global Chairman can delete a sale." });
+            }
+
+            const sale = await prisma.sale.findUnique({
+                where: { id: String(id) },
+                include: { payments: true }
+            });
+
+            if (!sale) {
+                return res.status(404).json({ error: "Sale not found" });
+            }
+
+            const saleDump = JSON.stringify(sale);
+
+            await prisma.$transaction(async (tx) => {
+                // Reverse EsthCoins for all payments
+                for (const payment of sale.payments) {
+                    if (payment.amount > 0 && payment.status === 'APPROVED' && sale.marketerId) {
+                        const esthCoinYield = payment.amount / 20000000;
+                        if (esthCoinYield > 0) {
+                            await tx.user.update({
+                                where: { id: sale.marketerId },
+                                data: { esthCoinBalance: { decrement: esthCoinYield } }
+                            });
+                            await tx.esthCoinLedger.create({
+                                data: {
+                                    userId: sale.marketerId,
+                                    amount: -esthCoinYield,
+                                    transactionType: 'SALES_COMMISSION_REVERSAL',
+                                    referenceId: payment.id,
+                                    description: `Reversal: Sale deleted. Reversed from approved payment of ₦${payment.amount}`
+                                }
+                            });
+                        }
+                    }
+                }
+
+                // Delete related records
+                const paymentIds = sale.payments.map(p => p.id);
+                if (paymentIds.length > 0) {
+                    await tx.paymentMessage.deleteMany({ where: { paymentId: { in: paymentIds } } });
+                }
+                
+                await tx.refundRequest.deleteMany({ where: { saleId: String(id) } });
+                await tx.payment.deleteMany({ where: { saleId: String(id) } });
+
+                // Delete Sale
+                await tx.sale.delete({ where: { id: String(id) } });
+
+                // Log deletion
+                await tx.saleDeletionLog.create({
+                    data: {
+                        saleId: String(id),
+                        deletedByUserId: user.id || user.userId,
+                        reason: reason || 'Deleted by Super Admin',
+                        saleDataDump: saleDump
+                    }
+                });
+
+                // Update Plot
+                await tx.plot.update({
+                    where: { id: sale.plotId },
+                    data: { status: 'AVAILABLE' }
+                });
+
+                // Check lead's other sales
+                const otherSales = await tx.sale.findFirst({
+                    where: { leadId: sale.leadId }
+                });
+
+                if (!otherSales) {
+                    await tx.lead.update({
+                        where: { id: sale.leadId },
+                        data: { status: 'PROSPECT' }
+                    });
+                }
+            });
+
+            res.json({ message: "Sale deleted successfully." });
+        } catch (error) {
+            console.error("Delete Sale Error", error);
+            res.status(500).json({ error: "Failed to delete the sale." });
+        }
     }
 };

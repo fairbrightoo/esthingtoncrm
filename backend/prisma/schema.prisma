@@ -222,6 +222,7 @@ model User {
 
   requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
   esthCoinLedgers      EsthCoinLedger[]
+  deletedSales         SaleDeletionLog[]
 }
 
 model EsthCoinLedger {
@@ -445,6 +446,7 @@ model Sale {
   referrer               User?           @relation("SaleReferrer", fields: [referrerId], references: [id])
   discountCode           DiscountCode?   @relation(fields: [discountCodeId], references: [id])
   refundRequests         RefundRequest[]
+  deletionLog            SaleDeletionLog?
 }
 
 model Payment {
@@ -490,7 +492,7 @@ model PaymentMessage {
   content   String   @db.Text
   createdAt DateTime @default(now())
 
-  payment Payment @relation(fields: [paymentId], references: [id])
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   sender  User    @relation(fields: [senderId], references: [id])
 }
 
@@ -1168,4 +1170,16 @@ model LegacySaleRequest {
   
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+}
+
+model SaleDeletionLog {
+  id              String   @id @default(uuid())
+  saleId          String?  @unique
+  deletedByUserId String
+  deletedAt       DateTime @default(now())
+  reason          String?  @db.Text
+  saleDataDump    String   @db.Text // JSON dump of the deleted sale and payment info
+
+  deletedByUser   User     @relation(fields: [deletedByUserId], references: [id])
+  sale            Sale?    @relation(fields: [saleId], references: [id])
 }
