@@ -1110,7 +1110,11 @@ export const SaleController = {
 
             const sale = await prisma.sale.findUnique({
                 where: { id: String(id) },
-                include: { payments: true }
+                include: { 
+                    payments: true,
+                    lead: { select: { fullName: true, phone: true } },
+                    plot: { select: { size: true, prototype: true, estate: { select: { name: true } } } }
+                }
             });
 
             if (!sale) {

@@ -103,14 +103,27 @@ export const DeletionHistory = () => {
                                                 </div>
                                             </td>
                                             <td className="p-4 align-top max-w-sm">
-                                                <div className="bg-gray-100 rounded-lg p-2 text-xs font-mono text-gray-600 overflow-y-auto max-h-32">
+                                                <div className="bg-gray-100 rounded-lg p-3 text-[11px] font-mono text-gray-700 overflow-y-auto max-h-48 border border-gray-200">
+                                                    <div className="text-gray-500 mb-1 border-b border-gray-200 pb-1 font-bold">SALE FINANCIALS</div>
                                                     Agreed Price: ₦{parsedData?.agreedPrice?.toLocaleString() || 0}
                                                     <br/>
                                                     Total Paid: ₦{parsedData?.totalPaid?.toLocaleString() || 0}
                                                     <br/>
-                                                    Plot ID: {parsedData?.plotId || 'N/A'}
-                                                    <br/>
                                                     {parsedData?.payments?.length || 0} reversed payment(s)
+                                                    
+                                                    <div className="text-gray-500 mt-2 mb-1 border-b border-gray-200 pb-1 font-bold">CLIENT DETAILS</div>
+                                                    Name: {parsedData?.lead?.fullName || 'N/A'}
+                                                    <br/>
+                                                    Phone: {parsedData?.lead?.phone || 'N/A'}
+                                                    
+                                                    <div className="text-gray-500 mt-2 mb-1 border-b border-gray-200 pb-1 font-bold">PLOT DETAILS</div>
+                                                    Estate: {parsedData?.plot?.estate?.name || 'N/A'}
+                                                    <br/>
+                                                    Type: {parsedData?.plot?.prototype || 'N/A'}
+                                                    <br/>
+                                                    Size: {parsedData?.plot?.size || 'N/A'} sqm
+                                                    <br/>
+                                                    Plot ID: {parsedData?.plotId || 'N/A'}
                                                 </div>
                                             </td>
                                         </tr>
