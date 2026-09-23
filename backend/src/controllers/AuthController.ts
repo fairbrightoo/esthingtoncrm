@@ -119,5 +119,27 @@ export const AuthController = {
             console.error('Login error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
+    },
+
+    patchCommissions: async (req: Request, res: Response) => {
+        try {
+            const rolesToUpdate = [
+                'BRANCH_ADMIN', 'BRANCH_HR', 'GENERAL_MANAGER', 'MANAGING_DIRECTOR',
+                'HEAD_BDD', 'BDM', 'TEAM_LEAD', 'GROUP_MANAGING_DIRECTOR',
+                'ACCOUNTANT', 'GLOBAL_ACCOUNTANT'
+            ];
+            const result = await prisma.user.updateMany({
+                where: {
+                    role: { in: rolesToUpdate },
+                    commissionRate: { lte: 5.0 }
+                },
+                data: {
+                    commissionRate: 10.0
+                }
+            });
+            res.json({ message: `Successfully updated ${result.count} management users to 10% commission.` });
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
+        }
     }
 };
