@@ -128,16 +128,27 @@ export const AuthController = {
                 'HEAD_BDD', 'BDM', 'TEAM_LEAD', 'GROUP_MANAGING_DIRECTOR',
                 'ACCOUNTANT', 'GLOBAL_ACCOUNTANT'
             ];
+            
+            // Get debug info first
+            const beforeUsers = await prisma.user.findMany({
+                where: { role: { in: rolesToUpdate } },
+                select: { email: true, role: true, commissionRate: true }
+            });
+
             const result = await prisma.user.updateMany({
                 where: {
                     role: { in: rolesToUpdate },
-                    commissionRate: { lte: 5.0 }
+                    commissionRate: { lt: 10.0 }
                 },
                 data: {
                     commissionRate: 10.0
                 }
             });
-            res.json({ message: `Successfully updated ${result.count} management users to 10% commission.` });
+            
+            res.json({ 
+                message: `Successfully updated ${result.count} management users to 10% commission.`,
+                debug: beforeUsers
+            });
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }
