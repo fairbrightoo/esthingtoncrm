@@ -1154,10 +1154,10 @@ export const SaleController = {
                 // Delete Sale
                 await tx.sale.delete({ where: { id: String(id) } });
 
-                // Log deletion
+                // Log deletion (set saleId to null since the sale no longer exists)
                 await tx.saleDeletionLog.create({
                     data: {
-                        saleId: String(id),
+                        saleId: null,
                         deletedByUserId: user.id || user.userId,
                         reason: reason || 'Deleted by Super Admin',
                         saleDataDump: saleDump
@@ -1202,8 +1202,7 @@ export const SaleController = {
             const history = await prisma.saleDeletionLog.findMany({
                 orderBy: { deletedAt: 'desc' },
                 include: {
-                    deletedByUser: { select: { fullName: true, email: true } },
-                    sale: { select: { id: true, status: true, totalPaid: true } }
+                    deletedByUser: { select: { fullName: true, email: true } }
                 }
             });
             res.json(history);
