@@ -428,6 +428,7 @@ model Sale {
   status                 String          @default("ONGOING")
   nextPaymentDue         DateTime?
   nameOnDocument         String?
+  salutationOnDocument   String?
   phoneOnDocument        String?
   addressOnDocument      String?
   plotNumber             String?
@@ -1136,6 +1137,7 @@ model LegacySaleRequest {
   clientName          String
   clientPhone         String
   clientEmail         String?
+  salutationOnDocument String?
   prototype           String
   size                Float
   agreedPrice         Float

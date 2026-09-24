@@ -11,6 +11,7 @@ export const LegacySaleRequestController = {
             const { userId, companyId, branchId } = req.user!;
             const { 
                 estateId, clientName, clientPhone, clientEmail, 
+                salutationOnDocument,
                 prototype, size, agreedPrice, amountPaidSoFar, 
                 dateOfSale, requestedPlotNumber, marketerEmail, notes 
             } = req.body;
@@ -39,6 +40,7 @@ export const LegacySaleRequestController = {
                     clientName,
                     clientPhone,
                     clientEmail,
+                    salutationOnDocument,
                     prototype,
                     size: Number(size),
                     agreedPrice: Number(agreedPrice),

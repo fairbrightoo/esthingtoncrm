@@ -15,6 +15,8 @@ export const LegacySalesRequests = () => {
     const [loading, setLoading] = useState(true);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [recipientProfileType, setRecipientProfileType] = useState<'INDIVIDUAL' | 'JOINT' | 'CORPORATE'>('INDIVIDUAL');
+    const [salutationOnDocument, setSalutationOnDocument] = useState('');
     const [createForm, setCreateForm] = useState({
         estateId: '', clientName: '', clientPhone: '', clientEmail: '',
         prototype: '', size: '', agreedPrice: '', amountPaidSoFar: '',
@@ -129,6 +131,7 @@ export const LegacySalesRequests = () => {
             Object.keys(createForm).forEach(key => {
                 formData.append(key, (createForm as any)[key]);
             });
+            formData.append('salutationOnDocument', salutationOnDocument);
             if (proofFile) {
                 formData.append('proofs', proofFile);
             }
@@ -146,6 +149,8 @@ export const LegacySalesRequests = () => {
                 prototype: '', size: '', agreedPrice: '', amountPaidSoFar: '',
                 dateOfSale: '', requestedPlotNumber: '', marketerEmail: '', notes: ''
             });
+            setRecipientProfileType('INDIVIDUAL');
+            setSalutationOnDocument('');
             setProofFile(null);
             fetchData();
         } catch (error: any) {
@@ -359,11 +364,44 @@ export const LegacySalesRequests = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Client Details */}
                                     <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                        <h3 className="font-bold text-indigo-900 border-b border-indigo-100 pb-2">Client Details</h3>
+                                        <div className="flex justify-between items-center border-b border-indigo-100 pb-2">
+                                            <h3 className="font-bold text-indigo-900">Client Details</h3>
+                                        </div>
+
+                                        <div className="flex bg-gray-200 p-1 rounded-lg mb-2 space-x-1">
+                                            <button type="button" onClick={() => { setRecipientProfileType('INDIVIDUAL'); setSalutationOnDocument(''); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'INDIVIDUAL' ? 'bg-white shadow-sm text-indigo-700' : 'text-gray-600 hover:bg-gray-300'}`}>Individual</button>
+                                            <button type="button" onClick={() => { setRecipientProfileType('JOINT'); setSalutationOnDocument('Dear Sir and Ma,'); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'JOINT' ? 'bg-white shadow-sm text-indigo-700' : 'text-gray-600 hover:bg-gray-300'}`}>Joint / Couple</button>
+                                            <button type="button" onClick={() => { setRecipientProfileType('CORPORATE'); setSalutationOnDocument('Dear Sirs,'); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'CORPORATE' ? 'bg-white shadow-sm text-indigo-700' : 'text-gray-600 hover:bg-gray-300'}`}>Corporate</button>
+                                        </div>
+
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-600 mb-1">Full Name</label>
-                                            <input required className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                                value={createForm.clientName} onChange={e => setCreateForm({ ...createForm, clientName: e.target.value })} />
+                                            <label className="block text-xs font-bold text-gray-600 mb-1">Name on Document</label>
+                                            {recipientProfileType === 'INDIVIDUAL' && (
+                                                <div className="flex space-x-2">
+                                                    <select 
+                                                        className="border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 w-24"
+                                                        value={salutationOnDocument}
+                                                        onChange={(e) => setSalutationOnDocument(e.target.value)}
+                                                    >
+                                                        <option value="">Default</option>
+                                                        <option value="Dear Sir,">Mr.</option>
+                                                        <option value="Dear Ma,">Mrs.</option>
+                                                        <option value="Dear Ma,">Ms.</option>
+                                                    </select>
+                                                    <input required className="flex-1 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                        value={createForm.clientName} onChange={e => setCreateForm({ ...createForm, clientName: e.target.value })} placeholder="Full Name" />
+                                                </div>
+                                            )}
+
+                                            {recipientProfileType === 'JOINT' && (
+                                                <input required className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                    value={createForm.clientName} onChange={e => setCreateForm({ ...createForm, clientName: e.target.value })} placeholder="e.g. Mr. John & Mrs. Jane Doe" />
+                                            )}
+
+                                            {recipientProfileType === 'CORPORATE' && (
+                                                <input required className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                    value={createForm.clientName} onChange={e => setCreateForm({ ...createForm, clientName: e.target.value })} placeholder="Company Name" />
+                                            )}
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-600 mb-1">Phone Number</label>

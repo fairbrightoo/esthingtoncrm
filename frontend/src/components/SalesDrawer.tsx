@@ -144,6 +144,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const [filterCornerPiece, setFilterCornerPiece] = useState(false);
     
     // Purchase Specific Document Details
+    const [recipientProfileType, setRecipientProfileType] = useState<'INDIVIDUAL' | 'JOINT' | 'CORPORATE'>('INDIVIDUAL');
+    const [salutationOnDocument, setSalutationOnDocument] = useState('');
     const [nameOnDocument, setNameOnDocument] = useState('');
     const [phoneOnDocument, setPhoneOnDocument] = useState('');
     const [addressOnDocument, setAddressOnDocument] = useState('');
@@ -234,6 +236,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                 plotId: selectedPlotId,
                 isCornerPiece: plots.find(p => p.id === selectedPlotId)?.isCornerPiece || false,
                 nameOnDocument,
+                salutationOnDocument,
                 phoneOnDocument,
                 addressOnDocument,
                 termsAccepted,
@@ -612,19 +615,45 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                         return null;
                     })()}
 
-                    <div className="pt-2 border-t border-gray-100">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-1">Document Details (Optional)</h4>
-                        <p className="text-xs text-gray-500 mb-3">If left blank, the client's primary profile data will be used on generating the Offer and Allocation Letters.</p>
+                    <div className="pt-4 border-t border-gray-100">
+                        <div className="flex justify-between items-center mb-1">
+                            <h4 className="text-sm font-semibold text-gray-700">Document Addressee Details (Optional)</h4>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-3">If left blank, documents will default to the primary Lead's profile data.</p>
+                        
+                        <div className="flex bg-gray-100 p-1 rounded-lg mb-4 space-x-1">
+                            <button type="button" onClick={() => { setRecipientProfileType('INDIVIDUAL'); setSalutationOnDocument(''); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'INDIVIDUAL' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Individual</button>
+                            <button type="button" onClick={() => { setRecipientProfileType('JOINT'); setSalutationOnDocument('Dear Sir and Ma,'); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'JOINT' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Joint / Couple</button>
+                            <button type="button" onClick={() => { setRecipientProfileType('CORPORATE'); setSalutationOnDocument('Dear Sirs,'); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'CORPORATE' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Corporate</button>
+                        </div>
+
                         <div className="space-y-3">
                             <div>
-                                <input
-                                    type="text"
-                                    placeholder="Name on Document"
-                                    value={nameOnDocument}
-                                    onChange={(e) => setNameOnDocument(e.target.value)}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                                />
+                                {recipientProfileType === 'INDIVIDUAL' && (
+                                    <div className="flex space-x-2">
+                                        <select 
+                                            className="border border-gray-300 rounded px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 w-24"
+                                            value={salutationOnDocument}
+                                            onChange={(e) => setSalutationOnDocument(e.target.value)}
+                                        >
+                                            <option value="">Default</option>
+                                            <option value="Dear Sir,">Mr.</option>
+                                            <option value="Dear Ma,">Mrs.</option>
+                                            <option value="Dear Ma,">Ms.</option>
+                                        </select>
+                                        <input type="text" placeholder="Full Name on Document" value={nameOnDocument} onChange={(e) => setNameOnDocument(e.target.value)} className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                                    </div>
+                                )}
+                                
+                                {recipientProfileType === 'JOINT' && (
+                                    <input type="text" placeholder="e.g. Mr. John & Mrs. Jane Doe" value={nameOnDocument} onChange={(e) => setNameOnDocument(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                                )}
+
+                                {recipientProfileType === 'CORPORATE' && (
+                                    <input type="text" placeholder="Company Name" value={nameOnDocument} onChange={(e) => setNameOnDocument(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                                )}
                             </div>
+                            
                             <div>
                                 <input
                                     type="tel"
