@@ -225,6 +225,7 @@ function App() {
             <Route path="/dashboard/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
             <Route path="/dashboard/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
+            <Route path="/dashboard/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/dashboard/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             {/* Global Chairman Routes */}
@@ -235,6 +236,7 @@ function App() {
             <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><ChairmanExpenses /></DashboardLayout>} />
             <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
             <Route path="/dashboard/chairman/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
             <Route path="/dashboard/chairman/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
             <Route path="/dashboard/chairman/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
@@ -243,6 +245,7 @@ function App() {
             <Route path="/dashboard/global-accountant/disbursements" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/payroll" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/reports" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />
