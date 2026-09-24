@@ -1202,22 +1202,29 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             }
 
             {/* Hidden Receipt Template - rendered offscreen so react-to-print can properly compute its layout on iOS */}
-            <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '800px' }}>
+            <div className="print-wrapper" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '800px' }}>
                 {selectedPaymentForReceipt && (
                     <style>{`
                         @media print {
                             @page { size: A4 portrait; margin: 0; }
                             body * { visibility: hidden !important; }
                             body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            
+                            .print-wrapper {
+                                position: absolute !important;
+                                top: 0 !important;
+                                left: 0 !important;
+                                width: 100% !important;
+                                visibility: visible !important;
+                                z-index: 99999 !important;
+                            }
+                            
                             .print-content, .print-content * { visibility: visible !important; }
                             .print-content { 
-                                position: absolute !important; 
-                                left: 0 !important; 
-                                top: 0 !important; 
+                                position: relative !important;
                                 width: 100% !important; 
                                 max-width: 800px !important;
                                 background: white !important;
-                                z-index: 99999 !important;
                                 margin: 0 auto !important;
                             }
                         }
