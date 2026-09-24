@@ -1140,6 +1140,7 @@ model LegacySaleRequest {
   size                Float
   agreedPrice         Float
   amountPaidSoFar     Float
+  proofOfPaymentUrl   String?
   dateOfSale          DateTime
   requestedPlotNumber String?
   marketerEmail       String?

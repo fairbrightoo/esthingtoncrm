@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import prisma from '../config/prisma.js';
+import { uploadFile } from '../middleware/uploadMiddleware.js';
 
 export const LegacySaleRequestController = {
 
@@ -14,7 +15,6 @@ export const LegacySaleRequestController = {
                 dateOfSale, requestedPlotNumber, marketerEmail, notes 
             } = req.body;
 
-            // Fetch Estate to know who manages it
             const estate = await prisma.estate.findUnique({
                 where: { id: estateId },
                 include: { company: true, branch: true }
@@ -22,6 +22,16 @@ export const LegacySaleRequestController = {
 
             if (!estate) {
                 return res.status(404).json({ error: "Estate not found" });
+            }
+
+            let proofOfPaymentUrl: string | null = null;
+            if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+                const savedUrls: string[] = [];
+                for (const file of req.files as Express.Multer.File[]) {
+                    const url = await uploadFile(file.buffer, file.originalname, 'legacy-receipts');
+                    savedUrls.push(url);
+                }
+                proofOfPaymentUrl = JSON.stringify(savedUrls);
             }
 
             const request = await prisma.legacySaleRequest.create({
@@ -43,7 +53,8 @@ export const LegacySaleRequestController = {
                     requestingBranchId: branchId!,
                     managingCompanyId: estate.companyId,
                     managingBranchId: estate.managingBranchId,
-                    status: 'PENDING'
+                    status: 'PENDING',
+                    proofOfPaymentUrl
                 }
             });
 
@@ -54,12 +65,19 @@ export const LegacySaleRequestController = {
         }
     },
 
-    // 2. View Sent Requests (Submitting Branch Admin)
+    // 2. View Sent Requests (Submitting Branch Admin & Staff)
     async getSentRequests(req: AuthRequest, res: Response) {
         try {
-            const branchId = req.user!.branchId!;
+            const { role, branchId, userId } = req.user!;
+            
+            // Admins & MDs see all branch submissions. Regular staff only see their own.
+            const isAdminOrMD = ['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '');
+            const whereClause = isAdminOrMD 
+                ? { requestingBranchId: branchId } 
+                : { requestingBranchId: branchId, requestingUserId: userId };
+
             const requests = await prisma.legacySaleRequest.findMany({
-                where: { requestingBranchId: branchId },
+                where: whereClause,
                 include: {
                     estate: { select: { name: true, company: true, branch: true } },
                     assignedPlot: { select: { plotNumber: true } }
@@ -97,12 +115,12 @@ export const LegacySaleRequestController = {
         }
     },
 
-    // 4. Reject Request (Managing Branch Admin)
+    // 4. Reject Request (Managing Branch Admin, MD, GMD)
     async rejectRequest(req: AuthRequest, res: Response) {
         try {
             const { role, branchId } = req.user!;
-            if (role !== 'BRANCH_ADMIN' && role !== 'SUPER_ADMIN') {
-                return res.status(403).json({ error: "Only Branch Admins can reject requests." });
+            if (!['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '')) {
+                return res.status(403).json({ error: "Unauthorized to reject requests." });
             }
 
             const { requestId } = req.params as { requestId: string };
@@ -127,16 +145,16 @@ export const LegacySaleRequestController = {
         }
     },
 
-    // 5. Approve Request and Execute Onboarding (Managing Branch Admin)
+    // 5. Approve Request and Execute Onboarding (Managing Branch Admin, MD, GMD)
     async approveRequest(req: AuthRequest, res: Response) {
         try {
             const { role, userId, branchId } = req.user!;
-            if (role !== 'BRANCH_ADMIN' && role !== 'SUPER_ADMIN') {
-                return res.status(403).json({ error: "Only Branch Admins can approve requests." });
+            if (!['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '')) {
+                return res.status(403).json({ error: "Unauthorized to approve requests." });
             }
 
             const { requestId } = req.params as { requestId: string };
-            const { assignedPlotId } = req.body; // Branch Admin selects an available Plot ID
+            const { assignedPlotId, autoGeneratePlot } = req.body; 
 
             const request = await prisma.legacySaleRequest.findUnique({ 
                 where: { id: requestId },
@@ -151,13 +169,35 @@ export const LegacySaleRequestController = {
                 return res.status(400).json({ error: "Request is already processed." });
             }
 
-            // 1. Validate Assigned Plot
-            const plot = await prisma.plot.findUnique({ where: { id: assignedPlotId } });
-            if (!plot || plot.estateId !== request.estateId) {
-                return res.status(400).json({ error: "Invalid plot selected." });
-            }
-            if (plot.status !== 'AVAILABLE') {
-                return res.status(400).json({ error: `Plot ${plot.plotNumber} is already ${plot.status}.` });
+            // 1. Validate or Generate Plot
+            let plot;
+            if (autoGeneratePlot) {
+                const basePrefix = request.estate.abbreviation || request.estate.name.substring(0, 3).toUpperCase();
+                const randomCode = Math.floor(1000 + Math.random() * 9000);
+                const plotNumber = `${basePrefix}-${request.size}-LGCY-${randomCode}`;
+                
+                plot = await prisma.plot.create({
+                    data: {
+                        estateId: request.estateId,
+                        size: request.size,
+                        prototype: request.prototype,
+                        price: request.agreedPrice,
+                        status: 'AVAILABLE',
+                        isCornerPiece: false,
+                        plotNumber: plotNumber
+                    }
+                });
+            } else {
+                if (!assignedPlotId) {
+                    return res.status(400).json({ error: "A plot must be assigned or auto-generated." });
+                }
+                plot = await prisma.plot.findUnique({ where: { id: assignedPlotId } });
+                if (!plot || plot.estateId !== request.estateId) {
+                    return res.status(400).json({ error: "Invalid plot selected." });
+                }
+                if (plot.status !== 'AVAILABLE') {
+                    return res.status(400).json({ error: `Plot ${plot.plotNumber} is already ${plot.status}.` });
+                }
             }
 
             // 2. Fetch Marketer (from Requesting Branch)
@@ -237,6 +277,7 @@ export const LegacySaleRequestController = {
                         status: 'APPROVED',
                         recordedByUserId: userId, // The approving MD
                         reference: `LEGACY-REQ-${request.id}`,
+                        proofOfPaymentUrl: request.proofOfPaymentUrl,
                         notes: `Legacy Sale approved and onboarded. Originally requested by ${request.requestingUserId}`,
                         receivingBranchId: request.requestingCompanyId !== request.managingCompanyId ? request.managingBranchId : null
                     }

@@ -57,7 +57,7 @@ router.put('/sales/:id/cancel', authenticateToken, SaleController.cancelSale);
 
 // --- LEGACY SALE REQUESTS ROUTES ---
 import { LegacySaleRequestController } from '../controllers/LegacySaleRequestController.js';
-router.post('/legacy-sale-requests', authenticateToken, LegacySaleRequestController.createRequest);
+router.post('/legacy-sale-requests', authenticateToken, upload.array('proofs', 1), LegacySaleRequestController.createRequest);
 router.get('/legacy-sale-requests/sent', authenticateToken, LegacySaleRequestController.getSentRequests);
 router.get('/legacy-sale-requests/received', authenticateToken, LegacySaleRequestController.getReceivedRequests);
 router.put('/legacy-sale-requests/:requestId/approve', authenticateToken, LegacySaleRequestController.approveRequest);

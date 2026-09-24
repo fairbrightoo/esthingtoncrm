@@ -26,6 +26,7 @@ export const LegacySalesRequests = () => {
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
     const [availablePlots, setAvailablePlots] = useState<any[]>([]);
     const [assignedPlotId, setAssignedPlotId] = useState('');
+    const [autoGeneratePlot, setAutoGeneratePlot] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -118,20 +119,34 @@ export const LegacySalesRequests = () => {
         }
     };
 
+    const [proofFile, setProofFile] = useState<File | null>(null);
+
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/legacy-sale-requests`, createForm, {
-                headers: { Authorization: `Bearer ${token}` }
+            const formData = new FormData();
+            Object.keys(createForm).forEach(key => {
+                formData.append(key, (createForm as any)[key]);
             });
-            addToast("Legacy sale request submitted successfully", "success");
+            if (proofFile) {
+                formData.append('proofs', proofFile);
+            }
+
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/legacy-sale-requests`, formData, {
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            addToast("Offline Sale Request submitted successfully", "success");
             setIsCreateModalOpen(false);
             setCreateForm({
                 estateId: '', clientName: '', clientPhone: '', clientEmail: '',
                 prototype: '', size: '', agreedPrice: '', amountPaidSoFar: '',
                 dateOfSale: '', requestedPlotNumber: '', marketerEmail: '', notes: ''
             });
+            setProofFile(null);
             fetchData();
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to submit request", "error");
@@ -141,14 +156,14 @@ export const LegacySalesRequests = () => {
     };
 
     const handleApprove = async () => {
-        if (!assignedPlotId) {
+        if (!autoGeneratePlot && !assignedPlotId) {
             addToast("Please assign a plot first", "error");
             return;
         }
         setIsProcessing(true);
         try {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/legacy-sale-requests/${selectedRequest.id}/approve`, 
-                { assignedPlotId }, 
+                { assignedPlotId, autoGeneratePlot }, 
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             addToast("Request approved and sale onboarded", "success");
@@ -196,19 +211,17 @@ export const LegacySalesRequests = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center">
                         <FileText className="mr-3 text-indigo-600" />
-                        Legacy Sale Requests
+                        Offline Sales Onboarding
                     </h1>
-                    <p className="text-gray-500 mt-1 text-sm">Submit cross-branch legacy sales or review requests sent to your managed estates.</p>
+                    <p className="text-gray-500 mt-1 text-sm">Submit offline sales for onboarding or review requests for your managed estates.</p>
                 </div>
-                {['BRANCH_ADMIN', 'SUPER_ADMIN', 'GENERAL_MANAGER'].includes(user?.role || '') && (
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="mt-4 md:mt-0 px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center"
-                    >
-                        <Send size={18} className="mr-2" />
-                        Submit New Request
-                    </button>
-                )}
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="mt-4 md:mt-0 px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center"
+                >
+                    <Send size={18} className="mr-2" />
+                    Submit New Request
+                </button>
             </header>
 
             <div className="flex space-x-2 border-b border-gray-200">
@@ -219,13 +232,15 @@ export const LegacySalesRequests = () => {
                     <Send size={16} className="mr-2" />
                     Sent Requests
                 </button>
-                <button
-                    onClick={() => setActiveTab('RECEIVED')}
-                    className={`px-6 py-3 font-semibold text-sm transition-colors flex items-center ${activeTab === 'RECEIVED' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    <Inbox size={16} className="mr-2" />
-                    Received Requests
-                </button>
+                {['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role || '') && (
+                    <button
+                        onClick={() => setActiveTab('RECEIVED')}
+                        className={`px-6 py-3 font-semibold text-sm transition-colors flex items-center ${activeTab === 'RECEIVED' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        <Inbox size={16} className="mr-2" />
+                        Received Requests
+                    </button>
+                )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -275,12 +290,17 @@ export const LegacySalesRequests = () => {
                                             <td className="px-6 py-4">
                                                 <p className="font-bold text-gray-700">₦{req.agreedPrice.toLocaleString()}</p>
                                                 <p className="text-green-600 text-xs font-semibold mt-1">Paid: ₦{req.amountPaidSoFar.toLocaleString()}</p>
+                                                {req.proofOfPaymentUrl && (
+                                                    <a href={JSON.parse(req.proofOfPaymentUrl)[0]} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline mt-2 inline-block font-bold">
+                                                        View Proof of Payment ↗
+                                                    </a>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <StatusBadge status={req.status} />
                                             </td>
                                             <td className="px-6 py-4">
-                                                {activeTab === 'RECEIVED' && req.status === 'PENDING' && ['BRANCH_ADMIN', 'SUPER_ADMIN'].includes(user?.role || '') && (
+                                                {activeTab === 'RECEIVED' && req.status === 'PENDING' && ['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role || '') && (
                                                     <div className="flex space-x-2">
                                                         <button 
                                                             onClick={() => { setSelectedRequest(req); fetchAvailablePlots(req.estateId); setIsApproveModalOpen(true); }}
@@ -318,8 +338,8 @@ export const LegacySalesRequests = () => {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
                         <div className="p-6 bg-gray-50 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-800">Submit Legacy Sale Request</h2>
-                                <p className="text-sm text-gray-500 mt-1">Request onboarding for a sale on an estate managed by another branch.</p>
+                                <h2 className="text-xl font-bold text-gray-800">Submit Offline Sale Request</h2>
+                                <p className="text-sm text-gray-500 mt-1">Request onboarding for a sale made offline.</p>
                             </div>
                         </div>
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
@@ -463,10 +483,18 @@ export const LegacySalesRequests = () => {
                                     </div>
                                 </div>
                                 
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-600 mb-1">Additional Notes</label>
-                                    <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm h-20"
-                                        value={createForm.notes} onChange={e => setCreateForm({ ...createForm, notes: e.target.value })} placeholder="Any extra information for the managing branch..." />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">Additional Notes</label>
+                                        <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm h-20"
+                                            value={createForm.notes} onChange={e => setCreateForm({ ...createForm, notes: e.target.value })} placeholder="Any extra information for the managing branch..." />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 mb-1">Proof of Payment (Optional)</label>
+                                        <input type="file" accept="image/*,.pdf" className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                            onChange={e => setProofFile(e.target.files?.[0] || null)} />
+                                        <p className="text-[10px] text-gray-400 mt-1">Upload the bank receipt to expedite approval.</p>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -499,14 +527,31 @@ export const LegacySalesRequests = () => {
                             </div>
                             
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Assign Plot from Inventory</label>
-                                <select className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
-                                    value={assignedPlotId} onChange={e => setAssignedPlotId(e.target.value)}>
-                                    <option value="">-- Select Available Plot --</option>
-                                    {availablePlots.map(p => (
-                                        <option key={p.id} value={p.id}>{p.plotNumber} ({p.size}sqm - ₦{p.price.toLocaleString()})</option>
-                                    ))}
-                                </select>
+                                <label className="flex items-center space-x-3 mb-4 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+                                    <input 
+                                        type="checkbox" 
+                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                                        checked={autoGeneratePlot}
+                                        onChange={(e) => setAutoGeneratePlot(e.target.checked)}
+                                    />
+                                    <div>
+                                        <div className="font-bold text-gray-800">Auto-Generate Custom Legacy Plot <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full ml-2 uppercase">Recommended</span></div>
+                                        <div className="text-xs text-gray-500 mt-0.5">Automatically spawns a bespoke system plot for this sale, ready for future site mapping.</div>
+                                    </div>
+                                </label>
+
+                                {!autoGeneratePlot && (
+                                    <div className="mt-4 p-4 border border-orange-200 bg-orange-50/50 rounded-xl">
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Assign Existing Unsold Plot</label>
+                                        <select className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
+                                            value={assignedPlotId} onChange={e => setAssignedPlotId(e.target.value)}>
+                                            <option value="">-- Select Available Plot --</option>
+                                            {availablePlots.map(p => (
+                                                <option key={p.id} value={p.id}>{p.plotNumber} ({p.size}sqm - ₦{p.price.toLocaleString()})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="p-6 bg-gray-50 flex justify-end space-x-3 border-t border-gray-100">
