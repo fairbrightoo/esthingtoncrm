@@ -1210,11 +1210,21 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             body * { visibility: hidden !important; }
                             body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                             
+                            #root {
+                                position: fixed !important;
+                                top: 0 !important;
+                                left: 0 !important;
+                                height: 100vh !important;
+                                overflow: hidden !important;
+                            }
+                            
                             .print-wrapper {
                                 position: absolute !important;
                                 top: 0 !important;
                                 left: 0 !important;
-                                width: 100% !important;
+                                width: 800px !important;
+                                min-width: 800px !important;
+                                zoom: 0.45 !important;
                                 visibility: visible !important;
                                 z-index: 99999 !important;
                             }
