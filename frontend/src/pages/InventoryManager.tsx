@@ -361,7 +361,7 @@ export const InventoryManager = () => {
             });
             addToast("Plot deleted successfully", "success");
             setPlotToDelete(null);
-            fetchPlots(selectedEstate!.id);
+            fetchEstatePlots(selectedEstate!.id);
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to delete plot", "error");
         } finally {
@@ -383,7 +383,7 @@ export const InventoryManager = () => {
             });
             addToast("Plot updated successfully", "success");
             setPlotToEdit(null);
-            fetchPlots(selectedEstate!.id);
+            fetchEstatePlots(selectedEstate!.id);
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to update plot", "error");
         } finally {
@@ -406,7 +406,7 @@ export const InventoryManager = () => {
             addToast(res.data.message || "Excess plots deleted", "success");
             setIsBulkDeleteModalOpen(false);
             setBulkDeleteForm({ prototype: '', size: '', quantity: '' });
-            fetchPlots(selectedEstate.id);
+            fetchEstatePlots(selectedEstate.id);
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to delete plots", "error");
         } finally {
