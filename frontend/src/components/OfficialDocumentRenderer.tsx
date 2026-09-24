@@ -267,7 +267,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                     }}
                 >
                     {/* Invisible boundary for ReactToPrint to target */}
-                    <div ref={componentRef} className="print-content text-sm leading-relaxed" style={{ padding: '20mm', width: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}>
+                    <div ref={componentRef} className="print-content text-sm leading-relaxed" style={{ padding: '10mm 15mm', width: '100%', maxWidth: '210mm', boxSizing: 'border-box' }}>
                         
                         {/* The Injected HTML Template */}
                         <div dangerouslySetInnerHTML={{ __html: processTemplate() }} className="document-prose" />
@@ -282,8 +282,9 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                                     position: absolute !important; 
                                     left: 0 !important; 
                                     top: 0 !important; 
-                                    padding: 20mm !important; 
-                                    width: 210mm !important; 
+                                    padding: 10mm 15mm !important; 
+                                    width: 100% !important; 
+                                    max-width: 210mm !important;
                                     background: white !important;
                                 }
                             }
