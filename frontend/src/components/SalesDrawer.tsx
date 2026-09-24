@@ -1292,10 +1292,8 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                 position: relative !important;
                                 width: 800px !important;
                                 min-width: 800px !important;
-                                transform: scale(0.48) !important;
-                                transform-origin: top left !important;
                                 background: white !important;
-                                margin: 0 !important;
+                                margin: 0 auto !important;
                                 padding: 0 !important;
                             }
                         }
