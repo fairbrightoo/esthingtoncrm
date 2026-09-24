@@ -1286,12 +1286,10 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             /* Hide our loading overlay during print */
                             .print\\\\:hidden { display: none !important; }
                             
-                            /* Position the portal perfectly at the top left and scale it down so iOS doesn't crop it */
+                            /* Ensure the portal is in normal document flow so the body has height to print */
                             .ios-print-portal {
                                 display: block !important;
-                                position: absolute !important;
-                                top: 0 !important;
-                                left: 0 !important;
+                                position: relative !important;
                                 width: 800px !important;
                                 min-width: 800px !important;
                                 transform: scale(0.48) !important;
@@ -1302,7 +1300,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                             }
                         }
                     `}</style>
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '800px', backgroundColor: 'white' }}>
+                    <div style={{ position: 'relative', width: '800px', backgroundColor: 'white', minHeight: '100vh' }}>
                         {(() => {
                             const estate = selectedPaymentForReceipt.sale.plot?.estate;
                             const managingCompany = estate?.company || user?.company;
