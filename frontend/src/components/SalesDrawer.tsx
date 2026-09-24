@@ -60,6 +60,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const handlePrint = useReactToPrint({
         contentRef: receiptRef,
         documentTitle: `Receipt-${selectedPaymentForReceipt?.id || 'New'}`,
+        onAfterPrint: () => setSelectedPaymentForReceipt(null)
     });
 
     const triggerPrint = (payment: any) => {
@@ -1201,7 +1202,25 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             }
 
             {/* Hidden Receipt Template */}
-            <div style={{ display: 'none' }}>
+            <div className={selectedPaymentForReceipt ? "print-content" : "hidden"} style={!selectedPaymentForReceipt ? { display: 'none' } : {}}>
+                {selectedPaymentForReceipt && (
+                    <style>{`
+                        @media print {
+                            @page { size: A4 portrait; margin: 0; }
+                            body * { visibility: hidden; }
+                            body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            .print-content, .print-content * { visibility: visible; }
+                            .print-content { 
+                                position: absolute !important; 
+                                left: 0 !important; 
+                                top: 0 !important; 
+                                width: 210mm !important; 
+                                background: white !important;
+                                z-index: 99999 !important;
+                            }
+                        }
+                    `}</style>
+                )}
                 {selectedPaymentForReceipt && (() => {
                     const estate = selectedPaymentForReceipt.sale.plot?.estate;
                     const managingCompany = estate?.company || user?.company;
