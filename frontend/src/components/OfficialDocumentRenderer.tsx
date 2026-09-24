@@ -23,14 +23,31 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         contentRef: componentRef,
         documentTitle: `${documentType}_${sale?.lead?.fullName?.replace(/\s+/g, '_')}`,
         print: async (printIframe) => {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            if (isIOS) {
-                window.print();
-            } else {
-                if (printIframe.contentWindow) {
-                    printIframe.contentWindow.print();
+            return new Promise((resolve) => {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                
+                if (isIOS) {
+                    let timeoutId: any;
+                    const cleanup = () => {
+                        clearTimeout(timeoutId);
+                        window.removeEventListener('afterprint', cleanup);
+                        resolve(null);
+                    };
+                    window.addEventListener('afterprint', cleanup);
+                    window.print();
+                    timeoutId = setTimeout(cleanup, 2000);
+                } else {
+                    let timeoutId: any;
+                    const cleanup = () => {
+                        clearTimeout(timeoutId);
+                        printIframe.contentWindow?.removeEventListener('afterprint', cleanup);
+                        resolve(null);
+                    };
+                    printIframe.contentWindow?.addEventListener('afterprint', cleanup);
+                    printIframe.contentWindow?.print();
+                    timeoutId = setTimeout(cleanup, 2000);
                 }
-            }
+            });
         }
     });
 

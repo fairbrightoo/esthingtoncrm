@@ -62,17 +62,33 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         documentTitle: `Receipt-${selectedPaymentForReceipt?.id || 'New'}`,
         onAfterPrint: () => setSelectedPaymentForReceipt(null),
         print: async (printIframe) => {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            if (isIOS) {
-                // Force all iOS browsers (Safari, Chrome, Firefox) to print the main window
-                // This correctly triggers the @media print fallback wrapper we designed for iOS WebKit
-                window.print();
-            } else {
-                // Use default iframe printing for Android and Desktop
-                if (printIframe.contentWindow) {
-                    printIframe.contentWindow.print();
+            return new Promise((resolve) => {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                
+                if (isIOS) {
+                    let timeoutId: any;
+                    const cleanup = () => {
+                        clearTimeout(timeoutId);
+                        window.removeEventListener('afterprint', cleanup);
+                        resolve(null);
+                    };
+                    window.addEventListener('afterprint', cleanup);
+                    window.print();
+                    // iOS fallback to ensure cleanup runs if afterprint fails
+                    timeoutId = setTimeout(cleanup, 2000);
+                } else {
+                    let timeoutId: any;
+                    const cleanup = () => {
+                        clearTimeout(timeoutId);
+                        printIframe.contentWindow?.removeEventListener('afterprint', cleanup);
+                        resolve(null);
+                    };
+                    printIframe.contentWindow?.addEventListener('afterprint', cleanup);
+                    printIframe.contentWindow?.print();
+                    // Desktop/Android fallback
+                    timeoutId = setTimeout(cleanup, 2000);
                 }
-            }
+            });
         }
     });
 
