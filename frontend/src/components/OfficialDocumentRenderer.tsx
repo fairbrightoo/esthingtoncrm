@@ -122,9 +122,15 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         let html = template;
 
         // Gender Salutation Logic
-        const gender = sale.lead?.gender?.toLowerCase() || 'male';
-        const correctSalutation = (gender === 'female') ? 'Dear Ma,' : 'Dear Sir,';
-        html = html.replace(/Dear\s*sir\/?ma\w*,?/gi, correctSalutation);
+        const salutationRegex = /Dear\s+(Sir\/?Ma|Sir|Ma|Madam|Mr\.?|Mrs\.?|Ms\.?)[^<\n]*?,?/gi;
+        
+        if (sale.salutationOnDocument) {
+            html = html.replace(salutationRegex, sale.salutationOnDocument);
+        } else {
+            const gender = sale.lead?.gender?.toLowerCase() || 'male';
+            const correctSalutation = (gender === 'female') ? 'Dear Ma,' : 'Dear Sir,';
+            html = html.replace(salutationRegex, correctSalutation);
+        }
 
         // General Info
         html = html.replace(/{{CURRENT_DATE}}/g, today);
