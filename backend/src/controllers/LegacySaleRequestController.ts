@@ -274,6 +274,9 @@ export const LegacySaleRequestController = {
                     totalPaid: request.amountPaidSoFar,
                     status: request.amountPaidSoFar >= request.agreedPrice ? 'COMPLETED' : 'ONGOING',
                     createdAt: request.dateOfSale,
+                    nameOnDocument: request.clientName,
+                    salutationOnDocument: request.salutationOnDocument,
+                    phoneOnDocument: request.clientPhone,
                     // Cross-Company details (if applicable)
                     // Currently Sale model doesn't have crossCompanyId, we rely on the related Marketer and Lead.
                 }
