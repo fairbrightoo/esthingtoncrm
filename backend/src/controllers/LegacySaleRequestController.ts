@@ -70,11 +70,14 @@ export const LegacySaleRequestController = {
         try {
             const { role, branchId, userId } = req.user!;
             
-            // Admins & MDs see all branch submissions. Regular staff only see their own.
-            const isAdminOrMD = ['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '');
-            const whereClause: any = isAdminOrMD 
-                ? { requestingBranchId: branchId as string } 
-                : { requestingBranchId: branchId as string, requestingUserId: userId as string };
+            let whereClause: any = {};
+            if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN') {
+                whereClause = {}; // See all
+            } else if (['BRANCH_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '')) {
+                whereClause = { requestingBranchId: branchId as string };
+            } else {
+                whereClause = { requestingBranchId: branchId as string, requestingUserId: userId as string };
+            }
 
             const requests = await prisma.legacySaleRequest.findMany({
                 where: whereClause,
@@ -90,12 +93,20 @@ export const LegacySaleRequestController = {
         }
     },
 
-    // 3. View Received Requests (Managing Branch Admin)
+    // 3. View Received Requests (Managing Branch Admin, MD, GMD, Super Admin)
     async getReceivedRequests(req: AuthRequest, res: Response) {
         try {
-            const branchId = req.user!.branchId!;
+            const { role, branchId } = req.user!;
+            
+            let whereClause: any = {};
+            if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN') {
+                whereClause = {}; // See all
+            } else {
+                whereClause = { managingBranchId: branchId as string };
+            }
+
             const requests = await prisma.legacySaleRequest.findMany({
-                where: { managingBranchId: branchId },
+                where: whereClause,
                 include: {
                     estate: { select: { name: true } },
                     requestingCompany: { select: { name: true } },
