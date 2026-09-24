@@ -79,12 +79,15 @@ export const PDFService = {
         let html = template;
 
         // Gender Salutation Logic
+        // This regex matches "Dear Sir,", "Dear Ma,", "Dear Sir/Ma,", "Dear Madam,", etc.
+        const salutationRegex = /Dear\s+(Sir\/?Ma|Sir|Ma|Madam|Mr\.?|Mrs\.?|Ms\.?)[^<\n]*?,?/gi;
+        
         if (sale.salutationOnDocument) {
-            html = html.replace(/Dear\s*sir\/?ma\w*,?/gi, sale.salutationOnDocument);
+            html = html.replace(salutationRegex, sale.salutationOnDocument);
         } else {
             const gender = sale.lead?.gender?.toLowerCase() || 'male';
             const correctSalutation = (gender === 'female') ? 'Dear Ma,' : 'Dear Sir,';
-            html = html.replace(/Dear\s*sir\/?ma\w*,?/gi, correctSalutation);
+            html = html.replace(salutationRegex, correctSalutation);
         }
 
         // General Info
