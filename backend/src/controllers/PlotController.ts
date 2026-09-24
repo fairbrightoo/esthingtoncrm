@@ -495,14 +495,26 @@ export const PlotController = {
     deletePlot: async (req: Request, res: Response) => {
         try {
             const { plotId } = req.params as { plotId: string };
-            const plot = await prisma.plot.findUnique({ where: { id: plotId } });
+            const plot = await prisma.plot.findUnique({ 
+                where: { id: plotId },
+                include: { sales: true }
+            });
             
             if (!plot) return res.status(404).json({ error: "Plot not found" });
             if (plot.status !== 'AVAILABLE') {
                 return res.status(403).json({ error: "Cannot delete a plot that is SOLD or RESERVED to preserve accounting integrity." });
             }
+            if (plot.sales && plot.sales.length > 0) {
+                return res.status(403).json({ error: "Cannot delete this plot because it has a historical sale record. Only pristine, unsold plots can be deleted." });
+            }
 
-            await prisma.plot.delete({ where: { id: plotId } });
+            await prisma.$transaction([
+                prisma.plotPriceHistory.deleteMany({ where: { plotId } }),
+                prisma.physicalPlot.updateMany({ where: { mappedSystemPlotId: plotId }, data: { mappedSystemPlotId: null } }),
+                prisma.legacySaleRequest.updateMany({ where: { assignedPlotId: plotId }, data: { assignedPlotId: null } }),
+                prisma.plot.delete({ where: { id: plotId } })
+            ]);
+
             res.json({ message: "Plot deleted successfully" });
         } catch (error) {
             console.error("Delete Plot Error:", error);
@@ -518,13 +530,14 @@ export const PlotController = {
             const numToDelete = Number(quantity);
             if (!numToDelete || numToDelete <= 0) return res.status(400).json({ error: "Invalid quantity" });
 
-            // Find AVAILABLE plots matching criteria
+            // Find AVAILABLE plots matching criteria that have NO sales history
             const availablePlots = await prisma.plot.findMany({
                 where: { 
                     estateId,
                     prototype,
                     size: Number(size),
-                    status: 'AVAILABLE'
+                    status: 'AVAILABLE',
+                    sales: { none: {} }
                 },
                 orderBy: { plotNumber: 'desc' }, // Delete newest plots first
                 take: numToDelete,
@@ -532,17 +545,21 @@ export const PlotController = {
             });
 
             if (availablePlots.length === 0) {
-                return res.status(404).json({ error: "No AVAILABLE plots found matching those attributes." });
+                return res.status(404).json({ error: "No pristine AVAILABLE plots found matching those attributes." });
             }
 
             const idsToDelete = availablePlots.map(p => p.id);
-            const result = await prisma.plot.deleteMany({
-                where: { id: { in: idsToDelete } }
-            });
+
+            await prisma.$transaction([
+                prisma.plotPriceHistory.deleteMany({ where: { plotId: { in: idsToDelete } } }),
+                prisma.physicalPlot.updateMany({ where: { mappedSystemPlotId: { in: idsToDelete } }, data: { mappedSystemPlotId: null } }),
+                prisma.legacySaleRequest.updateMany({ where: { assignedPlotId: { in: idsToDelete } }, data: { assignedPlotId: null } }),
+                prisma.plot.deleteMany({ where: { id: { in: idsToDelete } } })
+            ]);
 
             res.json({ 
-                message: `Successfully deleted ${result.count} excess plots.`,
-                count: result.count,
+                message: `Successfully deleted ${availablePlots.length} excess plots.`,
+                count: availablePlots.length,
                 requested: numToDelete
             });
         } catch (error) {
