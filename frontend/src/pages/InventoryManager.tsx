@@ -148,6 +148,18 @@ export const InventoryManager = () => {
     const [plotForm, setPlotForm] = useState({ prototype: '', size: '', price: '', quantity: '', isCornerPiece: false });
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // Plot Management Additions
+    const [plotToDelete, setPlotToDelete] = useState<Plot | null>(null);
+    const [isPlotDeleting, setIsPlotDeleting] = useState(false);
+    
+    const [plotToEdit, setPlotToEdit] = useState<Plot | null>(null);
+    const [plotEditForm, setPlotEditForm] = useState({ prototype: '', size: '', price: '' });
+    const [isPlotEditing, setIsPlotEditing] = useState(false);
+
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [bulkDeleteForm, setBulkDeleteForm] = useState({ prototype: '', size: '', quantity: '' });
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
     // Legacy Imports & Edits
     const [plotCreationMode, setPlotCreationMode] = useState<'AUTO' | 'LEGACY' | 'LEGACY_SALES'>('AUTO');
     const [legacyTab, setLegacyTab] = useState<'SINGLE' | 'CSV'>('SINGLE');
@@ -337,6 +349,68 @@ export const InventoryManager = () => {
             addToast(error.response?.data?.error || "Failed to delete estate", "error");
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleDeletePlot = async () => {
+        if (!plotToDelete) return;
+        setIsPlotDeleting(true);
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/plots/${plotToDelete.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            addToast("Plot deleted successfully", "success");
+            setPlotToDelete(null);
+            fetchPlots(selectedEstate!.id);
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to delete plot", "error");
+        } finally {
+            setIsPlotDeleting(false);
+        }
+    };
+
+    const handleEditPlot = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!plotToEdit) return;
+        setIsPlotEditing(true);
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/plots/${plotToEdit.id}`, {
+                prototype: plotEditForm.prototype,
+                size: Number(plotEditForm.size),
+                price: Number(plotEditForm.price)
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            addToast("Plot updated successfully", "success");
+            setPlotToEdit(null);
+            fetchPlots(selectedEstate!.id);
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to update plot", "error");
+        } finally {
+            setIsPlotEditing(false);
+        }
+    };
+
+    const handleBulkDeletePlots = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEstate) return;
+        setIsBulkDeleting(true);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/estates/${selectedEstate.id}/plots/bulk-delete`, {
+                prototype: bulkDeleteForm.prototype,
+                size: Number(bulkDeleteForm.size),
+                quantity: Number(bulkDeleteForm.quantity)
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            addToast(res.data.message || "Excess plots deleted", "success");
+            setIsBulkDeleteModalOpen(false);
+            setBulkDeleteForm({ prototype: '', size: '', quantity: '' });
+            fetchPlots(selectedEstate.id);
+        } catch (error: any) {
+            addToast(error.response?.data?.error || "Failed to delete plots", "error");
+        } finally {
+            setIsBulkDeleting(false);
         }
     };
 
@@ -1208,7 +1282,7 @@ export const InventoryManager = () => {
                         <div className="flex items-center space-x-3">
                             <h3 className="font-bold text-gray-700">Generated Plots ({estatePlots.length})</h3>
                             {['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role || '') && estatePlots.length > 0 && (
-                                <div className="flex space-x-2">
+                                <div className="flex flex-wrap gap-2">
                                     <button 
                                         onClick={() => setIsBulkPriceModalOpen(true)}
                                         className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-bold rounded-lg transition"
@@ -1220,6 +1294,12 @@ export const InventoryManager = () => {
                                         className="px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-xs font-bold rounded-lg transition"
                                     >
                                         Bulk Edit Plot Attributes
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsBulkDeleteModalOpen(true)}
+                                        className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 text-xs font-bold rounded-lg transition"
+                                    >
+                                        Bulk Delete Excess
                                     </button>
                                 </div>
                             )}
@@ -1249,13 +1329,14 @@ export const InventoryManager = () => {
                                     <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4">Details</th>
                                     <th className="px-6 py-4 text-center">Corner Piece</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {plotsLoading ? (
-                                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">Loading plots...</td></tr>
+                                    <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">Loading plots...</td></tr>
                                 ) : estatePlots.length === 0 ? (
-                                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">No plots generated yet. Use the form above to add plots.</td></tr>
+                                    <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">No plots generated yet. Use the form above to add plots.</td></tr>
                                 ) : (
                                     estatePlots.map(plot => (
                                         <tr key={plot.id} className="hover:bg-gray-50/50 transition-colors">
@@ -1304,6 +1385,31 @@ export const InventoryManager = () => {
                                                 >
                                                     {plot.isCornerPiece ? <CheckSquare size={20} /> : <Square size={20} />}
                                                 </button>
+                                            </td>
+                                            <td className="px-6 py-3.5 text-right space-x-2">
+                                                {plot.status === 'AVAILABLE' && ['BRANCH_ADMIN', 'SUPER_ADMIN'].includes(user?.role || '') ? (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => {
+                                                                setPlotToEdit(plot);
+                                                                setPlotEditForm({ prototype: plot.prototype, size: String(plot.size), price: String(plot.price) });
+                                                            }}
+                                                            className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                                                            title="Edit Plot"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setPlotToDelete(plot)}
+                                                            className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded transition"
+                                                            title="Delete Plot"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-gray-300 text-xs italic">Locked</span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
@@ -1601,6 +1707,113 @@ export const InventoryManager = () => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Plot Modal */}
+                {plotToEdit && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                            <div className="p-6 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-xl font-bold text-blue-900">Edit Plot</h2>
+                                    <p className="text-sm text-blue-700/70 mt-1 font-mono">{plotToEdit.plotNumber}</p>
+                                </div>
+                            </div>
+                            <form onSubmit={handleEditPlot} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Building Prototype</label>
+                                    <input required type="text" className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                        value={plotEditForm.prototype} onChange={e => setPlotEditForm({ ...plotEditForm, prototype: e.target.value })} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Size (sqm)</label>
+                                        <input required type="number" className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                            value={plotEditForm.size} onChange={e => setPlotEditForm({ ...plotEditForm, size: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Price (₦)</label>
+                                        <input required type="number" className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                            value={plotEditForm.price} onChange={e => setPlotEditForm({ ...plotEditForm, price: e.target.value })} />
+                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                                    <button type="button" onClick={() => setPlotToEdit(null)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition">Cancel</button>
+                                    <button type="submit" disabled={isPlotEditing} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition disabled:opacity-50">
+                                        {isPlotEditing ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Plot Confirmation Modal */}
+                {plotToDelete && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all text-center">
+                            <div className="p-6">
+                                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Trash2 size={32} />
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-900 mb-2">Delete Plot?</h2>
+                                <p className="text-sm text-slate-600 mb-2">Are you sure you want to permanently delete this plot?</p>
+                                <p className="text-xs font-mono font-semibold text-slate-800 bg-slate-100 py-1 rounded inline-block px-2">{plotToDelete.plotNumber}</p>
+                            </div>
+                            <div className="flex border-t border-slate-100">
+                                <button type="button" onClick={() => setPlotToDelete(null)} className="flex-1 py-4 text-slate-600 hover:bg-slate-50 font-bold transition">Cancel</button>
+                                <button type="button" onClick={handleDeletePlot} disabled={isPlotDeleting} className="flex-1 py-4 text-white bg-red-600 hover:bg-red-700 font-bold transition disabled:opacity-50">
+                                    {isPlotDeleting ? 'Deleting...' : 'Yes, Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Bulk Delete Excess Modal */}
+                {isBulkDeleteModalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                            <div className="p-6 bg-red-50 border-b border-red-100">
+                                <h2 className="text-xl font-bold text-red-900">Bulk Delete Excess Plots</h2>
+                                <p className="text-sm text-red-700/70 mt-1">Quickly remove mistakenly generated excess units. Only AVAILABLE plots will be deleted to preserve accounting integrity.</p>
+                            </div>
+                            <form onSubmit={handleBulkDeletePlots} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Target Plot Group</label>
+                                    <select required className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-red-500 transition"
+                                        value={bulkDeleteForm.prototype && bulkDeleteForm.size ? `${bulkDeleteForm.prototype}|${bulkDeleteForm.size}` : ""} 
+                                        onChange={e => {
+                                            const [proto, sz] = e.target.value.split('|');
+                                            setBulkDeleteForm({ ...bulkDeleteForm, prototype: proto || '', size: sz || '' });
+                                        }}>
+                                        <option value="">Select the plot group to trim...</option>
+                                        {Array.from(new Set(estatePlots.filter(p => p.status === 'AVAILABLE').map(p => `${p.prototype}|${p.size}`))).sort().map(key => {
+                                            const [proto, size] = key.split('|');
+                                            const count = estatePlots.filter(p => p.status === 'AVAILABLE' && p.prototype === proto && String(p.size) === size).length;
+                                            return (
+                                                <option key={key} value={key}>{proto} ({size} sqm) - {count} AVAILABLE units</option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">How many to delete?</label>
+                                    <input required type="number" min="1" className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-red-500 transition"
+                                        placeholder="e.g. 5"
+                                        value={bulkDeleteForm.quantity} onChange={e => setBulkDeleteForm({ ...bulkDeleteForm, quantity: e.target.value })} />
+                                </div>
+                                
+                                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                                    <button type="button" onClick={() => setIsBulkDeleteModalOpen(false)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition">Cancel</button>
+                                    <button type="submit" disabled={isBulkDeleting || !bulkDeleteForm.prototype || !bulkDeleteForm.quantity} className="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition disabled:opacity-50">
+                                        {isBulkDeleting ? 'Deleting...' : 'Delete Excess Plots'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}

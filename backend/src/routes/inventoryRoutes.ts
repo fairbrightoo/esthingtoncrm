@@ -23,10 +23,12 @@ router.post('/estates/:estateId/plots/manual', authenticateToken, PlotController
 router.get('/estates/:estateId/plots', authenticateToken, PlotController.getEstatePlots);
 router.get('/plots/available', authenticateToken, PlotController.getAvailablePlots);
 router.put('/plots/:plotId', authenticateToken, PlotController.updatePlot);
+router.delete('/plots/:plotId', authenticateToken, PlotController.deletePlot);
 router.put('/plots/:plotId/toggle-cp', authenticateToken, PlotController.toggleCornerPiece);
 router.get('/plots/:plotId/history', authenticateToken, PlotController.getPlotHistory);
 router.put('/estates/:estateId/plots/bulk-price', authenticateToken, PlotController.updateBulkPlotPrices);
 router.put('/estates/:estateId/plots/bulk-edit-attributes', authenticateToken, PlotController.updateBulkPlotAttributes);
+router.post('/estates/:estateId/plots/bulk-delete', authenticateToken, PlotController.bulkDeletePlots);
 
 // --- INVENTORY / PHYSICAL PLOTS (SITE LAYOUT) ROUTES ---
 router.post('/estates/:estateId/physical-plots/bulk', authenticateToken, PhysicalPlotController.bulkUpload);

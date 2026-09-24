@@ -490,5 +490,64 @@ export const PlotController = {
             console.error("Bulk Import Plots Error:", error);
             res.status(500).json({ error: "Failed to import plots" });
         }
+    },
+
+    deletePlot: async (req: Request, res: Response) => {
+        try {
+            const { plotId } = req.params as { plotId: string };
+            const plot = await prisma.plot.findUnique({ where: { id: plotId } });
+            
+            if (!plot) return res.status(404).json({ error: "Plot not found" });
+            if (plot.status !== 'AVAILABLE') {
+                return res.status(403).json({ error: "Cannot delete a plot that is SOLD or RESERVED to preserve accounting integrity." });
+            }
+
+            await prisma.plot.delete({ where: { id: plotId } });
+            res.json({ message: "Plot deleted successfully" });
+        } catch (error) {
+            console.error("Delete Plot Error:", error);
+            res.status(500).json({ error: "Failed to delete plot" });
+        }
+    },
+
+    bulkDeletePlots: async (req: Request, res: Response) => {
+        try {
+            const { estateId } = req.params as { estateId: string };
+            const { prototype, size, quantity } = req.body;
+            
+            const numToDelete = Number(quantity);
+            if (!numToDelete || numToDelete <= 0) return res.status(400).json({ error: "Invalid quantity" });
+
+            // Find AVAILABLE plots matching criteria
+            const availablePlots = await prisma.plot.findMany({
+                where: { 
+                    estateId,
+                    prototype,
+                    size: Number(size),
+                    status: 'AVAILABLE'
+                },
+                orderBy: { plotNumber: 'desc' }, // Delete newest plots first
+                take: numToDelete,
+                select: { id: true }
+            });
+
+            if (availablePlots.length === 0) {
+                return res.status(404).json({ error: "No AVAILABLE plots found matching those attributes." });
+            }
+
+            const idsToDelete = availablePlots.map(p => p.id);
+            const result = await prisma.plot.deleteMany({
+                where: { id: { in: idsToDelete } }
+            });
+
+            res.json({ 
+                message: `Successfully deleted ${result.count} excess plots.`,
+                count: result.count,
+                requested: numToDelete
+            });
+        } catch (error) {
+            console.error("Bulk Delete Plots Error:", error);
+            res.status(500).json({ error: "Failed to bulk delete plots" });
+        }
     }
 };
