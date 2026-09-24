@@ -21,7 +21,17 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
-        documentTitle: `${documentType}_${sale?.lead?.fullName?.replace(/\s+/g, '_')}`
+        documentTitle: `${documentType}_${sale?.lead?.fullName?.replace(/\s+/g, '_')}`,
+        print: async (printIframe) => {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isIOS) {
+                window.print();
+            } else {
+                if (printIframe.contentWindow) {
+                    printIframe.contentWindow.print();
+                }
+            }
+        }
     });
 
     useEffect(() => {

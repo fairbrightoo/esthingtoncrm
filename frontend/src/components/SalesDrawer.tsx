@@ -60,7 +60,20 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     const handlePrint = useReactToPrint({
         contentRef: receiptRef,
         documentTitle: `Receipt-${selectedPaymentForReceipt?.id || 'New'}`,
-        onAfterPrint: () => setSelectedPaymentForReceipt(null)
+        onAfterPrint: () => setSelectedPaymentForReceipt(null),
+        print: async (printIframe) => {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isIOS) {
+                // Force all iOS browsers (Safari, Chrome, Firefox) to print the main window
+                // This correctly triggers the @media print fallback wrapper we designed for iOS WebKit
+                window.print();
+            } else {
+                // Use default iframe printing for Android and Desktop
+                if (printIframe.contentWindow) {
+                    printIframe.contentWindow.print();
+                }
+            }
+        }
     });
 
     const triggerPrint = (payment: any) => {
