@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -55,48 +56,42 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
 
     // Receipt Printing Logic
     const [selectedPaymentForReceipt, setSelectedPaymentForReceipt] = useState<any>(null);
+    const [isIOSPrinting, setIsIOSPrinting] = useState(false);
     const receiptRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
         contentRef: receiptRef,
         documentTitle: `Receipt-${selectedPaymentForReceipt?.id || 'New'}`,
-        onAfterPrint: () => setSelectedPaymentForReceipt(null),
-        print: async (printIframe) => {
-            return new Promise((resolve) => {
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-                
-                if (isIOS) {
-                    let timeoutId: any;
-                    const cleanup = () => {
-                        clearTimeout(timeoutId);
-                        window.removeEventListener('afterprint', cleanup);
-                        resolve(null);
-                    };
-                    window.addEventListener('afterprint', cleanup);
-                    window.print();
-                    // iOS fallback to ensure cleanup runs if afterprint fails
-                    timeoutId = setTimeout(cleanup, 2000);
-                } else {
-                    let timeoutId: any;
-                    const cleanup = () => {
-                        clearTimeout(timeoutId);
-                        printIframe.contentWindow?.removeEventListener('afterprint', cleanup);
-                        resolve(null);
-                    };
-                    printIframe.contentWindow?.addEventListener('afterprint', cleanup);
-                    printIframe.contentWindow?.print();
-                    // Desktop/Android fallback
-                    timeoutId = setTimeout(cleanup, 2000);
-                }
-            });
-        }
+        onAfterPrint: () => setSelectedPaymentForReceipt(null)
     });
 
     const triggerPrint = (payment: any) => {
         setSelectedPaymentForReceipt(payment);
-        // Timeout to allow state to update and render the hidden receipt before printing
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        
         setTimeout(() => {
-            handlePrint();
+            if (isIOS) {
+                setIsIOSPrinting(true);
+                // Give React time to render the portal before calling window.print
+                setTimeout(() => {
+                    const cleanup = () => {
+                        setIsIOSPrinting(false);
+                        setSelectedPaymentForReceipt(null);
+                        window.removeEventListener('afterprint', cleanup);
+                    };
+                    window.addEventListener('afterprint', cleanup);
+                    window.print();
+                    
+                    // Fallback timeout in case afterprint fails on some iOS browsers
+                    // We set it long enough to give the user time in the print dialog
+                    setTimeout(() => {
+                        // Check if we are still printing before cleaning up
+                        cleanup();
+                    }, 5000);
+                }, 100);
+            } else {
+                handlePrint();
+            }
         }, 100);
     };
     const { addToast } = useToast();
@@ -1230,75 +1225,115 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
             )
             }
 
-            {/* Hidden Receipt Template - rendered offscreen so react-to-print can properly compute its layout on iOS */}
-            <div className="print-wrapper" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '800px' }}>
-                {selectedPaymentForReceipt && (
+            {/* Hidden Receipt Template for Desktop/Android react-to-print */}
+            {!isIOSPrinting && (
+                <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '800px' }}>
+                    {selectedPaymentForReceipt && (() => {
+                        const estate = selectedPaymentForReceipt.sale.plot?.estate;
+                        const managingCompany = estate?.company || user?.company;
+                        const managingBranch = estate?.branch;
+                        const accountant = managingBranch?.users?.[0];
+                        
+                        const resolvedBranding = {
+                            name: managingCompany?.name || 'Esthington CRM',
+                            address: managingCompany?.address,
+                            logoUrl: managingCompany?.logoUrl,
+                            phone: managingCompany?.phone,
+                            email: managingCompany?.email,
+                            website: managingCompany?.website,
+                            signatureUrl: accountant?.signatureUrl || managingBranch?.signatureUrl || managingCompany?.signatureUrl,
+                            managingDirectorName: accountant?.fullName || managingBranch?.managerName || managingCompany?.managingDirectorName,
+                            signatureRole: accountant ? 'Accountant' : 'Authorized Signature'
+                        };
+
+                        return (
+                            <ReceiptTemplate
+                                ref={receiptRef}
+                                sale={selectedPaymentForReceipt.sale}
+                                payment={selectedPaymentForReceipt}
+                                lead={selectedPaymentForReceipt.sale.lead}
+                                branding={resolvedBranding}
+                            />
+                        );
+                    })()}
+                </div>
+            )}
+
+            {/* iOS Exclusive Print Portal */}
+            {isIOSPrinting && selectedPaymentForReceipt && createPortal(
+                <div className="ios-print-portal z-[99999]">
+                    <div className="print:hidden fixed top-0 left-0 w-full h-full bg-white z-[99998] flex flex-col items-center justify-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-lg font-medium text-gray-800 mb-6">Preparing Print Preview...</p>
+                        <button 
+                            onClick={() => {
+                                setIsIOSPrinting(false);
+                                setSelectedPaymentForReceipt(null);
+                            }} 
+                            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg"
+                        >
+                            Cancel Print / Return to App
+                        </button>
+                    </div>
                     <style>{`
                         @media print {
                             @page { size: A4 portrait; margin: 0; }
-                            body * { visibility: hidden !important; }
-                            body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            body, html { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0 !important; padding: 0 !important; }
                             
-                            #root {
-                                position: fixed !important;
-                                top: 0 !important;
-                                left: 0 !important;
-                                height: 100vh !important;
-                                overflow: hidden !important;
-                            }
+                            /* Completely hide the main application to fix the 4 blank pages issue */
+                            #root { display: none !important; }
                             
-                            .print-wrapper {
+                            /* Hide our loading overlay during print */
+                            .print\\\\:hidden { display: none !important; }
+                            
+                            /* Position the portal perfectly at the top left and scale it down so iOS doesn't crop it */
+                            .ios-print-portal {
+                                display: block !important;
                                 position: absolute !important;
                                 top: 0 !important;
                                 left: 0 !important;
                                 width: 800px !important;
                                 min-width: 800px !important;
-                                transform: scale(0.45) !important;
+                                transform: scale(0.48) !important;
                                 transform-origin: top left !important;
-                                visibility: visible !important;
-                                z-index: 99999 !important;
-                            }
-                            
-                            .print-content, .print-content * { visibility: visible !important; }
-                            .print-content { 
-                                position: relative !important;
-                                width: 100% !important; 
-                                max-width: 800px !important;
                                 background: white !important;
-                                margin: 0 auto !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
                             }
                         }
                     `}</style>
-                )}
-                {selectedPaymentForReceipt && (() => {
-                    const estate = selectedPaymentForReceipt.sale.plot?.estate;
-                    const managingCompany = estate?.company || user?.company;
-                    const managingBranch = estate?.branch;
-                    const accountant = managingBranch?.users?.[0];
-                    
-                    const resolvedBranding = {
-                        name: managingCompany?.name || 'Esthington CRM',
-                        address: managingCompany?.address,
-                        logoUrl: managingCompany?.logoUrl,
-                        phone: managingCompany?.phone,
-                        email: managingCompany?.email,
-                        website: managingCompany?.website,
-                        signatureUrl: accountant?.signatureUrl || managingBranch?.signatureUrl || managingCompany?.signatureUrl,
-                        managingDirectorName: accountant?.fullName || managingBranch?.managerName || managingCompany?.managingDirectorName,
-                        signatureRole: accountant ? 'Accountant' : 'Authorized Signature'
-                    };
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '800px', backgroundColor: 'white' }}>
+                        {(() => {
+                            const estate = selectedPaymentForReceipt.sale.plot?.estate;
+                            const managingCompany = estate?.company || user?.company;
+                            const managingBranch = estate?.branch;
+                            const accountant = managingBranch?.users?.[0];
+                            
+                            const resolvedBranding = {
+                                name: managingCompany?.name || 'Esthington CRM',
+                                address: managingCompany?.address,
+                                logoUrl: managingCompany?.logoUrl,
+                                phone: managingCompany?.phone,
+                                email: managingCompany?.email,
+                                website: managingCompany?.website,
+                                signatureUrl: accountant?.signatureUrl || managingBranch?.signatureUrl || managingCompany?.signatureUrl,
+                                managingDirectorName: accountant?.fullName || managingBranch?.managerName || managingCompany?.managingDirectorName,
+                                signatureRole: accountant ? 'Accountant' : 'Authorized Signature'
+                            };
 
-                    return (
-                        <ReceiptTemplate
-                            ref={receiptRef}
-                            sale={selectedPaymentForReceipt.sale}
-                            payment={selectedPaymentForReceipt}
-                            lead={selectedPaymentForReceipt.sale.lead}
-                            branding={resolvedBranding}
-                        />
-                    );
-                })()}
-            </div>
+                            return (
+                                <ReceiptTemplate
+                                    sale={selectedPaymentForReceipt.sale}
+                                    payment={selectedPaymentForReceipt}
+                                    lead={selectedPaymentForReceipt.sale.lead}
+                                    branding={resolvedBranding}
+                                />
+                            );
+                        })()}
+                    </div>
+                </div>,
+                document.body
+            )}
 
             <PlotExchangeModal
                 isOpen={isExchangeModalOpen}
