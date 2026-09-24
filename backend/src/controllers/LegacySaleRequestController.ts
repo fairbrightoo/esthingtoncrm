@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import prisma from '../config/prisma.js';
-import { uploadFile } from '../middleware/uploadMiddleware.js';
+import { uploadFile } from '../services/StorageService.js';
 
 export const LegacySaleRequestController = {
 
@@ -72,9 +72,9 @@ export const LegacySaleRequestController = {
             
             // Admins & MDs see all branch submissions. Regular staff only see their own.
             const isAdminOrMD = ['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '');
-            const whereClause = isAdminOrMD 
-                ? { requestingBranchId: branchId } 
-                : { requestingBranchId: branchId, requestingUserId: userId };
+            const whereClause: any = isAdminOrMD 
+                ? { requestingBranchId: branchId as string } 
+                : { requestingBranchId: branchId as string, requestingUserId: userId as string };
 
             const requests = await prisma.legacySaleRequest.findMany({
                 where: whereClause,
@@ -172,7 +172,7 @@ export const LegacySaleRequestController = {
             // 1. Validate or Generate Plot
             let plot;
             if (autoGeneratePlot) {
-                const basePrefix = request.estate.abbreviation || request.estate.name.substring(0, 3).toUpperCase();
+                const basePrefix = request.estate.name.substring(0, 3).toUpperCase();
                 const randomCode = Math.floor(1000 + Math.random() * 9000);
                 const plotNumber = `${basePrefix}-${request.size}-LGCY-${randomCode}`;
                 
