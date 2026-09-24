@@ -71,7 +71,7 @@ export const LegacySaleRequestController = {
             const { role, branchId, userId } = req.user!;
             
             let whereClause: any = {};
-            if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN') {
+            if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(role || '')) {
                 whereClause = {}; // See all
             } else if (['BRANCH_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(role || '')) {
                 whereClause = { requestingBranchId: branchId as string };
@@ -99,7 +99,7 @@ export const LegacySaleRequestController = {
             const { role, branchId } = req.user!;
             
             let whereClause: any = {};
-            if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN') {
+            if (['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT'].includes(role || '')) {
                 whereClause = {}; // See all
             } else {
                 whereClause = { managingBranchId: branchId as string };
