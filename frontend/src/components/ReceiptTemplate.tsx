@@ -35,7 +35,7 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptProps>((p
     const signatureUrl = buildImageUrl(branding.signatureUrl);
 
     return (
-        <div ref={ref} className="receipt-container" style={{ fontFamily: 'Arial, sans-serif', color: '#333', padding: '10mm 15mm', width: '100%', maxWidth: '210mm', margin: '0 auto', boxSizing: 'border-box', backgroundColor: 'white' }}>
+        <div ref={ref} className="receipt-container print-content" style={{ fontFamily: 'Arial, sans-serif', color: '#333', padding: '10mm 15mm', width: '100%', maxWidth: '800px', margin: '0 auto', boxSizing: 'border-box', backgroundColor: 'white' }}>
             <div style={{ textAlign: 'right', marginBottom: '30px' }}>
                 {logoUrl ? (
                     <img src={logoUrl} style={{ maxWidth: '250px', maxHeight: '80px', marginBottom: '5px' }} alt="Logo" />
