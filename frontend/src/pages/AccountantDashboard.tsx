@@ -250,12 +250,12 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
     };
 
     const executeConfirmation = async () => {
-        setConfirmModal(prev => ({ ...prev, isOpen: false }));
         if (confirmModal.type === 'fund') {
             await handleDisburseFund(confirmModal.id);
         } else {
             await handleDisburseCommission(confirmModal.id, confirmModal.commissionType || 'DIRECT');
         }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
     };
 
     return (
