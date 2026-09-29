@@ -58,6 +58,7 @@ export const ManagingDirectorDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, paymentId: string, status: 'APPROVED' | 'REJECTED' | null, rejectionReason?: string, isBankConfirm?: boolean }>({ isOpen: false, paymentId: '', status: null, rejectionReason: '', isBankConfirm: false });
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [receiptModal, setReceiptModal] = useState<{ isOpen: boolean, url: string | null, isPdf: boolean }>({ isOpen: false, url: null, isPdf: false });
     const [messageModal, setMessageModal] = useState<{ isOpen: boolean, paymentId: string }>({ isOpen: false, paymentId: '' });
     const [messages, setMessages] = useState<any[]>([]);
@@ -121,7 +122,7 @@ export const ManagingDirectorDashboard = () => {
                 await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/md-approve/${reqModal.reqId}`, { status: 'REJECTED' }, { headers: { Authorization: `Bearer ${token}` }});
                 addToast("Requisition has been rejected.", "error");
             }
-            fetchRequisitions();
+            await fetchRequisitions();
         } catch(e) {
             addToast("Failed to process requisition.", "error");
         } finally {
@@ -168,7 +169,7 @@ export const ManagingDirectorDashboard = () => {
         const { paymentId, status, rejectionReason, isBankConfirm } = confirmModal;
         if (!paymentId || !status) return;
 
-        setConfirmModal({ isOpen: false, paymentId: '', status: null, rejectionReason: '', isBankConfirm: false });
+        setIsUpdatingStatus(true);
 
         try {
             if (isBankConfirm) {
@@ -190,12 +191,15 @@ export const ManagingDirectorDashboard = () => {
                 });
                 addToast(`Payment marked as ${status}`, "success");
             }
-            fetchPendingPayments();
-            fetchProcessedPayments();
+            await fetchPendingPayments();
+            await fetchProcessedPayments();
+            setConfirmModal({ isOpen: false, paymentId: '', status: null, rejectionReason: '', isBankConfirm: false });
         } catch (error: any) {
             console.error("Failed to update status", error);
             const errMsg = error.response?.data?.error || "Failed to update payment status.";
             addToast(errMsg, "error");
+        } finally {
+            setIsUpdatingStatus(false);
         }
     };
 
@@ -609,8 +613,15 @@ export const ManagingDirectorDashboard = () => {
                             />
                         )}
                         <div className="flex justify-end space-x-2">
-                            <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="px-4 py-2 border rounded">Cancel</button>
-                            <button onClick={executeStatusUpdate} className="px-4 py-2 bg-blue-600 text-white rounded">Confirm</button>
+                            <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} disabled={isUpdatingStatus} className="px-4 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+                            <button onClick={executeStatusUpdate} disabled={isUpdatingStatus} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center">
+                                {isUpdatingStatus ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Processing...
+                                    </>
+                                ) : 'Confirm'}
+                            </button>
                         </div>
                     </div>
                 </div>

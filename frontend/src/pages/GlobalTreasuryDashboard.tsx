@@ -150,8 +150,8 @@ export default function GlobalTreasuryDashboard() {
                 });
                 addToast("Requisition Override Approved successfully", "success");
             }
+            await fetchApprovals();
             setOverrideModal({ isOpen: false, type: 'PAYMENT', data: null, isLoading: false });
-            fetchApprovals();
         } catch (error: any) {
             addToast(error.response?.data?.error || "Failed to execute override", "error");
             setOverrideModal(prev => ({ ...prev, isLoading: false }));
