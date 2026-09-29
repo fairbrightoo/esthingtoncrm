@@ -35,6 +35,47 @@ app.post('/api/dom-dump', (req: Request, res: Response) => {
     }
 });
 
+import prisma from './config/prisma.js';
+
+app.get('/api/fix-totals', async (req: Request, res: Response) => {
+    try {
+        const sales = await prisma.sale.findMany({
+            include: { payments: { where: { status: 'APPROVED' } } }
+        });
+        
+        let fixedCount = 0;
+        let logs: string[] = [];
+
+        for (const sale of sales) {
+            const correctTotal = sale.payments.reduce((sum, p) => sum + p.amount + (p.virtualLoanAmount || 0), 0);
+            
+            if (sale.totalPaid !== correctTotal) {
+                logs.push(`Patching sale ${sale.id}: changing totalPaid from ${sale.totalPaid} to ${correctTotal}`);
+                
+                const isCompleted = correctTotal >= sale.agreedPrice;
+                await prisma.sale.update({
+                    where: { id: sale.id },
+                    data: {
+                        totalPaid: correctTotal,
+                        status: isCompleted ? 'COMPLETED' : 'ONGOING'
+                    }
+                });
+
+                if (!isCompleted && sale.plotId) {
+                    await prisma.plot.update({
+                       where: { id: sale.plotId },
+                       data: { status: 'RESERVED' }
+                    });
+                }
+                fixedCount++;
+            }
+        }
+        res.json({ success: true, fixedCount, logs });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.get('/api/proxy-image', async (req: Request, res: Response) => {
     try {
         const imageUrl = req.query.url as string;

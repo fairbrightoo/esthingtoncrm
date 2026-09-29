@@ -9,15 +9,25 @@ export class PaymentService {
      * dispenses EsthCoins, and dispatches documents.
      */
     static async approvePayment(paymentId: string, approvedByUserId?: string, overrideNote?: string) {
-        // 1. Update the payment status to APPROVED
-        const payment = await prisma.payment.update({
-            where: { id: paymentId },
+        // 1. Fetch the payment to check its current status atomically using updateMany
+        const updateResult = await prisma.payment.updateMany({
+            where: { id: paymentId, status: 'PENDING' },
             data: {
                 status: 'APPROVED',
                 ...(approvedByUserId && { approvedByUserId }),
                 ...(overrideNote && { approvalNote: overrideNote })
             }
         });
+
+        // If no rows were updated, the payment was already approved, rejected, or doesn't exist
+        if (updateResult.count === 0) {
+            console.log(`Payment ${paymentId} was already processed or does not exist.`);
+            return await prisma.payment.findUnique({ where: { id: paymentId } });
+        }
+
+        // Fetch the successfully updated payment
+        const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+        if (!payment) return null;
 
         // 2. Fetch the sale to update totals
         const sale = await prisma.sale.findUnique({
