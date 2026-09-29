@@ -46,7 +46,8 @@ export const ReportController = {
         date: {
           gte: startDate,
           lte: endDate
-        }
+        },
+        status: 'APPROVED'
       };
 
       if (role === 'SUPER_ADMIN' || role === 'GLOBAL_CHAIRMAN' || role === 'GLOBAL_ACCOUNTANT') {

@@ -118,7 +118,7 @@ export const DashboardController = {
                 }
             }
 
-            const paymentWhereClause: any = { sale: saleWhereClause };
+            const paymentWhereClause: any = { sale: saleWhereClause, status: 'APPROVED' };
 
             if (Object.keys(dateFilter).length > 0) {
                 saleWhereClause.createdAt = dateFilter;
