@@ -35,8 +35,6 @@ app.post('/api/dom-dump', (req: Request, res: Response) => {
     }
 });
 
-import prisma from './config/prisma.js';
-
 app.get('/api/fix-totals', async (req: Request, res: Response) => {
     try {
         const sales = await prisma.sale.findMany({
