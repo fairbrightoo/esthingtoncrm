@@ -375,6 +375,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
         setIsReviewingPayment(false);
         setSelectedPlotId('');
         setNameOnDocument('');
+        setSalutationOnDocument('');
         setPhoneOnDocument('');
         setAddressOnDocument('');
         setTermsAccepted(false);
@@ -622,9 +623,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                         <p className="text-xs text-gray-500 mb-3">If left blank, documents will default to the primary Lead's profile data.</p>
                         
                         <div className="flex bg-gray-100 p-1 rounded-lg mb-4 space-x-1">
-                            <button type="button" onClick={() => { setRecipientProfileType('INDIVIDUAL'); setSalutationOnDocument(''); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'INDIVIDUAL' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Individual</button>
-                            <button type="button" onClick={() => { setRecipientProfileType('JOINT'); setSalutationOnDocument('Dear Sir and Ma,'); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'JOINT' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Joint / Couple</button>
-                            <button type="button" onClick={() => { setRecipientProfileType('CORPORATE'); setSalutationOnDocument('Dear Sirs,'); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'CORPORATE' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Corporate</button>
+                            <button type="button" onClick={() => { if (recipientProfileType !== 'INDIVIDUAL') { setRecipientProfileType('INDIVIDUAL'); setSalutationOnDocument(''); } }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'INDIVIDUAL' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Individual</button>
+                            <button type="button" onClick={() => { if (recipientProfileType !== 'JOINT') { setRecipientProfileType('JOINT'); setSalutationOnDocument('Dear Sir and Ma,'); } }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'JOINT' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Joint / Couple</button>
+                            <button type="button" onClick={() => { if (recipientProfileType !== 'CORPORATE') { setRecipientProfileType('CORPORATE'); setSalutationOnDocument('Dear Sirs,'); } }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${recipientProfileType === 'CORPORATE' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-200'}`}>Corporate</button>
                         </div>
 
                         <div className="space-y-3">

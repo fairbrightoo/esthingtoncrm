@@ -881,9 +881,10 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
                             </button>
                             <button
                                 onClick={executeConfirmation}
-                                className="px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-[0_4px_12px_-2px_rgba(220,38,38,0.4)] hover:shadow-[0_6px_16px_-2px_rgba(220,38,38,0.5)] transform hover:-translate-y-0.5 active:translate-y-0 flex items-center"
+                                disabled={actionLoading}
+                                className={`px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-[0_4px_12px_-2px_rgba(220,38,38,0.4)] hover:shadow-[0_6px_16px_-2px_rgba(220,38,38,0.5)] transform hover:-translate-y-0.5 active:translate-y-0 flex items-center ${actionLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                Confirm Action
+                                {actionLoading ? 'Confirming...' : 'Confirm Action'}
                             </button>
                         </div>
                     </div>
