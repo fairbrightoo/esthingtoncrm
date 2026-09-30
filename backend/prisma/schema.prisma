@@ -457,6 +457,7 @@ model Payment {
   method            String
   reference         String?
   proofOfPaymentUrl String?
+  receiptHashes     String?  @db.Text
   status            String   @default("PENDING")
   notes             String?  @db.Text
   rejectionReason   String?  @db.Text

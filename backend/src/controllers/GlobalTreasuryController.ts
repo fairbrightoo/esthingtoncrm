@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { PaymentService } from '../services/PaymentService.js';
+import { FraudDetectionService } from '../services/FraudDetectionService.js';
 
 const prisma = new PrismaClient();
 
@@ -61,7 +62,9 @@ export class GlobalTreasuryController {
                 orderBy: { requestDate: 'desc' }
             });
 
-            res.json({ payments, requisitions });
+            const enrichedPayments = await FraudDetectionService.enrichWithFraudWarnings(payments);
+
+            res.json({ payments: enrichedPayments, requisitions });
         } catch (error) {
             console.error("GlobalTreasury getPendingApprovals Error:", error);
             res.status(500).json({ error: "Failed to fetch pending approvals" });

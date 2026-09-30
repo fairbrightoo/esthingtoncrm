@@ -394,6 +394,40 @@ export default function GlobalTreasuryDashboard() {
                                                 </div>
                                             )}
                                         </div>
+                                        {p.fraudWarnings && (
+                                            <div className={`mb-4 p-3 rounded-xl border shadow-sm ${p.fraudWarnings.level === 'RED' ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                                                <div className={`flex items-start gap-2 ${p.fraudWarnings.level === 'RED' ? 'text-red-800' : 'text-yellow-800'}`}>
+                                                    <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                                                    <div className="flex-1">
+                                                        <span className="font-bold text-sm block mb-1">{p.fraudWarnings.primaryMessage}</span>
+                                                        <span className="text-xs font-semibold block mb-2">Total Claimed: ₦{p.fraudWarnings.totalClaimedValue.toLocaleString()}</span>
+                                                        
+                                                        {p.fraudWarnings.duplicateDetails && p.fraudWarnings.duplicateDetails.length > 0 && (
+                                                            <div className="mt-2 text-xs border-t border-black/10 pt-2 space-y-2">
+                                                                {p.fraudWarnings.duplicateDetails.map((dup: any, i: number) => (
+                                                                    <div key={i} className="flex flex-col bg-white/50 p-2 rounded border border-black/5">
+                                                                        <div className="flex justify-between items-center mb-1">
+                                                                            <span className="font-bold">{dup.branchName}</span>
+                                                                            <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold ${dup.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'}`}>{dup.status}</span>
+                                                                        </div>
+                                                                        <span className="text-gray-600">By {dup.marketerName}</span>
+                                                                        <span className="font-mono mt-0.5">₦{dup.amount.toLocaleString()}</span>
+                                                                        {getReceiptInfo(dup.receiptImage) && (
+                                                                            <button 
+                                                                                onClick={() => setReceiptModal({ isOpen: true, url: getReceiptInfo(dup.receiptImage)?.url || null, isPdf: getReceiptInfo(dup.receiptImage)?.isPdf || false })}
+                                                                                className="mt-1.5 text-[10px] bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200 w-max font-bold transition flex items-center"
+                                                                            >
+                                                                                <Eye size={12} className="mr-1" /> View Receipt
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                         <button 
                                             onClick={() => setOverrideModal({ isOpen: true, type: 'PAYMENT', data: p, isLoading: false })}
                                             className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-medium hover:bg-indigo-600 transition shadow shadow-slate-200"

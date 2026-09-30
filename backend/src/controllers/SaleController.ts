@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { DocumentAutomationService } from '../services/DocumentAutomationService.js';
 import { PaymentService } from '../services/PaymentService.js';
+import { FraudDetectionService } from '../services/FraudDetectionService.js';
 import { uploadFile } from '../services/StorageService.js';
 import prisma from '../config/prisma.js';
 
@@ -296,13 +298,16 @@ export const SaleController = {
             }
 
             const savedUrls: string[] = [];
+            const hashes: string[] = [];
             for (const file of req.files as Express.Multer.File[]) {
                 const url = await uploadFile(file.buffer, file.originalname, 'receipts');
                 savedUrls.push(url);
+                hashes.push(crypto.createHash('sha256').update(file.buffer).digest('hex'));
             }
 
             // Serialize array of URLs
             const proofOfPaymentUrl = JSON.stringify(savedUrls);
+            const receiptHashes = JSON.stringify(hashes);
 
             // Deduce receiving branch from accountPaidTo
             let receivingBranchId: string | null = null;
@@ -327,6 +332,7 @@ export const SaleController = {
                     method,
                     reference,
                     proofOfPaymentUrl,
+                    receiptHashes,
                     status: 'PENDING',
                     recordedByUserId: userId,
                     accountPaidTo: accountPaidTo || null,
@@ -451,6 +457,8 @@ export const SaleController = {
                 orderBy: { createdAt: 'desc' }
             });
 
+            const enrichedPayments = await FraudDetectionService.enrichWithFraudWarnings(payments);
+
             // Categorize Payments
             const directSales: any[] = [];
             const outboundCrossSales: any[] = [];
@@ -458,10 +466,10 @@ export const SaleController = {
             const bankConfirmations: any[] = [];
 
             if (user?.role === 'SUPER_ADMIN') {
-                directSales.push(...payments);
+                directSales.push(...enrichedPayments);
             } else {
 
-                payments.forEach(payment => {
+                enrichedPayments.forEach((payment: any) => {
                     const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
                     const isSellingBranch = payment.sale.marketer?.branchId === effectiveBranchId;
                     const isManagingCompany = payment.sale.plot.estate.companyId === effectiveCompanyId;
