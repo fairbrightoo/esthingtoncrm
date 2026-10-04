@@ -30,7 +30,7 @@ export class FraudDetectionService {
                         include: {
                             sale: {
                                 include: {
-                                    marketer: { include: { branch: true } }
+                                    marketer: { include: { branch: { include: { company: true } } } }
                                 }
                             }
                         }
@@ -54,7 +54,7 @@ export class FraudDetectionService {
                 include: {
                     sale: {
                         include: {
-                            marketer: { include: { branch: true } }
+                            marketer: { include: { branch: { include: { company: true } } } }
                         }
                     }
                 }
@@ -90,9 +90,13 @@ export class FraudDetectionService {
                         }
                     }
 
+                    const companyName = m.sale?.marketer?.branch?.company?.name;
+                    const branchName = m.sale?.marketer?.branch?.name;
+                    const fullBranchName = companyName && branchName ? `${companyName} - ${branchName}` : branchName || 'Unknown Branch';
+
                     duplicateDetails.push({
                         id: m.id,
-                        branchName: m.sale?.marketer?.branch?.name || 'Unknown Branch',
+                        branchName: fullBranchName,
                         marketerName: m.sale?.marketer?.fullName || 'Unknown Marketer',
                         amount: m.amount,
                         status: m.status,
