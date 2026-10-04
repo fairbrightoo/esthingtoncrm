@@ -44,8 +44,8 @@ export const getPaymentTypeLabel = (payment: any) => {
 export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: string }) => {
     const { token, user } = useAuth();
     
-    // Fallback to user's branch if no target provided (for normal accountants)
-    const effectiveBranchId = targetBranchId || user?.branchId;
+    // Fallback to user's branch if no target provided (for normal accountants), but respect empty string for Global Aggregate
+    const effectiveBranchId = targetBranchId !== undefined ? targetBranchId : user?.branchId;
     
     const [personalStats, setPersonalStats] = useState<any>(null);
 
@@ -114,7 +114,7 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
     const fetchHistory = async () => {
         try {
             setHistoryLoading(true);
-            const branchQuery = targetBranchId ? `&branchId=${targetBranchId}` : '';
+            const branchQuery = effectiveBranchId ? `&branchId=${effectiveBranchId}` : '';
             const [reqRes, commRes, payRes] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions?startDate=${historyStartDate}&endDate=${historyEndDate}${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions?isPaid=true&startDate=${historyStartDate}&endDate=${historyEndDate}${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -167,7 +167,7 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
     const fetchData = async (isBackground = false) => {
         try {
             if (!isBackground) setLoading(true);
-            const branchQuery = targetBranchId ? `?branchId=${targetBranchId}` : '';
+            const branchQuery = effectiveBranchId ? `?branchId=${effectiveBranchId}` : '';
             const [reqRes, commRes, pendRes] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -307,8 +307,8 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
             
             <main className="space-y-8">
                     <>
-                        {activeTab === 'REFUNDS' && <RefundQueue roleContext="ACCOUNTANT" targetBranchId={targetBranchId} />}
-                        {activeTab === 'BUDGETS' && <BudgetManager targetBranchId={targetBranchId} />}
+                        {activeTab === 'REFUNDS' && <RefundQueue roleContext="ACCOUNTANT" targetBranchId={effectiveBranchId} />}
+                        {activeTab === 'BUDGETS' && <BudgetManager targetBranchId={effectiveBranchId} />}
                         
                         {activeTab === 'DISBURSEMENTS' && (
                             <>

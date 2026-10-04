@@ -21,9 +21,9 @@ export const AccountantPayroll = ({ targetBranchId, targetCompanyId }: { targetB
         }
     }, [targetBranchId, targetCompanyId]);
 
-    // Fallback to user's branch if no target provided
-    const effectiveBranchId = branchId || user?.branchId;
-    const effectiveCompanyId = companyId || user?.companyId;
+    // Fallback to user's branch if no target provided, but respect empty string for Global Aggregate
+    const effectiveBranchId = targetBranchId !== undefined ? targetBranchId : (branchId || user?.branchId);
+    const effectiveCompanyId = targetCompanyId !== undefined ? targetCompanyId : (companyId || user?.companyId);
 
     const [loading, setLoading] = useState(true);
     const [records, setRecords] = useState<any[]>([]);
