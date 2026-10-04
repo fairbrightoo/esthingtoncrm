@@ -151,7 +151,7 @@ export const PartnerApplicationController = {
     approveApplication: async (req: Request, res: Response) => {
         try {
             const id = req.params.id as string;
-            const { commissionRate } = req.body;
+            const { commissionRate, manualUplineId } = req.body;
 
             const app = await prisma.partnerApplication.findUnique({
                 where: { id }
@@ -176,8 +176,10 @@ export const PartnerApplicationController = {
                 if (!finalCommission) {
                     return res.status(400).json({ error: "Commission rate is required for direct partners." });
                 }
-                // Assign to MD of the branch
-                if (app.assignedBranchId) {
+                if (manualUplineId) {
+                    referredById = manualUplineId;
+                } else if (app.assignedBranchId) {
+                    // Assign to MD of the branch by default
                     const md = await prisma.user.findFirst({
                         where: { branchId: app.assignedBranchId, role: 'MANAGING_DIRECTOR', isActive: true }
                     });

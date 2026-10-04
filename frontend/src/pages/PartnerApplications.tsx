@@ -14,6 +14,8 @@ export const PartnerApplications = () => {
     const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
     const [selectedApp, setSelectedApp] = useState<any>(null);
     const [commissionRate, setCommissionRate] = useState<number | string>('');
+    const [staffList, setStaffList] = useState<any[]>([]);
+    const [manualUplineId, setManualUplineId] = useState<string>('');
 
     const fetchApplications = async () => {
         try {
@@ -61,12 +63,26 @@ export const PartnerApplications = () => {
         }
     };
 
-    const openApproveModal = (app: any) => {
+    const openApproveModal = async (app: any) => {
         setSelectedApp(app);
+        setManualUplineId('');
         if (app.referralCode) {
             setCommissionRate(app.referralCode.percentage);
         } else {
             setCommissionRate('');
+            // Fetch branch staff for manual upline assignment
+            try {
+                const token = localStorage.getItem('token');
+                const branchIdToFetch = app.assignedBranchId || user?.branchId;
+                if (branchIdToFetch) {
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branch/${branchIdToFetch}/users`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setStaffList(res.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch staff list', error);
+            }
         }
         setIsApproveModalOpen(true);
     };
@@ -80,9 +96,12 @@ export const PartnerApplications = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/partners/applications/${selectedApp.id}/approve`, {
-                commissionRate: Number(commissionRate)
-            }, {
+            const payload: any = { commissionRate: Number(commissionRate) };
+            if (manualUplineId) {
+                payload.manualUplineId = manualUplineId;
+            }
+
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/partners/applications/${selectedApp.id}/approve`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             addToast('Application approved. Welcome email sent!', 'success');
@@ -200,20 +219,43 @@ export const PartnerApplications = () => {
                         <h3 className="text-xl font-bold text-gray-900 mb-4">Approve Partner: {selectedApp.fullName}</h3>
                         
                         {!selectedApp.referralCode && (
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Set Commission Rate (%) for this Direct Partner
-                                </label>
-                                <input
-                                    type="number"
-                                    value={commissionRate}
-                                    onChange={(e) => setCommissionRate(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="e.g. 15"
-                                />
-                                <p className="text-xs text-gray-500 mt-2">
-                                    This percentage will be sent to them in their welcome email.
-                                </p>
+                            <div className="mb-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Set Commission Rate (%) for this Direct Partner
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={commissionRate}
+                                        onChange={(e) => setCommissionRate(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="e.g. 15"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        This percentage will be sent to them in their welcome email.
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Assign to Staff's Downline (Optional)
+                                    </label>
+                                    <select
+                                        value={manualUplineId}
+                                        onChange={(e) => setManualUplineId(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                                    >
+                                        <option value="">-- Do Not Assign (Defaults to MD) --</option>
+                                        {staffList.map(staff => (
+                                            <option key={staff.id} value={staff.id}>
+                                                {staff.fullName} ({staff.role})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Use this if a staff member recruited them but couldn't generate a code because the partner's commission is higher than theirs.
+                                    </p>
+                                </div>
                             </div>
                         )}
 
