@@ -199,6 +199,7 @@ export const PartnerApplicationController = {
                     companyId: app.assignedCompanyId,
                     branchId: app.assignedBranchId,
                     referredById,
+                    referralCodeId: app.referralCodeId,
                     commissionRate: finalCommission,
                     isActive: true,
                     passwordResetRequired: true
