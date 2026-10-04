@@ -1209,7 +1209,7 @@ export const SaleController = {
         try {
             // @ts-ignore
             const user = req.user;
-            if (user?.role !== 'SUPER_ADMIN') {
+            if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'GLOBAL_CHAIRMAN') {
                 return res.status(403).json({ error: "Unauthorized." });
             }
 

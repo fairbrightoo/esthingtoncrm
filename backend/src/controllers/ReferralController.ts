@@ -20,8 +20,8 @@ export const ReferralController = {
                 return res.status(403).json({ error: "Super Admins cannot generate referral codes." });
             }
 
-            if (percentage >= (user.commissionRate || 10)) {
-                return res.status(400).json({ error: `Percentage must be strictly less than your base commission rate (${user.commissionRate}%).` });
+            if (percentage > (user.commissionRate || 10)) {
+                return res.status(400).json({ error: `Percentage must be less than or equal to your base commission rate (${user.commissionRate}%).` });
             }
 
             const code = `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;

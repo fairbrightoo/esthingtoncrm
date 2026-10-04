@@ -182,7 +182,17 @@ export const CompanyController = {
                     teamId: true,
                     isActive: true,
                     monthlySalary: true,
-                    commissionRate: true
+                    commissionRate: true,
+                    company: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    referrer: {
+                        select: {
+                            fullName: true
+                        }
+                    }
                 }
             });
             res.json(users);
@@ -792,7 +802,7 @@ export const CompanyController = {
      */
     async updateUser(req: Request, res: Response) {
         const { id } = req.params as any;
-        let { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone } = req.body;
+        let { fullName, email, phone, role, password, monthlySalary, commissionRate, dateOfBirth, bankName, accountName, accountNumber, nextOfKinName, nextOfKinPhone, referredById } = req.body;
         if (email) email = email.trim().replace(/\s+/g, '').toLowerCase();
 
         try {
@@ -830,6 +840,9 @@ export const CompanyController = {
             }
             if (commissionRate !== undefined) {
                 data.commissionRate = parseFloat(commissionRate) || 0;
+            }
+            if (referredById !== undefined) {
+                data.referredById = referredById;
             }
             if (password) {
                 data.passwordHash = await bcrypt.hash(password, 10);

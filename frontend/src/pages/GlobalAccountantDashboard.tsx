@@ -91,7 +91,7 @@ export const GlobalAccountantDashboard = () => {
             <div className="mt-6">
                 {(() => {
                     if (location.pathname.endsWith('/disbursements') || location.pathname.endsWith('/disbursements/')) {
-                        return <AccountantDashboard targetBranchId={selectedBranchId} />;
+                        return <AccountantDashboard targetBranchId={selectedBranchId} targetCompanyId={selectedCompanyId} />;
                     }
                     if (location.pathname.endsWith('/payroll') || location.pathname.endsWith('/payroll/')) {
                         return <AccountantPayroll targetBranchId={selectedBranchId} targetCompanyId={selectedCompanyId} />;

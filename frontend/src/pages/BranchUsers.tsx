@@ -9,7 +9,7 @@ export const BranchUsers = () => {
     const { addToast } = useToast();
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'ACTIVE' | 'DELETED'>('ACTIVE');
+    const [activeTab, setActiveTab] = useState<'ACTIVE' | 'PARTNERS' | 'DELETED'>('ACTIVE');
     const [isModalOpen, setIsModalOpen] = useState(false);
     // Edit State
     const [editingUser, setEditingUser] = useState<any>(null);
@@ -31,6 +31,12 @@ export const BranchUsers = () => {
     const [bulkFile, setBulkFile] = useState<File | null>(null);
     const [uploadingBulk, setUploadingBulk] = useState(false);
     const [bulkReport, setBulkReport] = useState<any>(null);
+
+    // Reassign State
+    const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
+    const [partnerToReassign, setPartnerToReassign] = useState<any>(null);
+    const [newReferrerId, setNewReferrerId] = useState('');
+    const [reassigning, setReassigning] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -217,6 +223,8 @@ export const BranchUsers = () => {
         setHasReferralCode(false);
         setReferralInfo(null);
         setReferralError('');
+        setIsReassignModalOpen(false);
+        setPartnerToReassign(null);
     };
 
     const handleDeleteUser = async () => {
@@ -236,11 +244,36 @@ export const BranchUsers = () => {
         }
     };
 
+    const openReassignModal = (partner: any) => {
+        setPartnerToReassign(partner);
+        setNewReferrerId('');
+        setIsReassignModalOpen(true);
+    };
+
+    const handleReassign = async () => {
+        if (!partnerToReassign || !newReferrerId) return;
+        setReassigning(true);
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/users/${partnerToReassign.id}`,
+                { referredById: newReferrerId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            addToast('Partner reassigned successfully', 'success');
+            fetchUsers();
+            closeModals();
+        } catch (error: any) {
+            addToast('Failed to reassign partner', 'error');
+        } finally {
+            setReassigning(false);
+        }
+    };
+
     if (loading) return <div className="p-10">Loading staff...</div>;
 
-    const activeStaff = users.filter(u => u.isActive);
+    const activeStaff = users.filter(u => u.isActive && u.role !== 'PARTNER');
+    const partners = users.filter(u => u.isActive && u.role === 'PARTNER');
     const deletedStaff = users.filter(u => !u.isActive);
-    const filteredUsers = activeTab === 'ACTIVE' ? activeStaff : deletedStaff;
+    const filteredUsers = activeTab === 'ACTIVE' ? activeStaff : activeTab === 'PARTNERS' ? partners : deletedStaff;
 
     const getFileUrl = (url: string) => {
         if (!url) return '';
@@ -298,8 +331,14 @@ export const BranchUsers = () => {
                     Active Staff ({activeStaff.length})
                 </button>
                 <button
+                    onClick={() => setActiveTab('PARTNERS')}
+                    className={`py-2 px-4 border-b-2 font-medium text-sm focus:outline-none ${activeTab === 'PARTNERS' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Partners ({partners.length})
+                </button>
+                <button
                     onClick={() => setActiveTab('DELETED')}
-                    className={`py-2 px-4 border-b-2 font-medium text-sm focus:outline-none ${activeTab === 'DELETED' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                    className={`py-2 px-4 border-b-2 font-medium text-sm focus:outline-none ${activeTab === 'DELETED' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
                     Deleted Staff ({deletedStaff.length})
                 </button>
@@ -310,8 +349,9 @@ export const BranchUsers = () => {
                     <thead className="bg-gray-50 text-gray-500 font-medium text-sm">
                         <tr>
                             <th className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4">Role</th>
+                            <th className="px-6 py-4">{activeTab === 'PARTNERS' ? 'Company / Agency' : 'Role'}</th>
                             <th className="px-6 py-4">Contact</th>
+                            {activeTab === 'PARTNERS' && <th className="px-6 py-4">Assigned To</th>}
                             <th className="px-6 py-4">Actions</th>
                         </tr>
                     </thead>
@@ -337,17 +377,22 @@ export const BranchUsers = () => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-semibold
-                                        ${u.role === 'BRANCH_ADMIN' ? 'bg-purple-100 text-purple-700' :
-                                            u.role === 'HEAD_BDD' ? 'bg-amber-100 text-amber-700' :
-                                                u.role === 'BDM' ? 'bg-indigo-100 text-indigo-700' :
-                                                    u.role === 'TEAM_LEAD' ? 'bg-teal-100 text-teal-700' :
-                                                        u.role === 'CUSTOMER_CARE' ? 'bg-orange-100 text-orange-700' :
-                                                            u.role === 'SITE_EXPERT' ? 'bg-emerald-100 text-emerald-700' :
-                                                                u.role === 'ICT_ORACLE' ? 'bg-cyan-100 text-cyan-700' :
-                                                                    'bg-blue-100 text-blue-700'}`}>
-                                        {u.role.replace('_', ' ')}
-                                    </span>
+                                    {activeTab === 'PARTNERS' ? (
+                                        <span className="font-medium text-gray-800">{u.companyName || 'Individual Partner'}</span>
+                                    ) : (
+                                        <span className={`px-2 py-1 rounded text-xs font-semibold
+                                            ${u.role === 'BRANCH_ADMIN' ? 'bg-purple-100 text-purple-700' :
+                                                u.role === 'HEAD_BDD' ? 'bg-amber-100 text-amber-700' :
+                                                    u.role === 'BDM' ? 'bg-indigo-100 text-indigo-700' :
+                                                        u.role === 'TEAM_LEAD' ? 'bg-teal-100 text-teal-700' :
+                                                            u.role === 'CUSTOMER_CARE' ? 'bg-orange-100 text-orange-700' :
+                                                                u.role === 'SITE_EXPERT' ? 'bg-emerald-100 text-emerald-700' :
+                                                                    u.role === 'ICT_ORACLE' ? 'bg-cyan-100 text-cyan-700' :
+                                                                        u.role === 'PARTNER' ? 'bg-indigo-100 text-indigo-700' :
+                                                                            'bg-blue-100 text-blue-700'}`}>
+                                            {u.role.replace('_', ' ')}
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex flex-col text-sm text-gray-500 space-y-1">
@@ -355,9 +400,19 @@ export const BranchUsers = () => {
                                         {u.phone && <div className="flex items-center space-x-2"><Phone size={12} /> <span>{u.phone}</span></div>}
                                     </div>
                                 </td>
+                                {activeTab === 'PARTNERS' && (
+                                    <td className="px-6 py-4">
+                                        <span className="text-sm font-medium text-gray-700">{u.referrer?.fullName || 'MD / HR Default'}</span>
+                                    </td>
+                                )}
                                 <td className="px-6 py-4">
                                     {u.role !== 'BRANCH_ADMIN' && (
-                                        <div className="flex space-x-2">
+                                        <div className="flex space-x-2 items-center">
+                                            {activeTab === 'PARTNERS' && (
+                                                <button onClick={(e) => { e.stopPropagation(); openReassignModal(u); }} className="text-purple-600 hover:text-purple-800 text-sm font-medium mr-2 bg-purple-50 px-2 py-1 rounded">
+                                                    Reassign
+                                                </button>
+                                            )}
                                             <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} className="text-blue-500 hover:text-blue-700 p-1">
                                                 Edit
                                             </button>
@@ -873,6 +928,50 @@ export const BranchUsers = () => {
                     </div>
                 </div>
             )}
+            {/* Reassign Modal */}
+            {isReassignModalOpen && partnerToReassign && (
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-opacity">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-gray-800">Reassign Partner</h2>
+                            <button type="button" onClick={closeModals} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-sm text-gray-600 mb-4">
+                                Select a staff member to reassign <strong>{partnerToReassign.fullName}</strong> to.
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">New Referrer / Manager</label>
+                                <select 
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500"
+                                    value={newReferrerId}
+                                    onChange={(e) => setNewReferrerId(e.target.value)}
+                                >
+                                    <option value="">-- Select Staff --</option>
+                                    {activeStaff.map(staff => (
+                                        <option key={staff.id} value={staff.id}>{staff.fullName} ({staff.role.replace('_', ' ')})</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end space-x-3 shrink-0">
+                            <button onClick={closeModals} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none">
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleReassign}
+                                disabled={!newReferrerId || reassigning}
+                                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                            >
+                                {reassigning ? 'Reassigning...' : 'Confirm Reassignment'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Custom Sleek Delete User Confirmation Modal */}
             {userToDelete && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm transition-opacity">

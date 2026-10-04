@@ -136,6 +136,7 @@ model User {
   mobilePasscode         String?
   referencePhotoUrl      String?
   companyId              String?
+  companyName            String?
   branchId               String?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
@@ -1186,4 +1187,25 @@ model SaleDeletionLog {
 
   deletedByUser   User     @relation(fields: [deletedByUserId], references: [id])
   sale            Sale?    @relation(fields: [saleId], references: [id])
+}
+
+model PartnerApplication {
+  id                String   @id @default(uuid())
+  fullName          String
+  email             String   @unique
+  phone             String
+  companyName       String?
+  documentsUrl      String?  @db.Text
+  
+  referralCodeId    String?
+  assignedCompanyId String?
+  assignedBranchId  String?
+
+  status            String   @default("PENDING")
+  vettedByHR        Boolean  @default(false)
+  vettedByUserId    String?
+  commissionRate    Float?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

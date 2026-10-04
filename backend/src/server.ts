@@ -167,8 +167,10 @@ app.use('/api/hr-workflows', hrWorkflowRoutes);
 
 import ticketRoutes from './routes/ticketRoutes.js';
 import referralRoutes from './routes/referralRoutes.js';
+import partnerRoutes from './routes/partnerRoutes.js';
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/referrals', referralRoutes);
+app.use('/api/partners', partnerRoutes);
 
 import payrollRoutes from './routes/payrollRoutes.js';
 app.use('/api/payroll', payrollRoutes);

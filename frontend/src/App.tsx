@@ -10,6 +10,7 @@ import { BulkLeadUpload } from './pages/BulkLeadUpload';
 import { MyLeads } from './pages/MyLeads';
 import { BranchSelection } from './pages/BranchSelection';
 import { Login } from './pages/Login';
+import { PartnerRegistration } from './pages/PartnerRegistration';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { BranchDashboard } from './pages/BranchDashboard';
@@ -61,6 +62,7 @@ import { AccountantTaxCompliance } from './pages/AccountantTaxCompliance';
 import { AccountantSettings } from './pages/AccountantSettings';
 import { ReportsDashboard } from './pages/ReportsDashboard';
 import { BranchBroadcasts } from './pages/BranchBroadcasts';
+import { PartnerApplications } from './pages/PartnerApplications';
 import { GMNetwork } from './pages/GMNetwork';
 import { GMAdvisoryQueue } from './pages/GMAdvisoryQueue';
 import { HRRecommendations } from './pages/HRRecommendations';
@@ -198,6 +200,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/select-branch" element={<BranchSelection />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/partner/join" element={<PartnerRegistration />} />
             <Route path="/attendance" element={<Kiosk />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -226,6 +229,7 @@ function App() {
             <Route path="/dashboard/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
             <Route path="/dashboard/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
+            <Route path="/dashboard/partner-applications" element={<DashboardLayout><PartnerApplications /></DashboardLayout>} />
             <Route path="/dashboard/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             {/* Global Chairman Routes */}
@@ -237,6 +241,7 @@ function App() {
             <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
             <Route path="/dashboard/chairman/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/dashboard/chairman/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/deletion-history" element={<DashboardLayout><DeletionHistory /></DashboardLayout>} />
             <Route path="/dashboard/chairman/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
             <Route path="/dashboard/chairman/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
@@ -245,7 +250,14 @@ function App() {
             <Route path="/dashboard/global-accountant/disbursements" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/payroll" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/reports" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/my-hr" element={<DashboardLayout><StaffSelfService /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/policies" element={<DashboardLayout><CompanyPolicies /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             {/* Dynamic Branch Routes */}
             <Route path="/dashboard/:branchName" element={<DashboardLayout><BranchDashboardRouter /></DashboardLayout>} />
@@ -254,8 +266,8 @@ function App() {
             <Route path="/dashboard/:branchName/advisory" element={<DashboardLayout><GMAdvisoryQueue /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/hr-recommendations" element={<DashboardLayout><HRRecommendations /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/tasks" element={<DashboardLayout><Tasks /></DashboardLayout>} />
-            
             <Route path="/dashboard/:branchName/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/partner-applications" element={<DashboardLayout><PartnerApplications /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/staff-analytics" element={<DashboardLayout><MDStaffAnalytics /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/disbursements" element={<DashboardLayout><AccountantDashboard /></DashboardLayout>} />

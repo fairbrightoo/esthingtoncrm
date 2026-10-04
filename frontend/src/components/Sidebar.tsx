@@ -48,7 +48,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
             {/* Mobile Close Button */}
             <button 
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white md:hidden transition- रंगों"
+                className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white md:hidden transition-colors"
             >
                 <X size={20} />
             </button>
@@ -92,6 +92,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/chairman/reports" icon={<FileText size={20} />} label="Global Reports" />
                         <NavItem to="/dashboard/chairman/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Group Staff" />
+                        <NavItem to="/dashboard/chairman/deletion-history" icon={<Trash2 size={20} />} label="Deletion History" />
                         <NavItem to="/dashboard/chairman/settings" icon={<Settings size={20} />} label="Settings" />
                     </>
                 )}
@@ -99,6 +100,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'GROUP_MANAGING_DIRECTOR' && (
                     <>
                         <NavItem to="/dashboard/approvals" icon={<CheckCircle size={20} />} label="Payment Approvals" />
+                        <NavItem to="/dashboard/partner-applications" icon={<Users size={20} />} label="Partner Applications" />
                         <NavItem to="/dashboard/requisitions" icon={<FileSpreadsheet size={20} />} label="Fund Requests" />
                         <NavItem to="/dashboard/leaves" icon={<CalendarClock size={20} />} label="Leave Approvals" />
                         <NavItem to="/dashboard/staff-analytics" icon={<Users size={20} />} label="Branch Staff" />
@@ -133,7 +135,8 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
-                        <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
+                        <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff & Partners" />
+                        <NavItem to={`${basePath}/partner-applications`} icon={<FileText size={20} />} label="Partner Applications" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance Tracking" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Payroll Report" />
                         
@@ -232,8 +235,9 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'MANAGING_DIRECTOR' && (
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
-                        <NavItem to={`${basePath}/staff-analytics`} icon={<Users size={20} />} label="Branch Staff" />
+                        <NavItem to={`${basePath}/staff-analytics`} icon={<Users size={20} />} label="Branch Staff & Partners" />
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
+                        <NavItem to={`${basePath}/partner-applications`} icon={<CheckCircle size={20} />} label="Partner Applications" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />

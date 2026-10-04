@@ -41,11 +41,12 @@ export const getPaymentTypeLabel = (payment: any) => {
     return { text: 'Continuous Payment', bg: 'bg-blue-100', textCol: 'text-blue-700', border: 'border-blue-300' };
 };
 
-export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: string }) => {
+export const AccountantDashboard = ({ targetBranchId, targetCompanyId }: { targetBranchId?: string, targetCompanyId?: string }) => {
     const { token, user } = useAuth();
     
     // Fallback to user's branch if no target provided (for normal accountants), but respect empty string for Global Aggregate
     const effectiveBranchId = targetBranchId !== undefined ? targetBranchId : user?.branchId;
+    const effectiveCompanyId = targetCompanyId !== undefined ? targetCompanyId : user?.companyId;
     
     const [personalStats, setPersonalStats] = useState<any>(null);
 
@@ -167,11 +168,14 @@ export const AccountantDashboard = ({ targetBranchId }: { targetBranchId?: strin
     const fetchData = async (isBackground = false) => {
         try {
             if (!isBackground) setLoading(true);
-            const branchQuery = effectiveBranchId ? `?branchId=${effectiveBranchId}` : '';
+            const branchQuery = effectiveBranchId ? `branchId=${effectiveBranchId}` : '';
+            const companyQuery = effectiveCompanyId ? `companyId=${effectiveCompanyId}` : '';
+            const queryParams = [branchQuery, companyQuery].filter(Boolean).join('&');
+            const queryString = queryParams ? `?${queryParams}` : '';
             const [reqRes, commRes, pendRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending${branchQuery}`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions${queryString}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/requisitions/pending-commissions${queryString}`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/pending${queryString}`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
 
             const approvedReqs = reqRes.data.filter((r: any) => r.status === 'APPROVED_BY_MD' || r.status === 'DISBURSED');
