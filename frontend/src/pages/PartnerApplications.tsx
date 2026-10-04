@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { FileText, CheckCircle, XCircle, Search, UserCheck } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+
 
 export const PartnerApplications = () => {
     const { addToast } = useToast();
@@ -105,8 +105,8 @@ export const PartnerApplications = () => {
                 </div>
             </div>
 
-            <Card>
-                <CardContent className="p-0">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 text-gray-600 font-medium border-b">
@@ -190,8 +190,8 @@ export const PartnerApplications = () => {
                             </tbody>
                         </table>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Approval Modal */}
             {isApproveModalOpen && selectedApp && (

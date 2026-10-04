@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { User, Lock, Save, ShieldCheck, Smartphone, Bell, Mail, CreditCard, Download, Printer, KeyRound } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck, Smartphone, Bell, Mail, CreditCard, Download, Printer, KeyRound, Copy } from 'lucide-react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import { toPng } from 'html-to-image';
@@ -809,8 +809,18 @@ export const ProfileSettings = () => {
                                                         Created on {new Date(code.createdAt).toLocaleDateString()}
                                                     </p>
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="text-right flex flex-col items-end gap-2">
                                                     <div className="text-sm font-bold text-gray-800">{code._count?.users || 0} Recruits</div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const url = `${window.location.origin}/partner/join?ref=${code.code}`;
+                                                            navigator.clipboard.writeText(url);
+                                                            addToast("Referral link copied to clipboard!", "success");
+                                                        }}
+                                                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
+                                                    >
+                                                        <Copy size={12} /> Copy Link
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
