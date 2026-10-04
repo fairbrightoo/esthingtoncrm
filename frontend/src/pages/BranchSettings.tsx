@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Building2, MapPin, Save, Shield, Lock, Activity, Bell } from 'lucide-react';
+import { Building2, MapPin, Save, Shield, Lock, Activity, Bell, Copy } from 'lucide-react';
 import { ProfileSettings } from '../components/ProfileSettings';
 import { AccountantSettings } from './AccountantSettings';
 
@@ -358,6 +358,35 @@ export const BranchSettings = () => {
 
                 {/* Right Column */}
                 <div className="space-y-6">
+                    {/* Partner Registration Link */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm border border-blue-100 p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="bg-blue-100 p-2 rounded-lg text-blue-700">
+                                <Building2 size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800">Direct Partner Link</h2>
+                                <p className="text-sm text-gray-600">Onboard partners directly to this branch</p>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-gray-200 text-sm font-mono text-gray-600 break-all mb-3">
+                            {window.location.origin}/partner/join?branch={user?.branchId}
+                        </div>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/partner/join?branch=${user?.branchId}`);
+                                addToast('Branch link copied to clipboard!', 'success');
+                            }}
+                            className="w-full flex items-center justify-center space-x-2 bg-white border border-blue-200 text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition font-medium"
+                        >
+                            <Copy size={16} />
+                            <span>Copy Registration Link</span>
+                        </button>
+                        <p className="text-xs text-blue-600/80 mt-3 text-center">
+                            Partners who use this link will be automatically assigned to your branch for vetting and approval.
+                        </p>
+                    </div>
+
                     {/* Security & Password */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                          <div className="flex items-center space-x-3 mb-6">
