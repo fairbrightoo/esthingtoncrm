@@ -240,6 +240,25 @@ export const PartnerApplicationController = {
             `;
             await EmailService.send(app.email, subject, html);
 
+            // Notify Upline if assigned
+            if (referredById) {
+                const upline = await prisma.user.findUnique({ where: { id: referredById } });
+                if (upline && upline.email) {
+                    const uplineSubject = "New Partner Added to Your Downline!";
+                    const uplineHtml = `
+                        <div style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2>Great News!</h2>
+                            <p>Dear ${upline.fullName},</p>
+                            <p>A new partner, <strong>${app.fullName}</strong>, has just been approved and officially assigned to your downline network!</p>
+                            <p>You can track their activities and view them in your Network Activity dashboard.</p>
+                            <br>
+                            <p>Keep up the great work!</p>
+                        </div>
+                    `;
+                    await EmailService.send(upline.email, uplineSubject, uplineHtml).catch(e => console.error("Failed to send upline email:", e));
+                }
+            }
+
             res.json({ message: "Approved successfully", user: newUser });
         } catch (error) {
             console.error("Approve Application Error:", error);

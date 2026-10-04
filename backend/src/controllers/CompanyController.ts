@@ -790,6 +790,26 @@ export const CompanyController = {
             EmailService.send(email, `Welcome to ${companyName}! Your Login Credentials`, emailHtml, undefined, companyEmail)
                 .catch(err => console.error('Failed to send welcome email:', err));
 
+            // Notify Upline if assigned
+            if (referredById) {
+                prisma.user.findUnique({ where: { id: referredById } }).then(upline => {
+                    if (upline && upline.email) {
+                        const uplineSubject = "New Partner Added to Your Downline!";
+                        const uplineHtml = `
+                            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                                <h2>Great News!</h2>
+                                <p>Dear ${upline.fullName},</p>
+                                <p>A new partner, <strong>${fullName}</strong>, has just been registered and officially assigned to your downline network!</p>
+                                <p>You can track their activities and view them in your Network Activity dashboard.</p>
+                                <br>
+                                <p>Keep up the great work!</p>
+                            </div>
+                        `;
+                        EmailService.send(upline.email, uplineSubject, uplineHtml).catch(e => console.error("Failed to send upline email:", e));
+                    }
+                }).catch(err => console.error('Failed to fetch upline for email notification:', err));
+            }
+
             res.json({ ...user, tempPassword: password });
         } catch (error) {
             console.error('Error creating branch staff:', error);
