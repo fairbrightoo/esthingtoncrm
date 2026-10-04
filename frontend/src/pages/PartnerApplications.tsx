@@ -70,12 +70,12 @@ export const PartnerApplications = () => {
             setCommissionRate(app.referralCode.percentage);
         } else {
             setCommissionRate('');
-            // Fetch branch staff for manual upline assignment
             try {
                 const token = localStorage.getItem('token');
+                const companyIdToFetch = app.assignedCompanyId || user?.companyId;
                 const branchIdToFetch = app.assignedBranchId || user?.branchId;
-                if (branchIdToFetch) {
-                    const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/branch/${branchIdToFetch}/users`, {
+                if (companyIdToFetch && branchIdToFetch) {
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyIdToFetch}/branches/${branchIdToFetch}/users`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     setStaffList(res.data);
