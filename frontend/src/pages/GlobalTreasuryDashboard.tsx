@@ -400,7 +400,7 @@ export default function GlobalTreasuryDashboard() {
                                                     <AlertCircle size={18} className="mt-0.5 shrink-0" />
                                                     <div className="flex-1">
                                                         <span className="font-bold text-sm block mb-1">{p.fraudWarnings.primaryMessage}</span>
-                                                        <span className="text-xs font-semibold block mb-2">Total Claimed: ₦{p.fraudWarnings.totalClaimedValue.toLocaleString()}</span>
+                                                        <span className="text-xs font-semibold block mb-2">Total Value Attempted: ₦{p.fraudWarnings.totalClaimedValue.toLocaleString()}</span>
                                                         
                                                         {p.fraudWarnings.duplicateDetails && p.fraudWarnings.duplicateDetails.length > 0 && (
                                                             <div className="mt-2 text-xs border-t border-black/10 pt-2 space-y-2">
