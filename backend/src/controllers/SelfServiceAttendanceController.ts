@@ -208,6 +208,7 @@ export const SelfServiceAttendanceController = {
                     id: true,
                     fullName: true,
                     referencePhotoUrl: true,
+                    faceDescriptors: true,
                     employeeId: true,
                     role: true
                 }

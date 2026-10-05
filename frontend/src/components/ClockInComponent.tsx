@@ -32,7 +32,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
     const [locationError, setLocationError] = useState<string | null>(null);
     
     const [branchData, setBranchData] = useState<any>(null);
-    const [referenceDescriptor, setReferenceDescriptor] = useState<Float32Array | null>(null);
+    const [referenceDescriptors, setReferenceDescriptors] = useState<Float32Array[]>([]);
 
     // Fetch Branch Location & Reference Photo Descriptor
     useEffect(() => {
@@ -46,12 +46,8 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
                 const profile = profileRes.data;
                 setBranchData(profile.branch);
 
-                if (!profile.referencePhotoUrl) {
-                    setStatusText('No Reference Photo found. Please upload one in Profile Settings.');
-                    return;
-                }
-
                 // 2. Load face-api models (using ssdMobilenetv1 for high accuracy)
+                setStatusText('Loading AI Engine...');
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
                 await Promise.all([
                     faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
@@ -59,27 +55,30 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
                     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
                 ]);
                 setModelsLoaded(true);
-                setStatusText('Models Loaded. Preparing Reference Image...');
-                
-                // Allow UI to breathe before heavy processing
-                await new Promise(resolve => setTimeout(resolve, 100));
 
-                // 3. Process Reference Image from URL
-                const imgUrl = profile.referencePhotoUrl.startsWith('http') 
-                    ? profile.referencePhotoUrl 
-                    : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${profile.referencePhotoUrl}`;
-                
-                // Proxy image if cross-origin
-                const proxyUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
-                
-                const img = await faceapi.fetchImage(proxyUrl);
-                const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-                
-                if (detection) {
-                    setReferenceDescriptor(detection.descriptor);
+                if (profile.faceDescriptors && profile.faceDescriptors.length > 0) {
+                    const parsedDescriptors = profile.faceDescriptors.map((d: any) => new Float32Array(d));
+                    setReferenceDescriptors(parsedDescriptors);
                     setStatusText('Ready for Verification');
+                } else if (profile.referencePhotoUrl) {
+                    // Fallback to legacy single photo
+                    const imgUrl = profile.referencePhotoUrl.startsWith('http') 
+                        ? profile.referencePhotoUrl 
+                        : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${profile.referencePhotoUrl}`;
+                    
+                    const proxyUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+                    
+                    const img = await faceapi.fetchImage(proxyUrl);
+                    const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                    
+                    if (detection) {
+                        setReferenceDescriptors([detection.descriptor]);
+                        setStatusText('Ready for Verification');
+                    } else {
+                        setStatusText('Could not detect a face in your Reference Photo. Please setup Face ID.');
+                    }
                 } else {
-                    setStatusText('Could not detect a face in your Reference Photo. Please upload a clearer photo.');
+                    setStatusText('No Face ID setup found. Please set it up in Profile Settings.');
                 }
             } catch (err) {
                 console.error(err);
@@ -110,7 +109,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
     }, []);
 
     const captureAndVerify = useCallback(async (type: 'CLOCK_IN' | 'CLOCK_OUT') => {
-        if (!modelsLoaded || !referenceDescriptor || !webcamRef.current) return;
+        if (!modelsLoaded || referenceDescriptors.length === 0 || !webcamRef.current) return;
         if (!location) {
             addToast("Location not acquired yet. Please ensure GPS is enabled.", "error");
             return;
@@ -151,13 +150,19 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
                 return;
             }
 
-            // Compare faces
-            const distance = faceapi.euclideanDistance(referenceDescriptor, detection.descriptor);
+            // Compare faces against all registered angles
+            let bestMatchDistance = 1.0;
+            for (const refDesc of referenceDescriptors) {
+                const distance = faceapi.euclideanDistance(refDesc, detection.descriptor);
+                if (distance < bestMatchDistance) {
+                    bestMatchDistance = distance;
+                }
+            }
             
-            // 0.6 is typical threshold for Euclidean distance in face-api. Lower is stricter.
-            if (distance > 0.55) {
-                addToast(`Facial Verification Failed (confidence: ${distance.toFixed(2)}).`, "error");
-                setStatusText('Face did not match reference photo.');
+            // 0.55 is typical strict threshold for Euclidean distance
+            if (bestMatchDistance > 0.55) {
+                addToast(`Facial Verification Failed (confidence: ${bestMatchDistance.toFixed(2)}).`, "error");
+                setStatusText('Face did not match registered Face ID.');
                 setIsVerifying(false);
                 return;
             }
@@ -185,7 +190,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
         } finally {
             setIsVerifying(false);
         }
-    }, [modelsLoaded, referenceDescriptor, location, branchData, token, addToast, onClockInSuccess]);
+    }, [modelsLoaded, referenceDescriptors, location, branchData, token, addToast, onClockInSuccess]);
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-md mx-auto">

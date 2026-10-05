@@ -244,7 +244,37 @@ export const GlobalUserController = {
         }
     },
 
-    // 3.5. Update Attendance PIN
+    // 3.5. Update Face Descriptors
+    updateFaceDescriptors: async (req: Request, res: Response) => {
+        try {
+            const id = req.params.id as string;
+            const { faceDescriptors } = req.body;
+
+            // Simple validation that it's an array
+            if (!Array.isArray(faceDescriptors)) {
+                return res.status(400).json({ error: "Invalid face descriptors format." });
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { id },
+                data: {
+                    faceDescriptors: faceDescriptors as any,
+                },
+                select: {
+                    id: true,
+                    fullName: true,
+                    faceDescriptors: true
+                }
+            });
+
+            res.json({ success: true, message: "Facial data securely stored.", user: updatedUser });
+        } catch (error) {
+            console.error("Failed to update face descriptors:", error);
+            res.status(500).json({ error: "Failed to store facial ID." });
+        }
+    },
+
+    // 3.6. Update Attendance PIN
     updatePin: async (req: Request, res: Response) => {
         try {
             const { userId, newPin } = req.body;

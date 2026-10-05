@@ -20,6 +20,7 @@ router.delete('/global/chairman', requireRole(['SUPER_ADMIN']), GlobalUserContro
 // Personal Profile & Security
 router.get('/profile/:id', GlobalUserController.getProfile);
 router.put('/profile/:id', upload.any(), GlobalUserController.updateProfile);
+router.put('/profile/:id/face-descriptors', GlobalUserController.updateFaceDescriptors);
 router.post('/change-password', GlobalUserController.changePassword);
 router.post('/update-pin', GlobalUserController.updatePin);
 router.post('/update-mobile-passcode', GlobalUserController.updateMobilePasscode);

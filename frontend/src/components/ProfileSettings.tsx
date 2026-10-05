@@ -5,6 +5,7 @@ import { User, Lock, Save, ShieldCheck, Smartphone, Bell, Mail, CreditCard, Down
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import { toPng } from 'html-to-image';
+import { FaceRegistrationModal } from './FaceRegistrationModal';
 
 export const ProfileSettings = () => {
     const { user, token } = useAuth();
@@ -41,6 +42,9 @@ export const ProfileSettings = () => {
     // Mobile App Passcode
     const [newMobilePasscode, setNewMobilePasscode] = useState('');
     const [updatingMobilePasscode, setUpdatingMobilePasscode] = useState(false);
+    
+    // Face Registration
+    const [showFaceRegistration, setShowFaceRegistration] = useState(false);
     
     // Tabs
     const [activeTab, setActiveTab] = useState<'SECURITY' | 'ID_CARD' | 'REFERRAL'>('ID_CARD');
@@ -378,6 +382,25 @@ export const ProfileSettings = () => {
                             </div>
 
                             {/* Security Settings (Attendance PIN) */}
+                            {/* Face ID Settings */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                                <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
+                                    <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
+                                        <Camera size={24} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h2 className="text-xl font-bold text-gray-900">Smart Attendance Face ID</h2>
+                                        <p className="text-sm text-gray-500">Register your face from multiple angles for secure and instant clock-ins.</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowFaceRegistration(true)}
+                                        className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-blue-700 transition"
+                                    >
+                                        Setup Face ID
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                                 <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
                                     <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600">
@@ -868,6 +891,11 @@ export const ProfileSettings = () => {
                     )}
                 </div>
             </div>
+            
+            <FaceRegistrationModal 
+                isOpen={showFaceRegistration} 
+                onClose={() => setShowFaceRegistration(false)} 
+            />
         </div>
     );
 };

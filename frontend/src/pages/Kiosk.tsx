@@ -151,21 +151,6 @@ export const Kiosk = () => {
             let imageSrc = webcamRef.current?.getScreenshot() || undefined;
             if (!imageSrc) throw new Error("Could not capture webcam image.");
 
-            if (!targetUser.referencePhotoUrl) {
-                throw new Error("No AI Facial Verification Photo set up in your profile.");
-            }
-
-            const refImg = new Image();
-            refImg.crossOrigin = "anonymous";
-            refImg.src = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/attendance/kiosk/proxy-image?url=${encodeURIComponent(targetUser.referencePhotoUrl)}`;
-            await new Promise((resolve, reject) => {
-                refImg.onload = resolve;
-                refImg.onerror = () => reject(new Error("Failed to load reference photo"));
-            });
-
-            const refDetection = await faceapi.detectSingleFace(refImg).withFaceLandmarks().withFaceDescriptor();
-            if (!refDetection) throw new Error("Could not detect face in your reference photo.");
-
             const liveImg = new Image();
             liveImg.src = imageSrc;
             await new Promise((resolve) => { liveImg.onload = resolve; });
@@ -173,10 +158,41 @@ export const Kiosk = () => {
             const liveDetection = await faceapi.detectSingleFace(liveImg).withFaceLandmarks().withFaceDescriptor();
             if (!liveDetection) throw new Error("Could not detect face in webcam.");
 
-            const distance = faceapi.euclideanDistance(refDetection.descriptor, liveDetection.descriptor);
-            
-            if (distance > 0.55) {
-                throw new Error(`Facial Verification Failed (confidence: ${distance.toFixed(2)})`);
+            if (targetUser.faceDescriptors && targetUser.faceDescriptors.length > 0) {
+                // New Multi-Angle Face ID Check
+                const parsedDescriptors = targetUser.faceDescriptors.map((d: any) => new Float32Array(d));
+                let bestMatchDistance = 1.0;
+                
+                for (const refDesc of parsedDescriptors) {
+                    const distance = faceapi.euclideanDistance(refDesc, liveDetection.descriptor);
+                    if (distance < bestMatchDistance) {
+                        bestMatchDistance = distance;
+                    }
+                }
+                
+                if (bestMatchDistance > 0.55) {
+                    throw new Error(`Facial Verification Failed (confidence: ${bestMatchDistance.toFixed(2)})`);
+                }
+            } else if (targetUser.referencePhotoUrl) {
+                // Fallback to legacy single photo
+                const refImg = new Image();
+                refImg.crossOrigin = "anonymous";
+                refImg.src = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/attendance/kiosk/proxy-image?url=${encodeURIComponent(targetUser.referencePhotoUrl)}`;
+                await new Promise((resolve, reject) => {
+                    refImg.onload = resolve;
+                    refImg.onerror = () => reject(new Error("Failed to load reference photo"));
+                });
+
+                const refDetection = await faceapi.detectSingleFace(refImg).withFaceLandmarks().withFaceDescriptor();
+                if (!refDetection) throw new Error("Could not detect face in your reference photo.");
+
+                const distance = faceapi.euclideanDistance(refDetection.descriptor, liveDetection.descriptor);
+                
+                if (distance > 0.55) {
+                    throw new Error(`Facial Verification Failed (confidence: ${distance.toFixed(2)})`);
+                }
+            } else {
+                throw new Error("No AI Face ID or Reference Photo set up in your profile.");
             }
 
             setStatus({ type: 'info', message: 'Identity confirmed! Punching...' });

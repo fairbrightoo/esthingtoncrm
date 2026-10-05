@@ -135,6 +135,7 @@ model User {
   attendancePin          String?
   mobilePasscode         String?
   referencePhotoUrl      String?
+  faceDescriptors        Json?
   companyId              String?
   companyName            String?
   branchId               String?
