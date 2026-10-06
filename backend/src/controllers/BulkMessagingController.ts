@@ -15,7 +15,7 @@ export const BulkMessagingController = {
             res.json({ text: draftedText });
         } catch (error: any) {
             console.error("BulkMessaging draft Error:", error);
-            res.status(500).json({ error: "Failed to draft message" });
+            res.status(500).json({ error: error.message || "Failed to draft message" });
         }
     },
 

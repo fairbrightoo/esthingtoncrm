@@ -125,7 +125,7 @@ RULES:
             return response.choices[0]?.message?.content?.trim() || "";
         } catch (error) {
             console.error("AI Draft Error:", error);
-            throw new Error("Failed to draft message with AI");
+            throw new Error(`OpenAI Error: ${(error as any).message}`);
         }
     }
 };
