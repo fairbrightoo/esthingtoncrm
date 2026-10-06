@@ -219,7 +219,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
 
             {/* Webcam feed */}
             <div className="relative rounded-xl overflow-hidden bg-gray-100 mb-6 border-4 border-gray-200 aspect-square flex items-center justify-center">
-                {modelsLoaded && referenceDescriptor ? (
+                {modelsLoaded && referenceDescriptors.length > 0 ? (
                     <Webcam
                         audio={false}
                         ref={webcamRef}
@@ -242,7 +242,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
             <div className="grid grid-cols-2 gap-4">
                 <button
                     onClick={() => captureAndVerify('CLOCK_IN')}
-                    disabled={isVerifying || !modelsLoaded || !referenceDescriptor || !location}
+                    disabled={isVerifying || !modelsLoaded || referenceDescriptors.length === 0 || !location}
                     className="flex items-center justify-center space-x-2 bg-green-600 text-white py-3 rounded-xl font-bold shadow-sm hover:bg-green-700 transition disabled:opacity-50"
                 >
                     <LogIn size={18} />
@@ -250,7 +250,7 @@ export const ClockInComponent = ({ onClockInSuccess }: { onClockInSuccess?: () =
                 </button>
                 <button
                     onClick={() => captureAndVerify('CLOCK_OUT')}
-                    disabled={isVerifying || !modelsLoaded || !referenceDescriptor || !location}
+                    disabled={isVerifying || !modelsLoaded || referenceDescriptors.length === 0 || !location}
                     className="flex items-center justify-center space-x-2 bg-red-600 text-white py-3 rounded-xl font-bold shadow-sm hover:bg-red-700 transition disabled:opacity-50"
                 >
                     <LogOut size={18} />

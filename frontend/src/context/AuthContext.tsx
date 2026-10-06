@@ -7,8 +7,8 @@ interface User {
     role: 'SUPER_ADMIN' | 'GLOBAL_CHAIRMAN' | 'BRANCH_ADMIN' | 'CUSTOMER_CARE' | 'MARKETER' | 'BRANCH_HR' | 'MANAGING_DIRECTOR' | 'GROUP_MANAGING_DIRECTOR' | 'ACCOUNTANT' | 'GENERAL_MANAGER' | 'TEAM_LEAD' | 'BDM' | 'HEAD_BDD';
     companyId?: string;
     branchId?: string;
-    branch?: { id?: string; name: string; address: string; phone?: string; email?: string };
-    company?: { id?: string; name: string; themeColor: string; logoUrl: string; address?: string; phone?: string; email?: string; website?: string };
+    branch?: { id?: string; name: string; address: string; phone?: string; email?: string; abbreviation?: string };
+    company?: { id?: string; name: string; themeColor: string; logoUrl: string; address?: string; phone?: string; email?: string; website?: string; abbreviation?: string };
     esthCoinBalance?: number;
 }
 
