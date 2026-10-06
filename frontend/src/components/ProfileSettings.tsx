@@ -656,36 +656,20 @@ export const ProfileSettings = () => {
                                     </div>
                                     
                                     <div className="mt-6 border-t border-gray-100 pt-6">
-                                        <h3 className="font-semibold text-gray-800 mb-3">AI Facial Verification Photo</h3>
-                                        <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center">
-                                            {idCardData.referencePhotoUrl ? (
-                                                <img src={resolveUrl(idCardData.referencePhotoUrl)} alt="Reference Photo" className="w-24 h-24 object-cover rounded-full mb-3 shadow-md border-2 border-white" />
-                                            ) : (
-                                                <div className="w-24 h-24 bg-gray-200 rounded-full mb-3 flex items-center justify-center text-gray-400">
-                                                    <User size={32} />
-                                                </div>
-                                            )}
-                                            <p className="text-xs text-gray-500 mb-3 text-center">This photo is strictly used by the AI engine to verify your identity when you clock in for attendance.</p>
-                                            <div className="flex flex-col w-full space-y-3">
-                                                <div className="flex w-full items-center space-x-2">
-                                                    <label className="flex-1 cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 hover:border-gray-400 transition text-center shadow-sm">
-                                                        {referencePhotoFile ? referencePhotoFile.name : 'Select Clear Selfie'}
-                                                        <input 
-                                                            type="file" 
-                                                            accept="image/*"
-                                                            onChange={(e) => setReferencePhotoFile(e.target.files ? e.target.files[0] : null)}
-                                                            className="hidden"
-                                                        />
-                                                    </label>
-                                                    <button 
-                                                        onClick={handleReferencePhotoUpload}
-                                                        disabled={!referencePhotoFile || uploadingReferencePhoto}
-                                                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition shadow-sm"
-                                                    >
-                                                        {uploadingReferencePhoto ? 'Saving...' : 'Upload'}
-                                                    </button>
-                                                </div>
+                                        <h3 className="font-semibold text-gray-800 mb-3">AI Facial Verification</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center text-center">
+                                            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full mb-3 flex items-center justify-center">
+                                                <Camera size={28} />
                                             </div>
+                                            <p className="text-xs text-gray-500 mb-4">
+                                                Your attendance verification has been upgraded to a multi-angle Face ID system for maximum accuracy. 
+                                            </p>
+                                            <button 
+                                                onClick={() => setShowFaceRegistration(true)}
+                                                className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-blue-700 transition w-full"
+                                            >
+                                                Setup / Update Face ID
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
