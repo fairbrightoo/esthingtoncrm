@@ -59,7 +59,16 @@ export const BulkMessagingSystem = () => {
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        processFile(file);
+    };
 
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0];
+        if (file) processFile(file);
+    };
+
+    const processFile = (file: File) => {
         Papa.parse(file, {
             header: true,
             skipEmptyLines: true,
@@ -92,8 +101,9 @@ export const BulkMessagingSystem = () => {
             );
             setMessageTemplate(res.data.text);
             addToast("AI Draft generated successfully!", "success");
-        } catch (error) {
-            addToast("Failed to generate AI draft", "error");
+        } catch (error: any) {
+            console.error("Draft error:", error);
+            addToast(`Draft failed: ${error.response?.data?.error || error.message}`, "error");
         } finally {
             setIsDrafting(false);
         }
@@ -304,10 +314,12 @@ export const BulkMessagingSystem = () => {
                             
                             <div 
                                 onClick={() => fileInputRef.current?.click()}
-                                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 hover:border-indigo-400 transition cursor-pointer"
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={handleDrop}
+                                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-indigo-50 hover:border-indigo-400 transition cursor-pointer"
                             >
                                 <Users size={32} className="mx-auto text-gray-400 mb-3" />
-                                <p className="text-sm font-medium text-gray-900">Upload CSV (Comma Delimited)</p>
+                                <p className="text-sm font-medium text-gray-900">Drag & Drop or Click to Upload CSV</p>
                                 <p className="text-xs text-gray-500 mt-1">Columns: Name, Phone, Email, Site, Gender</p>
                             </div>
                         </div>
