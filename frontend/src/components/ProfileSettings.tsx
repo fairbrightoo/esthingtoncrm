@@ -639,7 +639,13 @@ export const ProfileSettings = () => {
                                     
                                     <div className="mt-6 border-t border-gray-100 pt-6">
                                         <h3 className="font-semibold text-gray-800 mb-3">AI Facial Verification</h3>
-                                        <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center text-center">
+                                        <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center text-center relative">
+                                            {idCardData.faceDescriptors && idCardData.faceDescriptors.length > 0 && (
+                                                <div className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center space-x-1">
+                                                    <CheckCircle size={12} />
+                                                    <span>Configured</span>
+                                                </div>
+                                            )}
                                             <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full mb-3 flex items-center justify-center">
                                                 <Camera size={28} />
                                             </div>

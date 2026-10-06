@@ -19,6 +19,7 @@ export const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({ is
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [step, setStep] = useState(0); 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [descriptors, setDescriptors] = useState<number[][]>([]);
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -97,7 +98,7 @@ export const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({ is
             });
             
             addToast("Face ID Setup Complete!", "success");
-            onClose();
+            setIsSuccess(true);
         } catch (error) {
             console.error("Failed to save descriptors:", error);
             setErrorMsg("Failed to save facial data to the server. Please try again.");
@@ -124,7 +125,27 @@ export const FaceRegistrationModal: React.FC<FaceRegistrationModalProps> = ({ is
                 </div>
 
                 <div className="p-6">
-                    {!modelsLoaded ? (
+                    {isSuccess ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                                <CheckCircle size={40} />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Setup Complete!</h3>
+                            <p className="text-gray-500 mb-8">
+                                Your multi-angle Face ID has been securely saved. You can now use it to clock in instantly.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    // Optional: You could reload the page or trigger a re-fetch to update the ProfileSettings UI state
+                                    window.location.reload(); 
+                                }}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl py-3.5 font-bold transition shadow-md"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    ) : !modelsLoaded ? (
                         <div className="flex flex-col items-center justify-center py-12">
                             <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
                             <p className="text-gray-500 font-medium">Initializing AI Engine...</p>
