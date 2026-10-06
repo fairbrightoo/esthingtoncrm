@@ -114,6 +114,7 @@ import scriptRoutes from './routes/scriptRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import bulkMessagingRoutes from './routes/bulkMessagingRoutes.js';
 
 app.use('/api', automationRoutes);
 app.use('/api/auth', authRoutes);
@@ -131,6 +132,7 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/bulk-messaging', bulkMessagingRoutes);
 
 import userRoutes from './routes/userRoutes.js';
 app.use('/api/users', userRoutes);

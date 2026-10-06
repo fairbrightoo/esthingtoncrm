@@ -102,5 +102,30 @@ export const AIConciergeService = {
             console.error('Concierge Error:', error);
             return null;
         }
+    },
+
+    async draftBroadcastMessage(prompt: string) {
+        try {
+            const openai = getOpenAI();
+            const response = await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [
+                    {
+                        role: "system",
+                        content: `You are an expert Real Estate Copywriter. Your job is to draft a professional, engaging, and persuasive broadcast message for existing or potential clients based on the user's prompt. 
+                        
+RULES:
+- Keep it concise, clear, and impactful.
+- Use placeholders like {{Name}}, {{Site}}, and {{Title}} where appropriate so the system can inject dynamic data.
+- Do NOT include subject lines or labels like "Message:" or "Subject:". Just return the exact text to send.`
+                    },
+                    { role: "user", content: prompt }
+                ]
+            });
+            return response.choices[0]?.message?.content?.trim() || "";
+        } catch (error) {
+            console.error("AI Draft Error:", error);
+            throw new Error("Failed to draft message with AI");
+        }
     }
 };
