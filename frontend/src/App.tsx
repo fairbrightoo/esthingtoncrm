@@ -19,6 +19,7 @@ import { GlobalSettings } from './pages/GlobalSettings';
 import { BranchUsers } from './pages/BranchUsers';
 import { BranchReports } from './pages/BranchReports';
 import { BranchSettings } from './pages/BranchSettings';
+import { BulkMessagingSystem } from './pages/BulkMessaging/BulkMessagingSystem';
 
 import GlobalTreasuryDashboard from './pages/GlobalTreasuryDashboard';
 import { CallScripts } from './pages/CallScripts';
@@ -202,6 +203,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/partner/join" element={<PartnerRegistration />} />
             <Route path="/attendance" element={<Kiosk />} />
+            <Route path="/bulkmessaging" element={<BulkMessagingSystem />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Super Admin Routes */}
