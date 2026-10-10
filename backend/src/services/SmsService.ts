@@ -27,7 +27,7 @@ export const SmsService = {
                 from: customSenderId || SENDER_ID,
                 sms: message,
                 type: "plain",
-                channel: "generic", // User requested to test generic channel to bypass inactive route
+                channel: "dnd", // Switched to dnd to ensure delivery to DND-active numbers
 
                 api_key: API_KEY,
             };
