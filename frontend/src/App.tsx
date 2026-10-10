@@ -14,6 +14,7 @@ import { PartnerRegistration } from './pages/PartnerRegistration';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { BranchDashboard } from './pages/BranchDashboard';
+import { PartnerDashboard } from './pages/PartnerDashboard';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { GlobalSettings } from './pages/GlobalSettings';
 import { BranchUsers } from './pages/BranchUsers';
@@ -109,6 +110,10 @@ const BranchDashboardRouter = () => {
 
   if (user?.role === 'BRANCH_HR') {
     return <HRDashboard />;
+  }
+
+  if (user?.role === 'PARTNER') {
+    return <PartnerDashboard />;
   }
 
   if (user?.role === 'GENERAL_MANAGER') {
