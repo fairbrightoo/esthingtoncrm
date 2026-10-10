@@ -33,7 +33,7 @@ export const BulkMessagingSystem = () => {
     // Form State
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [messageTemplate, setMessageTemplate] = useState('');
-    const [senderId, setSenderId] = useState('DOUBLEKING');
+    const [senderId, setSenderId] = useState('DOUBLE KING');
     const [channel, setChannel] = useState<'SMS' | 'EMAIL'>('SMS');
     const [aiPrompt, setAiPrompt] = useState('');
     
@@ -340,7 +340,7 @@ export const BulkMessagingSystem = () => {
                                         onChange={(e) => setSenderId(e.target.value)}
                                         className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                     >
-                                        <option value="DOUBLEKING">Double King Estate</option>
+                                        <option value="DOUBLE KING">Double King Estate</option>
                                         <option value="ROYALTON">Royalton Links</option>
                                         <option value="ESTHINGTON">Esthington Group</option>
                                         <option value="N-Alert">N-Alert (Generic)</option>
