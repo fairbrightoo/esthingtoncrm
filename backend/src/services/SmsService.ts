@@ -27,7 +27,7 @@ export const SmsService = {
                 from: customSenderId || SENDER_ID,
                 sms: message,
                 type: "plain",
-                channel: "dnd", // Switched to dnd to ensure delivery to DND-active numbers
+                channel: "generic", // Reverted to generic. DND route requires manual activation by Termii Support.
 
                 api_key: API_KEY,
             };
