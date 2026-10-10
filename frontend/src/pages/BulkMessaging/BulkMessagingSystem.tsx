@@ -33,6 +33,8 @@ export const BulkMessagingSystem = () => {
     // Form State
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [messageTemplate, setMessageTemplate] = useState('');
+    const [emailSubject, setEmailSubject] = useState('');
+    const [attachments, setAttachments] = useState<{name: string, content: string}[]>([]);
     const [senderId, setSenderId] = useState('DOUBLE KING');
     const [channel, setChannel] = useState<'SMS' | 'EMAIL'>('SMS');
     const [aiPrompt, setAiPrompt] = useState('');
@@ -100,6 +102,16 @@ export const BulkMessagingSystem = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setMessageTemplate(res.data.text);
+            if (channel === 'EMAIL' && !emailSubject) {
+                // Auto generate a subject if none exists
+                try {
+                    const subjRes = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bulk-messaging/draft`, 
+                        { prompt: `Generate a short, catchy email subject line (max 6 words) for this email: ${res.data.text}` },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setEmailSubject(subjRes.data.text.replace(/["']/g, ''));
+                } catch (e) {}
+            }
             addToast("AI Draft generated successfully!", "success");
         } catch (error: any) {
             console.error("Draft error:", error);
@@ -126,6 +138,8 @@ export const BulkMessagingSystem = () => {
                 const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bulk-messaging/send-batch`, {
                     contacts: batch,
                     messageTemplate,
+                    emailSubject,
+                    attachments,
                     senderId,
                     channel
                 }, { headers: { Authorization: `Bearer ${token}` } });
@@ -164,7 +178,29 @@ export const BulkMessagingSystem = () => {
     const handleLaunchCampaign = () => {
         if (contacts.length === 0) return addToast("Please import contacts first", "error");
         if (!messageTemplate) return addToast("Please enter a message to send", "error");
+        if (channel === 'EMAIL' && !emailSubject) return addToast("Please enter an email subject", "error");
         processBatchQueue(contacts);
+    };
+
+    const handleAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach(file => {
+            if (file.size > 5 * 1024 * 1024) {
+                return addToast(`File ${file.name} is too large (max 5MB)`, "error");
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = event.target?.result as string;
+                // resend expects base64 without the data URI prefix
+                const base64Data = base64.split(',')[1];
+                setAttachments(prev => [...prev, { name: file.name, content: base64Data }]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeAttachment = (index: number) => {
+        setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleResendFailed = () => {
@@ -408,12 +444,51 @@ export const BulkMessagingSystem = () => {
                                     <span>Message Content</span>
                                     <span className="text-xs text-gray-500">Variables: {'{{Name}}'}, {'{{Site}}'}, {'{{Title}}'}</span>
                                 </label>
+                                
+                                {channel === 'EMAIL' && (
+                                    <div className="mb-4">
+                                        <input 
+                                            type="text" 
+                                            value={emailSubject}
+                                            onChange={(e) => setEmailSubject(e.target.value)}
+                                            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                                            placeholder="Enter Email Subject (e.g. Update on your property)"
+                                        />
+                                    </div>
+                                )}
+
                                 <textarea 
                                     value={messageTemplate}
                                     onChange={(e) => setMessageTemplate(e.target.value)}
-                                    className="flex-1 w-full border border-gray-300 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[300px]"
+                                    className="flex-1 w-full border border-gray-300 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]"
                                     placeholder="Type your message here or use AI to draft..."
                                 ></textarea>
+                                
+                                {channel === 'EMAIL' && (
+                                    <div className="mt-4 border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="block text-sm font-bold text-gray-700">Attachments</label>
+                                            <input type="file" multiple id="email-attachments" className="hidden" onChange={handleAttachment} />
+                                            <label htmlFor="email-attachments" className="text-sm text-blue-600 hover:text-blue-700 font-bold cursor-pointer">
+                                                + Add File
+                                            </label>
+                                        </div>
+                                        {attachments.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {attachments.map((att, i) => (
+                                                    <div key={i} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-200 text-sm">
+                                                        <span className="truncate text-gray-700">{att.name}</span>
+                                                        <button onClick={() => removeAttachment(i)} className="text-red-500 hover:text-red-700">
+                                                            <XCircle size={16} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 italic">No files attached</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">

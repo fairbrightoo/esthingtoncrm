@@ -21,7 +21,7 @@ export const BulkMessagingController = {
 
     async processBatch(req: Request, res: Response) {
         try {
-            const { contacts, messageTemplate, senderId, channel } = req.body;
+            const { contacts, messageTemplate, emailSubject, attachments, senderId, channel } = req.body;
             
             if (!contacts || !Array.isArray(contacts)) {
                 return res.status(400).json({ error: "Invalid contacts array" });
@@ -48,9 +48,9 @@ export const BulkMessagingController = {
                         
                         await EmailService.send(
                             contact.email, 
-                            `${senderName} Update`, 
+                            emailSubject || `${senderName} Update`, 
                             `<div style="font-family: sans-serif; white-space: pre-wrap;">${personalizedMessage}</div>`,
-                            undefined,
+                            attachments,
                             `${senderName} <${process.env.EMAIL_FROM_ADDRESS}>`
                         );
                         results.push({ id: contact.id, email: contact.email, status: 'Success' });
