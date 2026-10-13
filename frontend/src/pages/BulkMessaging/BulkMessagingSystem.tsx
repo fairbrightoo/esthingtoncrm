@@ -1,27 +1,35 @@
-import React, { useState, useRef } from 'react';
-import { Lock, Mail, MessageSquare, Send, FileSpreadsheet, Sparkles, Image as ImageIcon, Users, CheckCircle, XCircle, RefreshCw, AlertCircle } from 'lucide-react';
-import Papa from 'papaparse';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+    Lock, 
+    Mail, 
+    MessageSquare, 
+    Send, 
+    FileSpreadsheet, 
+    Sparkles, 
+    Image as ImageIcon, 
+    Users, 
+    CheckCircle, 
+    XCircle, 
+    RefreshCw, 
+    AlertCircle,
+    Clock,
+    BookOpen,
+    UploadCloud,
+    X,
+    Filter,
+    ChevronRight,
+    ArrowRight
+} from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import type { Contact, BroadcastContact, LiveLogEntry } from './types';
+import { parseSpreadsheetFile } from './spreadsheetParser';
+import { normalizePhoneNumber, formatPhoneDisplay } from './phoneUtils';
+import { BroadcastPhonebook } from './BroadcastPhonebook';
+import { BroadcastHistory } from './BroadcastHistory';
 
 const PASSCODE = "2026"; 
-
-interface Contact {
-    id: string;
-    name: string;
-    phone: string;
-    email: string;
-    site: string;
-    gender: string;
-}
-
-interface LogEntry {
-    id: string;
-    contact: Contact;
-    status: 'Success' | 'Failed' | 'Pending';
-    reason?: string;
-}
 
 export const BulkMessagingSystem = () => {
     const { token } = useAuth();
@@ -30,22 +38,47 @@ export const BulkMessagingSystem = () => {
     const [passcode, setPasscode] = useState('');
     const [authError, setAuthError] = useState('');
 
-    // Form State
+    // Active Navigation Tab
+    const [activeTab, setActiveTab] = useState<'BROADCAST' | 'PHONEBOOK' | 'HISTORY'>('BROADCAST');
+
+    // Audience Mode: File Upload vs Phonebook Picker
+    const [audienceSource, setAudienceSource] = useState<'FILE' | 'PHONEBOOK'>('FILE');
+
+    // Broadcast Form State
     const [contacts, setContacts] = useState<Contact[]>([]);
+    const [uploadedFileName, setUploadedFileName] = useState('');
     const [messageTemplate, setMessageTemplate] = useState('');
     const [emailSubject, setEmailSubject] = useState('');
     const [attachments, setAttachments] = useState<{name: string, content: string}[]>([]);
     const [senderId, setSenderId] = useState('DOUBLE KING');
     const [channel, setChannel] = useState<'SMS' | 'EMAIL'>('SMS');
     const [aiPrompt, setAiPrompt] = useState('');
+
+    // Spreadsheet Auto-sync settings
+    const [autoSyncToPhonebook, setAutoSyncToPhonebook] = useState(true);
+    const [autoSyncTag, setAutoSyncTag] = useState('');
+
+    // Phonebook Audience Selector Modal / Filter
+    const [showPhonebookPicker, setShowPhonebookPicker] = useState(false);
+    const [phonebookAudience, setPhonebookAudience] = useState<BroadcastContact[]>([]);
+    const [selectedPhonebookIds, setSelectedPhonebookIds] = useState<Set<string>>(new Set());
+    const [pickerTagFilter, setPickerTagFilter] = useState('');
+    const [pickerSearch, setPickerSearch] = useState('');
+    const [isLoadingAudience, setIsLoadingAudience] = useState(false);
+    const [availableTags, setAvailableTags] = useState<string[]>([]);
     
-    // Status State
+    // Status & Progress State
     const [isDrafting, setIsDrafting] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [logs, setLogs] = useState<LogEntry[]>([]);
-    
+    const [logs, setLogs] = useState<LiveLogEntry[]>([]);
+    const [lastCompletedCampaignId, setLastCompletedCampaignId] = useState<string | null>(null);
+
+    // Live counts for tabs
+    const [phonebookCount, setPhonebookCount] = useState<number | null>(null);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,54 +91,135 @@ export const BulkMessagingSystem = () => {
         }
     };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Load filter tags and contact count when authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadPhonebookMeta();
+        }
+    }, [isAuthenticated]);
+
+    const loadPhonebookMeta = async () => {
+        try {
+            const res = await axios.get(`${API_URL}/api/bulk-messaging/contacts/filters`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setAvailableTags(res.data.tags || []);
+            setPhonebookCount(res.data.totalContacts || 0);
+        } catch (err) {
+            console.error("Failed to load phonebook metadata:", err);
+        }
+    };
+
+    // Universal Spreadsheet Ingestion (.csv, .xlsx, .xls)
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        processFile(file);
+        await processSpreadsheet(file);
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         const file = e.dataTransfer.files?.[0];
-        if (file) processFile(file);
+        if (file) await processSpreadsheet(file);
     };
 
-    const processFile = (file: File) => {
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                const parsedContacts: Contact[] = results.data.map((row: any, index) => ({
-                    id: `csv-${index}`,
-                    name: row['Name'] || row['Full Name'] || row['Client Name'] || '',
-                    phone: row['Phone'] || row['Phone Number'] || row['Contact'] || '',
-                    email: row['Email'] || row['Email Address'] || '',
-                    site: row['Site'] || row['Property'] || row['Site Subscribed'] || '',
-                    gender: row['Gender'] || row['Sex'] || ''
-                }));
-                
-                setContacts(parsedContacts);
-                addToast(`Imported ${parsedContacts.length} contacts successfully`, "success");
-            },
-            error: (error) => {
-                addToast("Error parsing file: " + error.message, "error");
-            }
+    const processSpreadsheet = async (file: File) => {
+        try {
+            const result = await parseSpreadsheetFile(file);
+            setContacts(result.contacts);
+            setUploadedFileName(result.filename);
+            // Default auto-sync tag to file name without extension
+            const defaultTagName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+            setAutoSyncTag(defaultTagName);
+            addToast(`Loaded ${result.totalCount} recipients (${result.validPhoneCount} valid numbers)`, "success");
+        } catch (err: any) {
+            addToast(`Error reading file: ${err.message}`, "error");
+        }
+    };
+
+    // Phonebook Selector Operations
+    const openPhonebookAudiencePicker = async () => {
+        setShowPhonebookPicker(true);
+        setIsLoadingAudience(true);
+        try {
+            const res = await axios.get(`${API_URL}/api/bulk-messaging/contacts/audience`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const allContacts: BroadcastContact[] = res.data.contacts || [];
+            setPhonebookAudience(allContacts);
+            // Pre-select all by default
+            setSelectedPhonebookIds(new Set(allContacts.map(c => c.id)));
+        } catch (err) {
+            console.error("Failed to fetch audience contacts:", err);
+            addToast("Failed to fetch phonebook contacts", "error");
+        } finally {
+            setIsLoadingAudience(false);
+        }
+    };
+
+    const handleToggleSelectAllPicker = () => {
+        const filtered = getFilteredPickerContacts();
+        if (selectedPhonebookIds.size === filtered.length && filtered.length > 0) {
+            setSelectedPhonebookIds(new Set());
+        } else {
+            setSelectedPhonebookIds(new Set(filtered.map(c => c.id)));
+        }
+    };
+
+    const handleToggleSelectOnePicker = (id: string) => {
+        setSelectedPhonebookIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
         });
     };
 
+    const getFilteredPickerContacts = () => {
+        return phonebookAudience.filter(c => {
+            const matchesTag = pickerTagFilter ? c.tags.includes(pickerTagFilter) : true;
+            const matchesSearch = pickerSearch.trim()
+                ? c.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
+                  c.phone.includes(pickerSearch.replace(/[^0-9]/g, '')) ||
+                  (c.email && c.email.toLowerCase().includes(pickerSearch.toLowerCase())) ||
+                  (c.site && c.site.toLowerCase().includes(pickerSearch.toLowerCase()))
+                : true;
+            return matchesTag && matchesSearch;
+        });
+    };
+
+    const handleConfirmPhonebookSelection = () => {
+        const selected = phonebookAudience
+            .filter(c => selectedPhonebookIds.has(c.id))
+            .map(c => ({
+                id: c.id,
+                name: c.name,
+                phone: c.phone,
+                email: c.email || '',
+                site: c.site || '',
+                gender: c.gender || '',
+                title: c.title || undefined
+            }));
+
+        setContacts(selected);
+        setUploadedFileName(`Phonebook Selection (${selected.length} contacts)`);
+        setShowPhonebookPicker(false);
+        addToast(`Selected ${selected.length} contacts from Phonebook`, "success");
+    };
+
+    // AI Message Composer
     const handleDraftWithAI = async () => {
         if (!aiPrompt) return;
         setIsDrafting(true);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bulk-messaging/draft`, 
+            const res = await axios.post(`${API_URL}/api/bulk-messaging/draft`, 
                 { prompt: aiPrompt },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setMessageTemplate(res.data.text);
             if (channel === 'EMAIL' && !emailSubject) {
-                // Auto generate a subject if none exists
                 try {
-                    const subjRes = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bulk-messaging/draft`, 
+                    const subjRes = await axios.post(`${API_URL}/api/bulk-messaging/draft`, 
                         { prompt: `Generate a short, catchy email subject line (max 6 words) for this email: ${res.data.text}` },
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
@@ -121,21 +235,23 @@ export const BulkMessagingSystem = () => {
         }
     };
 
+    // Queue Batch Process and Auto-Record Campaign + Sync
     const processBatchQueue = async (targetContacts: Contact[]) => {
         setIsSending(true);
         setProgress(0);
         
-        let newLogs: LogEntry[] = targetContacts.map(c => ({ id: c.id, contact: c, status: 'Pending' }));
+        let newLogs: LiveLogEntry[] = targetContacts.map(c => ({ id: c.id, contact: c, status: 'Pending' }));
         setLogs(newLogs);
 
         const batchSize = 20;
         let processedCount = 0;
+        const allFinalResults: any[] = [];
 
         for (let i = 0; i < targetContacts.length; i += batchSize) {
             const batch = targetContacts.slice(i, i + batchSize);
             
             try {
-                const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bulk-messaging/send-batch`, {
+                const res = await axios.post(`${API_URL}/api/bulk-messaging/send-batch`, {
                     contacts: batch,
                     messageTemplate,
                     emailSubject,
@@ -144,7 +260,8 @@ export const BulkMessagingSystem = () => {
                     channel
                 }, { headers: { Authorization: `Bearer ${token}` } });
 
-                const batchResults = res.data.results;
+                const batchResults = res.data.results || [];
+                allFinalResults.push(...batchResults);
                 
                 newLogs = newLogs.map(log => {
                     const result = batchResults.find((r: any) => r.id === log.id);
@@ -156,8 +273,18 @@ export const BulkMessagingSystem = () => {
                 
                 setLogs([...newLogs]);
 
-            } catch (error) {
+            } catch (error: any) {
                 // Mark entire batch as failed
+                const failedBatchResults = batch.map(b => ({
+                    id: b.id,
+                    name: b.name,
+                    phone: b.phone,
+                    email: b.email,
+                    status: 'Failed',
+                    reason: 'Network/Server Error'
+                }));
+                allFinalResults.push(...failedBatchResults);
+
                 newLogs = newLogs.map(log => {
                     if (batch.find(b => b.id === log.id)) {
                         return { ...log, status: 'Failed', reason: 'Network/Server Error' };
@@ -172,13 +299,43 @@ export const BulkMessagingSystem = () => {
         }
 
         setIsSending(false);
-        addToast("Campaign processing completed", "success");
+
+        // 1. Auto-save Campaign to Persistent Database History
+        try {
+            const campaignRes = await axios.post(`${API_URL}/api/bulk-messaging/campaigns`, {
+                title: emailSubject || `${channel} Broadcast - ${new Date().toLocaleDateString()}`,
+                channel,
+                senderId,
+                subject: channel === 'EMAIL' ? emailSubject : undefined,
+                messageTemplate,
+                results: allFinalResults
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            setLastCompletedCampaignId(campaignRes.data.campaign?.id || null);
+        } catch (campErr) {
+            console.error("Failed to persist campaign record:", campErr);
+        }
+
+        // 2. Auto-sync Contacts to Phonebook if checked
+        if (autoSyncToPhonebook && audienceSource === 'FILE' && targetContacts.length > 0) {
+            try {
+                await axios.post(`${API_URL}/api/bulk-messaging/contacts/sync`, {
+                    contacts: targetContacts,
+                    tag: autoSyncTag.trim() || undefined
+                }, { headers: { Authorization: `Bearer ${token}` } });
+                loadPhonebookMeta();
+            } catch (syncErr) {
+                console.error("Failed to auto-sync contacts to phonebook:", syncErr);
+            }
+        }
+
+        addToast("Broadcast processing completed and saved to history!", "success");
     };
 
     const handleLaunchCampaign = () => {
-        if (contacts.length === 0) return addToast("Please import contacts first", "error");
-        if (!messageTemplate) return addToast("Please enter a message to send", "error");
-        if (channel === 'EMAIL' && !emailSubject) return addToast("Please enter an email subject", "error");
+        if (contacts.length === 0) return addToast("Please select or import audience first", "error");
+        if (!messageTemplate) return addToast("Please enter a message to broadcast", "error");
+        if (channel === 'EMAIL' && !emailSubject) return addToast("Please enter an email subject line", "error");
         processBatchQueue(contacts);
     };
 
@@ -191,7 +348,6 @@ export const BulkMessagingSystem = () => {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const base64 = event.target?.result as string;
-                // resend expects base64 without the data URI prefix
                 const base64Data = base64.split(',')[1];
                 setAttachments(prev => [...prev, { name: file.name, content: base64Data }]);
             };
@@ -203,10 +359,22 @@ export const BulkMessagingSystem = () => {
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleResendFailed = () => {
-        const failedContacts = logs.filter(l => l.status === 'Failed').map(l => l.contact);
-        if (failedContacts.length === 0) return;
-        processBatchQueue(failedContacts);
+    // Callback when user clicks "Resend Failed" from Campaign History
+    const handleResendFromHistory = (
+        failedRecipients: Contact[], 
+        originalTemplate: string, 
+        origChannel: 'SMS' | 'EMAIL', 
+        origSender: string, 
+        origSubject?: string
+    ) => {
+        setContacts(failedRecipients);
+        setMessageTemplate(originalTemplate);
+        setChannel(origChannel);
+        setSenderId(origSender);
+        if (origSubject) setEmailSubject(origSubject);
+        setUploadedFileName(`Resending ${failedRecipients.length} Failed Recipients`);
+        setActiveTab('BROADCAST');
+        addToast(`Loaded ${failedRecipients.length} failed recipients into Composer`, "success");
     };
 
     if (!isAuthenticated) {
@@ -219,7 +387,7 @@ export const BulkMessagingSystem = () => {
                         </div>
                         <h2 className="text-3xl font-extrabold text-gray-900">Broadcast Engine</h2>
                         <p className="mt-2 text-sm text-gray-500">
-                            Enter the secure passcode to access the bulk messaging system.
+                            Enter the secure passcode to access the independent broadcast system.
                         </p>
                     </div>
                     <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -248,263 +416,630 @@ export const BulkMessagingSystem = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            {/* Top Navigation Header */}
+            <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
                             <Send size={20} />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">Esthington Broadcast Engine</h1>
-                            <p className="text-xs text-gray-500 font-medium">Independent Bulk Messaging System</p>
+                            <h1 className="text-xl font-black text-gray-900 tracking-tight">Esthington Broadcast Engine</h1>
+                            <p className="text-xs text-gray-500 font-medium">Independent Multi-Channel Messaging Suite</p>
                         </div>
                     </div>
-                    <button 
+
+                    {/* Navigation Tabs */}
+                    <div className="flex items-center bg-gray-100 p-1 rounded-2xl">
+                        <button
+                            onClick={() => setActiveTab('BROADCAST')}
+                            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                                activeTab === 'BROADCAST'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                        >
+                            <Send size={14} />
+                            <span>New Broadcast</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('PHONEBOOK')}
+                            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                                activeTab === 'PHONEBOOK'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                        >
+                            <BookOpen size={14} />
+                            <span>Phonebook</span>
+                            {phonebookCount !== null && (
+                                <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded-full">
+                                    {phonebookCount.toLocaleString()}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('HISTORY')}
+                            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                                activeTab === 'HISTORY'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                        >
+                            <Clock size={14} />
+                            <span>Campaign History</span>
+                        </button>
+                    </div>
+
+                    <button
                         onClick={() => setIsAuthenticated(false)}
-                        className="text-sm text-gray-500 hover:text-gray-900 font-medium flex items-center space-x-1"
+                        className="text-xs font-bold text-gray-500 hover:text-gray-800 flex items-center space-x-1 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition"
                     >
-                        <Lock size={14} />
-                        <span>Lock System</span>
+                        <Lock size={13} className="mr-1" />
+                        Lock System
                     </button>
                 </div>
             </header>
 
+            {/* Main Content Area */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                
-                {logs.length > 0 && (
-                    <div className="mb-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center space-x-2">
-                                <AlertCircle size={20} className="text-blue-600"/>
-                                <span>Campaign Logs</span>
-                            </h2>
-                            {isSending ? (
-                                <div className="flex items-center space-x-3">
-                                    <div className="text-sm font-bold text-blue-600">{progress}%</div>
-                                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }}></div>
-                                    </div>
+                {/* TAB 1: NEW BROADCAST */}
+                {activeTab === 'BROADCAST' && (
+                    <div className="space-y-6">
+                        {/* Live Dispatch Progress Banner */}
+                        {isSending && (
+                            <div className="bg-blue-600 text-white p-5 rounded-2xl shadow-lg flex items-center justify-between animate-pulse">
+                                <div className="space-y-1">
+                                    <h4 className="font-bold flex items-center text-sm">
+                                        <RefreshCw size={16} className="animate-spin mr-2" />
+                                        Dispatching Broadcast ({progress}%)
+                                    </h4>
+                                    <p className="text-xs text-blue-100">
+                                        Sending {contacts.length} messages via {channel} through {senderId}...
+                                    </p>
                                 </div>
-                            ) : (
-                                <button 
-                                    onClick={handleResendFailed}
-                                    disabled={logs.filter(l => l.status === 'Failed').length === 0}
-                                    className="flex items-center space-x-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-200 transition disabled:opacity-50"
-                                >
-                                    <RefreshCw size={14} />
-                                    <span>Resend Failed</span>
-                                </button>
-                            )}
-                        </div>
-                        
-                        <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-xl">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {logs.map((log) => (
-                                        <tr key={log.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{log.contact.name || '-'}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{channel === 'SMS' ? log.contact.phone : log.contact.email}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {log.status === 'Success' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle size={12} className="mr-1"/> Success</span>}
-                                                {log.status === 'Failed' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle size={12} className="mr-1"/> Failed</span>}
-                                                {log.status === 'Pending' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Pending...</span>}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{log.reason || '-'}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
+                                <span className="text-2xl font-black">{progress}%</span>
+                            </div>
+                        )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Data & Setup */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center space-x-2">
-                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                                        <FileSpreadsheet size={20} />
+                        {/* Composer Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Left Column: Audience & Channels */}
+                            <div className="space-y-6">
+                                {/* Step 1: Import / Select Audience */}
+                                <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-extrabold text-gray-900 flex items-center text-base">
+                                            <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xs mr-2 font-black">1</span>
+                                            Target Audience
+                                        </h3>
+                                        {contacts.length > 0 && (
+                                            <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full">
+                                                {contacts.length.toLocaleString()} Ready
+                                            </span>
+                                        )}
                                     </div>
-                                    <h2 className="text-lg font-bold text-gray-900">1. Import Audience</h2>
-                                </div>
-                                <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">{contacts.length} loaded</span>
-                            </div>
-                            
-                            <input 
-                                type="file" 
-                                accept=".csv" 
-                                className="hidden" 
-                                ref={fileInputRef} 
-                                onChange={handleFileUpload} 
-                            />
-                            
-                            <div 
-                                onClick={() => fileInputRef.current?.click()}
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={handleDrop}
-                                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-indigo-50 hover:border-indigo-400 transition cursor-pointer"
-                            >
-                                <Users size={32} className="mx-auto text-gray-400 mb-3" />
-                                <p className="text-sm font-medium text-gray-900">Drag & Drop or Click to Upload CSV</p>
-                                <p className="text-xs text-gray-500 mt-1">Columns: Name, Phone, Email, Site, Gender</p>
-                            </div>
-                        </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
-                                    <ImageIcon size={20} />
-                                </div>
-                                <h2 className="text-lg font-bold text-gray-900">3. Media & Channels</h2>
-                            </div>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Send As (Sender ID)</label>
-                                    <select 
-                                        value={senderId}
-                                        onChange={(e) => setSenderId(e.target.value)}
-                                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                    >
-                                        <option value="DOUBLE KING">Double King Estate</option>
-                                        <option value="ROYALTON">Royalton Links</option>
-                                        <option value="ESTHINGTON">Esthington Group</option>
-                                        <option value="N-Alert">N-Alert (Generic)</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Message Channel</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button 
-                                            onClick={() => setChannel('SMS')}
-                                            className={`flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold border transition ${channel === 'SMS' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                    {/* Source Switcher */}
+                                    <div className="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl text-xs font-bold">
+                                        <button
+                                            type="button"
+                                            onClick={() => setAudienceSource('FILE')}
+                                            className={`py-2 rounded-lg transition ${
+                                                audienceSource === 'FILE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                                            }`}
                                         >
-                                            <MessageSquare size={16} />
-                                            <span>SMS</span>
+                                            Spreadsheet (.xlsx / .csv)
                                         </button>
-                                        <button 
-                                            onClick={() => setChannel('EMAIL')}
-                                            className={`flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold border transition ${channel === 'EMAIL' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                        <button
+                                            type="button"
+                                            onClick={() => setAudienceSource('PHONEBOOK')}
+                                            className={`py-2 rounded-lg transition ${
+                                                audienceSource === 'PHONEBOOK' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                                            }`}
                                         >
-                                            <Mail size={16} />
-                                            <span>Email</span>
+                                            From Phonebook
                                         </button>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Right Column: AI Composer */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center space-x-2">
-                                    <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                                        <Sparkles size={20} />
+                                    {/* Option A: Spreadsheet Ingestion */}
+                                    {audienceSource === 'FILE' && (
+                                        <div className="space-y-3">
+                                            <div
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={handleDrop}
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center group bg-gray-50/50"
+                                            >
+                                                <input
+                                                    type="file"
+                                                    ref={fileInputRef}
+                                                    onChange={handleFileUpload}
+                                                    accept=".csv,.xlsx,.xls"
+                                                    className="hidden"
+                                                />
+                                                <UploadCloud className="text-gray-400 group-hover:text-blue-500 transition mb-2" size={32} />
+                                                <span className="text-xs font-bold text-gray-700">
+                                                    Drag & Drop or Click to Upload
+                                                </span>
+                                                <span className="text-[11px] text-gray-400 mt-1">
+                                                    Excel (.xlsx, .xls) & CSV files supported
+                                                </span>
+                                            </div>
+
+                                            {uploadedFileName && (
+                                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
+                                                    <div className="flex items-center space-x-2 truncate">
+                                                        <FileSpreadsheet className="text-blue-600 shrink-0" size={16} />
+                                                        <span className="font-bold text-blue-900 truncate">{uploadedFileName}</span>
+                                                    </div>
+                                                    <span className="text-blue-700 font-bold shrink-0">{contacts.length} rows</span>
+                                                </div>
+                                            )}
+
+                                            {/* Auto-Sync Checkbox (User requested) */}
+                                            <div className="pt-2 border-t border-gray-100 space-y-2">
+                                                <label className="flex items-start space-x-2.5 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={autoSyncToPhonebook}
+                                                        onChange={(e) => setAutoSyncToPhonebook(e.target.checked)}
+                                                        className="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                                    />
+                                                    <span className="text-xs font-medium text-gray-700">
+                                                        Auto-sync imported contacts to Phonebook (smart deduplication)
+                                                    </span>
+                                                </label>
+
+                                                {autoSyncToPhonebook && (
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                                            Assign Group / Tag
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={autoSyncTag}
+                                                            onChange={(e) => setAutoSyncTag(e.target.value)}
+                                                            placeholder="e.g. Double King Villa Subscribers"
+                                                            className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Option B: Choose from Phonebook */}
+                                    {audienceSource === 'PHONEBOOK' && (
+                                        <div className="space-y-3">
+                                            <button
+                                                type="button"
+                                                onClick={openPhonebookAudiencePicker}
+                                                className="w-full py-3.5 px-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2"
+                                            >
+                                                <Users size={16} />
+                                                <span>Choose Contacts / Groups from Phonebook</span>
+                                            </button>
+
+                                            {contacts.length > 0 && (
+                                                <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs flex items-center justify-between">
+                                                    <span className="font-semibold text-gray-700">{uploadedFileName || "Phonebook Contacts"}</span>
+                                                    <span className="font-bold text-blue-600">{contacts.length} Selected</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Step 3: Media & Channels */}
+                                <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm space-y-4">
+                                    <h3 className="font-extrabold text-gray-900 flex items-center text-base">
+                                        <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-xs mr-2 font-black">3</span>
+                                        Channels & Delivery
+                                    </h3>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                            Send As (Sender ID)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={senderId}
+                                            onChange={(e) => setSenderId(e.target.value)}
+                                            placeholder="DOUBLE KING"
+                                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                        <p className="text-[11px] text-gray-400 mt-1">
+                                            For SMS: Use approved Termii sender ID (e.g. DOUBLE KING).
+                                        </p>
                                     </div>
-                                    <h2 className="text-lg font-bold text-gray-900">2. AI Message Composer</h2>
-                                </div>
-                            </div>
 
-                            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-100 mb-4">
-                                <label className="block text-sm font-bold text-purple-900 mb-2">Draft with AI</label>
-                                <div className="flex space-x-2">
-                                    <input 
-                                        type="text" 
-                                        value={aiPrompt}
-                                        onChange={(e) => setAiPrompt(e.target.value)}
-                                        className="flex-1 bg-white border border-purple-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                        placeholder="E.g., Tell Double King subscribers to come for allocation..."
-                                    />
-                                    <button 
-                                        onClick={handleDraftWithAI}
-                                        disabled={isDrafting || !aiPrompt}
-                                        className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-purple-700 flex items-center space-x-1 disabled:opacity-50"
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                            Message Channel
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setChannel('SMS')}
+                                                className={`py-3 px-4 rounded-xl text-xs font-bold border transition flex items-center justify-center space-x-2 ${
+                                                    channel === 'SMS'
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                                                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <MessageSquare size={16} />
+                                                <span>SMS Blast</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setChannel('EMAIL')}
+                                                className={`py-3 px-4 rounded-xl text-xs font-bold border transition flex items-center justify-center space-x-2 ${
+                                                    channel === 'EMAIL'
+                                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                                                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <Mail size={16} />
+                                                <span>Email Broadcast</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        disabled={isSending || contacts.length === 0}
+                                        onClick={handleLaunchCampaign}
+                                        className="w-full mt-4 py-4 px-6 rounded-2xl text-sm font-black text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center space-x-2"
                                     >
-                                        <Sparkles size={16} />
-                                        <span>{isDrafting ? 'Drafting...' : 'Draft'}</span>
+                                        {isSending ? (
+                                            <>
+                                                <RefreshCw size={18} className="animate-spin" />
+                                                <span>Processing Broadcast...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send size={18} />
+                                                <span>Launch Campaign ({contacts.length.toLocaleString()})</span>
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="flex-1 flex flex-col">
-                                <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between">
-                                    <span>Message Content</span>
-                                    <span className="text-xs text-gray-500">Variables: {'{{Name}}'}, {'{{Site}}'}, {'{{Title}}'}</span>
-                                </label>
-                                
-                                {channel === 'EMAIL' && (
-                                    <div className="mb-4">
-                                        <input 
-                                            type="text" 
-                                            value={emailSubject}
-                                            onChange={(e) => setEmailSubject(e.target.value)}
-                                            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
-                                            placeholder="Enter Email Subject (e.g. Update on your property)"
-                                        />
-                                    </div>
-                                )}
+                            {/* Right Column: AI Message Composer */}
+                            <div className="lg:col-span-2 space-y-6">
+                                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200/80 shadow-sm space-y-5">
+                                    <h3 className="font-extrabold text-gray-900 flex items-center text-base">
+                                        <span className="w-6 h-6 bg-pink-100 text-pink-600 rounded-lg flex items-center justify-center text-xs mr-2 font-black">2</span>
+                                        AI Message Composer
+                                    </h3>
 
-                                <textarea 
-                                    value={messageTemplate}
-                                    onChange={(e) => setMessageTemplate(e.target.value)}
-                                    className="flex-1 w-full border border-gray-300 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]"
-                                    placeholder="Type your message here or use AI to draft..."
-                                ></textarea>
-                                
-                                {channel === 'EMAIL' && (
-                                    <div className="mt-4 border border-gray-200 rounded-xl p-4 bg-gray-50">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <label className="block text-sm font-bold text-gray-700">Attachments</label>
-                                            <input type="file" multiple id="email-attachments" className="hidden" onChange={handleAttachment} />
-                                            <label htmlFor="email-attachments" className="text-sm text-blue-600 hover:text-blue-700 font-bold cursor-pointer">
-                                                + Add File
-                                            </label>
+                                    {/* AI Prompt Box */}
+                                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100 space-y-2">
+                                        <label className="block text-xs font-bold text-purple-900 uppercase tracking-wider">
+                                            Draft with AI Copilot
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={aiPrompt}
+                                                onChange={(e) => setAiPrompt(e.target.value)}
+                                                placeholder="e.g. Write a warm update to Double King Villa subscribers announcing our move to the new site"
+                                                className="flex-1 px-4 py-2.5 bg-white border border-purple-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleDraftWithAI}
+                                                disabled={isDrafting || !aiPrompt}
+                                                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-purple-500/20 disabled:opacity-50"
+                                            >
+                                                {isDrafting ? <RefreshCw size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                                <span>Draft</span>
+                                            </button>
                                         </div>
-                                        {attachments.length > 0 ? (
-                                            <div className="space-y-2">
-                                                {attachments.map((att, i) => (
-                                                    <div key={i} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-200 text-sm">
-                                                        <span className="truncate text-gray-700">{att.name}</span>
-                                                        <button onClick={() => removeAttachment(i)} className="text-red-500 hover:text-red-700">
-                                                            <XCircle size={16} />
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                    </div>
+
+                                    {/* Dynamic Email Subject (When Email selected) */}
+                                    {channel === 'EMAIL' && (
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between items-center">
+                                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Email Subject Line *
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (messageTemplate) {
+                                                            setAiPrompt(`Generate a 5-word catchy email subject line for: ${messageTemplate}`);
+                                                            handleDraftWithAI();
+                                                        }
+                                                    }}
+                                                    className="text-xs text-purple-600 hover:text-purple-800 font-bold flex items-center space-x-1"
+                                                >
+                                                    <Sparkles size={12} className="mr-0.5" />
+                                                    Auto-Generate Subject
+                                                </button>
                                             </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500 italic">No files attached</p>
-                                        )}
+                                            <input
+                                                type="text"
+                                                value={emailSubject}
+                                                onChange={(e) => setEmailSubject(e.target.value)}
+                                                placeholder="e.g. Important Update Regarding Your Double King Villa Subscription"
+                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Message Body Content */}
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                Message Content
+                                            </label>
+                                            <div className="text-[11px] font-semibold text-gray-400 space-x-1">
+                                                <span>Variables:</span>
+                                                <span className="font-mono text-purple-600 bg-purple-50 px-1 rounded">{"{{Name}}"}</span>
+                                                <span className="font-mono text-purple-600 bg-purple-50 px-1 rounded">{"{{Site}}"}</span>
+                                                <span className="font-mono text-purple-600 bg-purple-50 px-1 rounded">{"{{Title}}"}</span>
+                                            </div>
+                                        </div>
+
+                                        <textarea
+                                            rows={9}
+                                            value={messageTemplate}
+                                            onChange={(e) => setMessageTemplate(e.target.value)}
+                                            placeholder="Type your message here or generate one with AI..."
+                                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition leading-relaxed"
+                                        />
+
+                                        <div className="flex justify-between text-xs text-gray-400">
+                                            <span>{messageTemplate.length} characters</span>
+                                            {channel === 'SMS' && (
+                                                <span>~{Math.ceil((messageTemplate.length || 1) / 160)} SMS segment(s)</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Media & Attachments (Email only) */}
+                                    {channel === 'EMAIL' && (
+                                        <div className="pt-2 border-t border-gray-100 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Media & File Attachments (Images, PDFs, Docs)
+                                                </label>
+                                                <label className="text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer flex items-center">
+                                                    <ImageIcon size={14} className="mr-1" />
+                                                    Add Files
+                                                    <input
+                                                        type="file"
+                                                        multiple
+                                                        onChange={handleAttachment}
+                                                        className="hidden"
+                                                    />
+                                                </label>
+                                            </div>
+
+                                            {attachments.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {attachments.map((att, idx) => (
+                                                        <div key={idx} className="bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2">
+                                                            <span className="truncate max-w-xs">{att.name}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeAttachment(idx)}
+                                                                className="text-gray-400 hover:text-rose-600"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Active Batch Execution Logs (Real-time Feedback) */}
+                                {logs.length > 0 && (
+                                    <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-sm font-bold text-gray-900 flex items-center">
+                                                <Clock size={16} className="mr-2 text-gray-400" />
+                                                Active Dispatch Logs ({logs.filter(l => l.status === 'Success').length}/{logs.length})
+                                            </h4>
+                                            {lastCompletedCampaignId && (
+                                                <button
+                                                    onClick={() => setActiveTab('HISTORY')}
+                                                    className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center"
+                                                >
+                                                    View in Campaign Archives
+                                                    <ChevronRight size={14} className="ml-0.5" />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="max-h-60 overflow-y-auto divide-y divide-gray-100 text-xs">
+                                            {logs.slice(0, 50).map((l) => (
+                                                <div key={l.id} className="py-2.5 flex items-center justify-between">
+                                                    <span className="font-semibold text-gray-800">{l.contact.name}</span>
+                                                    <span className="text-gray-500 font-mono">
+                                                        {l.contact.phone ? formatPhoneDisplay(l.contact.phone) : l.contact.email}
+                                                    </span>
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                                        l.status === 'Success' ? 'bg-emerald-100 text-emerald-700' :
+                                                        l.status === 'Failed' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                        {l.status}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                            {logs.length > 50 && (
+                                                <p className="text-center text-gray-400 pt-2 text-[11px]">
+                                                    Showing first 50 recipients. Full audit logs saved to Campaign History.
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                )}
 
-                            <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
-                                <button 
-                                    onClick={handleLaunchCampaign}
-                                    disabled={isSending || contacts.length === 0 || !messageTemplate}
-                                    className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 transition flex items-center space-x-2 disabled:opacity-50"
+                {/* TAB 2: PHONEBOOK */}
+                {activeTab === 'PHONEBOOK' && (
+                    <BroadcastPhonebook
+                        token={token}
+                        onSelectAudienceForBroadcast={(selected) => {
+                            setContacts(selected.map(s => ({
+                                id: s.id,
+                                name: s.name,
+                                phone: s.phone,
+                                email: s.email || '',
+                                site: s.site || '',
+                                gender: s.gender || '',
+                                title: s.title || undefined
+                            })));
+                            setUploadedFileName(`Phonebook (${selected.length} contacts)`);
+                            setActiveTab('BROADCAST');
+                            addToast(`Loaded ${selected.length} contacts into Composer`, "success");
+                        }}
+                    />
+                )}
+
+                {/* TAB 3: CAMPAIGN HISTORY */}
+                {activeTab === 'HISTORY' && (
+                    <BroadcastHistory
+                        token={token}
+                        onResendCampaign={handleResendFromHistory}
+                    />
+                )}
+            </main>
+
+            {/* Phonebook Audience Selector Modal */}
+            {showPhonebookPicker && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Select Audience from Phonebook</h3>
+                                <p className="text-xs text-gray-500">Pick specific contacts or filter by tag/site.</p>
+                            </div>
+                            <button onClick={() => setShowPhonebookPicker(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Search & Tag Filter */}
+                        <div className="py-3 flex flex-col sm:flex-row gap-3 border-b border-gray-100">
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    value={pickerSearch}
+                                    onChange={(e) => setPickerSearch(e.target.value)}
+                                    placeholder="Search by name, phone, or site..."
+                                    className="w-full px-3.5 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <select
+                                value={pickerTagFilter}
+                                onChange={(e) => setPickerTagFilter(e.target.value)}
+                                className="px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All Groups / Tags</option>
+                                {availableTags.map(tag => (
+                                    <option key={tag} value={tag}>{tag}</option>
+                                ))}
+                            </select>
+                            <button
+                                type="button"
+                                onClick={handleToggleSelectAllPicker}
+                                className="px-3 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition"
+                            >
+                                {selectedPhonebookIds.size === getFilteredPickerContacts().length && getFilteredPickerContacts().length > 0 ? "Deselect All" : "Select All"}
+                            </button>
+                        </div>
+
+                        {/* Contacts List */}
+                        <div className="flex-1 overflow-y-auto divide-y divide-gray-100 py-2">
+                            {isLoadingAudience ? (
+                                <div className="p-12 text-center text-gray-400">
+                                    <RefreshCw size={24} className="animate-spin mx-auto mb-2" />
+                                    Loading contacts...
+                                </div>
+                            ) : getFilteredPickerContacts().length === 0 ? (
+                                <div className="p-12 text-center text-gray-400 font-medium text-xs">
+                                    No contacts match criteria.
+                                </div>
+                            ) : (
+                                getFilteredPickerContacts().map((c) => {
+                                    const isSelected = selectedPhonebookIds.has(c.id);
+                                    return (
+                                        <div
+                                            key={c.id}
+                                            onClick={() => handleToggleSelectOnePicker(c.id)}
+                                            className={`p-3 flex items-center justify-between cursor-pointer rounded-xl transition ${
+                                                isSelected ? 'bg-blue-50/60' : 'hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <div className="flex items-center space-x-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => {}}
+                                                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 pointer-events-none"
+                                                />
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-900">{c.name}</p>
+                                                    <p className="text-[11px] text-gray-500 font-mono">{formatPhoneDisplay(c.phone)}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                {c.site && (
+                                                    <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full mr-2">
+                                                        {c.site}
+                                                    </span>
+                                                )}
+                                                {c.tags && c.tags.length > 0 && (
+                                                    <span className="text-[10px] font-bold text-blue-600 bg-blue-100/60 px-2 py-0.5 rounded-full">
+                                                        {c.tags[0]}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-700">
+                                {selectedPhonebookIds.size.toLocaleString()} contacts selected
+                            </span>
+                            <div className="space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPhonebookPicker(false)}
+                                    className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition"
                                 >
-                                    <Send size={18} />
-                                    <span>{isSending ? 'Sending Campaign...' : 'Launch Campaign'}</span>
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmPhonebookSelection}
+                                    disabled={selectedPhonebookIds.size === 0}
+                                    className="px-5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition disabled:opacity-50"
+                                >
+                                    Use Selected Contacts
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
+            )}
         </div>
     );
 };

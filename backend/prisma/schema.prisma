@@ -1210,3 +1210,59 @@ model PartnerApplication {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+model BroadcastContact {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  email     String?
+  site      String?
+  gender    String?
+  title     String?
+  tags      String[] @default([])
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs      BroadcastRecipientLog[]
+
+  @@index([phone])
+}
+
+model BroadcastCampaign {
+  id              String   @id @default(uuid())
+  title           String
+  channel         String   // SMS or EMAIL
+  senderId        String
+  subject         String?
+  messageTemplate String   @db.Text
+  totalRecipients Int      @default(0)
+  successCount    Int      @default(0)
+  failedCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  recipientLogs   BroadcastRecipientLog[]
+
+  @@index([createdAt])
+}
+
+model BroadcastRecipientLog {
+  id            String             @id @default(uuid())
+  campaignId    String
+  contactId     String?
+  name          String?
+  phone         String?
+  email         String?
+  status        String             // SUCCESS or FAILED
+  failureReason String?            @db.Text
+  sentAt        DateTime           @default(now())
+
+  campaign      BroadcastCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact       BroadcastContact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId])
+  @@index([status])
+  @@index([phone])
+}
+

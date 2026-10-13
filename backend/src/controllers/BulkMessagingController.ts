@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AIConciergeService } from '../services/AIConciergeService.js';
 import { SmsService } from '../services/SmsService.js';
 import { EmailService } from '../services/EmailService.js';
+import { normalizePhoneNumber } from '../utils/phoneNormalizer.js';
 
 export const BulkMessagingController = {
     async draftMessage(req: Request, res: Response) {
@@ -39,8 +40,14 @@ export const BulkMessagingController = {
 
                     if (channel === 'SMS') {
                         if (!contact.phone) throw new Error("Missing phone number");
-                        await SmsService.sendSMS(contact.phone, personalizedMessage, senderId);
-                        results.push({ id: contact.id, phone: contact.phone, status: 'Success' });
+                        const targetPhone = normalizePhoneNumber(contact.phone) || contact.phone;
+                        await SmsService.sendSMS(targetPhone, personalizedMessage, senderId);
+                        results.push({ 
+                            id: contact.id, 
+                            name: contact.name,
+                            phone: targetPhone, 
+                            status: 'Success' 
+                        });
                     } else if (channel === 'EMAIL') {
                         if (!contact.email) throw new Error("Missing email address");
                         
@@ -53,12 +60,18 @@ export const BulkMessagingController = {
                             attachments,
                             `${senderName} <${process.env.EMAIL_FROM_ADDRESS}>`
                         );
-                        results.push({ id: contact.id, email: contact.email, status: 'Success' });
+                        results.push({ 
+                            id: contact.id, 
+                            name: contact.name,
+                            email: contact.email, 
+                            status: 'Success' 
+                        });
                     }
 
                 } catch (err: any) {
                     results.push({ 
                         id: contact.id, 
+                        name: contact.name,
                         phone: contact.phone, 
                         email: contact.email,
                         status: 'Failed', 
