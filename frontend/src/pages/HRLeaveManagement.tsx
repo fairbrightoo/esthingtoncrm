@@ -10,17 +10,21 @@ export const HRLeaveManagement = () => {
     const [leaves, setLeaves] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
+    const [search, setSearch] = useState('');
     const [vetModalData, setVetModalData] = useState<{ isOpen: boolean, leaveId: string | null, status: string | null }>({ isOpen: false, leaveId: null, status: null });
     const [vetRemarks, setVetRemarks] = useState('');
 
+    const isDirector = ['MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(user?.role || '');
+    const isHR = user?.role === 'BRANCH_HR';
+
     useEffect(() => {
         fetchLeaves();
-    }, []);
+    }, [user?.role]);
 
     const fetchLeaves = async () => {
         try {
             const token = localStorage.getItem('token');
-            const url = user?.role === 'MANAGING_DIRECTOR' 
+            const url = isDirector 
                 ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/company-leaves`
                 : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/branch-leaves`;
                 
@@ -39,11 +43,11 @@ export const HRLeaveManagement = () => {
         if (!leaveId || !status) return;
 
         try {
-            const endpoint = user?.role === 'MANAGING_DIRECTOR' 
+            const endpoint = isDirector 
                 ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/${leaveId}/approve`
                 : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/${leaveId}/vet`;
             
-            const payload = user?.role === 'MANAGING_DIRECTOR'
+            const payload = isDirector
                 ? { status, mdRemarks: vetRemarks }
                 : { status, hrRemarks: vetRemarks };
 
@@ -58,7 +62,14 @@ export const HRLeaveManagement = () => {
         }
     };
 
-    const filteredLeaves = leaves.filter(l => filter === 'ALL' || l.status === filter);
+    const filteredLeaves = leaves.filter(l => {
+        const matchesFilter = filter === 'ALL' || l.status === filter;
+        const matchesSearch = !search.trim() || 
+            l.user?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+            l.reason?.toLowerCase().includes(search.toLowerCase()) ||
+            l.type?.toLowerCase().includes(search.toLowerCase());
+        return matchesFilter && matchesSearch;
+    });
 
     const getStatusBadge = (status: string) => {
         const styles: Record<string, string> = {
@@ -68,7 +79,13 @@ export const HRLeaveManagement = () => {
             'REJECTED': 'bg-red-100 text-red-800 border-red-200',
         };
         const activeStyle = styles[status] || styles['PENDING_HR_APPROVAL'];
-        return <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${activeStyle}`}>{status.replace(/_/g, ' ')}</span>;
+        
+        let label = status.replace(/_/g, ' ');
+        if (status === 'PENDING_MD_APPROVAL') {
+            label = 'PENDING MD/GMD APPROVAL';
+        }
+
+        return <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${activeStyle}`}>{label}</span>;
     };
 
     return (
@@ -86,42 +103,48 @@ export const HRLeaveManagement = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                    <div className="flex items-center bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm w-1/3">
-                        <Search size={18} className="text-gray-400 mr-2" />
-                        <input type="text" placeholder="Search by name..." className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-full" />
+                <div className="p-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-4">
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-1/3">
+                        <Search size={18} className="text-gray-400 mr-2 shrink-0" />
+                        <input 
+                            type="text" 
+                            placeholder="Search by employee name or reason..." 
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-full" 
+                        />
                     </div>
                     <select 
-                        className="bg-white border text-sm rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 shadow-sm"
+                        className="bg-white border text-sm rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 shadow-sm font-medium"
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
                     >
                         <option value="ALL">All Requests</option>
                         <option value="PENDING_HR_APPROVAL">HR Queue</option>
-                        <option value="PENDING_MD_APPROVAL">MD Queue</option>
+                        <option value="PENDING_MD_APPROVAL">MD / GMD Queue</option>
                         <option value="APPROVED">Approved</option>
                         <option value="REJECTED">Rejected</option>
                     </select>
                 </div>
 
                 {loading ? (
-                    <div className="p-10 text-center text-gray-500">Loading leave requests...</div>
+                    <div className="p-10 text-center text-gray-500 font-medium">Loading leave requests...</div>
                 ) : filteredLeaves.length === 0 ? (
                     <div className="p-10 text-center text-gray-500 flex flex-col items-center">
                         <CalendarClock size={48} className="text-gray-300 mb-4" />
-                        <p>No leave requests found matching the current filter.</p>
+                        <p className="font-medium text-gray-700">No leave requests found matching the current filter.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                            <thead className="bg-gray-50 text-gray-600 border-b border-gray-200 uppercase text-xs tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4 font-medium">Employee</th>
-                                    <th className="px-6 py-4 font-medium">Leave Type</th>
-                                    <th className="px-6 py-4 font-medium">Duration</th>
-                                    <th className="px-6 py-4 font-medium">Reason</th>
-                                    <th className="px-6 py-4 font-medium">Status</th>
-                                    <th className="px-6 py-4 font-medium text-right">Actions</th>
+                                    <th className="px-6 py-4 font-semibold">Employee</th>
+                                    <th className="px-6 py-4 font-semibold">Leave Type</th>
+                                    <th className="px-6 py-4 font-semibold">Duration</th>
+                                    <th className="px-6 py-4 font-semibold">Reason</th>
+                                    <th className="px-6 py-4 font-semibold">Status</th>
+                                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -133,8 +156,8 @@ export const HRLeaveManagement = () => {
                                         </td>
                                         <td className="px-6 py-4 font-medium text-gray-700">{leave.type}</td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center text-gray-600">
-                                                <Clock size={14} className="mr-1.5" />
+                                            <div className="flex items-center text-gray-600 text-xs font-medium">
+                                                <Clock size={14} className="mr-1.5 text-gray-400" />
                                                 <span>{new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}</span>
                                             </div>
                                         </td>
@@ -143,27 +166,68 @@ export const HRLeaveManagement = () => {
                                                 {leave.reason}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">{getStatusBadge(leave.status)}</td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            {(user?.role === 'BRANCH_HR' && leave.status === 'PENDING_HR_APPROVAL') && (
-                                                <div className="flex space-x-2">
-                                                    <button onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'PENDING_MD_APPROVAL' })} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-colors" title="Recommend to MD">
-                                                        <CheckCircle size={18} />
+                                        <td className="px-6 py-4">
+                                            {getStatusBadge(leave.status)}
+                                            {leave.mdRemarks && (
+                                                <p className="text-[11px] text-gray-500 mt-1 max-w-[200px] truncate" title={leave.mdRemarks}>
+                                                    <span className="font-semibold text-gray-700">Remark:</span> {leave.mdRemarks}
+                                                </p>
+                                            )}
+                                            {leave.hrRemarks && !leave.mdRemarks && (
+                                                <p className="text-[11px] text-gray-500 mt-1 max-w-[200px] truncate" title={leave.hrRemarks}>
+                                                    <span className="font-semibold text-gray-700">HR:</span> {leave.hrRemarks}
+                                                </p>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {/* HR Vetting Actions (HR can recommend to MD/GMD or reject if pending HR approval) */}
+                                            {isHR && leave.status === 'PENDING_HR_APPROVAL' && (
+                                                <div className="flex items-center justify-end space-x-2">
+                                                    <button 
+                                                        onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'PENDING_MD_APPROVAL' })} 
+                                                        className="text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold shadow-sm" 
+                                                        title="Recommend to MD / GMD"
+                                                    >
+                                                        <CheckCircle size={14} className="mr-1" />
+                                                        <span>Recommend</span>
                                                     </button>
-                                                    <button onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'REJECTED' })} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg transition-colors" title="Reject Request">
-                                                        <XCircle size={18} />
+                                                    <button 
+                                                        onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'REJECTED' })} 
+                                                        className="text-red-700 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold shadow-sm" 
+                                                        title="Reject Request"
+                                                    >
+                                                        <XCircle size={14} className="mr-1" />
+                                                        <span>Reject</span>
                                                     </button>
                                                 </div>
                                             )}
-                                            {(user?.role === 'MANAGING_DIRECTOR' && leave.status === 'PENDING_MD_APPROVAL') && (
-                                                <>
-                                                    <button onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'APPROVED' })} className="flex items-center px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors">
-                                                        <CheckCircle size={14} className="mr-1" /> Approve
+
+                                            {/* Director Actions: Both MD & GMD can approve or deny in MD Queue OR override HR if in HR Queue */}
+                                            {isDirector && (leave.status === 'PENDING_MD_APPROVAL' || leave.status === 'PENDING_HR_APPROVAL') && (
+                                                <div className="flex items-center justify-end space-x-2">
+                                                    <button 
+                                                        onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'APPROVED' })} 
+                                                        className="flex items-center px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors shadow-sm"
+                                                        title={leave.status === 'PENDING_HR_APPROVAL' ? "Direct Approve (Override HR)" : "Approve Leave Request"}
+                                                    >
+                                                        <CheckCircle size={14} className="mr-1" />
+                                                        <span>{leave.status === 'PENDING_HR_APPROVAL' ? 'Direct Approve' : 'Approve'}</span>
                                                     </button>
-                                                    <button onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'REJECTED' })} className="flex items-center mt-2 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors">
-                                                        <XCircle size={14} className="mr-1" /> Deny
+                                                    <button 
+                                                        onClick={() => setVetModalData({ isOpen: true, leaveId: leave.id, status: 'REJECTED' })} 
+                                                        className="flex items-center px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors shadow-sm"
+                                                        title="Deny / Reject Leave Request"
+                                                    >
+                                                        <XCircle size={14} className="mr-1" />
+                                                        <span>Deny</span>
                                                     </button>
-                                                </>
+                                                </div>
+                                            )}
+
+                                            {(leave.status === 'APPROVED' || leave.status === 'REJECTED') && (
+                                                <span className="text-xs text-gray-400 font-medium italic">
+                                                    Completed
+                                                </span>
                                             )}
                                         </td>
                                     </tr>
@@ -180,22 +244,49 @@ export const HRLeaveManagement = () => {
                     <form onSubmit={submitVetLeave} className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col transform transition-all">
                         <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <h3 className="text-lg font-bold text-gray-900">
-                                {vetModalData.status === 'APPROVED' ? 'Approve Leave' : vetModalData.status === 'REJECTED' ? 'Reject Leave' : 'Recommend Leave'}
+                                {vetModalData.status === 'APPROVED' 
+                                    ? (isDirector ? 'Authorize Leave Request' : 'Approve Leave') 
+                                    : vetModalData.status === 'REJECTED' 
+                                    ? 'Reject Leave Request' 
+                                    : 'Recommend Leave to Executives'}
                             </h3>
                             <button type="button" onClick={() => setVetModalData({ isOpen: false, leaveId: null, status: null })} className="text-gray-400 hover:text-gray-600 transition">
                                 <XCircle size={20} />
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <p className="text-sm text-gray-600">Please provide optional remarks or reasons for this action.</p>
+                            <p className="text-sm text-gray-600">
+                                {vetModalData.status === 'APPROVED' 
+                                    ? 'Confirm authorization for this employee time-off request. You may add executive remarks below.'
+                                    : 'Please provide optional remarks or reasons for this action.'}
+                            </p>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Remarks (Optional)</label>
-                                <textarea rows={3} value={vetRemarks} onChange={e => setVetRemarks(e.target.value)} className="w-full bg-gray-50 border border-gray-200 focus:bg-white rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" placeholder="Enter your remarks..."></textarea>
+                                <textarea 
+                                    rows={3} 
+                                    value={vetRemarks} 
+                                    onChange={e => setVetRemarks(e.target.value)} 
+                                    className="w-full bg-gray-50 border border-gray-200 focus:bg-white rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" 
+                                    placeholder="Enter your remarks..."
+                                />
                             </div>
                         </div>
                         <div className="px-6 py-4 border-t border-gray-50 bg-gray-50 flex justify-end space-x-3">
-                            <button type="button" onClick={() => {setVetModalData({ isOpen: false, leaveId: null, status: null }); setVetRemarks('');}} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-all">Cancel</button>
-                            <button type="submit" className={`px-5 py-2 text-sm font-semibold text-white rounded-xl shadow-sm transition-all ${vetModalData.status === 'REJECTED' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20'}`}>
+                            <button 
+                                type="button" 
+                                onClick={() => {setVetModalData({ isOpen: false, leaveId: null, status: null }); setVetRemarks('');}} 
+                                className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                className={`px-5 py-2 text-sm font-semibold text-white rounded-xl shadow-sm transition-all ${
+                                    vetModalData.status === 'REJECTED' 
+                                        ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' 
+                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20'
+                                }`}
+                            >
                                 Confirm Action
                             </button>
                         </div>
@@ -205,3 +296,4 @@ export const HRLeaveManagement = () => {
         </div>
     );
 };
+
