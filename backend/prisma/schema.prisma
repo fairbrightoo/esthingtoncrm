@@ -450,6 +450,11 @@ model Sale {
   discountCode           DiscountCode?   @relation(fields: [discountCodeId], references: [id])
   refundRequests         RefundRequest[]
   deletionLog            SaleDeletionLog?
+
+  @@index([status])
+  @@index([marketerId])
+  @@index([plotId])
+  @@index([leadId])
 }
 
 model Payment {
@@ -487,6 +492,12 @@ model Payment {
   approvedByUser User?            @relation("PaymentApproved", fields: [approvedByUserId], references: [id])
   sale           Sale             @relation(fields: [saleId], references: [id])
   messages       PaymentMessage[]
+
+  @@index([status])
+  @@index([date])
+  @@index([saleId])
+  @@index([receivingBranchId])
+  @@index([amount, method, date])
 }
 
 model PaymentMessage {

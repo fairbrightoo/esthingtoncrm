@@ -143,23 +143,36 @@ export const ManagingDirectorDashboard = () => {
         }
     };
 
+    const fetchPersonalStats = async () => {
+        try {
+            const statsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setPersonalStats(statsRes.data);
+        } catch (error) {
+            console.error("Failed to fetch personal stats", error);
+        }
+    };
+
+    // Priority load: Fetch pending payments immediately on mount
     useEffect(() => {
+        if (!token) return;
         fetchPendingPayments();
-        fetchProcessedPayments();
-        fetchRequisitions();
-        
-        const fetchPersonalStats = async () => {
-            try {
-                const statsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/stats?scope=PERSONAL`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setPersonalStats(statsRes.data);
-            } catch (error) {
-                console.error("Failed to fetch personal stats", error);
-            }
-        };
-        fetchPersonalStats();
     }, [token]);
+
+    // Lazy load non-approvals tab data on demand to optimize performance
+    useEffect(() => {
+        if (!token) return;
+        if (activeTab === 'HISTORY' && processedData.directSales.length === 0 && processedData.outboundCrossSales.length === 0 && processedData.inboundCrossSales.length === 0 && processedData.bankConfirmations.length === 0) {
+            fetchProcessedPayments();
+        }
+        if ((activeTab === 'FUNDS_REQUEST' || activeTab === 'HISTORY') && requisitions.length === 0 && processedRequisitions.length === 0) {
+            fetchRequisitions();
+        }
+        if (activeTab === 'PERFORMANCE' && !personalStats) {
+            fetchPersonalStats();
+        }
+    }, [activeTab, token]);
 
     const handleUpdateStatus = (paymentId: string, status: 'APPROVED' | 'REJECTED', isBankConfirm: boolean = false) => {
         setConfirmModal({ isOpen: true, paymentId, status, rejectionReason: '', isBankConfirm });
@@ -549,22 +562,48 @@ export const ManagingDirectorDashboard = () => {
 
             {activeTab === 'APPROVALS' && (
                 <div className="bg-white rounded-xl shadow-sm border overflow-hidden p-6">
-                    <div className="flex border-b border-gray-200 mb-4 space-x-6">
-                        <button onClick={() => { setApprovalSubTab('DIRECT'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 ${approvalSubTab === 'DIRECT' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
-                            Direct Sales ({pendingData.directSales.length})
+                    <div className="flex border-b border-gray-200 mb-4 space-x-6 overflow-x-auto">
+                        <button onClick={() => { setApprovalSubTab('DIRECT'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${approvalSubTab === 'DIRECT' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                            <span>Direct Sales</span>
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${
+                                approvalSubTab === 'DIRECT' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                                {loading ? '...' : pendingData.directSales.length}
+                            </span>
                         </button>
-                        <button onClick={() => { setApprovalSubTab('INBOUND'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 ${approvalSubTab === 'INBOUND' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
-                            Inbound Cross-Sales ({pendingData.inboundCrossSales.length})
+                        <button onClick={() => { setApprovalSubTab('INBOUND'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${approvalSubTab === 'INBOUND' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                            <span>Inbound Cross-Sales</span>
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${
+                                approvalSubTab === 'INBOUND' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                                {loading ? '...' : pendingData.inboundCrossSales.length}
+                            </span>
                         </button>
-                        <button onClick={() => { setApprovalSubTab('OUTBOUND'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 ${approvalSubTab === 'OUTBOUND' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
-                            Outbound Cross-Sales ({pendingData.outboundCrossSales.length})
+                        <button onClick={() => { setApprovalSubTab('OUTBOUND'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${approvalSubTab === 'OUTBOUND' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                            <span>Outbound Cross-Sales</span>
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${
+                                approvalSubTab === 'OUTBOUND' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                                {loading ? '...' : pendingData.outboundCrossSales.length}
+                            </span>
                         </button>
-                        <button onClick={() => { setApprovalSubTab('BANK'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 ${approvalSubTab === 'BANK' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
-                            Bank Confirmations ({pendingData.bankConfirmations.length})
+                        <button onClick={() => { setApprovalSubTab('BANK'); setPayPage(1); }} className={`pb-2 text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${approvalSubTab === 'BANK' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                            <span>Bank Confirmations</span>
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${
+                                approvalSubTab === 'BANK' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                                {loading ? '...' : pendingData.bankConfirmations.length}
+                            </span>
                         </button>
                     </div>
 
-                    {loading ? <div className="text-center py-10 text-gray-500">Loading...</div> : 
+                    {loading ? (
+                        <div className="py-16 flex flex-col items-center justify-center text-gray-400">
+                            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
+                            <p className="text-sm font-medium text-gray-600">Loading pending approvals...</p>
+                            <p className="text-xs text-gray-400 mt-1">Checking direct sales, cross-sales, and bank confirmations</p>
+                        </div>
+                    ) : 
                         approvalSubTab === 'DIRECT' ? renderPaymentTable(pendingData.directSales) :
                         approvalSubTab === 'INBOUND' ? renderPaymentTable(pendingData.inboundCrossSales) :
                         approvalSubTab === 'OUTBOUND' ? renderPaymentTable(pendingData.outboundCrossSales) :

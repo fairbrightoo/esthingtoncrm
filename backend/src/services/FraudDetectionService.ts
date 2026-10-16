@@ -2,6 +2,129 @@ import prisma from '../config/prisma.js';
 
 export class FraudDetectionService {
     static async enrichWithFraudWarnings(payments: any[]) {
+        if (!payments || payments.length === 0) {
+            return [];
+        }
+
+        // 1. Collect all receipt hashes across all payments
+        const allHashesSet = new Set<string>();
+        const paymentHashesMap = new Map<string, string[]>();
+
+        for (const payment of payments) {
+            if (payment.receiptHashes) {
+                try {
+                    const parsed = JSON.parse(payment.receiptHashes);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        const validHashes = parsed.filter(Boolean);
+                        paymentHashesMap.set(payment.id, validHashes);
+                        validHashes.forEach(h => allHashesSet.add(h));
+                    }
+                } catch (e) {}
+            }
+        }
+
+        // 2. Collect date range, unique amounts, and unique methods for behavioral match
+        const validDates = payments
+            .map(p => new Date(p.date).getTime())
+            .filter(t => !isNaN(t));
+
+        let minDate: Date | null = null;
+        let maxDate: Date | null = null;
+
+        if (validDates.length > 0) {
+            const minTime = Math.min(...validDates);
+            const maxTime = Math.max(...validDates);
+            minDate = new Date(minTime);
+            minDate.setHours(0, 0, 0, 0);
+            maxDate = new Date(maxTime);
+            maxDate.setHours(23, 59, 59, 999);
+        }
+
+        const uniqueAmounts = Array.from(new Set(payments.map(p => p.amount)));
+        const uniqueMethods = Array.from(new Set(payments.map(p => p.method).filter(Boolean)));
+
+        // Run batch queries in parallel: 1 query for hash candidates, 1 query for behavioral candidates
+        const [hashCandidatePayments, behavioralCandidatePayments] = await Promise.all([
+            allHashesSet.size > 0
+                ? prisma.payment.findMany({
+                    where: {
+                        OR: Array.from(allHashesSet).map(hash => ({
+                            receiptHashes: { contains: `"${hash}"` }
+                        }))
+                    },
+                    select: {
+                        id: true,
+                        amount: true,
+                        status: true,
+                        proofOfPaymentUrl: true,
+                        receiptHashes: true,
+                        date: true,
+                        method: true,
+                        sale: {
+                            select: {
+                                marketer: {
+                                    select: {
+                                        fullName: true,
+                                        branch: {
+                                            select: {
+                                                name: true,
+                                                company: { select: { name: true } }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                : Promise.resolve([]),
+
+            minDate && maxDate && uniqueAmounts.length > 0 && uniqueMethods.length > 0
+                ? prisma.payment.findMany({
+                    where: {
+                        amount: { in: uniqueAmounts },
+                        method: { in: uniqueMethods },
+                        date: { gte: minDate, lte: maxDate }
+                    },
+                    select: {
+                        id: true,
+                        amount: true,
+                        status: true,
+                        proofOfPaymentUrl: true,
+                        date: true,
+                        method: true,
+                        sale: {
+                            select: {
+                                marketer: {
+                                    select: {
+                                        fullName: true,
+                                        branch: {
+                                            select: {
+                                                name: true,
+                                                company: { select: { name: true } }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                : Promise.resolve([])
+        ]);
+
+        // Pre-index behavioral matches by `amount_method_dateString`
+        const behavioralByBucket = new Map<string, any[]>();
+        for (const candidate of behavioralCandidatePayments) {
+            const dateStr = new Date(candidate.date).toDateString();
+            const key = `${candidate.amount}_${candidate.method}_${dateStr}`;
+            if (!behavioralByBucket.has(key)) {
+                behavioralByBucket.set(key, []);
+            }
+            behavioralByBucket.get(key)!.push(candidate);
+        }
+
+        // Process each payment in memory in O(1)
         const enrichedPayments = [];
 
         for (const payment of payments) {
@@ -9,56 +132,24 @@ export class FraudDetectionService {
             let totalClaimedValue = payment.amount;
             const duplicateDetails: any[] = [];
 
-            // 1. Exact Hash Match
-            let hashMatches: any[] = [];
-            if (payment.receiptHashes) {
-                let parsedHashes: string[] = [];
-                try {
-                    parsedHashes = JSON.parse(payment.receiptHashes);
-                } catch (e) {}
-
-                if (parsedHashes.length > 0) {
-                    const orConditions = parsedHashes.map((hash: string) => ({
-                        receiptHashes: { contains: `"${hash}"` }
-                    }));
-
-                    hashMatches = await prisma.payment.findMany({
-                        where: {
-                            id: { not: payment.id },
-                            OR: orConditions
-                        },
-                        include: {
-                            sale: {
-                                include: {
-                                    marketer: { include: { branch: { include: { company: true } } } }
-                                }
-                            }
-                        }
-                    });
+            // 1. Check exact hash matches
+            const hashMatches: any[] = [];
+            const pHashes = paymentHashesMap.get(payment.id);
+            if (pHashes && pHashes.length > 0) {
+                for (const candidate of hashCandidatePayments) {
+                    if (candidate.id === payment.id) continue;
+                    if (!candidate.receiptHashes) continue;
+                    const isMatch = pHashes.some(h => candidate.receiptHashes?.includes(`"${h}"`));
+                    if (isMatch) {
+                        hashMatches.push(candidate);
+                    }
                 }
             }
 
-            // 2. Behavioral Match (Same Date, Amount, Method)
-            const startOfDay = new Date(payment.date);
-            startOfDay.setHours(0, 0, 0, 0);
-            const endOfDay = new Date(payment.date);
-            endOfDay.setHours(23, 59, 59, 999);
-
-            const behavioralMatches = await prisma.payment.findMany({
-                where: {
-                    id: { not: payment.id },
-                    amount: payment.amount,
-                    method: payment.method,
-                    date: { gte: startOfDay, lte: endOfDay }
-                },
-                include: {
-                    sale: {
-                        include: {
-                            marketer: { include: { branch: { include: { company: true } } } }
-                        }
-                    }
-                }
-            });
+            // 2. Check behavioral match
+            const pDateStr = new Date(payment.date).toDateString();
+            const pKey = `${payment.amount}_${payment.method}_${pDateStr}`;
+            const behavioralMatches = (behavioralByBucket.get(pKey) || []).filter(c => c.id !== payment.id);
 
             // Combine unique matches
             const allMatchesMap = new Map();

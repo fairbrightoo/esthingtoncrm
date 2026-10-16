@@ -428,15 +428,7 @@ export const SaleController = {
                                     estate: {
                                         include: {
                                             company: true,
-                                            branch: {
-                                                include: {
-                                                    users: {
-                                                        where: { role: 'ACCOUNTANT', isActive: true },
-                                                        take: 1
-                                                    }
-                                                }
-                                            },
-                                            plotConfigs: true
+                                            branch: true
                                         }
                                     } 
                                 } 
@@ -615,15 +607,7 @@ export const SaleController = {
                                     estate: {
                                         include: {
                                             company: true,
-                                            branch: {
-                                                include: {
-                                                    users: {
-                                                        where: { role: 'ACCOUNTANT', isActive: true },
-                                                        take: 1
-                                                    }
-                                                }
-                                            },
-                                            plotConfigs: true
+                                            branch: true
                                         }
                                     } 
                                 } 
