@@ -85,7 +85,15 @@ export const LegacySaleRequestController = {
                 where: whereClause,
                 include: {
                     estate: { select: { name: true, company: true, branch: true } },
-                    assignedPlot: { select: { plotNumber: true } }
+                    assignedPlot: { select: { plotNumber: true } },
+                    requestingBranch: { 
+                        select: { 
+                            name: true,
+                            company: { select: { name: true } }
+                        } 
+                    },
+                    requestingCompany: { select: { name: true } },
+                    requestingUser: { select: { fullName: true } }
                 },
                 orderBy: { createdAt: 'desc' }
             });
@@ -111,6 +119,7 @@ export const LegacySaleRequestController = {
                 where: whereClause,
                 include: {
                     estate: { select: { name: true } },
+                    assignedPlot: { select: { plotNumber: true } },
                     requestingCompany: { select: { name: true } },
                     requestingBranch: { 
                         select: { 

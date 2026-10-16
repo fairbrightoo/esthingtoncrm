@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { FileText, Send, Inbox, CheckCircle, XCircle, Search, Edit2 } from 'lucide-react';
+import { FileText, Send, Inbox, CheckCircle, XCircle, Search, Edit2, X } from 'lucide-react';
 
 export const LegacySalesRequests = () => {
     const { token, user } = useAuth();
@@ -13,6 +13,9 @@ export const LegacySalesRequests = () => {
     const [receivedRequests, setReceivedRequests] = useState<any[]>([]);
     const [estates, setEstates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [recipientProfileType, setRecipientProfileType] = useState<'INDIVIDUAL' | 'JOINT' | 'CORPORATE'>('INDIVIDUAL');
@@ -210,6 +213,52 @@ export const LegacySalesRequests = () => {
         }
     };
 
+    const matchesSearch = (req: any, query: string) => {
+        if (!query.trim()) return true;
+        const term = query.trim().toLowerCase();
+        const termDigits = query.replace(/\D/g, '');
+
+        const clientName = (req.clientName || '').toLowerCase();
+        const clientPhone = (req.clientPhone || '').toLowerCase();
+        const clientPhoneDigits = (req.clientPhone || '').replace(/\D/g, '');
+        const clientEmail = (req.clientEmail || '').toLowerCase();
+        const estateName = (req.estate?.name || '').toLowerCase();
+        const requestedPlot = (req.requestedPlotNumber || '').toLowerCase();
+        const assignedPlot = (req.assignedPlot?.plotNumber || '').toLowerCase();
+        const prototype = (req.prototype || '').toLowerCase();
+        const size = req.size ? String(req.size).toLowerCase() : '';
+        const notes = (req.notes || '').toLowerCase();
+        const marketerEmail = (req.marketerEmail || '').toLowerCase();
+        const requestingUserName = (req.requestingUser?.fullName || '').toLowerCase();
+        const branchName = (req.requestingBranch?.name || req.estate?.branch?.name || '').toLowerCase();
+        const companyName = (req.requestingBranch?.company?.name || req.requestingCompany?.name || req.estate?.company?.name || '').toLowerCase();
+
+        const phoneMatch = clientPhone.includes(term) || (termDigits.length >= 4 && clientPhoneDigits.includes(termDigits));
+
+        return (
+            clientName.includes(term) ||
+            phoneMatch ||
+            clientEmail.includes(term) ||
+            estateName.includes(term) ||
+            requestedPlot.includes(term) ||
+            assignedPlot.includes(term) ||
+            prototype.includes(term) ||
+            size.includes(term) ||
+            notes.includes(term) ||
+            marketerEmail.includes(term) ||
+            requestingUserName.includes(term) ||
+            branchName.includes(term) ||
+            companyName.includes(term)
+        );
+    };
+
+    const currentRequests = activeTab === 'SENT' ? sentRequests : receivedRequests;
+    const filteredRequests = currentRequests.filter(req => {
+        const matchesQuery = matchesSearch(req, searchQuery);
+        const matchesStatus = statusFilter === 'ALL' || req.status === statusFilter;
+        return matchesQuery && matchesStatus;
+    });
+
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-12">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -229,24 +278,108 @@ export const LegacySalesRequests = () => {
                 </button>
             </header>
 
-            <div className="flex space-x-2 border-b border-gray-200">
-                <button
-                    onClick={() => setActiveTab('SENT')}
-                    className={`px-6 py-3 font-semibold text-sm transition-colors flex items-center ${activeTab === 'SENT' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    <Send size={16} className="mr-2" />
-                    Sent Requests
-                </button>
-                {['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role || '') && (
+            {/* TABS & SEARCH BAR */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-200 pb-2">
+                <div className="flex space-x-2">
                     <button
-                        onClick={() => setActiveTab('RECEIVED')}
-                        className={`px-6 py-3 font-semibold text-sm transition-colors flex items-center ${activeTab === 'RECEIVED' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-gray-500 hover:text-gray-700'}`}
+                        onClick={() => setActiveTab('SENT')}
+                        className={`px-6 py-3 font-semibold text-sm transition-colors rounded-t-xl flex items-center ${
+                            activeTab === 'SENT' 
+                                ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' 
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
                     >
-                        <Inbox size={16} className="mr-2" />
-                        Received Requests
+                        <Send size={16} className="mr-2" />
+                        Sent Requests
+                        <span className={`ml-2 px-2 py-0.5 text-xs rounded-full font-bold ${
+                            activeTab === 'SENT' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                            {sentRequests.length}
+                        </span>
                     </button>
-                )}
+                    {['BRANCH_ADMIN', 'SUPER_ADMIN', 'MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role || '') && (
+                        <button
+                            onClick={() => setActiveTab('RECEIVED')}
+                            className={`px-6 py-3 font-semibold text-sm transition-colors rounded-t-xl flex items-center ${
+                                activeTab === 'RECEIVED' 
+                                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' 
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            <Inbox size={16} className="mr-2" />
+                            Received Requests
+                            <span className={`ml-2 px-2 py-0.5 text-xs rounded-full font-bold ${
+                                activeTab === 'RECEIVED' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                                {receivedRequests.length}
+                            </span>
+                        </button>
+                    )}
+                </div>
+
+                {/* SEARCH & FILTERS */}
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pb-2 lg:pb-0">
+                    <div className="relative flex-1 sm:w-80 md:w-96">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search client, site/estate, phone, plot..."
+                            className="w-full pl-10 pr-9 py-2 bg-white border border-gray-200 rounded-xl text-sm placeholder:text-gray-400 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100 transition"
+                                title="Clear search"
+                            >
+                                <X size={15} />
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs md:text-sm font-semibold text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
+                        >
+                            <option value="ALL">All Status</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
+
+                        {(searchQuery || statusFilter !== 'ALL') && (
+                            <button
+                                onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); }}
+                                className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold px-2.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 transition whitespace-nowrap"
+                                title="Reset all filters"
+                            >
+                                Reset
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
+
+            {/* SEARCH RESULTS SUMMARY (when filtered) */}
+            {(searchQuery || statusFilter !== 'ALL') && (
+                <div className="flex items-center justify-between text-xs text-gray-600 bg-indigo-50/50 border border-indigo-100 px-4 py-2 rounded-xl">
+                    <span>
+                        Showing <strong className="text-indigo-900">{filteredRequests.length}</strong> of <strong className="text-gray-700">{currentRequests.length}</strong> {activeTab.toLowerCase()} requests
+                        {searchQuery && <span> matching "<strong className="text-indigo-900">{searchQuery}</strong>"</span>}
+                        {statusFilter !== 'ALL' && <span> with status <strong className="text-indigo-900">{statusFilter}</strong></span>}
+                    </span>
+                    <button
+                        onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); }}
+                        className="text-indigo-600 hover:text-indigo-800 font-semibold underline ml-3"
+                    >
+                        Clear search
+                    </button>
+                </div>
+            )}
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 {loading ? (
@@ -264,22 +397,53 @@ export const LegacySalesRequests = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 text-sm">
-                                {(activeTab === 'SENT' ? sentRequests : receivedRequests).length === 0 ? (
+                                {filteredRequests.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium">
-                                            No requests found.
+                                            {currentRequests.length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center py-6">
+                                                    <Inbox className="w-10 h-10 text-gray-300 mb-2" />
+                                                    <p className="text-gray-600 font-semibold">No requests found.</p>
+                                                    <p className="text-gray-400 text-xs mt-1">
+                                                        {activeTab === 'SENT' 
+                                                            ? 'Requests you submit for offline onboarding will appear here.' 
+                                                            : 'Requests awaiting approval for your managed estates will appear here.'}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-6">
+                                                    <Search className="w-10 h-10 text-gray-300 mb-2" />
+                                                    <p className="text-gray-700 font-bold">No requests match your search criteria</p>
+                                                    <p className="text-gray-400 text-xs mt-1">
+                                                        No {activeTab.toLowerCase()} requests matched "{searchQuery}"{statusFilter !== 'ALL' ? ` with status ${statusFilter}` : ''}.
+                                                    </p>
+                                                    <button
+                                                        onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); }}
+                                                        className="mt-3 px-4 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition"
+                                                    >
+                                                        Clear Search & Filters
+                                                    </button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ) : (
-                                    (activeTab === 'SENT' ? sentRequests : receivedRequests).map((req) => (
+                                    filteredRequests.map((req) => (
                                         <tr key={req.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <p className="font-bold text-gray-800">{req.clientName}</p>
                                                 <p className="text-gray-500 text-xs mt-1">{req.clientPhone}</p>
-                                                {activeTab === 'RECEIVED' && (
+                                                {req.clientEmail && <p className="text-gray-400 text-[11px] truncate max-w-[200px]">{req.clientEmail}</p>}
+                                                {activeTab === 'RECEIVED' ? (
                                                     <p className="text-[10px] text-indigo-600 font-semibold mt-2 uppercase">
                                                         From: {req.requestingBranch?.company?.name ? `${req.requestingBranch.company.name} | ` : ''}{req.requestingBranch?.name || 'Unknown'}
                                                     </p>
+                                                ) : (
+                                                    (req.requestingBranch?.name || req.requestingUser?.fullName) && ['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GLOBAL_ACCOUNTANT', 'GROUP_MANAGING_DIRECTOR'].includes(user?.role || '') && (
+                                                        <p className="text-[10px] text-gray-500 font-semibold mt-2 uppercase">
+                                                            Submitted by: {req.requestingUser?.fullName ? `${req.requestingUser.fullName} ` : ''}{req.requestingBranch?.name ? `(${req.requestingBranch.name})` : ''}
+                                                        </p>
+                                                    )
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
