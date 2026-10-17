@@ -244,6 +244,9 @@ export const WalletController = {
                 return res.status(403).json({ error: "Access restricted strictly to Super Administrator" });
             }
 
+            // Auto-heal/seed any staff who do not have a wallet yet
+            await WalletService.syncMissingWallets();
+
             const users = await prisma.user.findMany({
                 where: {
                     isActive: true

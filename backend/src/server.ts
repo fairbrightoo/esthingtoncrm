@@ -204,9 +204,14 @@ app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date() });
 });
 
+import { WalletService } from './services/WalletService.js';
+
 if (process.env.NODE_ENV !== 'test') {
     // Start Background Omnichannel Automation
     AutomationService.startCronJobs();
+
+    // Self-healing: auto-seed default tariffs and staff wallets on server boot (including Render production)
+    WalletService.syncMissingWallets().catch((err: any) => console.error("Initial wallet sync error:", err));
 
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

@@ -38,7 +38,49 @@ export const WalletService = {
         return tariff;
     },
 
-    // 2. Get or create wallet for user
+    // 2. Synchronize and seed missing wallets for all staff (Self-healing on server boot)
+    async syncMissingWallets() {
+        try {
+            const tariff = await this.getTariff();
+            const welcomeCredit = tariff.defaultWelcomeCredit || 100.00;
+
+            const usersWithoutWallet = await prisma.user.findMany({
+                where: { wallet: null },
+                select: { id: true, fullName: true, role: true }
+            });
+
+            if (usersWithoutWallet.length > 0) {
+                console.log(`[Wallet Boot Sync] Found ${usersWithoutWallet.length} staff without messaging wallet. Seeding with ₦${welcomeCredit}...`);
+                for (const u of usersWithoutWallet) {
+                    await prisma.userWallet.create({
+                        data: {
+                            userId: u.id,
+                            balance: welcomeCredit,
+                            currency: 'NGN',
+                            transactions: {
+                                create: {
+                                    userId: u.id,
+                                    amount: welcomeCredit,
+                                    balanceAfter: welcomeCredit,
+                                    type: 'CREDIT',
+                                    category: 'ADMIN_GIFT',
+                                    paymentMethod: 'SYSTEM',
+                                    description: 'Welcome Initial Messaging Balance'
+                                }
+                            }
+                        }
+                    }).catch(e => console.error(`Error auto-seeding wallet for ${u.id}:`, e.message));
+                }
+                console.log(`[Wallet Boot Sync] Successfully initialized ${usersWithoutWallet.length} staff wallets.`);
+            } else {
+                console.log(`[Wallet Boot Sync] All staff accounts verified with active messaging wallets.`);
+            }
+        } catch (error: any) {
+            console.error('[Wallet Boot Sync Error]:', error.message);
+        }
+    },
+
+    // 3. Get or create wallet for user
     async getOrCreateWallet(userId: string) {
         let wallet = await prisma.userWallet.findUnique({
             where: { userId },
