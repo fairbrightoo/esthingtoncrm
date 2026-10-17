@@ -152,28 +152,30 @@ export const MyWallet = () => {
                     userName: user?.fullName,
                     purpose: 'MESSAGING_WALLET_TOPUP'
                 },
-                callback: async (response: { reference: string }) => {
+                callback: function(response: { reference: string }) {
                     toast.info("Verifying transaction with Paystack...");
-                    try {
-                        const verifyRes = await axios.post(`${API_URL}/api/wallet/verify-topup`, {
-                            reference: response.reference
-                        }, {
-                            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                        });
+                    (async () => {
+                        try {
+                            const verifyRes = await axios.post(`${API_URL}/api/wallet/verify-topup`, {
+                                reference: response.reference
+                            }, {
+                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                            });
 
-                        toast.success(verifyRes.data.message || `Wallet credited with ₦${finalTopupAmount.toLocaleString()}!`);
-                        fetchWalletData();
-                        setIsCustom(false);
-                        setCustomAmount('');
-                        setSelectedAmount(minTopup);
-                    } catch (verifyErr: any) {
-                        console.error("Verification error:", verifyErr);
-                        toast.error(verifyErr.response?.data?.error || "Payment verification failed. Please contact admin.");
-                    } finally {
-                        setIsProcessingPayment(false);
-                    }
+                            toast.success(verifyRes.data.message || `Wallet credited with ₦${finalTopupAmount.toLocaleString()}!`);
+                            fetchWalletData();
+                            setIsCustom(false);
+                            setCustomAmount('');
+                            setSelectedAmount(minTopup);
+                        } catch (verifyErr: any) {
+                            console.error("Verification error:", verifyErr);
+                            toast.error(verifyErr.response?.data?.error || "Payment verification failed. Please contact admin.");
+                        } finally {
+                            setIsProcessingPayment(false);
+                        }
+                    })();
                 },
-                onClose: () => {
+                onClose: function() {
                     setIsProcessingPayment(false);
                     toast.info("Payment window closed.");
                 }
