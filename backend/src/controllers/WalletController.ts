@@ -14,7 +14,20 @@ export const WalletController = {
             const tariff = await WalletService.getTariff();
 
             // Return Paystack Public Key for frontend inline widget
-            const paystackPublicKey = process.env.PAYSTACK_PUBLIC_KEY || process.env.VITE_PAYSTACK_PUBLIC_KEY || '';
+            const rawPk = 
+                process.env.PAYSTACK_PUBLIC_KEY || 
+                process.env.PAYSTACT_PUBLIC_KEY || 
+                process.env.PAYSTACK_PK || 
+                process.env.VITE_PAYSTACK_PUBLIC_KEY || 
+                process.env.VITE_PAYSTACT_PUBLIC_KEY || 
+                '';
+            let paystackPublicKey = rawPk;
+            if (paystackPublicKey.includes('\n') || paystackPublicKey.includes('PAYSTACK_SECRET_KEY') || paystackPublicKey.includes('PAYSTACT_SECRET_KEY')) {
+                const lines = paystackPublicKey.split(/\r?\n/);
+                const pkLine = lines.find(l => l.includes('pk_')) || lines[0];
+                paystackPublicKey = pkLine.replace(/.*PAYSTACK_PUBLIC_KEY\s*=\s*/i, '').replace(/.*PAYSTACT_PUBLIC_KEY\s*=\s*/i, '');
+            }
+            paystackPublicKey = paystackPublicKey.trim().replace(/^["']|["']$/g, '').trim();
 
             res.json({
                 wallet: {
@@ -38,7 +51,20 @@ export const WalletController = {
     async getTariff(req: Request, res: Response) {
         try {
             const tariff = await WalletService.getTariff();
-            const paystackPublicKey = process.env.PAYSTACK_PUBLIC_KEY || process.env.VITE_PAYSTACK_PUBLIC_KEY || '';
+            const rawPk = 
+                process.env.PAYSTACK_PUBLIC_KEY || 
+                process.env.PAYSTACT_PUBLIC_KEY || 
+                process.env.PAYSTACK_PK || 
+                process.env.VITE_PAYSTACK_PUBLIC_KEY || 
+                process.env.VITE_PAYSTACT_PUBLIC_KEY || 
+                '';
+            let paystackPublicKey = rawPk;
+            if (paystackPublicKey.includes('\n') || paystackPublicKey.includes('PAYSTACK_SECRET_KEY') || paystackPublicKey.includes('PAYSTACT_SECRET_KEY')) {
+                const lines = paystackPublicKey.split(/\r?\n/);
+                const pkLine = lines.find(l => l.includes('pk_')) || lines[0];
+                paystackPublicKey = pkLine.replace(/.*PAYSTACK_PUBLIC_KEY\s*=\s*/i, '').replace(/.*PAYSTACT_PUBLIC_KEY\s*=\s*/i, '');
+            }
+            paystackPublicKey = paystackPublicKey.trim().replace(/^["']|["']$/g, '').trim();
             res.json({ tariff, paystackPublicKey });
         } catch (error: any) {
             console.error("Get Tariff Error:", error);

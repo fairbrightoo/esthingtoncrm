@@ -278,18 +278,60 @@ export const WalletService = {
 
     // 7. Verify Paystack Top-Up server-to-server
     async verifyPaystackTopup(reference: string, userId: string) {
-        const secretKey = process.env.PAYSTACK_SECRET_KEY || 'sk_test_placeholder';
+        // Read secret key supporting multiple spelling variations and stripping quotes/spaces/Bearer prefix
+        const rawSecret = 
+            process.env.PAYSTACK_SECRET_KEY || 
+            process.env.PAYSTACT_SECRET_KEY || 
+            process.env.PAYSTACK_SECRET || 
+            process.env.PAYSTACT_SECRET || 
+            process.env.PAYSTACK_SK || 
+            '';
 
-        if (!secretKey || secretKey === 'sk_test_placeholder') {
-            console.warn('[Paystack Warning] PAYSTACK_SECRET_KEY is not configured or using placeholder.');
+        let secretKey = rawSecret;
+        // In case multiple lines were pasted into one environment variable
+        if (secretKey.includes('\n') || secretKey.includes('PAYSTACK_PUBLIC_KEY') || secretKey.includes('PAYSTACT_PUBLIC_KEY')) {
+            const lines = secretKey.split(/\r?\n/);
+            const skLine = lines.find(l => l.includes('sk_')) || lines[0];
+            secretKey = skLine.replace(/.*PAYSTACK_SECRET_KEY\s*=\s*/i, '').replace(/.*PAYSTACT_SECRET_KEY\s*=\s*/i, '');
+        }
+        secretKey = secretKey.trim().replace(/^["']|["']$/g, '').trim();
+        if (secretKey.startsWith('Bearer ')) {
+            secretKey = secretKey.replace(/^Bearer\s+/i, '').trim();
         }
 
-        // Call Paystack verify endpoint
-        const response = await axios.get(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-            headers: {
-                Authorization: `Bearer ${secretKey}`
+        if (!secretKey || secretKey === 'sk_test_placeholder' || secretKey.includes('placeholder')) {
+            console.error('[Paystack Error] PAYSTACK_SECRET_KEY is missing or using placeholder in backend environment.');
+            throw new Error("PAYSTACK_SECRET_KEY is not configured on the backend server environment. Please add your Paystack Secret Key (starts with sk_test_ or sk_live_) to Render backend Environment Variables.");
+        }
+
+        if (secretKey.startsWith('pk_')) {
+            console.error('[Paystack Error] PAYSTACK_SECRET_KEY is set to a Public Key (pk_...) instead of Secret Key.');
+            throw new Error("Misconfigured key: PAYSTACK_SECRET_KEY starts with 'pk_', which is a Public Key. Paystack transaction verification requires the Secret Key (starts with 'sk_test_' or 'sk_live_'). Please update PAYSTACK_SECRET_KEY in Render backend environment.");
+        }
+
+        console.log(`[Paystack Verification] Calling Paystack API for reference '${reference}' with key prefix '${secretKey.substring(0, 7)}...'`);
+
+        let response;
+        try {
+            response = await axios.get(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+                headers: {
+                    Authorization: `Bearer ${secretKey}`
+                }
+            });
+        } catch (axiosErr: any) {
+            const status = axiosErr.response?.status;
+            const paystackMessage = axiosErr.response?.data?.message || axiosErr.message;
+            console.error('[Paystack API Error]:', {
+                status,
+                data: axiosErr.response?.data,
+                reference
+            });
+
+            if (status === 401) {
+                throw new Error(`Paystack Authorization Failed (401): ${paystackMessage}. Paystack rejected the secret key. Please check that PAYSTACK_SECRET_KEY in your Render backend service matches your Paystack Dashboard Secret Key.`);
             }
-        });
+            throw new Error(`Paystack Verification Error: ${paystackMessage}`);
+        }
 
         const paystackData = response.data?.data;
         if (!paystackData || paystackData.status !== 'success') {
