@@ -7,6 +7,17 @@ export interface Contact {
     gender: string;
     title?: string;
     tags?: string[];
+    // Smart addressing & spreadsheet enrichment
+    phones?: string[];
+    firstName?: string;
+    salutation?: string;
+    plotNumber?: string;
+    houseType?: string;
+    plotSize?: string;
+    address?: string;
+    isCorporate?: boolean;
+    isCouple?: boolean;
+    isJoint?: boolean;
 }
 
 export interface BroadcastContact {

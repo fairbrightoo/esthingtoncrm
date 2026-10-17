@@ -1,26 +1,98 @@
 /**
- * Normalizes phone numbers to standard canonical format.
- * Specifically handles Nigerian phone numbers:
- * - '07045763306' -> '2347045763306'
- * - '+234 704 576 3306' -> '2347045763306'
- * - '7045763306' -> '2347045763306'
- * - '2347045763306' -> '2347045763306'
- * Also handles international numbers by retaining country digits.
+ * Phone Number Normalizer for Bulk Messaging Backend
+ * Handles Nigerian local and international formats, multi-phone delimiters, and diaspora numbers.
  */
-export function normalizePhoneNumber(rawPhone: string | number | null | undefined): string {
+
+/**
+ * Splits a phone string by common delimiters: /, comma, semicolon, &, pipe, newline
+ */
+export function splitPhoneNumbers(raw: string | number | null | undefined): string[] {
+    if (!raw) return [];
+    const str = String(raw).trim();
+    if (!str) return [];
+
+    return str
+        .split(/[/,;&|\n]+/)
+        .map(p => p.trim())
+        .filter(p => p.length >= 7);
+}
+
+/**
+ * Normalizes a single phone number into canonical international digits (no + symbol).
+ */
+export function normalizeSinglePhoneNumber(rawPhone: string | number | null | undefined): string {
     if (!rawPhone) return '';
     let phone = String(rawPhone).trim();
-    // Remove all spaces, dashes, dots, plus signs, brackets
+    // Strip non-digits
     phone = phone.replace(/[^0-9]/g, '');
-
     if (!phone) return '';
 
-    // If starts with 0 and 11 digits long (e.g. 080..., 070..., 090..., 081...)
-    if (phone.startsWith('0') && phone.length === 11) {
-        phone = '234' + phone.substring(1);
-    } else if (phone.length === 10 && (phone.startsWith('7') || phone.startsWith('8') || phone.startsWith('9'))) {
-        phone = '234' + phone;
+    // 1. Nigerian 14-digit typo: +234 080... -> '234080...'
+    if (phone.startsWith('2340') && phone.length === 14) {
+        return '234' + phone.substring(4);
     }
 
-    return phone;
+    // 2. Nigerian 13-digit canonical: '234803...'
+    if (phone.startsWith('234') && phone.length === 13) {
+        return phone;
+    }
+
+    // 3. Nigerian 11-digit local: '07045763306', '08057709000', '090...', '081...'
+    if (phone.startsWith('0') && phone.length === 11) {
+        return '234' + phone.substring(1);
+    }
+
+    // 4. Nigerian 10-digit missing leading zero: '7061610101', '8057709000', '901...'
+    if (phone.length === 10 && (phone.startsWith('7') || phone.startsWith('8') || phone.startsWith('9'))) {
+        return '234' + phone;
+    }
+
+    // 5. North American (US/Canada NANP) 11 digits: '13467025993', '12407054527'
+    if (phone.length === 11 && phone.startsWith('1')) {
+        return phone; // Keep intact as +1 international for Termii
+    }
+
+    // 6. North American 10 digits without leading 1 (e.g. '3467025993' not starting with 7,8,9)
+    if (phone.length === 10 && !['7', '8', '9'].includes(phone.charAt(0))) {
+        return '1' + phone;
+    }
+
+    // 7. UK numbers (starts with 44 and 11-13 digits)
+    if (phone.startsWith('44') && phone.length >= 11 && phone.length <= 13) {
+        return phone;
+    }
+
+    // Default fallback: return digits if valid length
+    if (phone.length >= 8) {
+        return phone;
+    }
+
+    return '';
+}
+
+/**
+ * Splits and normalizes multiple numbers from a single cell.
+ */
+export function splitAndNormalizePhones(rawPhone: string | number | null | undefined): string[] {
+    const parts = splitPhoneNumbers(rawPhone);
+    const normalizedList: string[] = [];
+    const seen = new Set<string>();
+
+    for (const part of parts) {
+        const norm = normalizeSinglePhoneNumber(part);
+        if (norm && !seen.has(norm)) {
+            seen.add(norm);
+            normalizedList.push(norm);
+        }
+    }
+
+    return normalizedList;
+}
+
+/**
+ * Normalizes phone number, returning the primary number if multiple exist.
+ */
+export function normalizePhoneNumber(rawPhone: string | number | null | undefined): string {
+    const phones = splitAndNormalizePhones(rawPhone);
+    return phones.length > 0 ? phones[0] : normalizeSinglePhoneNumber(rawPhone);
 }

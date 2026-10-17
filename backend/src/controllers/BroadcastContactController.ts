@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma.js';
-import { normalizePhoneNumber } from '../utils/phoneNormalizer.js';
+import { normalizePhoneNumber, splitAndNormalizePhones } from '../utils/phoneNormalizer.js';
 
 export const BroadcastContactController = {
     // List contacts with search, pagination, and tag/site filtering
@@ -214,29 +214,51 @@ export const BroadcastContactController = {
             const normalizedMap = new Map<string, any>();
 
             for (const c of contacts) {
-                const normPhone = normalizePhoneNumber(c.phone);
-                if (!normPhone) {
+                // If contact has phones array, process all numbers
+                let rawPhonesList: string[] = [];
+                if (Array.isArray(c.phones) && c.phones.length > 0) {
+                    rawPhonesList = c.phones;
+                } else if (c.phone) {
+                    rawPhonesList = splitAndNormalizePhones(c.phone);
+                }
+
+                if (rawPhonesList.length === 0) {
                     skippedCount++;
                     continue;
                 }
 
-                // If already seen in this file, merge missing fields
-                if (normalizedMap.has(normPhone)) {
-                    const existingInFile = normalizedMap.get(normPhone);
-                    if (!existingInFile.name && c.name) existingInFile.name = c.name;
-                    if (!existingInFile.email && c.email) existingInFile.email = c.email;
-                    if (!existingInFile.site && c.site) existingInFile.site = c.site;
-                    if (!existingInFile.gender && c.gender) existingInFile.gender = c.gender;
-                } else {
-                    normalizedMap.set(normPhone, {
-                        name: c.name?.trim() || 'Valued Subscriber',
-                        phone: normPhone,
-                        email: c.email?.trim() || null,
-                        site: c.site?.trim() || null,
-                        gender: c.gender?.trim() || null,
-                        title: c.title?.trim() || (c.gender === 'Female' ? "Ma'am" : 'Sir'),
-                        tags: cleanTag ? [cleanTag] : []
-                    });
+                for (let pIdx = 0; pIdx < rawPhonesList.length; pIdx++) {
+                    const normPhone = normalizePhoneNumber(rawPhonesList[pIdx]);
+                    if (!normPhone) continue;
+
+                    const displayName = rawPhonesList.length > 1 
+                        ? `${c.name?.trim() || 'Valued Subscriber'} (Line ${pIdx + 1})`
+                        : (c.name?.trim() || 'Valued Subscriber');
+
+                    const plotNote = c.plotNumber 
+                        ? `Plot: ${c.plotNumber}${c.houseType ? `, Type: ${c.houseType}` : ''}${c.plotSize ? ` (${c.plotSize})` : ''}`
+                        : null;
+
+                    // If already seen in this file, merge missing fields
+                    if (normalizedMap.has(normPhone)) {
+                        const existingInFile = normalizedMap.get(normPhone);
+                        if (!existingInFile.name && c.name) existingInFile.name = displayName;
+                        if (!existingInFile.email && c.email) existingInFile.email = c.email;
+                        if (!existingInFile.site && c.site) existingInFile.site = c.site;
+                        if (!existingInFile.gender && c.gender) existingInFile.gender = c.gender;
+                        if (!existingInFile.notes && plotNote) existingInFile.notes = plotNote;
+                    } else {
+                        normalizedMap.set(normPhone, {
+                            name: displayName,
+                            phone: normPhone,
+                            email: c.email?.trim() || null,
+                            site: c.site?.trim() || null,
+                            gender: c.gender?.trim() || null,
+                            title: c.title?.trim() || (c.gender === 'Female' ? "Ma'am" : (c.gender === 'Male' ? "Sir" : null)),
+                            tags: cleanTag ? [cleanTag] : [],
+                            notes: plotNote
+                        });
+                    }
                 }
             }
 
@@ -245,7 +267,7 @@ export const BroadcastContactController = {
             // Fetch existing contacts from DB in chunks of 500
             const existingContacts = await prisma.broadcastContact.findMany({
                 where: { phone: { in: uniquePhones } },
-                select: { id: true, phone: true, name: true, email: true, site: true, gender: true, tags: true }
+                select: { id: true, phone: true, name: true, email: true, site: true, gender: true, title: true, tags: true, notes: true }
             });
 
             const existingMap = new Map<string, any>();
@@ -271,6 +293,14 @@ export const BroadcastContactController = {
                     }
                     if (!existing.gender && item.gender) {
                         updateData.gender = item.gender;
+                        hasChanges = true;
+                    }
+                    if (!existing.title && item.title) {
+                        updateData.title = item.title;
+                        hasChanges = true;
+                    }
+                    if (!existing.notes && item.notes) {
+                        updateData.notes = item.notes;
                         hasChanges = true;
                     }
                     if (cleanTag && !existing.tags.includes(cleanTag)) {

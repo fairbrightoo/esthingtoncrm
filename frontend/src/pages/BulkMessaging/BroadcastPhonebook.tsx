@@ -215,7 +215,7 @@ export const BroadcastPhonebook: React.FC<BroadcastPhonebookProps> = ({ token, o
             
             const syncRes = await axios.post(`${API_URL}/api/bulk-messaging/contacts/sync`, {
                 contacts: result.contacts,
-                tag: importTag.trim() || undefined
+                tag: importTag.trim() || result.detectedSite || undefined
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });

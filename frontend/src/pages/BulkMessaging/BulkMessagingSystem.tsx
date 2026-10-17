@@ -18,7 +18,18 @@ import {
     X,
     Filter,
     ChevronRight,
-    ArrowRight
+    ArrowRight,
+    Eye,
+    Tag,
+    Smartphone,
+    Check,
+    Building,
+    Home,
+    Layers,
+    Search,
+    ChevronLeft,
+    HelpCircle,
+    Edit2
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -30,6 +41,17 @@ import { BroadcastPhonebook } from './BroadcastPhonebook';
 import { BroadcastHistory } from './BroadcastHistory';
 
 const PASSCODE = "2026"; 
+
+const VARIABLE_TAGS = [
+    { name: '{{Salutation}}', label: 'Salutation', desc: 'e.g. Dear Mr. & Mrs. Salawu, / Dear Idris,' },
+    { name: '{{FirstName}}', label: 'First Name', desc: 'e.g. Mr. & Mrs. Salawu / Idris' },
+    { name: '{{Name}}', label: 'Full Name', desc: 'e.g. Mr & Mrs Abraham Salawu' },
+    { name: '{{Site}}', label: 'Estate / Site', desc: 'e.g. Double King Villa Guzape 2 Cluster A' },
+    { name: '{{PlotNumber}}', label: 'Plot No.', desc: 'e.g. D005' },
+    { name: '{{HouseType}}', label: 'House Type', desc: 'e.g. 5 Bedroom Duplex With BQ' },
+    { name: '{{PlotSize}}', label: 'Plot Size', desc: 'e.g. 600sqm' },
+    { name: '{{Title}}', label: 'Title', desc: 'e.g. Mr & Mrs / Engr. / Dr.' }
+];
 
 export const BulkMessagingSystem = () => {
     const { token } = useAuth();
@@ -53,6 +75,15 @@ export const BulkMessagingSystem = () => {
     const [senderId, setSenderId] = useState('DOUBLE KING');
     const [channel, setChannel] = useState<'SMS' | 'EMAIL'>('SMS');
     const [aiPrompt, setAiPrompt] = useState('');
+
+    // Campaign Nuance Controls (Site, Multi-phone, Tags)
+    const [campaignSite, setCampaignSite] = useState('');
+    const [detectedSite, setDetectedSite] = useState('');
+    const [totalPhoneLines, setTotalPhoneLines] = useState(0);
+    const [sendToAllNumbers, setSendToAllNumbers] = useState(true);
+    const [showAudienceDrawer, setShowAudienceDrawer] = useState(false);
+    const [audienceSearch, setAudienceSearch] = useState('');
+    const [previewRecipientIndex, setPreviewRecipientIndex] = useState(0);
 
     // Spreadsheet Auto-sync settings
     const [autoSyncToPhonebook, setAutoSyncToPhonebook] = useState(true);
@@ -78,6 +109,7 @@ export const BulkMessagingSystem = () => {
     const [phonebookCount, setPhonebookCount] = useState<number | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
     const handleLogin = (e: React.FormEvent) => {
@@ -110,6 +142,55 @@ export const BulkMessagingSystem = () => {
         }
     };
 
+    // Insert variable tag at cursor
+    const insertVariableTag = (tagName: string) => {
+        if (!textareaRef.current) {
+            setMessageTemplate(prev => prev + tagName);
+            return;
+        }
+        const textarea = textareaRef.current;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = messageTemplate;
+        const updated = text.substring(0, start) + tagName + text.substring(end);
+        setMessageTemplate(updated);
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(start + tagName.length, start + tagName.length);
+            }
+        }, 10);
+    };
+
+    // Render personalized message for simulation preview
+    const renderPersonalizedMessage = (template: string, contact: Contact | null) => {
+        if (!template) return '';
+        if (!contact) return template;
+
+        const effectiveSite = campaignSite || contact.site || 'our prestigious estate';
+        const cleanName = contact.name || 'Valued Subscriber';
+        const firstName = contact.firstName || (cleanName.includes(' ') ? cleanName.split(' ')[0] : cleanName);
+        const salutation = contact.salutation || `Dear ${firstName},`;
+        const title = contact.title || (contact.gender === 'Female' ? "Ma'am" : (contact.gender === 'Male' ? "Sir" : 'Subscriber'));
+        const plotNumber = contact.plotNumber || 'your designated plot';
+        const houseType = contact.houseType || 'your property';
+        const plotSize = contact.plotSize || '';
+        const address = contact.address || '';
+
+        let result = template;
+        result = result.replace(/{{Salutation}}/gi, salutation);
+        result = result.replace(/{{FirstName}}/gi, firstName);
+        result = result.replace(/{{Name}}/gi, cleanName);
+        result = result.replace(/{{Title}}/gi, title);
+        result = result.replace(/{{Site}}/gi, effectiveSite);
+        result = result.replace(/{{PlotNumber}}/gi, plotNumber);
+        result = result.replace(/{{HouseType}}/gi, houseType);
+        result = result.replace(/{{PlotSize}}/gi, plotSize);
+        result = result.replace(/{{Address}}/gi, address);
+
+        return result;
+    };
+
     // Universal Spreadsheet Ingestion (.csv, .xlsx, .xls)
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -128,10 +209,21 @@ export const BulkMessagingSystem = () => {
             const result = await parseSpreadsheetFile(file);
             setContacts(result.contacts);
             setUploadedFileName(result.filename);
-            // Default auto-sync tag to file name without extension
-            const defaultTagName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+            setTotalPhoneLines(result.totalPhoneLines);
+            setPreviewRecipientIndex(0);
+
+            if (result.detectedSite) {
+                setDetectedSite(result.detectedSite);
+                setCampaignSite(result.detectedSite);
+            }
+
+            // Default auto-sync tag to estate banner or file name
+            const defaultTagName = result.detectedSite || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
             setAutoSyncTag(defaultTagName);
-            addToast(`Loaded ${result.totalCount} recipients (${result.validPhoneCount} valid numbers)`, "success");
+            addToast(
+                `Loaded ${result.totalCount} subscribers (${result.totalPhoneLines} phone lines${result.detectedSite ? ` · ${result.detectedSite}` : ''})`, 
+                "success"
+            );
         } catch (err: any) {
             addToast(`Error reading file: ${err.message}`, "error");
         }
@@ -252,19 +344,23 @@ export const BulkMessagingSystem = () => {
             
             try {
                 const res = await axios.post(`${API_URL}/api/bulk-messaging/send-batch`, {
-                    contacts: batch,
+                    contacts: batch.map(c => ({
+                        ...c,
+                        site: c.site || campaignSite || undefined
+                    })),
                     messageTemplate,
                     emailSubject,
                     attachments,
                     senderId,
-                    channel
+                    channel,
+                    sendToAllNumbers
                 }, { headers: { Authorization: `Bearer ${token}` } });
 
                 const batchResults = res.data.results || [];
                 allFinalResults.push(...batchResults);
                 
                 newLogs = newLogs.map(log => {
-                    const result = batchResults.find((r: any) => r.id === log.id);
+                    const result = batchResults.find((r: any) => r.id === log.id || r.contactId === log.id);
                     if (result) {
                         return { ...log, status: result.status, reason: result.reason };
                     }
@@ -320,7 +416,10 @@ export const BulkMessagingSystem = () => {
         if (autoSyncToPhonebook && audienceSource === 'FILE' && targetContacts.length > 0) {
             try {
                 await axios.post(`${API_URL}/api/bulk-messaging/contacts/sync`, {
-                    contacts: targetContacts,
+                    contacts: targetContacts.map(c => ({
+                        ...c,
+                        site: c.site || campaignSite || undefined
+                    })),
                     tag: autoSyncTag.trim() || undefined
                 }, { headers: { Authorization: `Bearer ${token}` } });
                 loadPhonebookMeta();
@@ -568,12 +667,72 @@ export const BulkMessagingSystem = () => {
                                             </div>
 
                                             {uploadedFileName && (
-                                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
-                                                    <div className="flex items-center space-x-2 truncate">
-                                                        <FileSpreadsheet className="text-blue-600 shrink-0" size={16} />
-                                                        <span className="font-bold text-blue-900 truncate">{uploadedFileName}</span>
+                                                <div className="p-4 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 border border-blue-200/80 rounded-2xl space-y-3">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <div className="flex items-center space-x-2 truncate">
+                                                            <FileSpreadsheet className="text-blue-600 shrink-0" size={18} />
+                                                            <span className="font-extrabold text-blue-950 truncate">{uploadedFileName}</span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowAudienceDrawer(true)}
+                                                            className="px-2.5 py-1 bg-white hover:bg-blue-600 hover:text-white border border-blue-200 text-blue-700 rounded-lg font-bold text-[11px] transition shadow-xs flex items-center space-x-1 shrink-0"
+                                                        >
+                                                            <Eye size={12} />
+                                                            <span>Inspect Audience</span>
+                                                        </button>
                                                     </div>
-                                                    <span className="text-blue-700 font-bold shrink-0">{contacts.length} rows</span>
+
+                                                    {/* Stats Pills */}
+                                                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                                        <div className="bg-white/80 p-2 rounded-xl border border-blue-100 flex items-center justify-between">
+                                                            <span className="text-gray-500 font-medium">Subscribers</span>
+                                                            <span className="font-black text-gray-900">{contacts.length}</span>
+                                                        </div>
+                                                        <div className="bg-white/80 p-2 rounded-xl border border-blue-100 flex items-center justify-between">
+                                                            <span className="text-gray-500 font-medium">Phone Lines</span>
+                                                            <span className="font-black text-blue-600">{totalPhoneLines || contacts.length}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Target Estate / Site Input */}
+                                                    <div className="pt-2 border-t border-blue-100/80 space-y-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="text-[10px] font-extrabold text-blue-900 uppercase tracking-wider flex items-center">
+                                                                <Building size={12} className="mr-1 text-blue-600" />
+                                                                Target Estate / Site
+                                                            </label>
+                                                            {detectedSite && (
+                                                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full flex items-center">
+                                                                    <Sparkles size={10} className="mr-1 text-emerald-600" />
+                                                                    Detected from banner
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            value={campaignSite}
+                                                            onChange={(e) => setCampaignSite(e.target.value)}
+                                                            placeholder="e.g. Double King Villa Guzape 2 Cluster A"
+                                                            className="w-full px-3 py-1.5 bg-white border border-blue-200 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        />
+                                                    </div>
+
+                                                    {/* Multi-phone Dispatch toggle */}
+                                                    <div className="pt-2 border-t border-blue-100/80">
+                                                        <label className="flex items-start space-x-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={sendToAllNumbers}
+                                                                onChange={(e) => setSendToAllNumbers(e.target.checked)}
+                                                                className="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+                                                            />
+                                                            <div className="text-[11px] leading-tight">
+                                                                <span className="font-bold text-gray-800">Dispatch to all lines for multi-phone subscribers</span>
+                                                                <p className="text-gray-500 text-[10px] mt-0.5">Sends to both numbers when numbers are separated by '/' (e.g. 703... / 802...).</p>
+                                                            </div>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -777,15 +936,31 @@ export const BulkMessagingSystem = () => {
                                             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                 Message Content
                                             </label>
-                                            <div className="text-[11px] font-semibold text-gray-400 space-x-1">
-                                                <span>Variables:</span>
-                                                <span className="font-mono text-purple-600 bg-purple-50 px-1 rounded">{"{{Name}}"}</span>
-                                                <span className="font-mono text-purple-600 bg-purple-50 px-1 rounded">{"{{Site}}"}</span>
-                                                <span className="font-mono text-purple-600 bg-purple-50 px-1 rounded">{"{{Title}}"}</span>
-                                            </div>
+                                            <span className="text-[11px] text-gray-400">
+                                                Click any variable below to insert:
+                                            </span>
+                                        </div>
+
+                                        {/* Clickable Variable Tag Chips */}
+                                        <div className="flex flex-wrap items-center gap-1.5 py-1">
+                                            <span className="text-[11px] font-bold text-gray-400 mr-1 flex items-center">
+                                                <Tag size={12} className="mr-1 text-purple-600" /> Insert:
+                                            </span>
+                                            {VARIABLE_TAGS.map(tag => (
+                                                <button
+                                                    key={tag.name}
+                                                    type="button"
+                                                    onClick={() => insertVariableTag(tag.name)}
+                                                    className="text-[11px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 hover:text-purple-900 border border-purple-200/70 px-2 py-0.5 rounded-lg transition active:scale-95 shadow-2xs cursor-pointer"
+                                                    title={tag.desc}
+                                                >
+                                                    {tag.name}
+                                                </button>
+                                            ))}
                                         </div>
 
                                         <textarea
+                                            ref={textareaRef}
                                             rows={9}
                                             value={messageTemplate}
                                             onChange={(e) => setMessageTemplate(e.target.value)}
@@ -839,6 +1014,131 @@ export const BulkMessagingSystem = () => {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Live Recipient Message Simulator / Preview */}
+                                {contacts.length > 0 && (
+                                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-xl space-y-4 border border-slate-700/60">
+                                        {/* Header with Switcher */}
+                                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
+                                            <div className="flex items-center space-x-2">
+                                                <Smartphone size={18} className="text-cyan-400" />
+                                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
+                                                    Live Recipient Simulator
+                                                </h4>
+                                                <span className="text-[10px] font-bold bg-cyan-900/60 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                                                    WYSIWYG Delivery View
+                                                </span>
+                                            </div>
+
+                                            {/* Prev / Next controls */}
+                                            <div className="flex items-center space-x-1.5 text-xs">
+                                                <button
+                                                    type="button"
+                                                    disabled={previewRecipientIndex === 0}
+                                                    onClick={() => setPreviewRecipientIndex(prev => Math.max(0, prev - 1))}
+                                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                                                    title="Previous Recipient"
+                                                >
+                                                    <ChevronLeft size={14} />
+                                                </button>
+                                                <span className="font-mono text-[11px] text-slate-300 px-2.5 py-0.5 bg-slate-800/90 rounded-md border border-slate-700">
+                                                    Recipient {previewRecipientIndex + 1} of {contacts.length}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    disabled={previewRecipientIndex >= contacts.length - 1}
+                                                    onClick={() => setPreviewRecipientIndex(prev => Math.min(contacts.length - 1, prev + 1))}
+                                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                                                    title="Next Recipient"
+                                                >
+                                                    <ChevronRight size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Active Recipient Profile Banner */}
+                                        {(() => {
+                                            const activeContact = contacts[previewRecipientIndex] || null;
+                                            if (!activeContact) return null;
+
+                                            return (
+                                                <div className="space-y-3">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/40 text-xs">
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                                <span className="font-extrabold text-white text-sm">
+                                                                    {activeContact.name}
+                                                                </span>
+                                                                {activeContact.isCouple && (
+                                                                    <span className="text-[10px] bg-pink-500/20 text-pink-300 border border-pink-500/40 font-bold px-2 py-0.5 rounded-md">
+                                                                        Couple / Spouses
+                                                                    </span>
+                                                                )}
+                                                                {activeContact.isCorporate && (
+                                                                    <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold px-2 py-0.5 rounded-md">
+                                                                        Corporate Entity
+                                                                    </span>
+                                                                )}
+                                                                {activeContact.isJoint && !activeContact.isCouple && (
+                                                                    <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-2 py-0.5 rounded-md">
+                                                                        Joint Subscribers
+                                                                    </span>
+                                                                )}
+                                                                {activeContact.plotNumber && (
+                                                                    <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold px-2 py-0.5 rounded-md">
+                                                                        Plot: {activeContact.plotNumber}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[11px] text-slate-400 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                                                <span><strong>Salutation:</strong> <span className="text-emerald-300">{activeContact.salutation || 'Dear Subscriber,'}</span></span>
+                                                                {activeContact.houseType && (
+                                                                    <span><strong>House:</strong> {activeContact.houseType}</span>
+                                                                )}
+                                                                <span><strong>Site:</strong> {activeContact.site || campaignSite || 'Default'}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Target Numbers Display */}
+                                                        <div className="text-right">
+                                                            <div className="text-[10px] uppercase font-bold text-slate-400">Target Dispatched Number(s)</div>
+                                                            <div className="font-mono text-cyan-300 text-xs font-bold mt-0.5 flex flex-wrap gap-1 justify-end">
+                                                                {activeContact.phones && activeContact.phones.length > 1 ? (
+                                                                    activeContact.phones.map((p, idx) => (
+                                                                        <span key={idx} className="bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded-md">
+                                                                            Line {idx + 1}: {formatPhoneDisplay(p)}
+                                                                        </span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded-md">
+                                                                        {formatPhoneDisplay(activeContact.phone)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Simulated Smartphone Chat Bubble */}
+                                                    <div className="bg-slate-950/80 rounded-2xl p-4 border border-slate-800 font-sans">
+                                                        <div className="text-[10px] font-bold text-slate-400 mb-2 flex items-center justify-between">
+                                                            <span>Sender ID: <strong className="text-white">{senderId}</strong></span>
+                                                            <span>{channel} Delivery Preview</span>
+                                                        </div>
+                                                        <div className="bg-blue-600/90 text-white p-3.5 rounded-2xl rounded-tl-sm text-xs leading-relaxed whitespace-pre-wrap shadow-inner border border-blue-400/20">
+                                                            {messageTemplate ? (
+                                                                renderPersonalizedMessage(messageTemplate, activeContact)
+                                                            ) : (
+                                                                <span className="text-blue-200 italic">
+                                                                    Type message content or prompt AI copilot above to view real-time personalized preview...
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
 
                                 {/* Active Batch Execution Logs (Real-time Feedback) */}
                                 {logs.length > 0 && (
@@ -1036,6 +1336,179 @@ export const BulkMessagingSystem = () => {
                                     Use Selected Contacts
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Audience Inspector & Nuance Verification Drawer / Modal */}
+            {showAudienceDrawer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                            <div className="space-y-0.5">
+                                <h3 className="text-lg font-black text-gray-900 flex items-center">
+                                    <Users className="text-blue-600 mr-2" size={20} />
+                                    Audience Inspector & Nuance Verification
+                                </h3>
+                                <p className="text-xs text-gray-500">
+                                    Detailed breakdown of parsed clients, computed honorifics, multi-phone lines, and estate plots.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowAudienceDrawer(false)}
+                                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Quick Metrics & Search */}
+                        <div className="py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-b border-gray-100">
+                            {/* Stat pills */}
+                            <div className="flex flex-wrap items-center gap-2 text-xs">
+                                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-200/60">
+                                    {contacts.length} Total Subscribers
+                                </span>
+                                <span className="px-3 py-1 bg-cyan-50 text-cyan-700 rounded-xl font-bold border border-cyan-200/60">
+                                    {totalPhoneLines || contacts.length} Total Phone Lines
+                                </span>
+                                <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-xl font-bold border border-purple-200/60">
+                                    {contacts.filter(c => c.phones && c.phones.length > 1).length} Multi-Phone Contacts
+                                </span>
+                                <span className="px-3 py-1 bg-pink-50 text-pink-700 rounded-xl font-bold border border-pink-200/60">
+                                    {contacts.filter(c => c.isCouple || c.isJoint).length} Couples / Joint
+                                </span>
+                            </div>
+
+                            {/* Search */}
+                            <div className="relative min-w-[240px]">
+                                <Search className="absolute left-3 top-2.5 text-gray-400" size={14} />
+                                <input
+                                    type="text"
+                                    value={audienceSearch}
+                                    onChange={(e) => setAudienceSearch(e.target.value)}
+                                    placeholder="Search name, phone, plot..."
+                                    className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Audience Table */}
+                        <div className="flex-1 overflow-y-auto py-2">
+                            <table className="w-full text-left text-xs border-collapse">
+                                <thead className="sticky top-0 bg-gray-50/95 backdrop-blur-xs text-gray-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                                    <tr>
+                                        <th className="py-2.5 px-3">#</th>
+                                        <th className="py-2.5 px-3">Plot</th>
+                                        <th className="py-2.5 px-3">Client Name</th>
+                                        <th className="py-2.5 px-3">Computed Salutation</th>
+                                        <th className="py-2.5 px-3">Phone Line(s)</th>
+                                        <th className="py-2.5 px-3">House Type</th>
+                                        <th className="py-2.5 px-3">Site / Estate</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 font-medium">
+                                    {contacts
+                                        .filter(c => {
+                                            if (!audienceSearch.trim()) return true;
+                                            const q = audienceSearch.toLowerCase();
+                                            return (
+                                                c.name.toLowerCase().includes(q) ||
+                                                c.phone.includes(q) ||
+                                                (c.plotNumber && c.plotNumber.toLowerCase().includes(q)) ||
+                                                (c.salutation && c.salutation.toLowerCase().includes(q)) ||
+                                                (c.site && c.site.toLowerCase().includes(q))
+                                            );
+                                        })
+                                        .map((c, idx) => (
+                                            <tr key={c.id || idx} className="hover:bg-blue-50/40 transition">
+                                                <td className="py-3 px-3 text-gray-400 font-mono text-[11px]">{idx + 1}</td>
+                                                <td className="py-3 px-3">
+                                                    {c.plotNumber ? (
+                                                        <span className="font-mono font-bold bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md text-[11px]">
+                                                            {c.plotNumber}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-300">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    <div className="font-bold text-gray-900">{c.name}</div>
+                                                    <div className="flex gap-1 mt-0.5">
+                                                        {c.isCouple && (
+                                                            <span className="text-[9px] bg-pink-100 text-pink-700 px-1.5 py-0.2 rounded font-bold">
+                                                                Couple
+                                                            </span>
+                                                        )}
+                                                        {c.isCorporate && (
+                                                            <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-bold">
+                                                                Corporate
+                                                            </span>
+                                                        )}
+                                                        {c.isJoint && !c.isCouple && (
+                                                            <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.2 rounded font-bold">
+                                                                Joint
+                                                            </span>
+                                                        )}
+                                                        {c.title && !c.isCouple && !c.isCorporate && (
+                                                            <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded font-bold">
+                                                                {c.title}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    <span className="font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2 py-1 rounded-lg">
+                                                        {c.salutation || `Dear ${c.name},`}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    <div className="space-y-1">
+                                                        {c.phones && c.phones.length > 1 ? (
+                                                            c.phones.map((p, pIdx) => (
+                                                                <div key={pIdx} className="flex items-center space-x-1.5">
+                                                                    <span className="text-[9px] font-bold bg-cyan-100 text-cyan-800 px-1 rounded">
+                                                                        Line {pIdx + 1}
+                                                                    </span>
+                                                                    <span className="font-mono text-gray-700 text-[11px]">
+                                                                        {formatPhoneDisplay(p)}
+                                                                    </span>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <span className="font-mono text-gray-700 text-[11px]">
+                                                                {formatPhoneDisplay(c.phone)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-3 text-gray-600 text-[11px]">
+                                                    {c.houseType || '-'}
+                                                    {c.plotSize && <span className="text-gray-400 block text-[10px]">{c.plotSize}</span>}
+                                                </td>
+                                                <td className="py-3 px-3 text-gray-600 text-[11px]">
+                                                    {c.site || campaignSite || '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                            <span className="text-xs text-gray-500 font-semibold">
+                                Showing {contacts.length} parsed records
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setShowAudienceDrawer(false)}
+                                className="px-5 py-2 text-xs font-bold bg-gray-900 hover:bg-gray-800 text-white rounded-xl shadow-md transition cursor-pointer"
+                            >
+                                Close Inspector
+                            </button>
                         </div>
                     </div>
                 </div>

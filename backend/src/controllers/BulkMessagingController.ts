@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { AIConciergeService } from '../services/AIConciergeService.js';
 import { SmsService } from '../services/SmsService.js';
 import { EmailService } from '../services/EmailService.js';
-import { normalizePhoneNumber } from '../utils/phoneNormalizer.js';
+import { normalizePhoneNumber, splitAndNormalizePhones } from '../utils/phoneNormalizer.js';
 
 export const BulkMessagingController = {
     async draftMessage(req: Request, res: Response) {
@@ -22,7 +22,15 @@ export const BulkMessagingController = {
 
     async processBatch(req: Request, res: Response) {
         try {
-            const { contacts, messageTemplate, emailSubject, attachments, senderId, channel } = req.body;
+            const { 
+                contacts, 
+                messageTemplate, 
+                emailSubject, 
+                attachments, 
+                senderId, 
+                channel,
+                sendToAllNumbers = true 
+            } = req.body;
             
             if (!contacts || !Array.isArray(contacts)) {
                 return res.status(400).json({ error: "Invalid contacts array" });
@@ -32,22 +40,68 @@ export const BulkMessagingController = {
 
             for (const contact of contacts) {
                 try {
-                    // Replace placeholders
+                    // Replace dynamic placeholders with smart fallbacks
                     let personalizedMessage = messageTemplate;
-                    personalizedMessage = personalizedMessage.replace(/{{Name}}/gi, contact.name || '');
-                    personalizedMessage = personalizedMessage.replace(/{{Site}}/gi, contact.site || '');
-                    personalizedMessage = personalizedMessage.replace(/{{Title}}/gi, contact.title || (contact.gender === 'Female' ? 'Ma\'am' : 'Sir'));
+                    const cleanName = contact.name || 'Valued Subscriber';
+                    const firstName = contact.firstName || (cleanName.includes(' ') ? cleanName.split(' ')[0] : cleanName);
+                    const salutation = contact.salutation || `Dear ${firstName},`;
+                    const title = contact.title || (contact.gender === 'Female' ? "Ma'am" : (contact.gender === 'Male' ? "Sir" : ''));
+                    const site = contact.site || 'our prestigious estate';
+                    const plotNumber = contact.plotNumber || '';
+                    const houseType = contact.houseType || '';
+                    const plotSize = contact.plotSize || '';
+                    const address = contact.address || '';
+
+                    personalizedMessage = personalizedMessage.replace(/{{Salutation}}/gi, salutation);
+                    personalizedMessage = personalizedMessage.replace(/{{FirstName}}/gi, firstName);
+                    personalizedMessage = personalizedMessage.replace(/{{Name}}/gi, cleanName);
+                    personalizedMessage = personalizedMessage.replace(/{{Title}}/gi, title);
+                    personalizedMessage = personalizedMessage.replace(/{{Site}}/gi, site);
+                    personalizedMessage = personalizedMessage.replace(/{{PlotNumber}}/gi, plotNumber);
+                    personalizedMessage = personalizedMessage.replace(/{{HouseType}}/gi, houseType);
+                    personalizedMessage = personalizedMessage.replace(/{{PlotSize}}/gi, plotSize);
+                    personalizedMessage = personalizedMessage.replace(/{{Address}}/gi, address);
 
                     if (channel === 'SMS') {
-                        if (!contact.phone) throw new Error("Missing phone number");
-                        const targetPhone = normalizePhoneNumber(contact.phone) || contact.phone;
-                        await SmsService.sendSMS(targetPhone, personalizedMessage, senderId);
-                        results.push({ 
-                            id: contact.id, 
-                            name: contact.name,
-                            phone: targetPhone, 
-                            status: 'Success' 
-                        });
+                        // Gather all numbers to send to
+                        let targetPhones: string[] = [];
+                        if (Array.isArray(contact.phones) && contact.phones.length > 0 && sendToAllNumbers) {
+                            targetPhones = contact.phones.map((p: string) => normalizePhoneNumber(p)).filter(Boolean);
+                        } else if (contact.phone) {
+                            targetPhones = splitAndNormalizePhones(contact.phone);
+                        }
+
+                        if (targetPhones.length === 0) {
+                            throw new Error("Missing or invalid phone number");
+                        }
+
+                        // Dispatch to each resolved number
+                        for (let pIdx = 0; pIdx < targetPhones.length; pIdx++) {
+                            const targetPhone = targetPhones[pIdx];
+                            const isMulti = targetPhones.length > 1;
+                            const lineLabel = isMulti ? ` (Line ${pIdx + 1})` : '';
+
+                            try {
+                                await SmsService.sendSMS(targetPhone, personalizedMessage, senderId);
+                                results.push({ 
+                                    id: isMulti ? `${contact.id}-line-${pIdx + 1}` : contact.id, 
+                                    contactId: contact.id,
+                                    name: `${contact.name}${lineLabel}`,
+                                    phone: targetPhone, 
+                                    status: 'Success' 
+                                });
+                            } catch (lineErr: any) {
+                                results.push({ 
+                                    id: isMulti ? `${contact.id}-line-${pIdx + 1}` : contact.id, 
+                                    contactId: contact.id,
+                                    name: `${contact.name}${lineLabel}`,
+                                    phone: targetPhone, 
+                                    status: 'Failed', 
+                                    reason: lineErr.message || 'SMS Send Failure' 
+                                });
+                            }
+                        }
+
                     } else if (channel === 'EMAIL') {
                         if (!contact.email) throw new Error("Missing email address");
                         
