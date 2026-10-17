@@ -3,6 +3,7 @@ import { EmailService } from '../services/EmailService.js';
 import { SmsService } from '../services/SmsService.js';
 import { WhatsAppService } from '../services/WhatsAppService.js';
 import prisma from '../config/prisma.js';
+import { WalletService } from '../services/WalletService.js';
 
 const buildCampaignWhereClause = async (companyId: string, filters: any, userId: string) => {
     const whereClause: any = { companyId };
@@ -177,6 +178,42 @@ export const CampaignController = {
                 return res.status(400).json({ error: "No leads match the campaign criteria" });
             }
 
+            // Fetch user to confirm role
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            const isCustomerCare = user?.role === 'CUSTOMER_CARE';
+
+            // --- WALLET QUOTA GATEKEEPING ---
+            let debitResult: any = null;
+            if (!isCustomerCare) {
+                const costDetails = await WalletService.calculateCost(
+                    campaign.type as any,
+                    leads.length,
+                    (campaign as any).template?.content || ''
+                );
+
+                const userWallet = await WalletService.getOrCreateWallet(userId);
+                if (userWallet.balance < costDetails.totalCost) {
+                    return res.status(402).json({
+                        error: `Insufficient messaging wallet balance. Total campaign cost is ₦${costDetails.totalCost.toFixed(2)} (${leads.length} leads @ ₦${costDetails.unitRate.toFixed(2)}), but your wallet balance is ₦${userWallet.balance.toFixed(2)}. Please recharge your wallet to proceed.`,
+                        requiredAmount: costDetails.totalCost,
+                        currentBalance: userWallet.balance,
+                        deficit: Number((costDetails.totalCost - userWallet.balance).toFixed(2))
+                    });
+                }
+
+                // Atomically debit wallet before batch sending
+                debitResult = await WalletService.debitWallet({
+                    userId,
+                    amount: costDetails.totalCost,
+                    category: campaign.type === 'SMS' ? 'CAMPAIGN_SMS' : campaign.type === 'EMAIL' ? 'CAMPAIGN_EMAIL' : 'CAMPAIGN_WHATSAPP',
+                    description: `Bulk Campaign: '${campaign.name}' (${leads.length} leads)`,
+                    channel: campaign.type as any,
+                    recipientCount: leads.length,
+                    campaignId: campaign.id
+                });
+                console.log(`[WALLET DEBIT] Successfully debited ₦${costDetails.totalCost} for campaign '${campaign.name}'. Balance remaining: ₦${debitResult.balanceAfter}`);
+            }
+
             // Fetch the company's approved Termii Sender ID and WhatsApp keys
             const company = await prisma.company.findUnique({ where: { id: companyId } });
             const companySenderId = company?.smsSenderId || undefined;
@@ -319,12 +356,12 @@ export const CampaignController = {
         }
     },
 
-    // Count Audience Reach based on active filters
+    // Count Audience Reach based on active filters & calculate live cost estimate
     async countAudience(req: Request, res: Response) {
         try {
             // @ts-ignore
             const { companyId, userId } = req.user as any;
-            const { filters } = req.body;
+            const { filters, type, content } = req.body;
 
             let whereClause: any;
             try {
@@ -334,7 +371,38 @@ export const CampaignController = {
             }
 
             const count = await prisma.lead.count({ where: whereClause });
-            res.json({ count });
+            
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            const isCustomerCare = user?.role === 'CUSTOMER_CARE';
+
+            let costDetails: any = null;
+            let walletBalance = 0;
+            let hasSufficientBalance = true;
+
+            if (isCustomerCare) {
+                costDetails = {
+                    unitRate: 0,
+                    pages: 1,
+                    recipientCount: count,
+                    totalCost: 0
+                };
+                hasSufficientBalance = true;
+            } else {
+                const wallet = await WalletService.getOrCreateWallet(userId);
+                walletBalance = wallet.balance;
+                if (type) {
+                    costDetails = await WalletService.calculateCost(type, count, content || '');
+                    hasSufficientBalance = walletBalance >= costDetails.totalCost;
+                }
+            }
+
+            res.json({
+                count,
+                costDetails,
+                walletBalance,
+                isCustomerCare,
+                hasSufficientBalance
+            });
         } catch (error) {
             console.error('Count Audience Error:', error);
             res.status(500).json({ error: 'Failed to count audience' });

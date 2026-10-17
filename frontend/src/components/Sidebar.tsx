@@ -1,13 +1,33 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2 } from 'lucide-react';
-
-
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2, Wallet } from 'lucide-react';
 
 export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onClose?: () => void }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [walletBalance, setWalletBalance] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        if (user && user.role !== 'CUSTOMER_CARE') {
+            const fetchBal = async () => {
+                try {
+                    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-wallet`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data?.wallet) {
+                            setWalletBalance(data.wallet.balance);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore silent background balance sync
+                }
+            };
+            fetchBal();
+        }
+    }, [user]);
 
     // Use dynamic branding from user object if logged in, otherwise fallback to "Esthington CRM"
     const branding = {
@@ -79,6 +99,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/site-mapping" icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to="/admin/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
+                        <NavItem to="/admin/wallet" icon={<Wallet size={20} />} label="Messaging Tariffs" />
                     </>
                 )}
 
@@ -86,6 +107,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to="/dashboard/chairman/crm" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/chairman/campaigns" icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to="/dashboard/wallet" icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to="/dashboard/chairman/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/dashboard/chairman/expenses" icon={<FileSpreadsheet size={20} />} label="My Expenses" />
                         <NavItem to="/dashboard/chairman/broadcasts" icon={<Megaphone size={20} />} label="Broadcasts" />
@@ -106,6 +128,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/staff-analytics" icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to="/dashboard/my-leads" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/campaigns" icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to="/dashboard/wallet" icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to="/dashboard/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to="/dashboard/settings" icon={<Settings size={20} />} label="Settings" />
@@ -125,6 +148,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/site-mapping`} icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
                         <NavItem to={`${basePath}/policies`} icon={<BookOpen size={20} />} label="Company Policies" />
@@ -135,6 +159,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff & Partners" />
                         <NavItem to={`${basePath}/partner-applications`} icon={<FileText size={20} />} label="Partner Applications" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance Tracking" />
@@ -181,6 +206,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/team-comms`} icon={<MessageCircle size={20} />} label="Team Comms" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
@@ -196,6 +222,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/team-comms`} icon={<MessageCircle size={20} />} label="Team Comms" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
@@ -210,6 +237,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/command-center`} icon={<Globe size={20} />} label="BDM Command Center" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
@@ -224,6 +252,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/department`} icon={<LayoutDashboard size={20} />} label="Department Builder" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
@@ -242,6 +271,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/knowledge-base`} icon={<BookOpen size={20} />} label="AI Knowledge Base" />
                     </>
                 )}
@@ -253,7 +283,6 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
-                        <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/site-mapping`} icon={<Map size={20} />} label="Site Plot Allocations" />
@@ -263,6 +292,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/broadcasts`} icon={<Megaphone size={20} />} label="Branch Broadcasts" />
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
@@ -274,6 +304,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />
@@ -342,6 +373,20 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
             </nav>
 
             <div className="p-4 border-t border-white/10 space-y-2">
+                {user?.role !== 'CUSTOMER_CARE' && (
+                    <div 
+                        onClick={() => navigate(user?.role === 'SUPER_ADMIN' ? '/admin/wallet' : user?.role === 'GLOBAL_CHAIRMAN' || user?.role === 'GLOBAL_ACCOUNTANT' ? '/dashboard/wallet' : `${basePath}/wallet`)}
+                        className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer rounded-lg p-3 flex items-center justify-between"
+                    >
+                        <div className="flex items-center space-x-2">
+                            <Wallet size={16} className="text-emerald-300" />
+                            <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">Msg Wallet</span>
+                        </div>
+                        <span className="font-bold text-white text-xs">
+                            {walletBalance !== null ? `₦${walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₦100.00'}
+                        </span>
+                    </div>
+                )}
                 <div className="bg-white/10 rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <span className="text-xl font-black text-indigo-300">E</span>

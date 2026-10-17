@@ -134,6 +134,9 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bulk-messaging', bulkMessagingRoutes);
 
+import walletRoutes from './routes/walletRoutes.js';
+app.use('/api/wallet', walletRoutes);
+
 import userRoutes from './routes/userRoutes.js';
 app.use('/api/users', userRoutes);
 

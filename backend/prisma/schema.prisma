@@ -225,6 +225,8 @@ model User {
   requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
   esthCoinLedgers      EsthCoinLedger[]
   deletedSales         SaleDeletionLog[]
+  wallet               UserWallet?
+  walletTransactions   WalletTransaction[]
 }
 
 model EsthCoinLedger {
@@ -1275,5 +1277,53 @@ model BroadcastRecipientLog {
   @@index([campaignId])
   @@index([status])
   @@index([phone])
+}
+
+model UserWallet {
+  id            String              @id @default(uuid())
+  userId        String              @unique
+  balance       Float               @default(100.0) // Defaults to ₦100.00 welcome credit
+  currency      String              @default("NGN")
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions  WalletTransaction[]
+
+  @@index([userId])
+}
+
+model WalletTransaction {
+  id             String         @id @default(uuid())
+  walletId       String
+  userId         String
+  amount         Float          // Positive for CREDIT, Negative for DEBIT
+  balanceAfter   Float
+  type           String         // "CREDIT" | "DEBIT"
+  category       String         // "TOPUP" | "CAMPAIGN_SMS" | "CAMPAIGN_EMAIL" | "CAMPAIGN_WHATSAPP" | "SINGLE_SMS" | "SINGLE_EMAIL" | "SINGLE_WHATSAPP" | "ADMIN_GIFT"
+  description    String
+  reference      String?        @unique // Paystack transaction reference for top-ups
+  paymentMethod  String?        // "PAYSTACK" | "ADMIN_GIFT" | "SYSTEM"
+  channel        String?        // "SMS" | "EMAIL" | "WHATSAPP"
+  recipientCount Int?
+  campaignId     String?
+  createdAt      DateTime       @default(now())
+
+  wallet         UserWallet     @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([userId])
+  @@index([reference])
+}
+
+model MessagingTariff {
+  id                   String   @id @default(uuid())
+  smsRatePerPage       Float    @default(9.50)  // ₦9.50 per 160 characters
+  emailRatePerMsg      Float    @default(2.50)  // ₦2.50 per email
+  waRatePerMsg         Float    @default(15.00) // ₦15.00 per WhatsApp template
+  minTopupAmount       Float    @default(3000.0) // ₦3,000 minimum recharge
+  defaultWelcomeCredit Float    @default(100.0)  // ₦100 welcome balance
+  updatedAt            DateTime @updatedAt
 }
 
