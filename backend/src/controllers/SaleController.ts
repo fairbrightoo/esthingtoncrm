@@ -385,12 +385,29 @@ export const SaleController = {
             // Respect Cross-Company & Branch boundaries
             if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(user?.role)) {
                 if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
-                    // Restricted to their specific BRANCH
-                    whereClause.OR = [
-                        { sale: { marketer: { branchId: effectiveBranchId } } },
-                        { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
-                        { receivingBranchId: effectiveBranchId }
-                    ];
+                    // Restricted to their specific BRANCH or COMPANY
+                    const branchConditions: any[] = [];
+                    if (effectiveBranchId) {
+                        branchConditions.push(
+                            { sale: { marketer: { branchId: effectiveBranchId } } },
+                            { sale: { lead: { branchId: effectiveBranchId } } },
+                            { recordedByUser: { branchId: effectiveBranchId } },
+                            { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
+                            { receivingBranchId: effectiveBranchId }
+                        );
+                    }
+                    if (user?.role === 'MANAGING_DIRECTOR' && effectiveCompanyId) {
+                        // Managing Director oversees all sales and payments belonging to their company
+                        branchConditions.push(
+                            { sale: { marketer: { companyId: effectiveCompanyId } } },
+                            { sale: { lead: { companyId: effectiveCompanyId } } },
+                            { recordedByUser: { companyId: effectiveCompanyId } },
+                            { sale: { plot: { estate: { companyId: effectiveCompanyId } } } }
+                        );
+                    }
+                    if (branchConditions.length > 0) {
+                        whereClause.OR = branchConditions;
+                    }
                 } else {
                     whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
@@ -401,8 +418,11 @@ export const SaleController = {
                     effectiveBranchId = hoBranch.id;
                     whereClause.OR = [
                         { sale: { marketer: { branchId: effectiveBranchId } } },
+                        { sale: { lead: { branchId: effectiveBranchId } } },
+                        { recordedByUser: { branchId: effectiveBranchId } },
                         { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
-                        { receivingBranchId: effectiveBranchId }
+                        { receivingBranchId: effectiveBranchId },
+                        { sale: { plot: { estate: { companyId: effectiveCompanyId } } } }
                     ];
                     companyBranchIds = [hoBranch.id]; // For receiving bank logic
                 } else {
@@ -412,6 +432,8 @@ export const SaleController = {
                 if (queryBranchId) {
                     whereClause.OR = [
                         { sale: { marketer: { branchId: queryBranchId } } },
+                        { sale: { lead: { branchId: queryBranchId } } },
+                        { recordedByUser: { branchId: queryBranchId } },
                         { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
                         { receivingBranchId: queryBranchId }
                     ];
@@ -438,7 +460,7 @@ export const SaleController = {
                         }
                     },
                     recordedByUser: {
-                        select: { fullName: true, email: true, role: true }
+                        select: { fullName: true, email: true, role: true, branchId: true, companyId: true }
                     },
                     messages: {
                         select: { senderId: true, createdAt: true },
@@ -462,10 +484,20 @@ export const SaleController = {
             } else {
 
                 enrichedPayments.forEach((payment: any) => {
-                    const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
-                    const isSellingBranch = payment.sale.marketer?.branchId === effectiveBranchId;
-                    const isManagingCompany = payment.sale.plot.estate.companyId === effectiveCompanyId;
-                    const isManagingBranch = payment.sale.plot.estate.managingBranchId === effectiveBranchId;
+                    const isSellingCompany = Boolean(
+                        payment.sale.marketer?.companyId === effectiveCompanyId ||
+                        payment.sale.lead?.companyId === effectiveCompanyId ||
+                        payment.recordedByUser?.companyId === effectiveCompanyId
+                    );
+                    const isSellingBranch = Boolean(
+                        (effectiveBranchId && payment.sale.marketer?.branchId === effectiveBranchId) ||
+                        (effectiveBranchId && payment.sale.lead?.branchId === effectiveBranchId) ||
+                        (effectiveBranchId && payment.recordedByUser?.branchId === effectiveBranchId)
+                    );
+                    const isManagingCompany = Boolean(payment.sale.plot.estate.companyId === effectiveCompanyId);
+                    const isManagingBranch = Boolean(
+                        effectiveBranchId && payment.sale.plot.estate.managingBranchId === effectiveBranchId
+                    );
                     
                     // Deduce Receiving Branch matching
                     // Determine if the current user is acting on behalf of the receiving bank branch
@@ -478,10 +510,18 @@ export const SaleController = {
                         }
                     }
 
-                    const isCompanyLevel = user?.role === 'GROUP_MANAGING_DIRECTOR';
-                    // For GMD, act exactly like the Head Office Branch MD
-                    const isSelling = isCompanyLevel ? isSellingBranch : isSellingBranch;
-                    const isManaging = isCompanyLevel ? isManagingBranch : isManagingBranch;
+                    const isMD = user?.role === 'MANAGING_DIRECTOR';
+                    const isGMD = user?.role === 'GROUP_MANAGING_DIRECTOR';
+
+                    // For Managing Director: A sale is selling if it originated from their branch or company
+                    const isSelling = isMD 
+                        ? (isSellingBranch || isSellingCompany)
+                        : (isGMD ? isSellingBranch : isSellingBranch);
+
+                    // For Managing Director: A sale is managing if the estate belongs to their branch/company
+                    const isManaging = isMD
+                        ? (isManagingBranch || (isManagingCompany && (!effectiveBranchId || isManagingBranch)))
+                        : (isGMD ? isManagingBranch : isManagingBranch);
                     
                     const formattedPayment = {
                         ...payment,
@@ -564,12 +604,29 @@ export const SaleController = {
             // Respect Cross-Company & Branch boundaries
             if (!['SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GROUP_MANAGING_DIRECTOR', 'GLOBAL_ACCOUNTANT'].includes(user?.role)) {
                 if (['MANAGING_DIRECTOR', 'ACCOUNTANT', 'GENERAL_MANAGER', 'BRANCH_ADMIN'].includes(user?.role)) {
-                    // Restricted to their specific BRANCH
-                    whereClause.OR = [
-                        { sale: { marketer: { branchId: effectiveBranchId } } },
-                        { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
-                        { receivingBranchId: effectiveBranchId }
-                    ];
+                    // Restricted to their specific BRANCH or COMPANY
+                    const branchConditions: any[] = [];
+                    if (effectiveBranchId) {
+                        branchConditions.push(
+                            { sale: { marketer: { branchId: effectiveBranchId } } },
+                            { sale: { lead: { branchId: effectiveBranchId } } },
+                            { recordedByUser: { branchId: effectiveBranchId } },
+                            { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
+                            { receivingBranchId: effectiveBranchId }
+                        );
+                    }
+                    if (user?.role === 'MANAGING_DIRECTOR' && effectiveCompanyId) {
+                        // Managing Director oversees all sales and payments belonging to their company
+                        branchConditions.push(
+                            { sale: { marketer: { companyId: effectiveCompanyId } } },
+                            { sale: { lead: { companyId: effectiveCompanyId } } },
+                            { recordedByUser: { companyId: effectiveCompanyId } },
+                            { sale: { plot: { estate: { companyId: effectiveCompanyId } } } }
+                        );
+                    }
+                    if (branchConditions.length > 0) {
+                        whereClause.OR = branchConditions;
+                    }
                 } else {
                     whereClause.sale = { marketer: { companyId: effectiveCompanyId } };
                 }
@@ -580,8 +637,11 @@ export const SaleController = {
                     effectiveBranchId = hoBranch.id;
                     whereClause.OR = [
                         { sale: { marketer: { branchId: effectiveBranchId } } },
+                        { sale: { lead: { branchId: effectiveBranchId } } },
+                        { recordedByUser: { branchId: effectiveBranchId } },
                         { sale: { plot: { estate: { managingBranchId: effectiveBranchId } } } },
-                        { receivingBranchId: effectiveBranchId }
+                        { receivingBranchId: effectiveBranchId },
+                        { sale: { plot: { estate: { companyId: effectiveCompanyId } } } }
                     ];
                     companyBranchIds = [hoBranch.id]; // For receiving bank logic
                 } else {
@@ -591,6 +651,8 @@ export const SaleController = {
                 if (queryBranchId) {
                     whereClause.OR = [
                         { sale: { marketer: { branchId: queryBranchId } } },
+                        { sale: { lead: { branchId: queryBranchId } } },
+                        { recordedByUser: { branchId: queryBranchId } },
                         { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
                         { receivingBranchId: queryBranchId }
                     ];
@@ -617,7 +679,7 @@ export const SaleController = {
                         }
                     },
                     recordedByUser: {
-                        select: { fullName: true, email: true, role: true }
+                        select: { fullName: true, email: true, role: true, branchId: true, companyId: true }
                     }
                 },
                 orderBy: { createdAt: 'desc' },
@@ -635,10 +697,20 @@ export const SaleController = {
             } else {
 
                 payments.forEach(payment => {
-                    const isSellingCompany = payment.sale.marketer?.companyId === effectiveCompanyId;
-                    const isSellingBranch = payment.sale.marketer?.branchId === effectiveBranchId;
-                    const isManagingCompany = payment.sale.plot.estate.companyId === effectiveCompanyId;
-                    const isManagingBranch = payment.sale.plot.estate.managingBranchId === effectiveBranchId;
+                    const isSellingCompany = Boolean(
+                        payment.sale.marketer?.companyId === effectiveCompanyId ||
+                        payment.sale.lead?.companyId === effectiveCompanyId ||
+                        payment.recordedByUser?.companyId === effectiveCompanyId
+                    );
+                    const isSellingBranch = Boolean(
+                        (effectiveBranchId && payment.sale.marketer?.branchId === effectiveBranchId) ||
+                        (effectiveBranchId && payment.sale.lead?.branchId === effectiveBranchId) ||
+                        (effectiveBranchId && payment.recordedByUser?.branchId === effectiveBranchId)
+                    );
+                    const isManagingCompany = Boolean(payment.sale.plot.estate.companyId === effectiveCompanyId);
+                    const isManagingBranch = Boolean(
+                        effectiveBranchId && payment.sale.plot.estate.managingBranchId === effectiveBranchId
+                    );
                     
                     // Determine if the current user is acting on behalf of the receiving bank branch
                     let isReceivingBank = false;
@@ -650,10 +722,18 @@ export const SaleController = {
                         }
                     }
 
-                    const isCompanyLevel = user?.role === 'GROUP_MANAGING_DIRECTOR';
-                    // For GMD, act exactly like the Head Office Branch MD
-                    const isSelling = isCompanyLevel ? isSellingBranch : isSellingBranch;
-                    const isManaging = isCompanyLevel ? isManagingBranch : isManagingBranch;
+                    const isMD = user?.role === 'MANAGING_DIRECTOR';
+                    const isGMD = user?.role === 'GROUP_MANAGING_DIRECTOR';
+
+                    // For Managing Director: A sale is selling if it originated from their branch or company
+                    const isSelling = isMD 
+                        ? (isSellingBranch || isSellingCompany)
+                        : (isGMD ? isSellingBranch : isSellingBranch);
+
+                    // For Managing Director: A sale is managing if the estate belongs to their branch/company
+                    const isManaging = isMD
+                        ? (isManagingBranch || (isManagingCompany && (!effectiveBranchId || isManagingBranch)))
+                        : (isGMD ? isManagingBranch : isManagingBranch);
                     
                     // Direct Sale: We sold it AND we manage it
                     if (isSelling && isManaging) {
