@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List, MessageCircle, TrendingUp } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List, MessageCircle, TrendingUp, Search, Filter } from 'lucide-react';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
 import { Pagination, getPaginatedData } from '../components/Pagination';
 import { MDDiscountManager } from '../components/MDDiscountManager';
@@ -39,6 +39,7 @@ interface Payment {
     notes?: string;
     rejectionReason?: string;
     isReadOnly?: boolean;
+    fraudWarnings?: any;
 }
 
 interface PendingData {
@@ -76,6 +77,93 @@ export const ManagingDirectorDashboard = () => {
     const [payRows, setPayRows] = useState(10);
     const [procPayPage, setProcPayPage] = useState(1);
     const [procPayRows, setProcPayRows] = useState(10);
+
+    // Search & Filter States
+    const [searchQuery, setSearchQuery] = useState('');
+    const [methodFilter, setMethodFilter] = useState('ALL');
+    const [historySearchQuery, setHistorySearchQuery] = useState('');
+    const [historyMethodFilter, setHistoryMethodFilter] = useState('ALL');
+
+    // Smart Multi-Token Filter Function
+    const filterPayments = (list: Payment[], query: string, methodFilt: string = 'ALL') => {
+        let result = list;
+
+        if (methodFilt !== 'ALL') {
+            result = result.filter(p => {
+                const m = (p.method || '').toUpperCase();
+                if (methodFilt === 'BANK_DEPOSIT') {
+                    return m.includes('DEPOSIT') || m.includes('CHEQUE');
+                }
+                return m.includes(methodFilt);
+            });
+        }
+
+        if (!query.trim()) return result;
+
+        const q = query.toLowerCase().trim();
+        const tokens = q.split(/\s+/).filter(Boolean);
+
+        return result.filter(p => {
+            const clientName = (p.sale?.lead?.fullName || '').toLowerCase();
+            const clientPhone = (p.sale?.lead?.phone || '').toLowerCase();
+            const prototype = (p.sale?.plot?.prototype || '').toLowerCase();
+            const estateName = (p.sale?.plot?.estate?.name || '').toLowerCase();
+            const estateLocation = (p.sale?.plot?.estate?.location || '').toLowerCase();
+            const marketerName = (p.sale?.marketer?.fullName || '').toLowerCase();
+            const recordedByName = (p.recordedByUser?.fullName || '').toLowerCase();
+            const recordedByEmail = (p.recordedByUser?.email || '').toLowerCase();
+            const recordedByRole = (p.recordedByUser?.role || '').toLowerCase();
+            const method = (p.method || '').toLowerCase();
+            const account = (p.accountPaidTo || '').toLowerCase();
+            const reference = (p.reference || '').toLowerCase();
+            const notes = (p.notes || '').toLowerCase();
+            const bankConf = (p.bankBranchConfirmation || '').toLowerCase();
+            const status = (p.status || '').toLowerCase();
+            const amountNum = p.amount || 0;
+            const amountStr = amountNum.toString();
+            const amountFormatted = amountNum.toLocaleString().toLowerCase();
+            const agreedPrice = p.sale?.agreedPrice || 0;
+            const agreedPriceStr = agreedPrice.toString();
+            const agreedPriceFormatted = agreedPrice.toLocaleString().toLowerCase();
+
+            return tokens.every(token => {
+                const cleanToken = token.replace(/[₦, ]/g, '');
+
+                let parsedShorthand: number | null = null;
+                if (/^\d+(\.\d+)?k$/.test(cleanToken)) {
+                    parsedShorthand = parseFloat(cleanToken.slice(0, -1)) * 1000;
+                } else if (/^\d+(\.\d+)?m$/.test(cleanToken)) {
+                    parsedShorthand = parseFloat(cleanToken.slice(0, -1)) * 1000000;
+                }
+
+                const matchesAmount = 
+                    amountStr.includes(cleanToken) || 
+                    amountFormatted.includes(token) ||
+                    agreedPriceStr.includes(cleanToken) ||
+                    agreedPriceFormatted.includes(token) ||
+                    (parsedShorthand !== null && (amountNum === parsedShorthand || agreedPrice === parsedShorthand));
+
+                return (
+                    clientName.includes(token) ||
+                    clientPhone.includes(token) ||
+                    prototype.includes(token) ||
+                    estateName.includes(token) ||
+                    estateLocation.includes(token) ||
+                    marketerName.includes(token) ||
+                    recordedByName.includes(token) ||
+                    recordedByEmail.includes(token) ||
+                    recordedByRole.includes(token) ||
+                    method.includes(token) ||
+                    account.includes(token) ||
+                    reference.includes(token) ||
+                    notes.includes(token) ||
+                    bankConf.includes(token) ||
+                    status.includes(token) ||
+                    matchesAmount
+                );
+            });
+        });
+    };
 
     const fetchPendingPayments = async () => {
         setLoading(true);
@@ -252,9 +340,33 @@ export const ManagingDirectorDashboard = () => {
         return pendingData.directSales.length + pendingData.inboundCrossSales.length + pendingData.outboundCrossSales.length + pendingData.bankConfirmations.length;
     };
 
-    const renderPaymentTable = (paymentsList: Payment[], isBankConfirmTab: boolean = false, isHistory: boolean = false) => {
+    const renderPaymentTable = (paymentsList: Payment[], isBankConfirmTab: boolean = false, isHistory: boolean = false, isSearching: boolean = false) => {
         if (paymentsList.length === 0) {
-            return (
+            return isSearching ? (
+                <div className="p-12 text-center text-gray-500 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 my-4">
+                    <Search size={36} className="mx-auto text-gray-300 mb-3" />
+                    <p className="font-bold text-gray-700 text-base">No payments found</p>
+                    <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                        No payments match your current search "{isHistory ? historySearchQuery : searchQuery}". Check for typos or try searching by client name, estate, property, amount, or payment method.
+                    </p>
+                    <button
+                        onClick={() => {
+                            if (isHistory) {
+                                setHistorySearchQuery('');
+                                setHistoryMethodFilter('ALL');
+                                setProcPayPage(1);
+                            } else {
+                                setSearchQuery('');
+                                setMethodFilter('ALL');
+                                setPayPage(1);
+                            }
+                        }}
+                        className="mt-4 inline-flex items-center px-4 py-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-bold border border-blue-200 transition"
+                    >
+                        <X size={14} className="mr-1.5" /> Clear Filters & Show All
+                    </button>
+                </div>
+            ) : (
                 <div className="p-10 text-center text-gray-500">
                     <CheckCircle size={32} className="mx-auto text-gray-300 mb-2" />
                     No payments found in this category.
@@ -603,12 +715,96 @@ export const ManagingDirectorDashboard = () => {
                             <p className="text-sm font-medium text-gray-600">Loading pending approvals...</p>
                             <p className="text-xs text-gray-400 mt-1">Checking direct sales, cross-sales, and bank confirmations</p>
                         </div>
-                    ) : 
-                        approvalSubTab === 'DIRECT' ? renderPaymentTable(pendingData.directSales) :
-                        approvalSubTab === 'INBOUND' ? renderPaymentTable(pendingData.inboundCrossSales) :
-                        approvalSubTab === 'OUTBOUND' ? renderPaymentTable(pendingData.outboundCrossSales) :
-                        renderPaymentTable(pendingData.bankConfirmations, true)
-                    }
+                    ) : (
+                        (() => {
+                            const rawList = 
+                                approvalSubTab === 'DIRECT' ? pendingData.directSales :
+                                approvalSubTab === 'INBOUND' ? pendingData.inboundCrossSales :
+                                approvalSubTab === 'OUTBOUND' ? pendingData.outboundCrossSales :
+                                pendingData.bankConfirmations;
+                            const filteredList = filterPayments(rawList, searchQuery, methodFilter);
+                            const isSearching = Boolean(searchQuery.trim() || methodFilter !== 'ALL');
+
+                            return (
+                                <>
+                                    {/* Smart Search Bar */}
+                                    <div className="mb-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                            <input
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => {
+                                                    setSearchQuery(e.target.value);
+                                                    setPayPage(1);
+                                                }}
+                                                placeholder="Search client, estate, property, marketer, amount (e.g. 500,000 or 500k), bank, note..."
+                                                className="w-full pl-10 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            />
+                                            {searchQuery && (
+                                                <button
+                                                    onClick={() => {
+                                                        setSearchQuery('');
+                                                        setPayPage(1);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100 transition"
+                                                    title="Clear search"
+                                                >
+                                                    <X size={15} />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={methodFilter}
+                                                onChange={(e) => {
+                                                    setMethodFilter(e.target.value);
+                                                    setPayPage(1);
+                                                }}
+                                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+                                            >
+                                                <option value="ALL">All Payment Methods</option>
+                                                <option value="TRANSFER">Transfer</option>
+                                                <option value="BANK_DEPOSIT">Bank Deposit / Cheque</option>
+                                                <option value="CASH">Cash</option>
+                                                <option value="POS">POS</option>
+                                            </select>
+
+                                            {isSearching ? (
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="bg-blue-100 text-blue-700 font-bold px-2.5 py-1.5 rounded-lg text-xs">
+                                                        {filteredList.length} of {rawList.length} found
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSearchQuery('');
+                                                            setMethodFilter('ALL');
+                                                            setPayPage(1);
+                                                        }}
+                                                        className="text-xs text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer shrink-0"
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-gray-500 font-medium shrink-0 px-1">
+                                                    Total: <strong className="text-gray-800">{rawList.length}</strong> {rawList.length === 1 ? 'payment' : 'payments'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {renderPaymentTable(
+                                        filteredList,
+                                        approvalSubTab === 'BANK',
+                                        false,
+                                        isSearching
+                                    )}
+                                </>
+                            );
+                        })()
+                    )}
                 </div>
             )}
 
@@ -639,12 +835,94 @@ export const ManagingDirectorDashboard = () => {
                                     Bank Confirmations
                                 </button>
                             </div>
-                            {
-                                historySubTab === 'DIRECT' ? renderPaymentTable(processedData.directSales, false, true) :
-                                historySubTab === 'INBOUND' ? renderPaymentTable(processedData.inboundCrossSales, false, true) :
-                                historySubTab === 'OUTBOUND' ? renderPaymentTable(processedData.outboundCrossSales, false, true) :
-                                renderPaymentTable(processedData.bankConfirmations, true, true)
-                            }
+                            {(() => {
+                                const rawList =
+                                    historySubTab === 'DIRECT' ? processedData.directSales :
+                                    historySubTab === 'INBOUND' ? processedData.inboundCrossSales :
+                                    historySubTab === 'OUTBOUND' ? processedData.outboundCrossSales :
+                                    processedData.bankConfirmations;
+                                const filteredList = filterPayments(rawList, historySearchQuery, historyMethodFilter);
+                                const isSearching = Boolean(historySearchQuery.trim() || historyMethodFilter !== 'ALL');
+
+                                return (
+                                    <>
+                                        {/* Smart Search Bar */}
+                                        <div className="mb-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                                            <div className="relative flex-1">
+                                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                                <input
+                                                    type="text"
+                                                    value={historySearchQuery}
+                                                    onChange={(e) => {
+                                                        setHistorySearchQuery(e.target.value);
+                                                        setProcPayPage(1);
+                                                    }}
+                                                    placeholder="Search client, estate, property, marketer, amount (e.g. 500,000 or 500k), bank, note..."
+                                                    className="w-full pl-10 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                />
+                                                {historySearchQuery && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setHistorySearchQuery('');
+                                                            setProcPayPage(1);
+                                                        }}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100 transition"
+                                                        title="Clear search"
+                                                    >
+                                                        <X size={15} />
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <select
+                                                    value={historyMethodFilter}
+                                                    onChange={(e) => {
+                                                        setHistoryMethodFilter(e.target.value);
+                                                        setProcPayPage(1);
+                                                    }}
+                                                    className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+                                                >
+                                                    <option value="ALL">All Payment Methods</option>
+                                                    <option value="TRANSFER">Transfer</option>
+                                                    <option value="BANK_DEPOSIT">Bank Deposit / Cheque</option>
+                                                    <option value="CASH">Cash</option>
+                                                    <option value="POS">POS</option>
+                                                </select>
+
+                                                {isSearching ? (
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="bg-blue-100 text-blue-700 font-bold px-2.5 py-1.5 rounded-lg text-xs">
+                                                            {filteredList.length} of {rawList.length} found
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setHistorySearchQuery('');
+                                                                setHistoryMethodFilter('ALL');
+                                                                setProcPayPage(1);
+                                                            }}
+                                                            className="text-xs text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer shrink-0"
+                                                        >
+                                                            Clear
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-gray-500 font-medium shrink-0 px-1">
+                                                        Total: <strong className="text-gray-800">{rawList.length}</strong> {rawList.length === 1 ? 'payment' : 'payments'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {renderPaymentTable(
+                                            filteredList,
+                                            historySubTab === 'BANK',
+                                            true,
+                                            isSearching
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     ) : (
                         // Requisitions history table... Keep it simple, just render the processed requisitions
