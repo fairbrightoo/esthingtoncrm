@@ -63,6 +63,8 @@ model Company {
   marketingAssets      MarketingAsset[]
   productionScripts    ProductionScript[]
   socialReports        SocialMediaReport[]
+  transfersFrom        StaffTransfer[] @relation("TransfersFromCompany")
+  transfersTo          StaffTransfer[] @relation("TransfersToCompany")
 
   hoDelegatesPayments     Boolean @default(false)
   hoDelegatesDiscounts    Boolean @default(true)
@@ -118,6 +120,8 @@ model Branch {
   socialReports         SocialMediaReport[]
   campaigns             Campaign[]
   Announcement          Announcement[]
+  transfersFrom         StaffTransfer[] @relation("TransfersFromBranch")
+  transfersTo           StaffTransfer[] @relation("TransfersToBranch")
 
   requestingLegacySales LegacySaleRequest[] @relation("RequestingBranch")
   managingLegacySales   LegacySaleRequest[] @relation("ManagingBranch")
@@ -221,6 +225,11 @@ model User {
   oracleSocialReports     SocialMediaReport[] @relation("OracleReports")
   createdCampaigns        Campaign[]          @relation("CreatedCampaigns")
   sentPaymentMessages     PaymentMessage[]
+  transfersInitiated         StaffTransfer[]      @relation("TransferInitiator")
+  transfersReceived          StaffTransfer[]      @relation("TransferredStaff")
+  releasingApprovedTransfers StaffTransfer[]      @relation("TransferReleasingMD")
+  receivingApprovedTransfers StaffTransfer[]      @relation("TransferReceivingMD")
+  inheritedTransferredLeads  StaffTransfer[]      @relation("LeadsReassignedTo")
 
   requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
   esthCoinLedgers      EsthCoinLedger[]
@@ -1325,5 +1334,79 @@ model MessagingTariff {
   minTopupAmount       Float    @default(3000.0) // ₦3,000 minimum recharge
   defaultWelcomeCredit Float    @default(100.0)  // ₦100 welcome balance
   updatedAt            DateTime @updatedAt
+}
+
+model StaffTransfer {
+  id                          String    @id @default(uuid())
+  referenceNumber             String    @unique // E.g., TRF-2026-0089
+
+  // Staff being transferred
+  userId                      String
+  user                        User      @relation("TransferredStaff", fields: [userId], references: [id])
+
+  // Origin (Releasing) Context
+  fromCompanyId               String
+  fromCompany                 Company   @relation("TransfersFromCompany", fields: [fromCompanyId], references: [id])
+  fromBranchId                String
+  fromBranch                  Branch    @relation("TransfersFromBranch", fields: [fromBranchId], references: [id])
+  previousRole                String
+  previousSalary              Float?
+  previousCommission          Float?
+
+  // Destination (Receiving) Context
+  toCompanyId                 String
+  toCompany                   Company   @relation("TransfersToCompany", fields: [toCompanyId], references: [id])
+  toBranchId                  String
+  toBranch                    Branch    @relation("TransfersToBranch", fields: [toBranchId], references: [id])
+  newRole                     String
+  newSalary                   Float?
+  newCommission               Float?
+
+  // Operational Details
+  reason                      String    // e.g., "Branch Expansion", "Promotion", "Relocation", "Realignment", "Employee Request"
+  justification               String?
+  effectiveDate               DateTime  // Date the transfer takes effect
+  leadStrategy                String    @default("MIGRATE_WITH_STAFF") // MIGRATE_WITH_STAFF, REASSIGN_AT_SOURCE, RETURN_TO_BRANCH_POOL
+  reassignedToUserId          String?
+  reassignedToUser            User?     @relation("LeadsReassignedTo", fields: [reassignedToUserId], references: [id])
+
+  // Handover & Clearance Checklist
+  handoverNotes               String?
+  assetsClearance             Boolean   @default(false)
+  filesHandedOver             Boolean   @default(false)
+
+  // Status & Approval Workflow
+  // PENDING_RELEASING_MD, PENDING_RECEIVING_MD, APPROVED_SCHEDULED, COMPLETED, REJECTED_BY_RELEASING_MD, DECLINED_BY_RECEIVING_MD, CANCELLED
+  status                      String    @default("PENDING_RELEASING_MD")
+
+  initiatedByUserId           String
+  initiatedByUser             User      @relation("TransferInitiator", fields: [initiatedByUserId], references: [id])
+  initiatedAt                 DateTime  @default(now())
+
+  // Releasing MD Sign-off
+  releasingMdApprovedByUserId  String?
+  releasingMdApprovedByUser    User?     @relation("TransferReleasingMD", fields: [releasingMdApprovedByUserId], references: [id])
+  releasingMdApprovedAt        DateTime?
+  releasingMdRemarks           String?
+  releasingMdRejectionReason   String?
+
+  // Receiving MD Sign-off
+  receivingMdApprovedByUserId  String?
+  receivingMdApprovedByUser    User?     @relation("TransferReceivingMD", fields: [receivingMdApprovedByUserId], references: [id])
+  receivingMdApprovedAt        DateTime?
+  receivingMdRemarks           String?
+  receivingMdDeclineReason     String?
+
+  // Execution & Letter
+  executedAt                  DateTime?
+  transferLetterUrl           String?
+
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([fromBranchId])
+  @@index([toBranchId])
+  @@index([status])
 }
 

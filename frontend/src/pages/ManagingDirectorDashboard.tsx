@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List, MessageCircle, TrendingUp, Search, Filter } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, AlertCircle, AlertTriangle, FileText, X, Tag, List, MessageCircle, TrendingUp, Search, Filter, ArrowRightLeft } from 'lucide-react';
 import { AnnouncementWidget } from '../components/AnnouncementWidget';
 import { Pagination, getPaginatedData } from '../components/Pagination';
 import { MDDiscountManager } from '../components/MDDiscountManager';
@@ -11,6 +11,7 @@ import { Calculator } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
 import { getPaymentTypeLabel } from './AccountantDashboard';
 import { SalesPerformanceTab } from '../components/SalesPerformanceTab';
+import { MDStaffTransferQueue } from '../components/MDStaffTransferQueue';
 
 interface Payment {
     id: string;
@@ -66,7 +67,7 @@ export const ManagingDirectorDashboard = () => {
     const [newMessage, setNewMessage] = useState('');
     const [personalStats, setPersonalStats] = useState<any>(null);
 
-    const [activeTab, setActiveTab] = useState<'APPROVALS' | 'HISTORY' | 'DISCOUNTS' | 'FUNDS_REQUEST' | 'BUDGETS' | 'REFUNDS' | 'PERFORMANCE'>('APPROVALS');
+    const [activeTab, setActiveTab] = useState<'APPROVALS' | 'HISTORY' | 'DISCOUNTS' | 'FUNDS_REQUEST' | 'BUDGETS' | 'REFUNDS' | 'PERFORMANCE' | 'TRANSFERS'>('APPROVALS');
     const [approvalSubTab, setApprovalSubTab] = useState<'DIRECT' | 'INBOUND' | 'OUTBOUND' | 'BANK'>('DIRECT');
     const [historySubTab, setHistorySubTab] = useState<'DIRECT' | 'INBOUND' | 'OUTBOUND' | 'BANK'>('DIRECT');
 
@@ -657,6 +658,12 @@ export const ManagingDirectorDashboard = () => {
                     <TrendingUp className="w-4 h-4 mr-2" /> My Sales Performance
                 </button>
                 <button
+                    onClick={() => setActiveTab('TRANSFERS')}
+                    className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'TRANSFERS' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                    <ArrowRightLeft className="w-4 h-4 mr-2" /> Staff Transfers
+                </button>
+                <button
                     onClick={() => setActiveTab('HISTORY')}
                     className={`pb-3 px-2 font-bold flex items-center transition-colors ${activeTab === 'HISTORY' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
                 >
@@ -949,6 +956,12 @@ export const ManagingDirectorDashboard = () => {
                             </table>
                         </div>
                     )}
+                </div>
+            )}
+
+            {activeTab === 'TRANSFERS' && (
+                <div className="bg-white rounded-xl shadow-sm border overflow-hidden p-6">
+                    <MDStaffTransferQueue />
                 </div>
             )}
 
