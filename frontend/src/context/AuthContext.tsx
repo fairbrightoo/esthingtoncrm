@@ -1,15 +1,38 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-interface User {
+export type UserRole = 
+    | 'SUPER_ADMIN' 
+    | 'GLOBAL_CHAIRMAN' 
+    | 'GLOBAL_ACCOUNTANT'
+    | 'GLOBAL_HR'
+    | 'BRANCH_ADMIN' 
+    | 'CUSTOMER_CARE' 
+    | 'MARKETER' 
+    | 'BRANCH_HR' 
+    | 'MANAGING_DIRECTOR' 
+    | 'GROUP_MANAGING_DIRECTOR' 
+    | 'ACCOUNTANT' 
+    | 'GENERAL_MANAGER' 
+    | 'TEAM_LEAD' 
+    | 'BDM' 
+    | 'HEAD_BDD'
+    | 'SITE_EXPERT'
+    | 'ICT_ORACLE'
+    | 'PARTNER';
+
+export interface User {
     id: string;
     email: string;
     fullName: string;
-    role: 'SUPER_ADMIN' | 'GLOBAL_CHAIRMAN' | 'BRANCH_ADMIN' | 'CUSTOMER_CARE' | 'MARKETER' | 'BRANCH_HR' | 'MANAGING_DIRECTOR' | 'GROUP_MANAGING_DIRECTOR' | 'ACCOUNTANT' | 'GENERAL_MANAGER' | 'TEAM_LEAD' | 'BDM' | 'HEAD_BDD';
+    role: UserRole;
     companyId?: string;
     branchId?: string;
     branch?: { id?: string; name: string; address: string; phone?: string; email?: string; abbreviation?: string };
     company?: { id?: string; name: string; themeColor: string; logoUrl: string; address?: string; phone?: string; email?: string; website?: string; abbreviation?: string };
     esthCoinBalance?: number;
+    commissionRate?: number;
+    referralCodeId?: string;
+    passwordResetRequired?: boolean;
 }
 
 interface AuthContextType {
