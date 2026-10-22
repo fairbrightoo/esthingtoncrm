@@ -2,20 +2,24 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { RequisitionForm } from '../components/RequisitionForm';
-import { Plus, Clock, CheckCircle, XCircle, FileSpreadsheet, ArrowRightLeft } from 'lucide-react';
+import { Plus, Clock, CheckCircle, XCircle, FileSpreadsheet, ArrowRightLeft, Wallet } from 'lucide-react';
 import { RefundQueue } from '../components/RefundQueue';
+import { ImprestManagement } from '../components/ImprestManagement';
 
 export const BranchRequisitions = () => {
     const [requisitions, setRequisitions] = useState<any[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'REQUISITIONS' | 'REFUNDS'>('REQUISITIONS');
+    const [activeTab, setActiveTab] = useState<'REQUISITIONS' | 'REFUNDS' | 'IMPREST'>('REQUISITIONS');
 
     const { user } = useAuth();
     const token = localStorage.getItem('token');
     
-    // Hide refunds from HR roles and Global Chairman (they use this for personal expenses)
-    const canViewRefunds = !['BRANCH_HR', 'GLOBAL_CHAIRMAN'].includes(user?.role || '');
+    // RBAC: Accountants and Executive Approvers see all 3 tabs (Requisitions, Client Refunds, Imprest).
+    // All other roles see ONLY the Requisitions tab.
+    const isAccountant = user?.role === 'ACCOUNTANT' || user?.role === 'GLOBAL_ACCOUNTANT';
+    const isExecutive = ['MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(user?.role || '');
+    const canViewAllTabs = isAccountant || isExecutive;
 
     const fetchRequisitions = async () => {
         try {
@@ -49,16 +53,18 @@ export const BranchRequisitions = () => {
         <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Branch Requisitions</h1>
-                    <p className="text-gray-500">Submit and track requests for materials, imprest, or operational expenses.</p>
+                    <h1 className="text-2xl font-bold text-gray-800">Branch Requisitions & Financial Ledgers</h1>
+                    <p className="text-gray-500">Submit and track requests for materials, operational expenses, client refunds, and monthly branch imprest floats.</p>
                 </div>
-                <button 
-                    onClick={() => setShowForm(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
-                >
-                    <Plus size={20} />
-                    New Requisition
-                </button>
+                {activeTab === 'REQUISITIONS' && (
+                    <button 
+                        onClick={() => setShowForm(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
+                    >
+                        <Plus size={20} />
+                        New Requisition
+                    </button>
+                )}
             </div>
             
             {showForm && (
@@ -72,23 +78,33 @@ export const BranchRequisitions = () => {
                 </div>
             )}
 
-            
-            {canViewRefunds && (
-                <div className="flex bg-gray-100 rounded-lg p-1 w-fit mb-6">
-                    <button
-                        onClick={() => setActiveTab('REQUISITIONS')}
-                        className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'REQUISITIONS' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <FileSpreadsheet size={16} /> Requisitions
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('REFUNDS')}
-                        className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'REFUNDS' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <ArrowRightLeft size={16} /> Client Refunds
-                    </button>
-                </div>
-            )}
+            {/* TAB NAVIGATION: Only Accountants & Executive Approvers see all 3 tabs; other roles see only Requisitions */}
+            <div className="flex bg-gray-100 rounded-lg p-1 w-fit mb-6">
+                <button
+                    onClick={() => setActiveTab('REQUISITIONS')}
+                    className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'REQUISITIONS' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                    <FileSpreadsheet size={16} /> Requisitions
+                </button>
+                {canViewAllTabs && (
+                    <>
+                        <button
+                            onClick={() => setActiveTab('REFUNDS')}
+                            className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'REFUNDS' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-500 hover:text-gray-800'}`}
+                        >
+                            <ArrowRightLeft size={16} /> Client Refunds
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('IMPREST')}
+                            className={`px-6 py-2 rounded-md font-medium text-sm transition flex items-center gap-2 ${activeTab === 'IMPREST' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
+                        >
+                            <Wallet size={16} /> Imprest
+                        </button>
+                    </>
+                )}
+            </div>
+
+            {activeTab === 'IMPREST' && <ImprestManagement />}
 
             {activeTab === 'REFUNDS' && <RefundQueue roleContext={user?.role as any} />}
 

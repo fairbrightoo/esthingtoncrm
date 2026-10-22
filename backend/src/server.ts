@@ -173,6 +173,9 @@ app.use('/api/hr-workflows', hrWorkflowRoutes);
 import staffTransferRoutes from './routes/staffTransferRoutes.js';
 app.use('/api/transfers', staffTransferRoutes);
 
+import imprestRoutes from './routes/imprestRoutes.js';
+app.use('/api/imprest', imprestRoutes);
+
 import ticketRoutes from './routes/ticketRoutes.js';
 import referralRoutes from './routes/referralRoutes.js';
 import partnerRoutes from './routes/partnerRoutes.js';

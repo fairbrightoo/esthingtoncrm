@@ -65,6 +65,7 @@ model Company {
   socialReports        SocialMediaReport[]
   transfersFrom        StaffTransfer[] @relation("TransfersFromCompany")
   transfersTo          StaffTransfer[] @relation("TransfersToCompany")
+  imprests             Imprest[]
 
   hoDelegatesPayments     Boolean @default(false)
   hoDelegatesDiscounts    Boolean @default(true)
@@ -122,6 +123,7 @@ model Branch {
   Announcement          Announcement[]
   transfersFrom         StaffTransfer[] @relation("TransfersFromBranch")
   transfersTo           StaffTransfer[] @relation("TransfersToBranch")
+  imprests              Imprest[]
 
   requestingLegacySales LegacySaleRequest[] @relation("RequestingBranch")
   managingLegacySales   LegacySaleRequest[] @relation("ManagingBranch")
@@ -230,6 +232,9 @@ model User {
   releasingApprovedTransfers StaffTransfer[]      @relation("TransferReleasingMD")
   receivingApprovedTransfers StaffTransfer[]      @relation("TransferReceivingMD")
   inheritedTransferredLeads  StaffTransfer[]      @relation("LeadsReassignedTo")
+  imprestsPrepared           Imprest[]            @relation("ImprestPreparedBy")
+  imprestsApproved           Imprest[]            @relation("ImprestApprovedBy")
+  imprestsDisbursed          Imprest[]            @relation("ImprestDisbursedBy")
 
   requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
   esthCoinLedgers      EsthCoinLedger[]
@@ -1409,4 +1414,88 @@ model StaffTransfer {
   @@index([toBranchId])
   @@index([status])
 }
+
+model Imprest {
+  id                     String         @id @default(uuid())
+  referenceNumber        String         @unique // e.g. IMP-202610-DKEL-01
+  title                  String         // e.g. "Imprest Expense Reimbursement - October 2026"
+  period                 String         // e.g. "07TH SEPTEMBER 2026 TO 22ND OCTOBER 2026"
+  startDate              DateTime
+  endDate                DateTime
+  
+  // Organization Relations
+  companyId              String
+  company                Company        @relation(fields: [companyId], references: [id])
+  branchId               String
+  branch                 Branch         @relation(fields: [branchId], references: [id])
+  
+  // Financial Totals
+  openingBalance         Float          @default(0) // Balance Brought Forward / Float Received (=N=)
+  totalInflow            Float          @default(0) // Opening Balance + Any Mid-Period Top-ups
+  totalOutflow           Float          @default(0) // Sum of all expense line items
+  closingBalance         Float          @default(0) // totalInflow - totalOutflow
+  reimbursementRequested Float          @default(0) // Net amount needed to restore float
+  
+  // Status: "DRAFT", "PENDING_APPROVAL", "APPROVED", "DISBURSED", "REJECTED"
+  status                 String         @default("PENDING_APPROVAL")
+  
+  // Auditing: Preparation & Submission
+  preparedByUserId       String
+  preparedByUser         User           @relation("ImprestPreparedBy", fields: [preparedByUserId], references: [id])
+  submittedAt            DateTime?
+  
+  // Auditing: Dual Approval (Branch MD or Global Accountant)
+  approvedByUserId       String?
+  approvedByUser         User?          @relation("ImprestApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt             DateTime?
+  approvalRole           String?        // "MANAGING_DIRECTOR", "GLOBAL_ACCOUNTANT", etc.
+  approvalRemarks        String?
+  rejectionReason        String?
+  
+  // Auditing: Fund Disbursement
+  disbursedByUserId      String?
+  disbursedByUser        User?          @relation("ImprestDisbursedBy", fields: [disbursedByUserId], references: [id])
+  disbursedAt            DateTime?
+  disbursementSourceBank String?        // Bank / Source Account e.g. "Zenith Bank - Operations"
+  disbursementReference  String?        // Transfer Reference or Cheque No
+  disbursementProofUrl   String?        // Uploaded payment slip / bank debit advice
+  
+  notes                  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  
+  items                  ImprestItem[]
+
+  @@index([companyId])
+  @@index([branchId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model ImprestItem {
+  id              String   @id @default(uuid())
+  imprestId       String
+  imprest         Imprest  @relation(fields: [imprestId], references: [id], onDelete: Cascade)
+  
+  itemNumber      Int      // S/N: 1, 2, 3...
+  date            DateTime // Date of transaction
+  description     String   // e.g. "TOTALENERGY TOP CARD - KUJE", "REPAIRS AND MAINTENANCE"
+  expenseClass    String   // e.g. "ACCOUNT", "TOP CARD", "IMPREST", "GENERAL", "UTILITIES"
+  uom             String   // Unit of Measure: e.g. "ACT", "LTR", "TRF", "PCS", "DAYS"
+  qty             Float    @default(1)
+  unitPrice       Float    @default(0)
+  inflow          Float    @default(0) // Inflow amount (if any, e.g. Bal B/F row)
+  outflow         Float    @default(0) // Outflow amount (= qty * unitPrice)
+  runningBalance  Float    @default(0) // Running balance snapshot after this row
+  receivedBy      String   // Beneficiary/Staff name: e.g. "ADA", "GODWIN", "BAMIYI"
+  paymentStatus   String   @default("PAID") // "PAID", "PENDING", "CLEARED"
+  receiptUrl      String?  // Optional uploaded voucher / receipt photo
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([imprestId])
+  @@index([expenseClass])
+}
+
 
