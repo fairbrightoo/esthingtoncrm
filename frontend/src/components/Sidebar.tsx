@@ -266,6 +266,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/staff-analytics`} icon={<Users size={20} />} label="Branch Staff & Partners" />
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
+                        <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions & Imprest" />
                         <NavItem to={`${basePath}/partner-applications`} icon={<CheckCircle size={20} />} label="Partner Applications" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Executive Memos" />
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
@@ -306,6 +307,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
+                        <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions & Imprest" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/taxes`} icon={<BookOpen size={20} />} label="Tax Compliance" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
@@ -320,6 +322,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 mt-4 px-4">Group Financials</div>
                         <NavItem to="/dashboard/global-accountant" icon={<Globe size={20} />} label="Global Overview" />
                         <NavItem to="/dashboard/global-accountant/disbursements" icon={<CheckCircle size={20} />} label="Disbursement Center" />
+                        <NavItem to="/dashboard/global-accountant/requisitions" icon={<FileSpreadsheet size={20} />} label="Requisitions & Imprest" />
                         <NavItem to="/dashboard/global-accountant/payroll" icon={<FileSpreadsheet size={20} />} label="Global Payroll" />
                         <NavItem to="/dashboard/global-accountant/reports" icon={<FileText size={20} />} label="Reports" />
                         

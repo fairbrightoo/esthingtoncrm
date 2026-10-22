@@ -261,6 +261,7 @@ function App() {
             <Route path="/dashboard/global-accountant/disbursements" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/payroll" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/reports" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/requisitions" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
