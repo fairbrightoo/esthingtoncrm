@@ -200,6 +200,16 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     </>
                 )}
 
+                {user?.role === 'PARTNER' && (
+                    <>
+                        <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
+                        <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
+                        <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
+                        <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
+                    </>
+                )}
+
                 {user?.role === 'MARKETER' && (
                     <>
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
@@ -368,7 +378,9 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 
                 {user?.role !== 'GROUP_MANAGING_DIRECTOR' && user?.role !== 'GLOBAL_ACCOUNTANT' && (
                     <>
-                        <NavItem to={`${basePath}/archive`} icon={<BookOpen size={20} />} label="Notice Archive" />
+                        {user?.role !== 'PARTNER' && (
+                            <NavItem to={`${basePath}/archive`} icon={<BookOpen size={20} />} label="Notice Archive" />
+                        )}
                         <NavItem to={`${basePath}/reports`} icon={<FileText size={20} />} label="Reports" />
                         <NavItem to={`${basePath}/settings`} icon={<Settings size={20} />} label="Settings" />
                     </>

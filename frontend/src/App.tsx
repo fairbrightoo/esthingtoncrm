@@ -162,7 +162,7 @@ const ReportsRouter = () => {
   if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
   }
-  if (['MARKETER', 'SALES_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user?.role || '')) {
+  if (['MARKETER', 'SALES_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'PARTNER'].includes(user?.role || '')) {
     return <MarketerReportsDashboard />;
   }
   return <BranchReports />;
