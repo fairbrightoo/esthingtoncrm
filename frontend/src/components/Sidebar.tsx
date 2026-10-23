@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2, Wallet } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2, Wallet, ArrowRightLeft } from 'lucide-react';
 
 export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onClose?: () => void }) => {
     const { user, logout } = useAuth();
@@ -92,6 +92,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to="/admin/onboarding" icon={<Upload size={20} />} label="Bulk Onboarding" />
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Global User Mgmt" />
+                        <NavItem to="/admin/transfers" icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to="/admin/global-clients" icon={<Globe size={20} />} label="Global Clients" />
                         <NavItem to="/admin/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/admin/deletion-history" icon={<Trash2 size={20} />} label="Deletion History" />
@@ -114,6 +115,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/chairman/reports" icon={<FileText size={20} />} label="Global Reports" />
                         <NavItem to="/dashboard/chairman/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Group Staff" />
+                        <NavItem to="/dashboard/chairman/transfers" icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to="/dashboard/chairman/deletion-history" icon={<Trash2 size={20} />} label="Deletion History" />
                         <NavItem to="/dashboard/chairman/settings" icon={<Settings size={20} />} label="Settings" />
                     </>
@@ -122,6 +124,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                 {user?.role === 'GROUP_MANAGING_DIRECTOR' && (
                     <>
                         <NavItem to="/dashboard/approvals" icon={<CheckCircle size={20} />} label="Payment Approvals" />
+                        <NavItem to="/dashboard/transfers" icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to="/dashboard/partner-applications" icon={<Users size={20} />} label="Partner Applications" />
                         <NavItem to="/dashboard/requisitions" icon={<FileSpreadsheet size={20} />} label="Fund Requests" />
                         <NavItem to="/dashboard/leaves" icon={<CalendarClock size={20} />} label="Leave Approvals" />
@@ -141,6 +144,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
+                        <NavItem to={`${basePath}/transfers`} icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance" />
                         <NavItem to={`${basePath}/leads`} icon={<FileText size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/cross-sales`} icon={<Globe size={20} />} label="Cross-Branch Clients" />
@@ -161,6 +165,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff & Partners" />
+                        <NavItem to={`${basePath}/transfers`} icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to={`${basePath}/partner-applications`} icon={<FileText size={20} />} label="Partner Applications" />
                         <NavItem to={`${basePath}/attendance`} icon={<CalendarClock size={20} />} label="Attendance Tracking" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Payroll Report" />
@@ -275,6 +280,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/staff-analytics`} icon={<Users size={20} />} label="Branch Staff & Partners" />
+                        <NavItem to={`${basePath}/transfers`} icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions & Imprest" />
                         <NavItem to={`${basePath}/partner-applications`} icon={<CheckCircle size={20} />} label="Partner Applications" />
@@ -294,6 +300,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/approvals`} icon={<CheckCircle size={20} />} label="Payment Approvals" />
                         <NavItem to={`${basePath}/payroll`} icon={<FileSpreadsheet size={20} />} label="Staff Payroll" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff" />
+                        <NavItem to={`${basePath}/transfers`} icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="All Branch Leads" />
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/site-mapping`} icon={<Map size={20} />} label="Site Plot Allocations" />

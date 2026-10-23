@@ -120,15 +120,18 @@ export const MDStaffTransferQueue = () => {
 
     // Filter by Subtab
     const userBranchId = user?.branchId || user?.branch?.id;
+    const userCompanyId = user?.companyId || user?.company?.id;
     const isGlobalExecutive = ['GROUP_MANAGING_DIRECTOR', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(user?.role || '');
+    const isHeadOfficeMD = user?.role === 'MANAGING_DIRECTOR' && (user?.branch?.isHeadOffice || false);
+    const isManagement = ['MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GENERAL_MANAGER'].includes(user?.role || '');
 
     const outboundList = transfers.filter(t =>
-        (isGlobalExecutive || t.fromBranchId === userBranchId) &&
+        (isGlobalExecutive || t.fromBranchId === userBranchId || (isHeadOfficeMD && t.fromCompanyId === userCompanyId)) &&
         t.status === 'PENDING_RELEASING_MD'
     );
 
     const inboundList = transfers.filter(t =>
-        (isGlobalExecutive || t.toBranchId === userBranchId) &&
+        (isGlobalExecutive || t.toBranchId === userBranchId || (isHeadOfficeMD && t.toCompanyId === userCompanyId)) &&
         t.status === 'PENDING_RECEIVING_MD'
     );
 
@@ -328,7 +331,7 @@ export const MDStaffTransferQueue = () => {
 
                             {/* Action Buttons Column */}
                             <div className="flex flex-col gap-2 shrink-0 sm:w-44 lg:self-center pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
-                                {subTab === 'OUTBOUND' && t.status === 'PENDING_RELEASING_MD' && (
+                                {isManagement && subTab === 'OUTBOUND' && t.status === 'PENDING_RELEASING_MD' && (
                                     <>
                                         <button
                                             onClick={() => setActionModal({ isOpen: true, type: 'RELEASING_APPROVE', transfer: t, remarks: '', reason: '' })}
@@ -345,7 +348,7 @@ export const MDStaffTransferQueue = () => {
                                     </>
                                 )}
 
-                                {subTab === 'INBOUND' && t.status === 'PENDING_RECEIVING_MD' && (
+                                {isManagement && subTab === 'INBOUND' && t.status === 'PENDING_RECEIVING_MD' && (
                                     <>
                                         <button
                                             onClick={() => setActionModal({ isOpen: true, type: 'RECEIVING_ACCEPT', transfer: t, remarks: '', reason: '' })}

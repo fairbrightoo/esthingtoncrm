@@ -78,6 +78,7 @@ import { SiteExpertDashboard } from './pages/SiteExpertDashboard';
 import { SiteInspectionTracking } from './pages/SiteInspectionTracking';
 import { ICTOracleDashboard } from './pages/ICTOracleDashboard';
 import { MarketingMediaHub } from './pages/MarketingMediaHub';
+import { StaffTransfersPage } from './pages/StaffTransfersPage';
 import { ProductionScriptSharing } from './pages/ProductionScriptSharing';
 import { StaffTrainingHub } from './pages/StaffTrainingHub';
 import { SocialMediaAnalytics } from './pages/SocialMediaAnalytics';
@@ -217,6 +218,7 @@ function App() {
             <Route path="/admin" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
             <Route path="/admin/onboarding" element={<DashboardLayout><BulkOnboarding /></DashboardLayout>} />
             <Route path="/admin/users" element={<DashboardLayout><GlobalUserManagement /></DashboardLayout>} />
+            <Route path="/admin/transfers" element={<DashboardLayout><StaffTransfersPage /></DashboardLayout>} />
             <Route path="/admin/global-clients" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
             <Route path="/admin/deletion-history" element={<DashboardLayout><DeletionHistory /></DashboardLayout>} />
             <Route path="/admin/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
@@ -232,6 +234,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
             <Route path="/dashboard/wallet" element={<DashboardLayout><MyWallet /></DashboardLayout>} />
             <Route path="/dashboard/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/transfers" element={<DashboardLayout><StaffTransfersPage /></DashboardLayout>} />
             <Route path="/dashboard/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
             <Route path="/dashboard/leaves" element={<DashboardLayout><HRLeaveManagement /></DashboardLayout>} />
             <Route path="/dashboard/staff-analytics" element={<DashboardLayout><GMDStaffAnalytics /></DashboardLayout>} />
@@ -247,6 +250,7 @@ function App() {
             <Route path="/dashboard/chairman" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
             <Route path="/dashboard/chairman/crm" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
             <Route path="/dashboard/chairman/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/transfers" element={<DashboardLayout><StaffTransfersPage /></DashboardLayout>} />
             <Route path="/dashboard/chairman/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
             <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><ChairmanExpenses /></DashboardLayout>} />
             <Route path="/dashboard/chairman/broadcasts" element={<DashboardLayout><GlobalBroadcasts /></DashboardLayout>} />
@@ -279,6 +283,7 @@ function App() {
             <Route path="/dashboard/:branchName/hr-recommendations" element={<DashboardLayout><HRRecommendations /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/tasks" element={<DashboardLayout><Tasks /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/transfers" element={<DashboardLayout><StaffTransfersPage /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/partner-applications" element={<DashboardLayout><PartnerApplications /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/staff-analytics" element={<DashboardLayout><MDStaffAnalytics /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/memos" element={<DashboardLayout><ExecutiveMemos /></DashboardLayout>} />
