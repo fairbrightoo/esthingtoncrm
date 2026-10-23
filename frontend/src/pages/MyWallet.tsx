@@ -10,10 +10,7 @@ import {
     AlertCircle, 
     RefreshCcw, 
     ShieldCheck, 
-    Sparkles, 
-    Mail, 
-    MessageSquare, 
-    Phone 
+    Sparkles 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -58,7 +55,7 @@ export const MyWallet = () => {
     const { toast } = useToast();
 
     const [wallet, setWallet] = useState<WalletData | null>(null);
-    const [tariff, setTariff] = useState<TariffData | null>(null);
+    const [_tariff, setTariff] = useState<TariffData | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isCustomerCare, setIsCustomerCare] = useState(false);
     const [paystackPublicKey, setPaystackPublicKey] = useState('');
@@ -380,55 +377,7 @@ export const MyWallet = () => {
                 </div>
             </div>
 
-            {/* Transparent Rate Card */}
-            <div>
-                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-                    Current Messaging Tariffs (Standard Group Rates)
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                                <MessageSquare className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <span className="text-xs font-semibold text-gray-500">SMS Tariff</span>
-                                <h4 className="text-lg font-black text-gray-900">
-                                    ₦{(tariff?.smsRatePerPage ?? 9.5).toFixed(2)} <span className="text-xs font-medium text-gray-500">/ 160-char page</span>
-                                </h4>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-violet-50 text-violet-600 rounded-xl">
-                                <Mail className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <span className="text-xs font-semibold text-gray-500">Email Tariff</span>
-                                <h4 className="text-lg font-black text-gray-900">
-                                    ₦{(tariff?.emailRatePerMsg ?? 2.5).toFixed(2)} <span className="text-xs font-medium text-gray-500">/ recipient</span>
-                                </h4>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                                <Phone className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <span className="text-xs font-semibold text-gray-500">WhatsApp Meta Template</span>
-                                <h4 className="text-lg font-black text-gray-900">
-                                    ₦{(tariff?.waRatePerMsg ?? 15.0).toFixed(2)} <span className="text-xs font-medium text-gray-500">/ message</span>
-                                </h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {/* Transparent Rate Card - Temporarily Hidden */}
 
             {/* Transaction Ledger */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
