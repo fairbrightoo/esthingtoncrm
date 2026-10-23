@@ -55,7 +55,7 @@ export const MyWallet = () => {
     const { toast } = useToast();
 
     const [wallet, setWallet] = useState<WalletData | null>(null);
-    const [_tariff, setTariff] = useState<TariffData | null>(null);
+    const [tariff, setTariff] = useState<TariffData | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isCustomerCare, setIsCustomerCare] = useState(false);
     const [paystackPublicKey, setPaystackPublicKey] = useState('');
