@@ -12,7 +12,10 @@ router.post('/initiate', StaffTransferController.initiateTransfer);
 // 2. Get list of transfers (scoped by role: outbound, inbound, all, or personal)
 router.get('/', StaffTransferController.getTransfers);
 
-// 3. Get single transfer details
+// 3. Get all eligible companies & branches for destination dropdowns
+router.get('/destinations', StaffTransferController.getEligibleDestinations);
+
+// 4. Get single transfer details
 router.get('/:transferId', StaffTransferController.getTransferDetails);
 
 // 4. Releasing Branch MD Sign-off (Approve Release or Reject)

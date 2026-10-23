@@ -183,8 +183,19 @@ export const CompanyController = {
                     isActive: true,
                     monthlySalary: true,
                     commissionRate: true,
+                    companyId: true,
+                    branchId: true,
+                    branch: {
+                        select: {
+                            id: true,
+                            name: true,
+                            address: true,
+                            isHeadOffice: true
+                        }
+                    },
                     company: {
                         select: {
+                            id: true,
                             name: true
                         }
                     },

@@ -426,7 +426,16 @@ export const BranchUsers = () => {
                                         <div className="flex space-x-2 items-center">
                                             {activeTab === 'ACTIVE' && (
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); setTransferModalStaff(u); }}
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        setTransferModalStaff({
+                                                            ...u,
+                                                            companyId: u.companyId || effectiveCompanyId,
+                                                            branchId: u.branchId || effectiveBranchId,
+                                                            company: u.company || { id: effectiveCompanyId, name: user?.company?.name || 'Company' },
+                                                            branch: u.branch || { id: effectiveBranchId, name: branchName }
+                                                        }); 
+                                                    }}
                                                     className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md border border-indigo-200 transition flex items-center shadow-xs"
                                                     title="Initiate Branch Transfer"
                                                 >
