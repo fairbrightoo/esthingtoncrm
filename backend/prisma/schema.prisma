@@ -63,6 +63,9 @@ model Company {
   marketingAssets      MarketingAsset[]
   productionScripts    ProductionScript[]
   socialReports        SocialMediaReport[]
+  transfersFrom        StaffTransfer[] @relation("TransfersFromCompany")
+  transfersTo          StaffTransfer[] @relation("TransfersToCompany")
+  imprests             Imprest[]
 
   hoDelegatesPayments     Boolean @default(false)
   hoDelegatesDiscounts    Boolean @default(true)
@@ -118,6 +121,9 @@ model Branch {
   socialReports         SocialMediaReport[]
   campaigns             Campaign[]
   Announcement          Announcement[]
+  transfersFrom         StaffTransfer[] @relation("TransfersFromBranch")
+  transfersTo           StaffTransfer[] @relation("TransfersToBranch")
+  imprests              Imprest[]
 
   requestingLegacySales LegacySaleRequest[] @relation("RequestingBranch")
   managingLegacySales   LegacySaleRequest[] @relation("ManagingBranch")
@@ -221,10 +227,20 @@ model User {
   oracleSocialReports     SocialMediaReport[] @relation("OracleReports")
   createdCampaigns        Campaign[]          @relation("CreatedCampaigns")
   sentPaymentMessages     PaymentMessage[]
+  transfersInitiated         StaffTransfer[]      @relation("TransferInitiator")
+  transfersReceived          StaffTransfer[]      @relation("TransferredStaff")
+  releasingApprovedTransfers StaffTransfer[]      @relation("TransferReleasingMD")
+  receivingApprovedTransfers StaffTransfer[]      @relation("TransferReceivingMD")
+  inheritedTransferredLeads  StaffTransfer[]      @relation("LeadsReassignedTo")
+  imprestsPrepared           Imprest[]            @relation("ImprestPreparedBy")
+  imprestsApproved           Imprest[]            @relation("ImprestApprovedBy")
+  imprestsDisbursed          Imprest[]            @relation("ImprestDisbursedBy")
 
   requestedLegacySales LegacySaleRequest[] @relation("RequestedLegacySales")
   esthCoinLedgers      EsthCoinLedger[]
   deletedSales         SaleDeletionLog[]
+  wallet               UserWallet?
+  walletTransactions   WalletTransaction[]
 }
 
 model EsthCoinLedger {
@@ -1276,4 +1292,210 @@ model BroadcastRecipientLog {
   @@index([status])
   @@index([phone])
 }
+
+model UserWallet {
+  id            String              @id @default(uuid())
+  userId        String              @unique
+  balance       Float               @default(100.0) // Defaults to ₦100.00 welcome credit
+  currency      String              @default("NGN")
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions  WalletTransaction[]
+
+  @@index([userId])
+}
+
+model WalletTransaction {
+  id             String         @id @default(uuid())
+  walletId       String
+  userId         String
+  amount         Float          // Positive for CREDIT, Negative for DEBIT
+  balanceAfter   Float
+  type           String         // "CREDIT" | "DEBIT"
+  category       String         // "TOPUP" | "CAMPAIGN_SMS" | "CAMPAIGN_EMAIL" | "CAMPAIGN_WHATSAPP" | "SINGLE_SMS" | "SINGLE_EMAIL" | "SINGLE_WHATSAPP" | "ADMIN_GIFT"
+  description    String
+  reference      String?        @unique // Paystack transaction reference for top-ups
+  paymentMethod  String?        // "PAYSTACK" | "ADMIN_GIFT" | "SYSTEM"
+  channel        String?        // "SMS" | "EMAIL" | "WHATSAPP"
+  recipientCount Int?
+  campaignId     String?
+  createdAt      DateTime       @default(now())
+
+  wallet         UserWallet     @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([userId])
+  @@index([reference])
+}
+
+model MessagingTariff {
+  id                   String   @id @default(uuid())
+  smsRatePerPage       Float    @default(9.50)  // ₦9.50 per 160 characters
+  emailRatePerMsg      Float    @default(2.50)  // ₦2.50 per email
+  waRatePerMsg         Float    @default(15.00) // ₦15.00 per WhatsApp template
+  minTopupAmount       Float    @default(3000.0) // ₦3,000 minimum recharge
+  defaultWelcomeCredit Float    @default(100.0)  // ₦100 welcome balance
+  updatedAt            DateTime @updatedAt
+}
+
+model StaffTransfer {
+  id                          String    @id @default(uuid())
+  referenceNumber             String    @unique // E.g., TRF-2026-0089
+
+  // Staff being transferred
+  userId                      String
+  user                        User      @relation("TransferredStaff", fields: [userId], references: [id])
+
+  // Origin (Releasing) Context
+  fromCompanyId               String
+  fromCompany                 Company   @relation("TransfersFromCompany", fields: [fromCompanyId], references: [id])
+  fromBranchId                String
+  fromBranch                  Branch    @relation("TransfersFromBranch", fields: [fromBranchId], references: [id])
+  previousRole                String
+  previousSalary              Float?
+  previousCommission          Float?
+
+  // Destination (Receiving) Context
+  toCompanyId                 String
+  toCompany                   Company   @relation("TransfersToCompany", fields: [toCompanyId], references: [id])
+  toBranchId                  String
+  toBranch                    Branch    @relation("TransfersToBranch", fields: [toBranchId], references: [id])
+  newRole                     String
+  newSalary                   Float?
+  newCommission               Float?
+
+  // Operational Details
+  reason                      String    // e.g., "Branch Expansion", "Promotion", "Relocation", "Realignment", "Employee Request"
+  justification               String?
+  effectiveDate               DateTime  // Date the transfer takes effect
+  leadStrategy                String    @default("MIGRATE_WITH_STAFF") // MIGRATE_WITH_STAFF, REASSIGN_AT_SOURCE, RETURN_TO_BRANCH_POOL
+  reassignedToUserId          String?
+  reassignedToUser            User?     @relation("LeadsReassignedTo", fields: [reassignedToUserId], references: [id])
+
+  // Handover & Clearance Checklist
+  handoverNotes               String?
+  assetsClearance             Boolean   @default(false)
+  filesHandedOver             Boolean   @default(false)
+
+  // Status & Approval Workflow
+  // PENDING_RELEASING_MD, PENDING_RECEIVING_MD, APPROVED_SCHEDULED, COMPLETED, REJECTED_BY_RELEASING_MD, DECLINED_BY_RECEIVING_MD, CANCELLED
+  status                      String    @default("PENDING_RELEASING_MD")
+
+  initiatedByUserId           String
+  initiatedByUser             User      @relation("TransferInitiator", fields: [initiatedByUserId], references: [id])
+  initiatedAt                 DateTime  @default(now())
+
+  // Releasing MD Sign-off
+  releasingMdApprovedByUserId  String?
+  releasingMdApprovedByUser    User?     @relation("TransferReleasingMD", fields: [releasingMdApprovedByUserId], references: [id])
+  releasingMdApprovedAt        DateTime?
+  releasingMdRemarks           String?
+  releasingMdRejectionReason   String?
+
+  // Receiving MD Sign-off
+  receivingMdApprovedByUserId  String?
+  receivingMdApprovedByUser    User?     @relation("TransferReceivingMD", fields: [receivingMdApprovedByUserId], references: [id])
+  receivingMdApprovedAt        DateTime?
+  receivingMdRemarks           String?
+  receivingMdDeclineReason     String?
+
+  // Execution & Letter
+  executedAt                  DateTime?
+  transferLetterUrl           String?
+
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([fromBranchId])
+  @@index([toBranchId])
+  @@index([status])
+}
+
+model Imprest {
+  id                     String         @id @default(uuid())
+  referenceNumber        String         @unique // e.g. IMP-202610-DKEL-01
+  title                  String         // e.g. "Imprest Expense Reimbursement - October 2026"
+  period                 String         // e.g. "07TH SEPTEMBER 2026 TO 22ND OCTOBER 2026"
+  startDate              DateTime
+  endDate                DateTime
+  
+  // Organization Relations
+  companyId              String
+  company                Company        @relation(fields: [companyId], references: [id])
+  branchId               String
+  branch                 Branch         @relation(fields: [branchId], references: [id])
+  
+  // Financial Totals
+  openingBalance         Float          @default(0) // Balance Brought Forward / Float Received (=N=)
+  totalInflow            Float          @default(0) // Opening Balance + Any Mid-Period Top-ups
+  totalOutflow           Float          @default(0) // Sum of all expense line items
+  closingBalance         Float          @default(0) // totalInflow - totalOutflow
+  reimbursementRequested Float          @default(0) // Net amount needed to restore float
+  
+  // Status: "DRAFT", "PENDING_APPROVAL", "APPROVED", "DISBURSED", "REJECTED"
+  status                 String         @default("PENDING_APPROVAL")
+  
+  // Auditing: Preparation & Submission
+  preparedByUserId       String
+  preparedByUser         User           @relation("ImprestPreparedBy", fields: [preparedByUserId], references: [id])
+  submittedAt            DateTime?
+  
+  // Auditing: Dual Approval (Branch MD or Global Accountant)
+  approvedByUserId       String?
+  approvedByUser         User?          @relation("ImprestApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt             DateTime?
+  approvalRole           String?        // "MANAGING_DIRECTOR", "GLOBAL_ACCOUNTANT", etc.
+  approvalRemarks        String?
+  rejectionReason        String?
+  
+  // Auditing: Fund Disbursement
+  disbursedByUserId      String?
+  disbursedByUser        User?          @relation("ImprestDisbursedBy", fields: [disbursedByUserId], references: [id])
+  disbursedAt            DateTime?
+  disbursementSourceBank String?        // Bank / Source Account e.g. "Zenith Bank - Operations"
+  disbursementReference  String?        // Transfer Reference or Cheque No
+  disbursementProofUrl   String?        // Uploaded payment slip / bank debit advice
+  
+  notes                  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  
+  items                  ImprestItem[]
+
+  @@index([companyId])
+  @@index([branchId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model ImprestItem {
+  id              String   @id @default(uuid())
+  imprestId       String
+  imprest         Imprest  @relation(fields: [imprestId], references: [id], onDelete: Cascade)
+  
+  itemNumber      Int      // S/N: 1, 2, 3...
+  date            DateTime // Date of transaction
+  description     String   // e.g. "TOTALENERGY TOP CARD - KUJE", "REPAIRS AND MAINTENANCE"
+  expenseClass    String   // e.g. "ACCOUNT", "TOP CARD", "IMPREST", "GENERAL", "UTILITIES"
+  uom             String   // Unit of Measure: e.g. "ACT", "LTR", "TRF", "PCS", "DAYS"
+  qty             Float    @default(1)
+  unitPrice       Float    @default(0)
+  inflow          Float    @default(0) // Inflow amount (if any, e.g. Bal B/F row)
+  outflow         Float    @default(0) // Outflow amount (= qty * unitPrice)
+  runningBalance  Float    @default(0) // Running balance snapshot after this row
+  receivedBy      String   // Beneficiary/Staff name: e.g. "ADA", "GODWIN", "BAMIYI"
+  paymentStatus   String   @default("PAID") // "PAID", "PENDING", "CLEARED"
+  receiptUrl      String?  // Optional uploaded voucher / receipt photo
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([imprestId])
+  @@index([expenseClass])
+}
+
 

@@ -17,7 +17,7 @@ export const RequisitionController = {
 
             const { title, description, category, items, receiptUrl, requestDate } = req.body;
 
-            if (category === 'IMPREST' && role !== 'ACCOUNTANT' && role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
+            if (category === 'IMPREST' && role !== 'ACCOUNTANT' && role !== 'GLOBAL_ACCOUNTANT' && role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN') {
                 res.status(403).json({ error: "Only the Accountant or Executives can raise an IMPREST requisition." });
                 return;
             }

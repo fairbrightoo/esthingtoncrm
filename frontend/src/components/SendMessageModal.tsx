@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { X, Mail, MessageSquare, Send, Paperclip, AlertCircle } from 'lucide-react';
+import { X, Mail, MessageSquare, Send, Paperclip, AlertCircle, Wallet, Sparkles, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 interface SendMessageModalProps {
     isOpen: boolean;
@@ -15,6 +17,8 @@ interface SendMessageModalProps {
 
 export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail, leadPhone }: SendMessageModalProps) => {
     const { toast } = useToast();
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [type, setType] = useState<'EMAIL' | 'SMS' | 'WHATSAPP'>('EMAIL');
     const [subject, setSubject] = useState('');
     const [content, setContent] = useState('');
@@ -25,12 +29,35 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
     const [attachment, setAttachment] = useState<File | null>(null);
     const [attachmentType, setAttachmentType] = useState<'image' | 'document' | 'video' | ''>('');
 
+    // Wallet State
+    const [walletBalance, setWalletBalance] = useState<number>(0);
+    const [tariff, setTariff] = useState<any>(null);
+    const isCustomerCare = user?.role === 'CUSTOMER_CARE';
+
     useEffect(() => {
         if (isOpen) {
             fetchTemplates();
             fetchWhatsAppTemplates();
+            fetchWallet();
         }
     }, [isOpen, type]);
+
+    const fetchWallet = async () => {
+        if (isCustomerCare) return;
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-wallet`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.data?.wallet) {
+                setWalletBalance(res.data.wallet.balance);
+            }
+            if (res.data?.tariff) {
+                setTariff(res.data.tariff);
+            }
+        } catch (e) {
+            // Ignore background fetch error
+        }
+    };
 
     const fetchTemplates = async () => {
         try {
@@ -268,20 +295,64 @@ export const SendMessageModal = ({ isOpen, onClose, leadId, leadName, leadEmail,
                         </div>
                     )}
 
-                    <div className="pt-4 flex justify-end space-x-3">
+                    {/* Wallet Quota & Cost Indicator */}
+                    <div className="bg-gray-50 border border-gray-200/80 rounded-xl p-3 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                            <Wallet className="w-4 h-4 text-indigo-600" />
+                            {isCustomerCare ? (
+                                <span className="font-semibold text-emerald-700 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" /> Customer Care Sponsored Allowance
+                                </span>
+                            ) : (
+                                <span className="text-gray-600">
+                                    Message Cost: <strong>
+                                        ₦{(type === 'SMS' 
+                                            ? (tariff?.smsRatePerPage || 9.5) * Math.max(1, Math.ceil((content.length || 1) / 160))
+                                            : type === 'EMAIL' 
+                                                ? (tariff?.emailRatePerMsg || 2.5) 
+                                                : (tariff?.waRatePerMsg || 15.0)
+                                        ).toFixed(2)}
+                                    </strong>
+                                    &nbsp;&middot;&nbsp;Balance: <strong className={walletBalance < 10 ? 'text-red-600' : 'text-gray-900'}>
+                                        ₦{walletBalance.toFixed(2)}
+                                    </strong>
+                                </span>
+                            )}
+                        </div>
+
+                        {!isCustomerCare && walletBalance < (type === 'SMS' ? (tariff?.smsRatePerPage || 9.5) : type === 'EMAIL' ? (tariff?.emailRatePerMsg || 2.5) : (tariff?.waRatePerMsg || 15.0)) && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onClose();
+                                    navigate('/dashboard/wallet');
+                                }}
+                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 underline"
+                            >
+                                Top Up Wallet <ArrowRight className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="pt-2 flex justify-end space-x-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            disabled={isSending || (type === 'EMAIL' && !leadEmail) || (type !== 'EMAIL' && !leadPhone)}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center"
+                            disabled={
+                                isSending || 
+                                (type === 'EMAIL' && !leadEmail) || 
+                                (type !== 'EMAIL' && !leadPhone) ||
+                                (!isCustomerCare && walletBalance < (type === 'SMS' ? (tariff?.smsRatePerPage || 9.5) : type === 'EMAIL' ? (tariff?.emailRatePerMsg || 2.5) : (tariff?.waRatePerMsg || 15.0)))
+                            }
+                            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center text-sm shadow-md shadow-indigo-500/20 active:scale-95"
                         >
-                            {isSending ? 'Sending...' : 'Send Now'} <Send size={16} className="ml-2" />
+                            {isSending ? 'Sending...' : 'Send Now'} <Send size={15} className="ml-2" />
                         </button>
                     </div>
                 </form>

@@ -134,6 +134,9 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bulk-messaging', bulkMessagingRoutes);
 
+import walletRoutes from './routes/walletRoutes.js';
+app.use('/api/wallet', walletRoutes);
+
 import userRoutes from './routes/userRoutes.js';
 app.use('/api/users', userRoutes);
 
@@ -166,6 +169,12 @@ app.use('/api/hr-analytics', hrAnalyticsRoutes);
 
 import hrWorkflowRoutes from './routes/hrWorkflowRoutes.js';
 app.use('/api/hr-workflows', hrWorkflowRoutes);
+
+import staffTransferRoutes from './routes/staffTransferRoutes.js';
+app.use('/api/transfers', staffTransferRoutes);
+
+import imprestRoutes from './routes/imprestRoutes.js';
+app.use('/api/imprest', imprestRoutes);
 
 import ticketRoutes from './routes/ticketRoutes.js';
 import referralRoutes from './routes/referralRoutes.js';
@@ -201,9 +210,14 @@ app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date() });
 });
 
+import { WalletService } from './services/WalletService.js';
+
 if (process.env.NODE_ENV !== 'test') {
     // Start Background Omnichannel Automation
     AutomationService.startCronJobs();
+
+    // Self-healing: auto-seed default tariffs and staff wallets on server boot (including Render production)
+    WalletService.syncMissingWallets().catch((err: any) => console.error("Initial wallet sync error:", err));
 
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

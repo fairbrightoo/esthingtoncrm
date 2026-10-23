@@ -84,6 +84,7 @@ export const AutomationService = {
             await this.runBirthdayEmails();
             await this.runDailyAIPaymentReminders();
             await this.runOfferExpirationsAndReminders();
+            await this.processScheduledStaffTransfers();
             console.log('[CRON] Sequences completed.');
         });
         console.log('[CRON] Automation Service initialized and running in background.');
@@ -429,6 +430,73 @@ export const AutomationService = {
             }
         } catch (error) {
             console.error('[CRON] Failed Daily Payment Reminders:', error);
+        }
+    },
+
+    /**
+     * CRON: Process Scheduled Staff Transfers
+     */
+    async processScheduledStaffTransfers() {
+        try {
+            const now = new Date();
+            const scheduled = await prisma.staffTransfer.findMany({
+                where: {
+                    status: 'APPROVED_SCHEDULED',
+                    effectiveDate: { lte: now }
+                }
+            });
+
+            if (scheduled.length === 0) return;
+            console.log(`[CRON] Found ${scheduled.length} scheduled staff transfers due for execution.`);
+
+            for (const t of scheduled) {
+                await prisma.$transaction(async (tx) => {
+                    const userUpdate: any = {
+                        branchId: t.toBranchId,
+                        companyId: t.toCompanyId,
+                        role: t.newRole
+                    };
+                    if (t.newSalary !== null && t.newSalary !== undefined) {
+                        userUpdate.monthlySalary = t.newSalary;
+                    }
+                    if (t.newCommission !== null && t.newCommission !== undefined) {
+                        userUpdate.commissionRate = t.newCommission;
+                    }
+
+                    await tx.user.update({
+                        where: { id: t.userId },
+                        data: userUpdate
+                    });
+
+                    if (t.leadStrategy === 'MIGRATE_WITH_STAFF') {
+                        await tx.lead.updateMany({
+                            where: { assignedToUserId: t.userId },
+                            data: { branchId: t.toBranchId, companyId: t.toCompanyId }
+                        });
+                    } else if (t.leadStrategy === 'REASSIGN_AT_SOURCE' && t.reassignedToUserId) {
+                        await tx.lead.updateMany({
+                            where: { assignedToUserId: t.userId },
+                            data: { assignedToUserId: t.reassignedToUserId }
+                        });
+                    } else if (t.leadStrategy === 'RETURN_TO_BRANCH_POOL') {
+                        await tx.lead.updateMany({
+                            where: { assignedToUserId: t.userId },
+                            data: { assignedToUserId: null }
+                        });
+                    }
+
+                    await tx.staffTransfer.update({
+                        where: { id: t.id },
+                        data: {
+                            status: 'COMPLETED',
+                            executedAt: new Date()
+                        }
+                    });
+                });
+                console.log(`[CRON] Executed scheduled staff transfer: ${t.referenceNumber}`);
+            }
+        } catch (error) {
+            console.error('[CRON] Error executing scheduled staff transfers:', error);
         }
     }
 };

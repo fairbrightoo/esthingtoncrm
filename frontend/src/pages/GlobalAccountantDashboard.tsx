@@ -7,6 +7,7 @@ import { AccountantDashboard } from './AccountantDashboard';
 import { AccountantPayroll } from './AccountantPayroll';
 import GlobalTreasuryDashboard from './GlobalTreasuryDashboard';
 import { BranchReports } from './BranchReports';
+import { BranchRequisitions } from './BranchRequisitions';
 
 export const GlobalAccountantDashboard = () => {
     const { token, user } = useAuth();
@@ -98,6 +99,9 @@ export const GlobalAccountantDashboard = () => {
                     }
                     if (location.pathname.endsWith('/reports') || location.pathname.endsWith('/reports/')) {
                         return <BranchReports targetBranchId={selectedBranchId} targetCompanyId={selectedCompanyId} />;
+                    }
+                    if (location.pathname.endsWith('/requisitions') || location.pathname.endsWith('/requisitions/')) {
+                        return <BranchRequisitions />;
                     }
                     // Add other global accountant pages here later if needed
                     return <GlobalTreasuryDashboard />;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Send, Filter, CheckCircle, Mail, MessageSquare, Phone, RefreshCcw, AlertCircle, X } from 'lucide-react';
+import { Plus, Send, Filter, CheckCircle, Mail, MessageSquare, Phone, RefreshCcw, AlertCircle, X, Wallet, ArrowRight, Sparkles } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 // @ts-ignore
@@ -68,6 +69,13 @@ export const Campaigns = () => {
     const [mediaFile, setMediaFile] = useState<File | null>(null);
     const [waMessageType, setWaMessageType] = useState<'TEMPLATE' | 'CUSTOM'>('TEMPLATE');
 
+    // Wallet & Financial Quota State
+    const [costEstimate, setCostEstimate] = useState<any>(null);
+    const [walletBalance, setWalletBalance] = useState<number>(0);
+    const [hasSufficientBalance, setHasSufficientBalance] = useState<boolean>(true);
+    const [isCustomerCare, setIsCustomerCare] = useState<boolean>(false);
+    const navigate = useNavigate();
+
     // Logs Modal State
     const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
     const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -84,16 +92,26 @@ export const Campaigns = () => {
     }, []);
 
     useEffect(() => {
-        // Debounce audience counting
+        // Debounce audience counting and financial cost estimate
         const handler = setTimeout(async () => {
             if (!isModalOpen) return;
             setIsCountingAudience(true);
             try {
                 const filters = { gender: genderFilter, status: statusFilter, source: sourceFilter, scope: scopeFilter, estateId: estateFilter !== 'All' ? estateFilter : undefined };
-                const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns/audience-count`, { filters }, {
+                const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/communication/campaigns/audience-count`, { 
+                    filters,
+                    type,
+                    content
+                }, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 setAudienceCount(res.data.count);
+                if (res.data.costDetails) {
+                    setCostEstimate(res.data.costDetails);
+                }
+                setWalletBalance(res.data.walletBalance ?? 0);
+                setHasSufficientBalance(res.data.hasSufficientBalance ?? true);
+                setIsCustomerCare(res.data.isCustomerCare ?? false);
             } catch (error) {
                 console.error("Failed to count audience", error);
                 setAudienceCount(null);
@@ -103,7 +121,7 @@ export const Campaigns = () => {
         }, 500);
 
         return () => clearTimeout(handler);
-    }, [genderFilter, statusFilter, sourceFilter, estateFilter, scopeFilter, isModalOpen]);
+    }, [genderFilter, statusFilter, sourceFilter, estateFilter, scopeFilter, isModalOpen, type, content]);
 
     const fetchWhatsAppTemplates = async () => {
         try {
@@ -638,23 +656,99 @@ export const Campaigns = () => {
                                 </div>
                             </div>
 
+                            {/* Wallet & Campaign Cost Estimator Card */}
+                            <div className="bg-gradient-to-br from-gray-50 to-indigo-50/40 border border-indigo-100/70 rounded-2xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Wallet className="w-4 h-4 text-indigo-600" />
+                                        <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Campaign Cost & Quota</span>
+                                    </div>
+                                    {isCustomerCare ? (
+                                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
+                                            <Sparkles className="w-3 h-3" />
+                                            Customer Care Free Allowance
+                                        </span>
+                                    ) : (
+                                        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                                            hasSufficientBalance ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                            Wallet Balance: ₦{walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {!isCustomerCare && (
+                                    <div className="grid grid-cols-3 gap-2 pt-1 border-t border-indigo-100/50 text-xs">
+                                        <div>
+                                            <span className="text-gray-500 block">Audience Reach:</span>
+                                            <span className="font-bold text-gray-800">
+                                                {isCountingAudience ? 'Calculating...' : `${(audienceCount || 0).toLocaleString()} Leads`}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 block">Unit Rate:</span>
+                                            <span className="font-bold text-gray-800">
+                                                ₦{(costEstimate?.unitRate || (type === 'SMS' ? 9.5 : type === 'EMAIL' ? 2.5 : 15.0)).toFixed(2)}
+                                                {type === 'SMS' && costEstimate?.pages > 1 && ` (${costEstimate.pages} pgs)`}
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-gray-500 block">Total Est. Cost:</span>
+                                            <span className="font-extrabold text-sm text-indigo-700">
+                                                ₦{((costEstimate?.totalCost || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!isCustomerCare && !hasSufficientBalance && (
+                                    <div className="bg-red-50 border border-red-200/80 rounded-xl p-3 flex items-center justify-between gap-3 text-xs text-red-700">
+                                        <div className="flex items-center gap-2">
+                                            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                                            <span>
+                                                Insufficient balance. Required: <strong>₦{(costEstimate?.totalCost || 0).toFixed(2)}</strong>, available: <strong>₦{walletBalance.toFixed(2)}</strong>.
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsModalOpen(false);
+                                                navigate('/dashboard/wallet');
+                                            }}
+                                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm whitespace-nowrap flex items-center gap-1 transition-all"
+                                        >
+                                            Top Up Wallet <ArrowRight className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Actions */}
                             <div className="flex justify-end space-x-3 pt-4 border-t">
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleCreateAndSend}
-                                    disabled={isSending}
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+                                    disabled={isSending || (!isCustomerCare && !hasSufficientBalance)}
+                                    className={`px-6 py-2 rounded-xl text-white font-bold text-sm shadow-md transition-all flex items-center space-x-2 ${
+                                        !isCustomerCare && !hasSufficientBalance
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+                                            : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 active:scale-95'
+                                    }`}
                                 >
                                     {isSending ? (
-                                        <><span>Sending...</span></>
+                                        <span>Dispatching...</span>
                                     ) : (
-                                        <><Send size={18} /><span>Send Campaign</span></>
+                                        <>
+                                            <Send size={16} />
+                                            <span>
+                                                {!isCustomerCare && !hasSufficientBalance ? 'Insufficient Balance' : 'Send Campaign'}
+                                            </span>
+                                        </>
                                     )}
                                 </button>
                             </div>

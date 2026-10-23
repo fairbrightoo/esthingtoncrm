@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { User, Mail, Plus, Trash2, Phone, Upload, CheckCircle, AlertCircle, FileText, Image as ImageIcon, File as FileIcon, ExternalLink, X } from 'lucide-react';
+import { User, Mail, Plus, Trash2, Phone, Upload, CheckCircle, AlertCircle, FileText, Image as ImageIcon, File as FileIcon, ExternalLink, X, ArrowRightLeft } from 'lucide-react';
+import { StaffTransferModal } from '../components/StaffTransferModal';
+import { MDStaffTransferQueue } from '../components/MDStaffTransferQueue';
 
 export const BranchUsers = () => {
     const { user, token } = useAuth();
     const { addToast } = useToast();
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'ACTIVE' | 'PARTNERS' | 'DELETED'>('ACTIVE');
+    const [activeTab, setActiveTab] = useState<'ACTIVE' | 'PARTNERS' | 'TRANSFERS' | 'DELETED'>('ACTIVE');
     const [isModalOpen, setIsModalOpen] = useState(false);
     // Edit State
     const [editingUser, setEditingUser] = useState<any>(null);
     const [createdUserCreds, setCreatedUserCreds] = useState<any>(null);
+
+    // Staff Transfer Modal State
+    const [transferModalStaff, setTransferModalStaff] = useState<any | null>(null);
 
     // Document Modal State
     const [selectedStaffDocs, setSelectedStaffDocs] = useState<any>(null);
@@ -337,6 +342,12 @@ export const BranchUsers = () => {
                     Partners ({partners.length})
                 </button>
                 <button
+                    onClick={() => setActiveTab('TRANSFERS')}
+                    className={`py-2 px-4 border-b-2 font-medium text-sm focus:outline-none flex items-center gap-1.5 ${activeTab === 'TRANSFERS' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <ArrowRightLeft size={15} /> Staff Transfers
+                </button>
+                <button
                     onClick={() => setActiveTab('DELETED')}
                     className={`py-2 px-4 border-b-2 font-medium text-sm focus:outline-none ${activeTab === 'DELETED' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
@@ -344,6 +355,11 @@ export const BranchUsers = () => {
                 </button>
             </div>
 
+            {activeTab === 'TRANSFERS' ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <MDStaffTransferQueue />
+                </div>
+            ) : (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 text-gray-500 font-medium text-sm">
@@ -408,6 +424,15 @@ export const BranchUsers = () => {
                                 <td className="px-6 py-4">
                                     {u.role !== 'BRANCH_ADMIN' && (
                                         <div className="flex space-x-2 items-center">
+                                            {activeTab === 'ACTIVE' && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setTransferModalStaff(u); }}
+                                                    className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md border border-indigo-200 transition flex items-center shadow-xs"
+                                                    title="Initiate Branch Transfer"
+                                                >
+                                                    <ArrowRightLeft size={13} className="mr-1" /> Transfer
+                                                </button>
+                                            )}
                                             {activeTab === 'PARTNERS' && (
                                                 <button onClick={(e) => { e.stopPropagation(); openReassignModal(u); }} className="text-purple-600 hover:text-purple-800 text-sm font-medium mr-2 bg-purple-50 px-2 py-1 rounded">
                                                     Reassign
@@ -428,6 +453,7 @@ export const BranchUsers = () => {
                 </table>
                 {filteredUsers.length === 0 && <div className="p-8 text-center text-gray-500">No staff found.</div>}
             </div>
+            )}
 
             {/* Staff Details & Documents Modal */}
             {selectedStaffDocs && (
@@ -1012,6 +1038,13 @@ export const BranchUsers = () => {
                     </div>
                 </div>
             )}
+            {/* Staff Transfer Initiation Modal */}
+            <StaffTransferModal
+                isOpen={!!transferModalStaff}
+                staff={transferModalStaff}
+                onClose={() => setTransferModalStaff(null)}
+                onSuccess={fetchUsers}
+            />
         </div>
     );
 };

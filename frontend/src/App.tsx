@@ -21,6 +21,8 @@ import { BranchUsers } from './pages/BranchUsers';
 import { BranchReports } from './pages/BranchReports';
 import { BranchSettings } from './pages/BranchSettings';
 import { BulkMessagingSystem } from './pages/BulkMessaging/BulkMessagingSystem';
+import { MyWallet } from './pages/MyWallet';
+import { SuperAdminWalletManagement } from './pages/SuperAdminWalletManagement';
 
 import GlobalTreasuryDashboard from './pages/GlobalTreasuryDashboard';
 import { CallScripts } from './pages/CallScripts';
@@ -160,7 +162,7 @@ const ReportsRouter = () => {
   if (user?.role === 'BRANCH_HR') {
     return <HRReports />;
   }
-  if (['MARKETER', 'SALES_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD'].includes(user?.role || '')) {
+  if (['MARKETER', 'SALES_MANAGER', 'TEAM_LEAD', 'BDM', 'HEAD_BDD', 'PARTNER'].includes(user?.role || '')) {
     return <MarketerReportsDashboard />;
   }
   return <BranchReports />;
@@ -224,9 +226,11 @@ function App() {
             <Route path="/admin/announcements" element={<DashboardLayout><Announcements /></DashboardLayout>} />
             <Route path="/admin/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/admin/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
+            <Route path="/admin/wallet" element={<DashboardLayout><SuperAdminWalletManagement /></DashboardLayout>} />
             <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
+            <Route path="/dashboard/wallet" element={<DashboardLayout><MyWallet /></DashboardLayout>} />
             <Route path="/dashboard/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
             <Route path="/dashboard/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
             <Route path="/dashboard/leaves" element={<DashboardLayout><HRLeaveManagement /></DashboardLayout>} />
@@ -257,6 +261,7 @@ function App() {
             <Route path="/dashboard/global-accountant/disbursements" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/payroll" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/reports" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/global-accountant/requisitions" element={<DashboardLayout><GlobalAccountantDashboard /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/my-leads" element={<DashboardLayout><MyLeads scope="my" /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/global-accountant/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
@@ -298,6 +303,7 @@ function App() {
             <Route path="/dashboard/:branchName/inventory" element={<DashboardLayout><InventoryManager /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/site-mapping" element={<DashboardLayout><SitePlotMapping /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/legacy-requests" element={<DashboardLayout><LegacySalesRequests /></DashboardLayout>} />
+            <Route path="/dashboard/:branchName/wallet" element={<DashboardLayout><MyWallet /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/templates" element={<DashboardLayout><CommunicationTemplates /></DashboardLayout>} />
             <Route path="/dashboard/:branchName/knowledge-base" element={<DashboardLayout><AIKnowledgeBase /></DashboardLayout>} />

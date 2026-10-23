@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CalendarClock, AlertTriangle, CheckCircle, Target, MessageSquare, XCircle, Clock } from 'lucide-react';
+import { CalendarClock, AlertTriangle, CheckCircle, Target, MessageSquare, XCircle, Clock, ArrowRightLeft, FileText, Building2, Calendar, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { ClockInComponent } from '../components/ClockInComponent';
+import { TransferLetterModal } from '../components/TransferLetterModal';
 
 export const StaffSelfService = () => {
     const { addToast } = useToast();
@@ -11,8 +12,15 @@ export const StaffSelfService = () => {
     const [queries, setQueries] = useState<any[]>([]);
     const [appraisals, setAppraisals] = useState<any[]>([]);
     const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
+    const [transfers, setTransfers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('ATTENDANCE');
+
+    // Transfer Letter Modal
+    const [letterModal, setLetterModal] = useState<{ isOpen: boolean; transfer: any | null }>({
+        isOpen: false,
+        transfer: null
+    });
 
     // New Leave Form
     const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -32,16 +40,18 @@ export const StaffSelfService = () => {
     const fetchMyData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const [lRes, qRes, aRes, attRes] = await Promise.all([
+            const [lRes, qRes, aRes, attRes, trfRes] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/leaves/my-leaves`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/queries/my-queries`, { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/hr-workflows/appraisals/my-appraisals`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/attendance/my-records`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/attendance/my-records`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/transfers`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
             ]);
             setLeaves(lRes.data);
             setQueries(qRes.data);
             setAppraisals(aRes.data);
             setAttendanceHistory(attRes.data);
+            setTransfers(trfRes.data || []);
             setLoading(false);
         } catch (error) {
             setLoading(false);
@@ -105,6 +115,14 @@ export const StaffSelfService = () => {
                 </button>
                 <button onClick={() => setActiveTab('APPRAISALS')} className={`px-6 py-2.5 rounded-lg text-sm font-medium flex items-center ${activeTab === 'APPRAISALS' ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                     <Target size={16} className="mr-2" /> Appraisals
+                </button>
+                <button onClick={() => setActiveTab('TRANSFERS')} className={`px-6 py-2.5 rounded-lg text-sm font-medium flex items-center ${activeTab === 'TRANSFERS' ? 'bg-emerald-50 text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                    <ArrowRightLeft size={16} className="mr-2" /> Redeployments
+                    {transfers.length > 0 && (
+                        <span className="ml-2 bg-emerald-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                            {transfers.length}
+                        </span>
+                    )}
                 </button>
             </div>
 
@@ -252,6 +270,105 @@ export const StaffSelfService = () => {
                             </div>
                         </div>
                     )}
+
+                    {/* TRANSFERS TAB */}
+                    {activeTab === 'TRANSFERS' && (
+                        <div>
+                            <div className="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                <div>
+                                    <h3 className="font-semibold text-emerald-800">Branch Transfers & Redeployments</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Track your official station transfers, approval statuses, and download internal redeployment letters.</p>
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                {transfers.length === 0 ? (
+                                    <div className="p-12 text-center text-gray-400">
+                                        <ArrowRightLeft className="mx-auto mb-3 text-gray-300" size={36} />
+                                        <p className="font-medium text-gray-600">No transfer or redeployment records found.</p>
+                                        <p className="text-xs text-gray-400 mt-1">When HR or Management initiates an internal transfer, your record and approval progress will appear here.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {transfers.map(trf => {
+                                            const isApprovedOrCompleted = ['APPROVED_SCHEDULED', 'COMPLETED'].includes(trf.status);
+                                            return (
+                                                <div key={trf.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow transition space-y-4">
+                                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded">
+                                                                    {trf.referenceNumber}
+                                                                </span>
+                                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                                                    trf.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                                                    trf.status === 'APPROVED_SCHEDULED' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                                                    trf.status === 'PENDING_RELEASING_MD' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                                                    trf.status === 'PENDING_RECEIVING_MD' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                                                                    'bg-red-100 text-red-800 border border-red-200'
+                                                                }`}>
+                                                                    {trf.status === 'COMPLETED' ? 'Completed & Active' :
+                                                                     trf.status === 'APPROVED_SCHEDULED' ? 'Approved (Scheduled)' :
+                                                                     trf.status === 'PENDING_RELEASING_MD' ? 'Awaiting Origin MD Release' :
+                                                                     trf.status === 'PENDING_RECEIVING_MD' ? 'Awaiting Destination MD Intake' :
+                                                                     trf.status === 'REJECTED_BY_RELEASING_MD' ? 'Declined by Origin MD' :
+                                                                     trf.status === 'DECLINED_BY_RECEIVING_MD' ? 'Declined by Destination MD' : trf.status}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-400 mt-1">Initiated on {new Date(trf.createdAt).toLocaleDateString()}</p>
+                                                        </div>
+
+                                                        {isApprovedOrCompleted && (
+                                                            <button
+                                                                onClick={() => setLetterModal({ isOpen: true, transfer: trf })}
+                                                                className="px-3.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                                                            >
+                                                                <FileText size={14} /> Official Transfer Letter
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                                        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Origin Station</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <Building2 size={15} className="text-gray-500" />
+                                                                <span className="font-bold text-gray-800">{trf.fromBranch?.name || 'N/A'}</span>
+                                                            </div>
+                                                            <p className="text-gray-500 mt-1">Role: <span className="font-semibold text-gray-700">{trf.previousRole?.replace(/_/g, ' ')}</span></p>
+                                                        </div>
+
+                                                        <div className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100">
+                                                            <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Destination Station</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <Building2 size={15} className="text-emerald-700" />
+                                                                <span className="font-bold text-emerald-900">{trf.toBranch?.name || 'N/A'}</span>
+                                                            </div>
+                                                            <p className="text-emerald-700 mt-1">Role: <span className="font-semibold text-emerald-900">{trf.newRole?.replace(/_/g, ' ')}</span></p>
+                                                        </div>
+
+                                                        <div className="bg-blue-50/60 p-3.5 rounded-xl border border-blue-100">
+                                                            <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-1">Timeline & Reason</p>
+                                                            <div className="flex items-center gap-1.5 text-blue-900 font-semibold">
+                                                                <Calendar size={14} />
+                                                                Effective: {new Date(trf.effectiveDate).toLocaleDateString()}
+                                                            </div>
+                                                            <p className="text-gray-600 mt-1 truncate" title={trf.reason}>Reason: {trf.reason}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {trf.justification && (
+                                                        <div className="text-xs bg-gray-50 p-3 rounded-lg border border-gray-100 text-gray-600">
+                                                            <span className="font-semibold text-gray-700">Remarks:</span> {trf.justification}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -323,6 +440,13 @@ export const StaffSelfService = () => {
                     </form>
                 </div>
             )}
+
+            {/* Transfer Letter Modal */}
+            <TransferLetterModal
+                isOpen={letterModal.isOpen}
+                transfer={letterModal.transfer}
+                onClose={() => setLetterModal({ isOpen: false, transfer: null })}
+            />
         </div>
     );
 };

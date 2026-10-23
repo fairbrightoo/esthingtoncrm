@@ -3,6 +3,7 @@ import { EmailService } from '../services/EmailService.js';
 import { SmsService } from '../services/SmsService.js';
 import { WhatsAppService } from '../services/WhatsAppService.js';
 import prisma from '../config/prisma.js';
+import { WalletService } from '../services/WalletService.js';
 
 
 export const CommunicationController = {
@@ -22,6 +23,24 @@ export const CommunicationController = {
             const companySenderId = lead.company?.smsSenderId || undefined;
             const waPhoneNumberId = lead.company?.waPhoneNumberId || undefined;
             const waToken = lead.company?.waToken || undefined;
+
+            // --- WALLET QUOTA GATEKEEPING ---
+            const isCustomerCare = user.role === 'CUSTOMER_CARE';
+            let singleCost = 0;
+            if (!isCustomerCare) {
+                const costDetails = await WalletService.calculateCost(type as any, 1, content || '');
+                singleCost = costDetails.totalCost;
+
+                const userWallet = await WalletService.getOrCreateWallet(user.id);
+                if (userWallet.balance < singleCost) {
+                    return res.status(402).json({
+                        error: `Insufficient messaging wallet balance. Cost is ₦${singleCost.toFixed(2)}, but your current balance is ₦${userWallet.balance.toFixed(2)}. Please recharge your wallet.`,
+                        requiredAmount: singleCost,
+                        currentBalance: userWallet.balance,
+                        deficit: Number((singleCost - userWallet.balance).toFixed(2))
+                    });
+                }
+            }
 
             let providerId = "";
             let recipient = "";
@@ -82,7 +101,21 @@ export const CommunicationController = {
                 }
             });
 
-            res.json({ success: true, log });
+            // Debit wallet upon verified dispatch
+            let balanceAfter: number | null = null;
+            if (!isCustomerCare && singleCost > 0) {
+                const debit = await WalletService.debitWallet({
+                    userId: user.id,
+                    amount: singleCost,
+                    category: type === 'SMS' ? 'SINGLE_SMS' : type === 'EMAIL' ? 'SINGLE_EMAIL' : 'SINGLE_WHATSAPP',
+                    description: `Direct ${type} to ${lead.fullName || 'Lead'}`,
+                    channel: type as any,
+                    recipientCount: 1
+                });
+                balanceAfter = debit.balanceAfter;
+            }
+
+            res.json({ success: true, log, balanceAfter });
         } catch (error) {
             console.error("SendMessage Error:", error);
             res.status(500).json({ error: "Failed to send message" });

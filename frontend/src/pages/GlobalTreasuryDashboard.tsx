@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
     Building2, CheckCircle2, Search, Filter,
-    Download, Clock, CheckSquare, XSquare, Briefcase, Landmark, AlertCircle, Paperclip
+    Download, Clock, CheckSquare, XSquare, Briefcase, Landmark, AlertCircle, Paperclip, Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';

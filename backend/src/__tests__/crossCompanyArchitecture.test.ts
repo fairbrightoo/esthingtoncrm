@@ -58,6 +58,8 @@ describe('Cross-Company Sales & Commission Architecture', () => {
         await prisma.plot.deleteMany({ where: { estate: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
         await prisma.estate.deleteMany({ where: { company: { abbreviation: TEST_COMPANY_ABBR } } });
         await prisma.corporateBankAccount.deleteMany({ where: { branch: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
+        await prisma.esthCoinLedger.deleteMany({ where: { user: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
+        await prisma.payrollRecord.deleteMany({ where: { staff: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
         await prisma.user.deleteMany({ where: { company: { abbreviation: TEST_COMPANY_ABBR } } });
         await prisma.branch.deleteMany({ where: { company: { abbreviation: TEST_COMPANY_ABBR } } });
         await prisma.company.deleteMany({ where: { abbreviation: TEST_COMPANY_ABBR } });
@@ -114,6 +116,8 @@ describe('Cross-Company Sales & Commission Architecture', () => {
         await prisma.plot.deleteMany({ where: { estate: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
         await prisma.estate.deleteMany({ where: { company: { abbreviation: TEST_COMPANY_ABBR } } });
         await prisma.corporateBankAccount.deleteMany({ where: { branch: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
+        await prisma.esthCoinLedger.deleteMany({ where: { user: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
+        await prisma.payrollRecord.deleteMany({ where: { staff: { company: { abbreviation: TEST_COMPANY_ABBR } } } });
         await prisma.user.deleteMany({ where: { company: { abbreviation: TEST_COMPANY_ABBR } } });
         await prisma.branch.deleteMany({ where: { company: { abbreviation: TEST_COMPANY_ABBR } } });
         await prisma.company.deleteMany({ where: { abbreviation: TEST_COMPANY_ABBR } });

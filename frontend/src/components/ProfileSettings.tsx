@@ -67,7 +67,7 @@ export const ProfileSettings = () => {
                 console.error("Failed to load profile for ID card", err);
             });
         }
-        if (activeTab === 'REFERRAL' && user && !user.referralCodeId) {
+        if (activeTab === 'REFERRAL' && user?.role !== 'PARTNER' && user && !user.referralCodeId) {
             fetchReferralCodes();
         }
     }, [activeTab, user, token, idCardData]);
@@ -267,7 +267,7 @@ export const ProfileSettings = () => {
                             <span>Security</span>
                         </div>
                     </button>
-                    {user?.role !== 'SUPER_ADMIN' && !user?.referralCodeId && (
+                    {user?.role !== 'SUPER_ADMIN' && user?.role !== 'PARTNER' && !user?.referralCodeId && (
                         <button
                             onClick={() => setActiveTab('REFERRAL')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'REFERRAL' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -382,89 +382,92 @@ export const ProfileSettings = () => {
                             </div>
 
                             {/* Security Settings (Attendance PIN) */}
+                            {user?.role !== 'PARTNER' && (
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                                    <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
+                                        <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600">
+                                            <KeyRound size={24} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-gray-900">Attendance PIN</h2>
+                                            <p className="text-sm text-gray-500">Set your 4-digit PIN for the office Kiosk.</p>
+                                        </div>
+                                    </div>
 
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                                <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
-                                    <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600">
-                                        <KeyRound size={24} />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold text-gray-900">Attendance PIN</h2>
-                                        <p className="text-sm text-gray-500">Set your 4-digit PIN for the office Kiosk.</p>
-                                    </div>
+                                    <form onSubmit={handlePinChange} className="space-y-5">
+                                        <div className="max-w-xs">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">New 4-Digit PIN</label>
+                                            <input
+                                                type="text"
+                                                maxLength={4}
+                                                required
+                                                value={newPin}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length <= 4) setNewPin(val);
+                                                }}
+                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-mono font-bold tracking-[0.5em] text-center text-lg"
+                                                placeholder="••••"
+                                            />
+                                        </div>
+
+                                        <div className="pt-2 flex justify-start">
+                                            <button
+                                                type="submit"
+                                                disabled={updatingPin || newPin.length !== 4}
+                                                className="flex items-center space-x-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition disabled:opacity-70"
+                                            >
+                                                <Save size={18} />
+                                                <span>{updatingPin ? 'Saving...' : 'Set New PIN'}</span>
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
-
-                                <form onSubmit={handlePinChange} className="space-y-5">
-                                    <div className="max-w-xs">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">New 4-Digit PIN</label>
-                                        <input
-                                            type="text"
-                                            maxLength={4}
-                                            required
-                                            value={newPin}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, '');
-                                                if (val.length <= 4) setNewPin(val);
-                                            }}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-mono font-bold tracking-[0.5em] text-center text-lg"
-                                            placeholder="••••"
-                                        />
-                                    </div>
-
-                                    <div className="pt-2 flex justify-start">
-                                        <button
-                                            type="submit"
-                                            disabled={updatingPin || newPin.length !== 4}
-                                            className="flex items-center space-x-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition disabled:opacity-70"
-                                        >
-                                            <Save size={18} />
-                                            <span>{updatingPin ? 'Saving...' : 'Set New PIN'}</span>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                            )}
 
                             {/* Security Settings (Mobile App Passcode) */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                                <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
-                                    <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
-                                        <Smartphone size={24} />
+                            {user?.role !== 'PARTNER' && (
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                                    <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-100">
+                                        <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
+                                            <Smartphone size={24} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-gray-900">Mobile App Passcode</h2>
+                                            <p className="text-sm text-gray-500">Set your 6-digit passcode for quick login on the Mobile App.</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold text-gray-900">Mobile App Passcode</h2>
-                                        <p className="text-sm text-gray-500">Set your 6-digit passcode for quick login on the Mobile App.</p>
-                                    </div>
+
+                                    <form onSubmit={handleMobilePasscodeChange} className="space-y-5">
+                                        <div className="max-w-xs">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">New 6-Digit Passcode</label>
+                                            <input
+                                                type="text"
+                                                maxLength={6}
+                                                required
+                                                value={newMobilePasscode}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length <= 6) setNewMobilePasscode(val);
+                                                }}
+                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono font-bold tracking-[0.5em] text-center text-lg"
+                                                placeholder="••••••"
+                                            />
+                                        </div>
+
+                                        <div className="pt-2 flex justify-start">
+                                            <button
+                                                type="submit"
+                                                disabled={updatingMobilePasscode || newMobilePasscode.length !== 6}
+                                                className="flex items-center space-x-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-700 transition disabled:opacity-70"
+                                            >
+                                                <Save size={18} />
+                                                <span>{updatingMobilePasscode ? 'Saving...' : 'Set Mobile Passcode'}</span>
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
-
-                                <form onSubmit={handleMobilePasscodeChange} className="space-y-5">
-                                    <div className="max-w-xs">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">New 6-Digit Passcode</label>
-                                        <input
-                                            type="text"
-                                            maxLength={6}
-                                            required
-                                            value={newMobilePasscode}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, '');
-                                                if (val.length <= 6) setNewMobilePasscode(val);
-                                            }}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono font-bold tracking-[0.5em] text-center text-lg"
-                                            placeholder="••••••"
-                                        />
-                                    </div>
-
-                                    <div className="pt-2 flex justify-start">
-                                        <button
-                                            type="submit"
-                                            disabled={updatingMobilePasscode || newMobilePasscode.length !== 6}
-                                            className="flex items-center space-x-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-700 transition disabled:opacity-70"
-                                        >
-                                            <Save size={18} />
-                                            <span>{updatingMobilePasscode ? 'Saving...' : 'Set Mobile Passcode'}</span>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                            )}
 
                             {/* Advanced Preferences Panel */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
@@ -735,7 +738,7 @@ export const ProfileSettings = () => {
                         </div>
                     )}
 
-                    {activeTab === 'REFERRAL' && !user?.referralCodeId && (
+                    {activeTab === 'REFERRAL' && user?.role !== 'PARTNER' && !user?.referralCodeId && (
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 pb-6 border-b border-gray-100">
                                 <div>

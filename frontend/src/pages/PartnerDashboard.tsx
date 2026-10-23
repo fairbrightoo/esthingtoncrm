@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Loader2, Copy, CheckCircle, TrendingUp, Users, ArrowRight } from 'lucide-react';
@@ -8,8 +9,12 @@ import { AnnouncementWidget } from '../components/AnnouncementWidget';
 
 export const PartnerDashboard = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const { toast, addToast } = useToast();
     const token = localStorage.getItem('token');
+    
+    const branchSlug = user?.branch?.name?.toLowerCase().replace(/\s+/g, '-') || 'head-office';
+    const basePath = `/dashboard/${branchSlug}`;
     
     const [personalStats, setPersonalStats] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +107,10 @@ export const PartnerDashboard = () => {
                             View the clients you have referred and track their conversion status down the pipeline.
                         </p>
                     </div>
-                    <button className="text-indigo-700 font-bold text-sm flex items-center gap-2 hover:gap-3 transition-all bg-white px-5 py-2.5 rounded-xl shadow-sm border border-indigo-100">
+                    <button 
+                        onClick={() => navigate(`${basePath}/leads`)}
+                        className="text-indigo-700 font-bold text-sm flex items-center gap-2 hover:gap-3 transition-all bg-white px-5 py-2.5 rounded-xl shadow-sm border border-indigo-100 cursor-pointer"
+                    >
                         View Clients <ArrowRight size={16} />
                     </button>
                 </div>
@@ -117,7 +125,10 @@ export const PartnerDashboard = () => {
                             Access high-quality banners, videos, and flyers to share with your network and drive sales.
                         </p>
                     </div>
-                    <button className="text-amber-700 font-bold text-sm flex items-center gap-2 hover:gap-3 transition-all bg-white px-5 py-2.5 rounded-xl shadow-sm border border-amber-100">
+                    <button 
+                        onClick={() => navigate(`${basePath}/campaigns`)}
+                        className="text-amber-700 font-bold text-sm flex items-center gap-2 hover:gap-3 transition-all bg-white px-5 py-2.5 rounded-xl shadow-sm border border-amber-100 cursor-pointer"
+                    >
                         Open Media Hub <ArrowRight size={16} />
                     </button>
                 </div>

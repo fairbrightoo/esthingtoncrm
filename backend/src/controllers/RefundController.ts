@@ -128,7 +128,7 @@ export const RefundController = {
                     data: { status: updatedStatus, branchAdminId: user.userId }
                 }));
             } 
-            else if (action === 'APPROVE' && (user.role === 'MANAGING_DIRECTOR' || user.role === 'SUPER_ADMIN')) {
+            else if (action === 'APPROVE' && (user.role === 'MANAGING_DIRECTOR' || user.role === 'SUPER_ADMIN' || user.role === 'GROUP_MANAGING_DIRECTOR' || user.role === 'GLOBAL_CHAIRMAN')) {
                 updatedStatus = 'APPROVED_BY_MD';
                 
                 transactionOps.push(prisma.refundRequest.update({
@@ -186,7 +186,7 @@ export const RefundController = {
                     data: { status: updatedStatus }
                 }));
             }
-            else if (action === 'DISBURSE' && user.role === 'ACCOUNTANT') {
+            else if (action === 'DISBURSE' && (user.role === 'ACCOUNTANT' || user.role === 'GLOBAL_ACCOUNTANT')) {
                 updatedStatus = 'DISBURSED';
                 transactionOps.push(prisma.refundRequest.update({
                 // @ts-ignore

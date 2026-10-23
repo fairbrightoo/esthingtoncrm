@@ -21,12 +21,16 @@ interface RefundRequest {
     };
 }
 
-export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRANCH_ADMIN' | 'MANAGING_DIRECTOR' | 'ACCOUNTANT' | 'CUSTOMER_CARE', targetBranchId?: string }) => {
+export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: string, targetBranchId?: string }) => {
     const { token } = useAuth();
     const { addToast } = useToast();
     const [refunds, setRefunds] = useState<RefundRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; action: 'approve' | 'reject' | 'disburse' | null; refundId: string | null; message: string; title: string; }>({ isOpen: false, action: null, refundId: null, message: '', title: '' });
+
+    const isAccountant = roleContext === 'ACCOUNTANT' || roleContext === 'GLOBAL_ACCOUNTANT';
+    const isMD = roleContext === 'MANAGING_DIRECTOR' || roleContext === 'SUPER_ADMIN' || roleContext === 'GROUP_MANAGING_DIRECTOR' || roleContext === 'GLOBAL_CHAIRMAN';
+    const isAdmin = roleContext === 'BRANCH_ADMIN';
 
     const fetchRefunds = async () => {
         setLoading(true);
@@ -54,13 +58,13 @@ export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRA
         let confirmMessage = "";
         let title = "Confirm Action";
 
-        if (action === 'approve' && roleContext === 'BRANCH_ADMIN') {
+        if (action === 'approve' && isAdmin) {
             title = "Escalate Refund";
             confirmMessage = "Are you sure you want to properly vet and escalate this refund to the Managing Director?";
-        } else if (action === 'approve' && roleContext === 'MANAGING_DIRECTOR') {
+        } else if (action === 'approve' && isMD) {
             title = "Approve Refund";
             confirmMessage = "Are you sure you want to approve this refund? This will immediately make the property AVAILABLE back on the market.";
-        } else if (action === 'disburse' && roleContext === 'ACCOUNTANT') {
+        } else if (action === 'disburse' && isAccountant) {
             title = "Confirm Disbursement";
             confirmMessage = "Please confirm that you have successfully wired the funds to the client. This legally concludes the transaction and cannot be undone.";
         } else if (action === 'reject') {
@@ -79,11 +83,11 @@ export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRA
 
         let actionPayload = '';
 
-        if (action === 'approve' && roleContext === 'BRANCH_ADMIN') {
+        if (action === 'approve' && isAdmin) {
             actionPayload = 'ESCALATE';
-        } else if (action === 'approve' && roleContext === 'MANAGING_DIRECTOR') {
+        } else if (action === 'approve' && isMD) {
             actionPayload = 'APPROVE';
-        } else if (action === 'disburse' && roleContext === 'ACCOUNTANT') {
+        } else if (action === 'disburse' && isAccountant) {
             actionPayload = 'DISBURSE';
         } else if (action === 'reject') {
             actionPayload = 'REJECT';
@@ -151,7 +155,7 @@ export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRA
                                 <p className="text-xs text-gray-500 mt-1">By {refund.marketer?.fullName || 'Unknown'}</p>
                             </td>
                             <td className="px-6 py-4 text-right">
-                                {roleContext === 'BRANCH_ADMIN' && refund.status === 'PENDING_BRANCH_ADMIN' && (
+                                {isAdmin && refund.status === 'PENDING_BRANCH_ADMIN' && (
                                     <button 
                                         onClick={() => handleActionClick('approve', refund.id)}
                                         className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700"
@@ -159,7 +163,7 @@ export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRA
                                         Vett & Escalate
                                     </button>
                                 )}
-                                {roleContext === 'MANAGING_DIRECTOR' && refund.status === 'PENDING_MD_APPROVAL' && (
+                                {isMD && refund.status === 'PENDING_MD_APPROVAL' && (
                                     <button 
                                         onClick={() => handleActionClick('approve', refund.id)}
                                         className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-700"
@@ -167,7 +171,7 @@ export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRA
                                         Approve Refund
                                     </button>
                                 )}
-                                {roleContext === 'ACCOUNTANT' && refund.status === 'APPROVED_BY_MD' && (
+                                {isAccountant && refund.status === 'APPROVED_BY_MD' && (
                                     <button 
                                         onClick={() => handleActionClick('disburse', refund.id)}
                                         className="bg-orange-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-orange-700 flex items-center justify-center shadow-md w-full"
@@ -175,10 +179,10 @@ export const RefundQueue = ({ roleContext, targetBranchId }: { roleContext: 'BRA
                                         <CheckCircle size={16} className="mr-1.5" /> Disburse Cash
                                     </button>
                                 )}
-                                {((roleContext === 'BRANCH_ADMIN' && refund.status !== 'PENDING_BRANCH_ADMIN') || 
-                                  (roleContext === 'MANAGING_DIRECTOR' && refund.status !== 'PENDING_MD_APPROVAL') || 
-                                  (roleContext === 'ACCOUNTANT' && refund.status !== 'APPROVED_BY_MD') ||
-                                  (roleContext === 'CUSTOMER_CARE')) && (
+                                {((isAdmin && refund.status !== 'PENDING_BRANCH_ADMIN') || 
+                                  (isMD && refund.status !== 'PENDING_MD_APPROVAL') || 
+                                  (isAccountant && refund.status !== 'APPROVED_BY_MD') ||
+                                  (!isAdmin && !isMD && !isAccountant)) && (
                                     <span className="text-gray-400 text-xs font-bold uppercase">{refund.status.replace(/_/g, ' ')}</span>
                                 )}
                             </td>
