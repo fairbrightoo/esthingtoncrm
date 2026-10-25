@@ -142,15 +142,37 @@ export const ICTController = {
             let fileSizeMB: number | null = null;
 
             if (req.file) {
-                // Upload directly to Cloudflare R2 / Storage
-                const folder = type.toLowerCase().includes('video') ? 'marketing-videos' : 'marketing-flyers';
+                const isVideoFile = req.file.mimetype.startsWith('video/') ||
+                    Boolean(req.file.originalname.match(/\.(mp4|mov|webm|m4v)$/i)) ||
+                    type.toLowerCase().includes('video') ||
+                    type === 'STORY_REEL' ||
+                    type === 'PROMO_VIDEO' ||
+                    type === 'MEETING_EVENT' ||
+                    type === 'ENTERTAINMENT' ||
+                    type === 'TRAINING';
+
+                const folder = isVideoFile ? 'marketing-videos' : 'marketing-flyers';
                 finalFileUrl = await uploadFile(req.file.buffer, req.file.originalname, folder);
                 fileSizeMB = Number((req.file.size / (1024 * 1024)).toFixed(2));
                 storageProvider = 'R2';
-                
-                // If it's an image, the fileUrl is its own thumbnail
-                if (!type.includes('VIDEO')) {
+
+                // If client provided a base64 thumbnail captured from video frame
+                if (customThumbnailUrl && typeof customThumbnailUrl === 'string' && customThumbnailUrl.startsWith('data:image')) {
+                    try {
+                        const base64Data = customThumbnailUrl.replace(/^data:image\/\w+;base64,/, '');
+                        const thumbBuffer = Buffer.from(base64Data, 'base64');
+                        const thumbName = `thumb-${Date.now()}.jpg`;
+                        thumbnailUrl = await uploadFile(thumbBuffer, thumbName, 'marketing-thumbnails');
+                    } catch (e) {
+                        console.error('Failed to process custom video thumbnail:', e);
+                        thumbnailUrl = null;
+                    }
+                } else if (!isVideoFile) {
+                    // For images, the image file is its own thumbnail
                     thumbnailUrl = finalFileUrl;
+                } else {
+                    // For video files without custom thumbnail, leave null (frontend uses video #t=0.5)
+                    thumbnailUrl = null;
                 }
             } else if (fileUrl) {
                 // External video / cloud link

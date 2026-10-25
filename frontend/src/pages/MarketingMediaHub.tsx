@@ -114,6 +114,7 @@ export const MarketingMediaHub: React.FC = () => {
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [filePreview, setFilePreview] = useState<string | null>(null);
+    const [capturedThumbnail, setCapturedThumbnail] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
 
@@ -236,11 +237,12 @@ export const MarketingMediaHub: React.FC = () => {
         return { total, flyers, estateVideos, cultureVideos, totalDownloads };
     }, [assets]);
 
-    // Handle File Selection with preview
+    // Handle File Selection with preview and automatic video frame extraction
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setSelectedFile(file);
+            setCapturedThumbnail(null);
 
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
@@ -249,7 +251,36 @@ export const MarketingMediaHub: React.FC = () => {
                 };
                 reader.readAsDataURL(file);
             } else if (file.type.startsWith('video/')) {
-                setFilePreview(URL.createObjectURL(file));
+                const blobUrl = URL.createObjectURL(file);
+                setFilePreview(blobUrl);
+
+                // Extract frame at 0.5s via HTML5 Canvas
+                try {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    video.src = blobUrl;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.currentTime = 0.5;
+
+                    video.onloadeddata = () => {
+                        video.currentTime = 0.5;
+                    };
+
+                    video.onseeked = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 640;
+                        canvas.height = video.videoHeight || 360;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                            setCapturedThumbnail(dataUrl);
+                        }
+                    };
+                } catch (err) {
+                    console.error('Video thumbnail extraction error:', err);
+                }
             } else {
                 setFilePreview(null);
             }
@@ -274,6 +305,10 @@ export const MarketingMediaHub: React.FC = () => {
 
             if (uploadForm.estateId && uploadForm.estateId !== 'ALL' && uploadForm.estateId !== 'NON_ESTATE') {
                 formData.append('estateId', uploadForm.estateId);
+            }
+
+            if (capturedThumbnail) {
+                formData.append('customThumbnailUrl', capturedThumbnail);
             }
 
             if (uploadForm.storageMethod === 'LINK') {
@@ -318,6 +353,7 @@ export const MarketingMediaHub: React.FC = () => {
             });
             setSelectedFile(null);
             setFilePreview(null);
+            setCapturedThumbnail(null);
             fetchAssets();
         } catch (error: any) {
             console.error('Failed to upload asset', error);
@@ -800,9 +836,31 @@ export const MarketingMediaHub: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredAssets.map((asset) => {
                         const isVideo = isVideoType(asset.type);
-                        const displayThumb =
-                            asset.thumbnailUrl ||
-                            (asset.type.includes('IMAGE') || asset.type === 'FLYER' ? asset.fileUrl : null);
+                        const fileUrl = asset.fileUrl.startsWith('http')
+                            ? asset.fileUrl
+                            : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${asset.fileUrl}`;
+
+                        // Check if thumbnailUrl is an actual image (not an mp4/mov video file)
+                        const isImageFile = (url?: string | null) => {
+                            if (!url) return false;
+                            const clean = url.split('?')[0].toLowerCase();
+                            return (
+                                clean.endsWith('.jpg') ||
+                                clean.endsWith('.jpeg') ||
+                                clean.endsWith('.png') ||
+                                clean.endsWith('.webp') ||
+                                clean.endsWith('.gif') ||
+                                clean.includes('img.youtube.com') ||
+                                clean.includes('googleusercontent.com')
+                            );
+                        };
+
+                        const hasImageThumb = isImageFile(asset.thumbnailUrl);
+                        const isDirectVideo =
+                            fileUrl.split('?')[0].toLowerCase().endsWith('.mp4') ||
+                            fileUrl.split('?')[0].toLowerCase().endsWith('.mov') ||
+                            fileUrl.split('?')[0].toLowerCase().endsWith('.webm') ||
+                            asset.storageProvider === 'R2';
 
                         return (
                             <div
@@ -820,24 +878,35 @@ export const MarketingMediaHub: React.FC = () => {
                                     }`}
                                     onClick={() => setPreviewAsset(asset)}
                                 >
-                                    {displayThumb ? (
+                                    {hasImageThumb ? (
                                         <img
                                             src={
-                                                displayThumb.startsWith('http')
-                                                    ? displayThumb
-                                                    : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${displayThumb}`
+                                                asset.thumbnailUrl!.startsWith('http')
+                                                    ? asset.thumbnailUrl!
+                                                    : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${asset.thumbnailUrl}`
                                             }
                                             alt={asset.title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             loading="lazy"
                                         />
+                                    ) : !isVideo ? (
+                                        <img
+                                            src={fileUrl}
+                                            alt={asset.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            loading="lazy"
+                                        />
+                                    ) : isDirectVideo ? (
+                                        <video
+                                            src={`${fileUrl}#t=0.5`}
+                                            preload="metadata"
+                                            muted
+                                            playsInline
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+                                        />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-center">
-                                            {isVideo ? (
-                                                <Film size={40} className="text-cyan-400/60 mb-2" />
-                                            ) : (
-                                                <ImageIcon size={40} className="text-slate-600 mb-2" />
-                                            )}
+                                            <Film size={40} className="text-cyan-400/60 mb-2" />
                                             <span className="text-xs font-semibold text-slate-400 line-clamp-2">
                                                 {asset.title}
                                             </span>
