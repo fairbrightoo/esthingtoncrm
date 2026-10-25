@@ -41,8 +41,12 @@ export const DocumentTemplatesConfig = () => {
         { tag: '{{AGREED_PRICE}}', desc: 'Total Price (Formatted)' },
         { tag: '{{AGREED_PRICE_WORDS}}', desc: 'Total Price in Words (e.g. Ten Million Naira)' },
         { tag: '{{AMOUNT_PAID}}', desc: 'Total Paid out so far' },
+        { tag: '{{AMOUNT_PAID_WORDS}}', desc: 'Total Paid out in Words (e.g. Five Million Naira)' },
         { tag: '{{BALANCE_OUTSTANDING}}', desc: 'Remaining Balance' },
+        { tag: '{{BALANCE_OUTSTANDING_WORDS}}', desc: 'Remaining Balance in Words' },
+        { tag: '{{BALANCE_DATE}}', desc: 'Deadline Date (6 months from initial installment)' },
         { tag: '{{CURRENT_DATE}}', desc: 'Today\'s Date' },
+        { tag: '{{MD_TITLE}}', desc: 'Dynamic Title (Managing Director or Group Managing Director)' },
         { tag: '{{CORNER_PIECE_TAG}}', desc: 'Renders a stylish CORNER PIECE badge if applicable' },
     ];
 
