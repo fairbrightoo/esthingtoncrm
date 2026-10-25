@@ -110,6 +110,45 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         }
     };
 
+    const numberToWords = (num: number): string => {
+        if (!num || isNaN(num) || num <= 0) return 'Zero Naira';
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+                      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        const convertChunk = (n: number): string => {
+            let str = '';
+            if (n >= 100) {
+                str += ones[Math.floor(n / 100)] + ' Hundred';
+                n %= 100;
+                if (n > 0) str += ' and ';
+            }
+            if (n >= 20) {
+                str += tens[Math.floor(n / 10)] + (n % 10 > 0 ? ' ' + ones[n % 10] : '');
+            } else if (n > 0) {
+                str += ones[n];
+            }
+            return str.trim();
+        };
+        
+        let integerPart = Math.floor(Math.abs(num));
+        const chunks: string[] = [];
+        const billions = Math.floor(integerPart / 1000000000);
+        integerPart %= 1000000000;
+        const millions = Math.floor(integerPart / 1000000);
+        integerPart %= 1000000;
+        const thousands = Math.floor(integerPart / 1000);
+        integerPart %= 1000;
+        const remainder = integerPart;
+        
+        if (billions > 0) chunks.push(convertChunk(billions) + ' Billion');
+        if (millions > 0) chunks.push(convertChunk(millions) + ' Million');
+        if (thousands > 0) chunks.push(convertChunk(thousands) + ' Thousand');
+        if (remainder > 0) chunks.push(convertChunk(remainder));
+        
+        return (chunks.join(', ') || 'Zero') + ' Naira';
+    };
+
     const processTemplate = () => {
         if (!template || !sale) return '';
 
@@ -141,28 +180,52 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{CLIENT_PHONE}}/g, sale.phoneOnDocument || sale.lead.phone || '___________________________');
 
         // Plot Info
+        const plotSizeNum = Number(sale.plot?.size || sale.size || 0);
+        const plotPrototypeStr = (sale.plot?.prototype || sale.prototype || 'Prototype').trim();
+
         html = html.replace(/{{ESTATE_NAME}}/g, sale.plot?.estate?.name || 'Estate');
         html = html.replace(/{{LOCATION}}/g, sale.plot?.estate?.location || 'Location');
-        html = html.replace(/{{PLOT_SIZE}}/g, `${sale.plot?.size} sqm`);
+        html = html.replace(/{{PLOT_SIZE}}/g, plotSizeNum ? `${plotSizeNum} sqm` : (sale.plot?.size ? `${sale.plot.size} sqm` : 'Plot Space'));
         html = html.replace(/{{PLOT_NUMBER}}/g, sale.plot?.plotNumber || sale.plotNumber || '____________________');
-        html = html.replace(/{{PROTOTYPE}}/g, sale.plot?.prototype || 'Prototype');
+        html = html.replace(/{{PROTOTYPE}}/g, plotPrototypeStr);
 
-        // Dynamic Fees
-        const supervisionFee = sale.plot?.estate?.projectSupervisionFee || 0;
-        let settingOutFee = 400000; // fallback
-        let infrastructureFee = 3000000; // fallback
+        // Dynamic Fees: Robust matching against PlotPrototypeConfig
+        const supervisionFee = Number(sale.plot?.estate?.projectSupervisionFee || 0);
+        let settingOutFee = 400000; // default fallback
+        let infrastructureFee = 3000000; // default fallback
 
-        if (sale.plot?.estate?.plotConfigs && sale.plot?.prototype && sale.plot?.size) {
-            const config = sale.plot.estate.plotConfigs.find((c: any) => c.prototype === sale.plot.prototype && c.size === sale.plot.size);
-            if (config) {
-                settingOutFee = config.settingOutFee;
-                infrastructureFee = config.infrastructureFee;
+        const configs: any[] = sale.plot?.estate?.plotConfigs || [];
+        if (configs.length > 0) {
+            // 1. Exact match (prototype case-insensitive + size)
+            let matchedConfig = configs.find((c: any) => 
+                c.prototype?.trim().toLowerCase() === plotPrototypeStr.toLowerCase() && 
+                Number(c.size) === plotSizeNum
+            );
+
+            // 2. Fallback: match by size if prototype has naming variations
+            if (!matchedConfig && plotSizeNum > 0) {
+                matchedConfig = configs.find((c: any) => Number(c.size) === plotSizeNum);
+            }
+
+            // 3. Fallback: match by prototype name if sizes match closely
+            if (!matchedConfig && plotPrototypeStr) {
+                matchedConfig = configs.find((c: any) => 
+                    c.prototype?.trim().toLowerCase() === plotPrototypeStr.toLowerCase()
+                );
+            }
+
+            if (matchedConfig) {
+                settingOutFee = Number(matchedConfig.settingOutFee);
+                infrastructureFee = Number(matchedConfig.infrastructureFee);
             }
         }
 
         html = html.replace(/{{PROJECT_SUPERVISION_FEE}}/g, formatCurrency(supervisionFee));
+        html = html.replace(/{{PROJECT_SUPERVISION_FEE_WORDS}}/g, numberToWords(supervisionFee));
         html = html.replace(/{{SETTING_OUT_FEE}}/g, formatCurrency(settingOutFee));
+        html = html.replace(/{{SETTING_OUT_FEE_WORDS}}/g, numberToWords(settingOutFee));
         html = html.replace(/{{INFRASTRUCTURE_FEE}}/g, formatCurrency(infrastructureFee));
+        html = html.replace(/{{INFRASTRUCTURE_FEE_WORDS}}/g, numberToWords(infrastructureFee));
 
         const isCornerPiece = sale.plot?.isCornerPiece || sale.isCornerPiece;
         const cornerPieceHtml = isCornerPiece 
@@ -172,6 +235,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
 
         // Financials
         html = html.replace(/{{AGREED_PRICE}}/g, formatCurrency(sale.agreedPrice));
+        html = html.replace(/{{AGREED_PRICE_WORDS}}/g, numberToWords(sale.agreedPrice || 0));
         html = html.replace(/{{AMOUNT_PAID}}/g, formatCurrency(sale.totalPaid));
         const balance = sale.agreedPrice - sale.totalPaid;
         html = html.replace(/{{BALANCE_OUTSTANDING}}/g, formatCurrency(balance > 0 ? balance : 0));
