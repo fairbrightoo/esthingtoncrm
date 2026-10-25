@@ -120,24 +120,35 @@ export const MDStaffTransferQueue = () => {
 
     // Filter by Subtab
     const userBranchId = user?.branchId || user?.branch?.id;
-    const userCompanyId = user?.companyId || user?.company?.id;
     const isGlobalExecutive = ['GROUP_MANAGING_DIRECTOR', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN'].includes(user?.role || '');
-    const isHeadOfficeMD = user?.role === 'MANAGING_DIRECTOR' && (user?.branch?.isHeadOffice || false);
     const isManagement = ['MANAGING_DIRECTOR', 'GROUP_MANAGING_DIRECTOR', 'SUPER_ADMIN', 'GLOBAL_CHAIRMAN', 'GENERAL_MANAGER'].includes(user?.role || '');
 
     const outboundList = transfers.filter(t =>
-        (isGlobalExecutive || t.fromBranchId === userBranchId || (isHeadOfficeMD && t.fromCompanyId === userCompanyId)) &&
+        (isGlobalExecutive || t.fromBranchId === userBranchId) &&
         t.status === 'PENDING_RELEASING_MD'
     );
 
     const inboundList = transfers.filter(t =>
-        (isGlobalExecutive || t.toBranchId === userBranchId || (isHeadOfficeMD && t.toCompanyId === userCompanyId)) &&
+        (isGlobalExecutive || t.toBranchId === userBranchId) &&
         t.status === 'PENDING_RECEIVING_MD'
     );
 
-    const historyList = transfers.filter(t =>
-        ['COMPLETED', 'APPROVED_SCHEDULED', 'REJECTED_BY_RELEASING_MD', 'DECLINED_BY_RECEIVING_MD', 'CANCELLED'].includes(t.status)
-    );
+    const historyList = transfers.filter(t => {
+        const belongsToUser = isGlobalExecutive || t.fromBranchId === userBranchId || t.toBranchId === userBranchId;
+        if (!belongsToUser) return false;
+
+        // Terminal statuses
+        if (['COMPLETED', 'APPROVED_SCHEDULED', 'REJECTED_BY_RELEASING_MD', 'DECLINED_BY_RECEIVING_MD', 'CANCELLED'].includes(t.status)) {
+            return true;
+        }
+
+        // Outbound transfers that releasing MD has already signed off on and are awaiting destination MD
+        if (t.fromBranchId === userBranchId && t.status === 'PENDING_RECEIVING_MD') {
+            return true;
+        }
+
+        return false;
+    });
 
     const currentList =
         subTab === 'OUTBOUND' ? outboundList :

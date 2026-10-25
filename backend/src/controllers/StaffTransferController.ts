@@ -161,30 +161,16 @@ export const StaffTransferController = {
                     ];
                 }
             } else if (role === 'MANAGING_DIRECTOR') {
-                // Branch MD sees transfers where their branch or company is either releasing (outbound) or receiving (inbound)
-                const mdBranch = branchId ? await prisma.branch.findUnique({ where: { id: branchId }, select: { isHeadOffice: true } }) : null;
-                if (mdBranch?.isHeadOffice && companyId) {
-                    if (type === 'outbound') {
-                        whereClause.fromCompanyId = companyId;
-                    } else if (type === 'inbound') {
-                        whereClause.toCompanyId = companyId;
-                    } else {
-                        whereClause.OR = [
-                            { fromCompanyId: companyId },
-                            { toCompanyId: companyId }
-                        ];
-                    }
+                // Branch MD sees transfers where their branch is either releasing (outbound) or receiving (inbound)
+                if (type === 'outbound') {
+                    whereClause.fromBranchId = branchId;
+                } else if (type === 'inbound') {
+                    whereClause.toBranchId = branchId;
                 } else {
-                    if (type === 'outbound') {
-                        whereClause.fromBranchId = branchId;
-                    } else if (type === 'inbound') {
-                        whereClause.toBranchId = branchId;
-                    } else {
-                        whereClause.OR = [
-                            { fromBranchId: branchId },
-                            { toBranchId: branchId }
-                        ];
-                    }
+                    whereClause.OR = [
+                        { fromBranchId: branchId },
+                        { toBranchId: branchId }
+                    ];
                 }
             } else if (['BRANCH_HR', 'BRANCH_ADMIN', 'HR_MANAGER'].includes(role)) {
                 // HR / Admin sees transfers involving their branch or company
@@ -276,11 +262,9 @@ export const StaffTransferController = {
             // Branch validation for MD (unless GMD / SuperAdmin / Global Chairman)
             if (mdRole === 'MANAGING_DIRECTOR') {
                 const isDirectBranchMD = transfer.fromBranchId === mdBranchId;
-                const mdBranch = mdBranchId ? await prisma.branch.findUnique({ where: { id: mdBranchId }, select: { isHeadOffice: true } }) : null;
-                const isHeadOfficeMD = mdBranch?.isHeadOffice && transfer.fromCompanyId === (req as any).user.companyId;
 
-                if (!isDirectBranchMD && !isHeadOfficeMD) {
-                    return res.status(403).json({ error: 'You can only sign off on staff transfers originating from your branch or company.' });
+                if (!isDirectBranchMD) {
+                    return res.status(403).json({ error: 'You can only sign off on staff transfers originating from your branch.' });
                 }
             }
 
@@ -355,11 +339,9 @@ export const StaffTransferController = {
             // Branch validation for MD (unless GMD / SuperAdmin / Global Chairman)
             if (mdRole === 'MANAGING_DIRECTOR') {
                 const isDirectBranchMD = transfer.toBranchId === mdBranchId;
-                const mdBranch = mdBranchId ? await prisma.branch.findUnique({ where: { id: mdBranchId }, select: { isHeadOffice: true } }) : null;
-                const isHeadOfficeMD = mdBranch?.isHeadOffice && transfer.toCompanyId === (req as any).user.companyId;
 
-                if (!isDirectBranchMD && !isHeadOfficeMD) {
-                    return res.status(403).json({ error: 'You can only sign off on staff transfers incoming to your branch or company.' });
+                if (!isDirectBranchMD) {
+                    return res.status(403).json({ error: 'You can only sign off on staff transfers incoming to your branch.' });
                 }
             }
 
