@@ -1,16 +1,96 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma.js';
+import { uploadFile } from '../services/StorageService.js';
+
+function parseVideoLink(url: string) {
+    if (!url) return { provider: 'EXTERNAL_URL', thumbnailUrl: null, embedUrl: null };
+    
+    // YouTube
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+        const id = ytMatch[1];
+        return {
+            provider: 'YOUTUBE',
+            thumbnailUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+            embedUrl: `https://www.youtube.com/embed/${id}`
+        };
+    }
+
+    // Google Drive
+    const driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/);
+    if (driveMatch && driveMatch[1]) {
+        const id = driveMatch[1];
+        return {
+            provider: 'GOOGLE_DRIVE',
+            thumbnailUrl: `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+            embedUrl: `https://drive.google.com/file/d/${id}/preview`
+        };
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+        return {
+            provider: 'VIMEO',
+            thumbnailUrl: null,
+            embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`
+        };
+    }
+
+    return { provider: 'EXTERNAL_URL', thumbnailUrl: null, embedUrl: url };
+}
 
 export const ICTController = {
     // Marketing Assets
     async getAssets(req: Request, res: Response) {
         try {
-            const companyId = req.params.companyId as string;
-            const branchId = req.params.branchId as string;
+            const companyId = (req.params.companyId || req.query.companyId) as string;
+            const branchId = (req.params.branchId || req.query.branchId) as string;
+            const { estateId, type, aspectRatio, search, scope } = req.query;
+
+            const whereClause: any = {};
+
+            // Company & Branch Filtering (unless 'ALL' or global search)
+            if (companyId && companyId !== 'ALL' && scope !== 'ALL_COMPANIES') {
+                whereClause.companyId = companyId;
+            }
+            if (branchId && branchId !== 'ALL' && branchId !== 'null' && scope === 'BRANCH_ONLY') {
+                whereClause.branchId = branchId;
+            }
+
+            if (estateId && estateId !== 'ALL') {
+                whereClause.estateId = String(estateId);
+            }
+
+            if (type && type !== 'ALL') {
+                whereClause.type = String(type);
+            }
+
+            if (aspectRatio && aspectRatio !== 'ALL') {
+                whereClause.aspectRatio = String(aspectRatio);
+            }
+
+            if (search) {
+                const s = String(search).trim();
+                whereClause.OR = [
+                    { title: { contains: s, mode: 'insensitive' } },
+                    { description: { contains: s, mode: 'insensitive' } },
+                    { marketingCaption: { contains: s, mode: 'insensitive' } },
+                    { estate: { name: { contains: s, mode: 'insensitive' } } }
+                ];
+            }
+
             const assets = await prisma.marketingAsset.findMany({
-                where: { companyId, branchId: branchId !== 'null' ? branchId : null },
+                where: whereClause,
+                include: {
+                    estate: { select: { id: true, name: true, location: true } },
+                    company: { select: { id: true, name: true, logoUrl: true } },
+                    branch: { select: { id: true, name: true } },
+                    uploadedByOracle: { select: { id: true, fullName: true, role: true } }
+                },
                 orderBy: { createdAt: 'desc' }
             });
+
             res.json(assets);
         } catch (error) {
             console.error('Get Assets Error:', error);
@@ -22,27 +102,131 @@ export const ICTController = {
         try {
             // @ts-ignore
             const user = req.user;
-            const companyId = req.params.companyId as string;
-            const branchId = req.params.branchId as string;
-            const { title, description, type, fileUrl } = req.body;
-            // if file was uploaded via multer, use req.file.path (which is the R2 URL set by middleware)
-            const finalFileUrl = req.file ? (req.file as any).location : fileUrl;
+            let effectiveCompanyId = (req.params.companyId && req.params.companyId !== 'ALL' && req.params.companyId !== 'global') 
+                ? req.params.companyId 
+                : (user.companyId || req.body.companyId);
+
+            const { 
+                title, 
+                description, 
+                type = 'FLYER', 
+                aspectRatio = '1:1', 
+                estateId, 
+                marketingCaption, 
+                fileUrl, 
+                customThumbnailUrl 
+            } = req.body;
+
+            if (!effectiveCompanyId && estateId && estateId !== 'ALL') {
+                const est = await prisma.estate.findUnique({ where: { id: estateId }, select: { companyId: true } });
+                if (est?.companyId) effectiveCompanyId = est.companyId;
+            }
+
+            if (!effectiveCompanyId) {
+                const firstCompany = await prisma.company.findFirst({ select: { id: true } });
+                if (firstCompany) effectiveCompanyId = firstCompany.id;
+            }
+
+            const rawBranch = req.params.branchId || user.branchId;
+            const effectiveBranchId = (rawBranch && rawBranch !== 'ALL' && rawBranch !== 'null' && rawBranch !== 'global') ? rawBranch : (user.branchId || null);
+
+            let finalFileUrl = fileUrl;
+            let storageProvider = 'R2';
+            let thumbnailUrl: string | null = customThumbnailUrl || null;
+            let fileSizeMB: number | null = null;
+
+            if (req.file) {
+                // Upload directly to Cloudflare R2 / Storage
+                const folder = type.toLowerCase().includes('video') ? 'marketing-videos' : 'marketing-flyers';
+                finalFileUrl = await uploadFile(req.file.buffer, req.file.originalname, folder);
+                fileSizeMB = Number((req.file.size / (1024 * 1024)).toFixed(2));
+                storageProvider = 'R2';
+                
+                // If it's an image, the fileUrl is its own thumbnail
+                if (!type.includes('VIDEO')) {
+                    thumbnailUrl = finalFileUrl;
+                }
+            } else if (fileUrl) {
+                // External video / cloud link
+                const parsed = parseVideoLink(fileUrl);
+                storageProvider = parsed.provider;
+                if (!thumbnailUrl && parsed.thumbnailUrl) {
+                    thumbnailUrl = parsed.thumbnailUrl;
+                }
+            } else {
+                return res.status(400).json({ error: 'Please provide a file to upload or an external video link.' });
+            }
 
             const asset = await prisma.marketingAsset.create({
                 data: {
                     title,
-                    description,
+                    description: description || null,
                     type,
+                    aspectRatio,
                     fileUrl: finalFileUrl,
-                    companyId,
-                    branchId: branchId !== 'null' ? branchId : null,
+                    thumbnailUrl,
+                    storageProvider,
+                    fileSizeMB,
+                    marketingCaption: marketingCaption || null,
+                    estateId: estateId && estateId !== 'ALL' ? estateId : null,
+                    companyId: effectiveCompanyId as string,
+                    branchId: effectiveBranchId,
                     uploadedByOracleId: user.userId || user.id
+                },
+                include: {
+                    estate: { select: { id: true, name: true, location: true } },
+                    company: { select: { id: true, name: true } },
+                    branch: { select: { id: true, name: true } },
+                    uploadedByOracle: { select: { id: true, fullName: true } }
                 }
             });
-            res.json(asset);
-        } catch (error) {
+
+            res.status(201).json(asset);
+        } catch (error: any) {
             console.error('Create Asset Error:', error);
-            res.status(500).json({ error: 'Failed to create asset' });
+            res.status(500).json({ error: error.message || 'Failed to create asset' });
+        }
+    },
+
+    async updateAsset(req: Request, res: Response) {
+        try {
+            const assetId = req.params.assetId as string;
+            const { title, description, type, aspectRatio, estateId, marketingCaption } = req.body;
+
+            const updated = await prisma.marketingAsset.update({
+                where: { id: assetId },
+                data: {
+                    ...(title && { title }),
+                    ...(description !== undefined && { description }),
+                    ...(type && { type }),
+                    ...(aspectRatio && { aspectRatio }),
+                    estateId: estateId && estateId !== 'ALL' ? estateId : null,
+                    ...(marketingCaption !== undefined && { marketingCaption })
+                },
+                include: {
+                    estate: { select: { id: true, name: true, location: true } },
+                    company: { select: { id: true, name: true } }
+                }
+            });
+
+            res.json(updated);
+        } catch (error: any) {
+            console.error('Update Asset Error:', error);
+            res.status(500).json({ error: 'Failed to update asset' });
+        }
+    },
+
+    async trackDownload(req: Request, res: Response) {
+        try {
+            const assetId = req.params.assetId as string;
+            const updated = await prisma.marketingAsset.update({
+                where: { id: assetId },
+                data: { downloadCount: { increment: 1 } }
+            });
+            res.json({ success: true, downloadCount: updated.downloadCount });
+        } catch (error) {
+            console.error('Track Download Error:', error);
+            res.status(500).json({ error: 'Failed to record download' });
         }
     },
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2, Wallet, ArrowRightLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, FileText, Settings, LogOut, BookOpen, Home, CheckCircle, Megaphone, CalendarClock, FileSpreadsheet, Calendar, MessageCircle, X, Globe, Landmark, Map, Trash2, Wallet, ArrowRightLeft, Image } from 'lucide-react';
 
 export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onClose?: () => void }) => {
     const { user, logout } = useAuth();
@@ -100,6 +100,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/admin/site-mapping" icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to="/admin/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/admin/announcements" icon={<Megaphone size={20} />} label="Announcements" />
+                        <NavItem to="/admin/media-hub" icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to="/admin/wallet" icon={<Wallet size={20} />} label="Messaging Tariffs" />
                     </>
                 )}
@@ -108,6 +109,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to="/dashboard/chairman/crm" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/chairman/campaigns" icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to="/dashboard/chairman/media-hub" icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to="/dashboard/wallet" icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to="/dashboard/chairman/global-treasury" icon={<Landmark size={20} />} label="Global Treasury" />
                         <NavItem to="/dashboard/chairman/expenses" icon={<FileSpreadsheet size={20} />} label="My Expenses" />
@@ -131,6 +133,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to="/dashboard/staff-analytics" icon={<Users size={20} />} label="Branch Staff" />
                         <NavItem to="/dashboard/my-leads" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/campaigns" icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to="/dashboard/media-hub" icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to="/dashboard/wallet" icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to="/dashboard/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/dashboard/memos" icon={<FileText size={20} />} label="Executive Memos" />
@@ -152,6 +155,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/site-mapping`} icon={<Map size={20} />} label="Site Plot Allocations" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
                         <NavItem to={`${basePath}/my-hr`} icon={<CalendarClock size={20} />} label="My HR Desk" />
@@ -163,6 +167,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/users`} icon={<Users size={20} />} label="Branch Staff & Partners" />
                         <NavItem to={`${basePath}/transfers`} icon={<ArrowRightLeft size={20} />} label="Staff Transfers" />
@@ -194,6 +199,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/inventory`} icon={<Home size={20} />} label="Inventory" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/templates`} icon={<BookOpen size={20} />} label="Templates" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         <NavItem to={`${basePath}/tickets`} icon={<MessageCircle size={20} />} label="Helpdesk Tickets" />
@@ -210,6 +216,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                     </>
@@ -221,6 +228,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/team-comms`} icon={<MessageCircle size={20} />} label="Team Comms" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
@@ -237,6 +245,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/team-comms`} icon={<MessageCircle size={20} />} label="Team Comms" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
@@ -252,6 +261,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/command-center`} icon={<Globe size={20} />} label="BDM Command Center" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
@@ -267,6 +277,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/department`} icon={<LayoutDashboard size={20} />} label="Department Builder" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/scripts`} icon={<BookOpen size={20} />} label="Scripts" />
                         
@@ -288,6 +299,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/leaves`} icon={<CalendarClock size={20} />} label="Leave Approvals" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/knowledge-base`} icon={<BookOpen size={20} />} label="AI Knowledge Base" />
                     </>
@@ -310,6 +322,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <NavItem to={`${basePath}/broadcasts`} icon={<Megaphone size={20} />} label="Branch Broadcasts" />
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/tasks`} icon={<CheckCircle size={20} />} label="Tasks" />
                         <NavItem to={`${basePath}/memos`} icon={<FileText size={20} />} label="Memos" />
@@ -322,6 +335,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/my-leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/wallet`} icon={<Wallet size={20} />} label="My Wallet" />
                         <NavItem to={`${basePath}/disbursements`} icon={<CheckCircle size={20} />} label="Disbursement Center" />
                         <NavItem to={`${basePath}/requisitions`} icon={<FileSpreadsheet size={20} />} label="Requisitions & Imprest" />
@@ -346,6 +360,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                         <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 mt-4 px-4">Personal Operations</div>
                         <NavItem to="/dashboard/global-accountant/my-leads" icon={<Users size={20} />} label="My Leads" />
                         <NavItem to="/dashboard/global-accountant/campaigns" icon={<FileText size={20} />} label="My Campaigns" />
+                        <NavItem to="/dashboard/global-accountant/media-hub" icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to="/dashboard/global-accountant/legacy-requests" icon={<FileText size={20} />} label="Offline Sales Onboarding" />
                         <NavItem to="/dashboard/global-accountant/memos" icon={<FileText size={20} />} label="Memos" />
                         <NavItem to="/dashboard/global-accountant/my-hr" icon={<CalendarClock size={20} />} label="My HR Desk" />
@@ -359,6 +374,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/inspection-tracking`} icon={<CheckCircle size={20} />} label="Inspection Hub" />
                         <NavItem to={`${basePath}/announcements`} icon={<Megaphone size={20} />} label="Announcements" />
                         <NavItem to={`${basePath}/legacy-requests`} icon={<FileText size={20} />} label="Offline Sales Onboarding" />
@@ -372,7 +388,7 @@ export const Sidebar = ({ isMobileOpen, onClose }: { isMobileOpen?: boolean; onC
                     <>
                         <NavItem to={`${basePath}/leads`} icon={<Users size={20} />} label="My Leads" />
                         <NavItem to={`${basePath}/campaigns`} icon={<FileText size={20} />} label="Campaigns" />
-                        <NavItem to={`${basePath}/media-hub`} icon={<Home size={20} />} label="Marketing Media Hub" />
+                        <NavItem to={`${basePath}/media-hub`} icon={<Image size={20} />} label="Marketing Media Hub" />
                         <NavItem to={`${basePath}/production-scripts`} icon={<FileText size={20} />} label="Production Scripts" />
                         <NavItem to={`${basePath}/social-analytics`} icon={<LayoutDashboard size={20} />} label="Social Analytics" />
                         <NavItem to={`${basePath}/training-hub`} icon={<BookOpen size={20} />} label="Staff Training Hub" />

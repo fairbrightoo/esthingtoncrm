@@ -41,9 +41,17 @@ router.delete('/users/:id/documents/:documentType', authenticateToken, CompanyCo
 router.put('/users/:id', authenticateToken, CompanyController.updateUser);
 router.delete('/users/:id', authenticateToken, CompanyController.deleteUser);
 
-// ICT Oracle & Site Expert Routes
+// ICT Oracle & Marketing Media Hub Routes
+router.get('/media-assets', authenticateToken, ICTController.getAssets);
+router.post('/media-assets', authenticateToken, upload.single('file'), ICTController.createAsset);
+router.put('/media-assets/:assetId', authenticateToken, ICTController.updateAsset);
+router.post('/media-assets/:assetId/download', authenticateToken, ICTController.trackDownload);
+router.delete('/media-assets/:assetId', authenticateToken, ICTController.deleteAsset);
+
 router.get('/:companyId/branches/:branchId/assets', authenticateToken, ICTController.getAssets);
 router.post('/:companyId/branches/:branchId/assets', authenticateToken, upload.single('file'), ICTController.createAsset);
+router.put('/:companyId/branches/:branchId/assets/:assetId', authenticateToken, ICTController.updateAsset);
+router.post('/:companyId/branches/:branchId/assets/:assetId/download', authenticateToken, ICTController.trackDownload);
 router.delete('/:companyId/branches/:branchId/assets/:assetId', authenticateToken, ICTController.deleteAsset);
 
 router.get('/:companyId/branches/:branchId/scripts', authenticateToken, ICTController.getScripts);

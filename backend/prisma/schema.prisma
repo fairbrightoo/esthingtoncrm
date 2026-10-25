@@ -369,6 +369,7 @@ model Estate {
   plots                Plot[]
   plotConfigs          PlotPrototypeConfig[]
   physicalPlots        PhysicalPlot[]
+  marketingAssets      MarketingAsset[]
 
   legacySaleRequests LegacySaleRequest[]
 }
@@ -1106,9 +1107,19 @@ model ReferralCode {
 model MarketingAsset {
   id                 String   @id @default(uuid())
   title              String
-  description        String?
-  type               String // IMAGE, VIDEO_LINK, FLYER
-  fileUrl            String // R2 URL or external video link
+  description        String?  @db.Text
+  type               String   // FLYER, PROMO_VIDEO, WALKTHROUGH, STORY_REEL, PRICELIST, BRANDING
+  aspectRatio        String   @default("1:1") // 1:1, 9:16, 16:9
+  fileUrl            String   // R2 URL or external video link
+  thumbnailUrl       String?
+  storageProvider    String   @default("R2") // R2, YOUTUBE, GOOGLE_DRIVE, EXTERNAL_URL
+  fileSizeMB         Float?
+  marketingCaption   String?  @db.Text
+  downloadCount      Int      @default(0)
+
+  estateId           String?
+  estate             Estate?  @relation(fields: [estateId], references: [id])
+
   uploadedByOracleId String
   companyId          String
   branchId           String?
@@ -1119,6 +1130,10 @@ model MarketingAsset {
   company          Company             @relation(fields: [companyId], references: [id])
   branch           Branch?             @relation(fields: [branchId], references: [id])
   socialReports    SocialMediaReport[]
+
+  @@index([companyId])
+  @@index([estateId])
+  @@index([type])
 }
 
 model ProductionScript {

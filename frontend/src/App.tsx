@@ -229,10 +229,13 @@ function App() {
             <Route path="/admin/archive" element={<DashboardLayout><NoticeArchive /></DashboardLayout>} />
             <Route path="/admin/reports" element={<DashboardLayout><EnterpriseReports /></DashboardLayout>} />
             <Route path="/admin/wallet" element={<DashboardLayout><SuperAdminWalletManagement /></DashboardLayout>} />
+            <Route path="/admin/media-hub" element={<DashboardLayout><MarketingMediaHub /></DashboardLayout>} />
             <Route path="/admin/settings" element={<DashboardLayout><GlobalSettings /></DashboardLayout>} />
 
             <Route path="/dashboard" element={<DashboardLayout><DashboardHome /></DashboardLayout>} />
             <Route path="/dashboard/wallet" element={<DashboardLayout><MyWallet /></DashboardLayout>} />
+            <Route path="/dashboard/media-hub" element={<DashboardLayout><MarketingMediaHub /></DashboardLayout>} />
+            <Route path="/dashboard/global/media-hub" element={<DashboardLayout><MarketingMediaHub /></DashboardLayout>} />
             <Route path="/dashboard/approvals" element={<DashboardLayout><ManagingDirectorDashboard /></DashboardLayout>} />
             <Route path="/dashboard/transfers" element={<DashboardLayout><StaffTransfersPage /></DashboardLayout>} />
             <Route path="/dashboard/requisitions" element={<DashboardLayout><BranchRequisitions /></DashboardLayout>} />
@@ -250,6 +253,7 @@ function App() {
             <Route path="/dashboard/chairman" element={<DashboardLayout><SuperAdminDashboard /></DashboardLayout>} />
             <Route path="/dashboard/chairman/crm" element={<DashboardLayout><GlobalClientsDatabase /></DashboardLayout>} />
             <Route path="/dashboard/chairman/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
+            <Route path="/dashboard/chairman/media-hub" element={<DashboardLayout><MarketingMediaHub /></DashboardLayout>} />
             <Route path="/dashboard/chairman/transfers" element={<DashboardLayout><StaffTransfersPage /></DashboardLayout>} />
             <Route path="/dashboard/chairman/global-treasury" element={<DashboardLayout><GlobalTreasuryDashboard /></DashboardLayout>} />
             <Route path="/dashboard/chairman/expenses" element={<DashboardLayout><ChairmanExpenses /></DashboardLayout>} />
