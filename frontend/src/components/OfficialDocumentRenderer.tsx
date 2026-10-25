@@ -267,7 +267,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         let finalMdTitle = 'Managing Director';
         let finalSignatureUrl = '';
 
-        const isHeadOffice = branchInfo?.isHeadOffice === true;
+        const isHeadOffice = branchInfo?.isHeadOffice === true || branchInfo?.name?.toLowerCase().includes('head office');
         const branchGeneralManagerName = branchInfo?.managerName || '';
         const branchGeneralManagerSig = branchInfo?.signatureUrl || '';
         const branchMDName = branchMDUser?.fullName || branchGeneralManagerName;
@@ -277,29 +277,29 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
 
         if (documentType === 'OFFER') {
             if (isHeadOffice) {
-                finalMdName = branchMDName;
+                finalMdName = branchMDName || groupMDName;
                 finalMdTitle = 'Managing Director';
-                finalSignatureUrl = branchMDSig;
+                finalSignatureUrl = branchMDSig || groupMDSig;
             } else {
-                finalMdName = branchGeneralManagerName;
+                finalMdName = branchGeneralManagerName || branchMDName;
                 finalMdTitle = 'General Manager';
-                finalSignatureUrl = branchGeneralManagerSig;
+                finalSignatureUrl = branchGeneralManagerSig || branchMDSig;
             }
         } else if (documentType === 'PROVISIONAL_ALLOCATION' || documentType === 'FINAL_ALLOCATION') {
             if (isHeadOffice) {
-                finalMdName = groupMDName;
+                finalMdName = groupMDName || branchMDName;
                 finalMdTitle = 'Group Managing Director';
-                finalSignatureUrl = groupMDSig;
+                finalSignatureUrl = groupMDSig || branchMDSig;
             } else {
-                finalMdName = branchMDName;
+                finalMdName = branchMDName || groupMDName;
                 finalMdTitle = 'Managing Director';
-                finalSignatureUrl = branchMDSig;
+                finalSignatureUrl = branchMDSig || groupMDSig;
             }
         } else {
             // Default fallback
-            finalMdName = branchGeneralManagerName || groupMDName;
+            finalMdName = branchGeneralManagerName || branchMDName || groupMDName;
             finalMdTitle = branchGeneralManagerName ? 'General Manager' : 'Managing Director';
-            finalSignatureUrl = branchGeneralManagerSig || groupMDSig;
+            finalSignatureUrl = branchGeneralManagerSig || branchMDSig || groupMDSig;
         }
 
         const resolvedSignatureUrl = finalSignatureUrl ? (finalSignatureUrl.startsWith('http') ? finalSignatureUrl : `${baseUrl}${finalSignatureUrl}`) : '';
