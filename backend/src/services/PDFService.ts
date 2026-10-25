@@ -186,15 +186,18 @@ export const PDFService = {
         html = html.replace(/{{INFRASTRUCTURE_FEE_WORDS}}/g, numberToWords(infrastructureFee));
 
         // Financials
-        html = html.replace(/{{AGREED_PRICE}}/g, formatCurrency(sale.agreedPrice || 0));
-        html = html.replace(/{{AGREED_PRICE_WORDS}}/g, numberToWords(sale.agreedPrice || 0));
-        html = html.replace(/{{AMOUNT_PAID}}/g, formatCurrency(sale.totalPaid || 0));
-        html = html.replace(/{{AMOUNT_PAID_WORDS}}/g, numberToWords(sale.totalPaid || 0));
-        const balance = (sale.agreedPrice || 0) - (sale.totalPaid || 0);
-        html = html.replace(/{{BALANCE_OUTSTANDING}}/g, formatCurrency(balance > 0 ? balance : 0));
-        html = html.replace(/{{BALANCE_OUTSTANDING_WORDS}}/g, numberToWords(balance > 0 ? balance : 0));
-        html = html.replace(/{{BALANCE_AMOUNT}}/g, formatCurrency(balance > 0 ? balance : 0));
-        html = html.replace(/{{BALANCE_AMOUNT_WORDS}}/g, numberToWords(balance > 0 ? balance : 0));
+        const agreedPrice = Number(sale.agreedPrice || 0);
+        const totalPaid = Number(sale.totalPaid || 0);
+        const balance = Math.max(0, agreedPrice - totalPaid);
+
+        html = html.replace(/{{AGREED_PRICE}}/gi, formatCurrency(agreedPrice));
+        html = html.replace(/{{AGREED_PRICE_WORDS}}/gi, numberToWords(agreedPrice));
+        html = html.replace(/{{AMOUNT_PAID}}/gi, formatCurrency(totalPaid));
+        html = html.replace(/{{AMOUNT_PAID_WORDS}}/gi, numberToWords(totalPaid));
+        html = html.replace(/{{BALANCE_OUTSTANDING}}/gi, formatCurrency(balance));
+        html = html.replace(/{{BALANCE_OUTSTANDING_WORDS}}/gi, numberToWords(balance));
+        html = html.replace(/{{BALANCE_AMOUNT}}/gi, formatCurrency(balance));
+        html = html.replace(/{{BALANCE_AMOUNT_WORDS}}/gi, numberToWords(balance));
         
         // Calculate Balance Deadline: 6 months from the date of the first installment (Sale createdAt)
         const firstInstallmentDate = new Date(sale.createdAt || new Date());
