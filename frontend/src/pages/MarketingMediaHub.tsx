@@ -211,6 +211,17 @@ export const MarketingMediaHub: React.FC = () => {
         );
     }, [assets, searchQuery]);
 
+    // Dynamically Filter Estates by Selected Sister Company
+    const displayedEstates = useMemo(() => {
+        if (selectedCompany === 'ALL') return estates;
+        return estates.filter((est) => est.companyId === selectedCompany);
+    }, [estates, selectedCompany]);
+
+    const uploadModalEstates = useMemo(() => {
+        if (uploadForm.companyId === 'ALL') return estates;
+        return estates.filter((est) => est.companyId === uploadForm.companyId);
+    }, [estates, uploadForm.companyId]);
+
     // Metrics Counters
     const metrics = useMemo(() => {
         const total = assets.length;
@@ -671,7 +682,7 @@ export const MarketingMediaHub: React.FC = () => {
                             <PartyPopper size={13} /> 🏢 Corporate & Culture (Monday Meetings, Events, Skits)
                         </button>
 
-                        {estates.map((est) => (
+                        {displayedEstates.map((est) => (
                             <button
                                 key={est.id}
                                 onClick={() => setSelectedEstate(est.id)}
@@ -1252,7 +1263,7 @@ export const MarketingMediaHub: React.FC = () => {
                                         🏢 Corporate / Culture (Monday Meeting, Cultural Day, Skit, No Estate)
                                     </option>
                                     <option value="ALL">🌟 General / Multi-Estate Promotion</option>
-                                    {estates.map((est) => (
+                                    {uploadModalEstates.map((est) => (
                                         <option key={est.id} value={est.id}>
                                             📍 {est.name}
                                         </option>
