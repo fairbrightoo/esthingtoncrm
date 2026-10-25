@@ -20,11 +20,21 @@ export const EnterpriseReportController = {
             if (dateFilter.gte) whereClause.date = dateFilter;
             if (status && status !== 'ALL') whereClause.status = status;
             
-            if (companyId && companyId !== 'ALL') {
-                whereClause.sale = { marketer: { companyId } };
-            }
-            if (branchId && branchId !== 'ALL') {
-                whereClause.sale = { ...whereClause.sale, marketer: { ...whereClause.sale?.marketer, branchId } };
+            if (companyId && companyId !== 'ALL' && branchId && branchId !== 'ALL') {
+                whereClause.OR = [
+                    { sale: { marketer: { companyId, branchId } } },
+                    { sale: { lead: { companyId, branchId } } }
+                ];
+            } else if (companyId && companyId !== 'ALL') {
+                whereClause.OR = [
+                    { sale: { marketer: { companyId } } },
+                    { sale: { lead: { companyId } } }
+                ];
+            } else if (branchId && branchId !== 'ALL') {
+                whereClause.OR = [
+                    { sale: { marketer: { branchId } } },
+                    { sale: { lead: { branchId } } }
+                ];
             }
 
             const payments = await prisma.payment.findMany({

@@ -56,12 +56,14 @@ export const ReportController = {
         if (queryBranchId) {
           whereClause.OR = [
             { sale: { marketer: { branchId: queryBranchId } } },
+            { sale: { lead: { branchId: queryBranchId } } },
             { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
             { receivingBranchId: queryBranchId }
           ];
         } else if (queryCompanyId) {
           whereClause.OR = [
             { sale: { marketer: { companyId: queryCompanyId } } },
+            { sale: { lead: { companyId: queryCompanyId } } },
             { sale: { plot: { estate: { companyId: queryCompanyId } } } }
           ];
         }
@@ -69,6 +71,7 @@ export const ReportController = {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
           { sale: { marketer: { branchId: branchId } } },
+          { sale: { lead: { branchId: branchId } } },
           { sale: { plot: { estate: { managingBranchId: branchId } } } },
           { receivingBranchId: branchId }
         ];
@@ -119,7 +122,7 @@ export const ReportController = {
         // Commission Accrued (Using Sale's marketer commission rate or 5%)
         let saleType = 'Direct Sale';
         if (role !== 'SUPER_ADMIN' && role !== 'GLOBAL_CHAIRMAN' && role !== 'GLOBAL_ACCOUNTANT' && branchId) {
-            const mBranchId = sale.marketer?.branchId;
+            const mBranchId = sale.marketer?.branchId || sale.lead?.branchId;
             const estBranchId = sale.plot.estate.managingBranchId;
             const recBranchId = payment.receivingBranchId;
             if (mBranchId === branchId && estBranchId !== branchId) saleType = 'Outbound Cross-Sale';
@@ -221,12 +224,14 @@ export const ReportController = {
         if (queryBranchId) {
           whereClause.OR = [
             { sale: { marketer: { branchId: queryBranchId } } },
+            { sale: { lead: { branchId: queryBranchId } } },
             { sale: { plot: { estate: { managingBranchId: queryBranchId } } } },
             { receivingBranchId: queryBranchId }
           ];
         } else if (queryCompanyId) {
           whereClause.OR = [
             { sale: { marketer: { companyId: queryCompanyId } } },
+            { sale: { lead: { companyId: queryCompanyId } } },
             { sale: { plot: { estate: { companyId: queryCompanyId } } } }
           ];
         }
@@ -234,6 +239,7 @@ export const ReportController = {
         if (!branchId) return res.status(403).json({ error: 'Not authorized for a branch' });
         whereClause.OR = [
           { sale: { marketer: { branchId: branchId } } },
+          { sale: { lead: { branchId: branchId } } },
           { sale: { plot: { estate: { managingBranchId: branchId } } } },
           { receivingBranchId: branchId }
         ];

@@ -49,10 +49,12 @@ export const MDReportController = {
                 const targetBranchId = (branchId as string) || (user?.branchId as string);
                 paymentWhere.OR = [
                     { sale: { marketer: { branchId: targetBranchId } } },
+                    { sale: { lead: { branchId: targetBranchId } } },
                     { sale: { plot: { estate: { managingBranchId: targetBranchId } } } }
                 ];
                 saleWhere.OR = [
                     { marketer: { branchId: targetBranchId } },
+                    { lead: { branchId: targetBranchId } },
                     { plot: { estate: { managingBranchId: targetBranchId } } }
                 ];
             }
@@ -82,9 +84,9 @@ export const MDReportController = {
 
             payments.forEach(p => {
                 const s = p.sale;
-                const isSellingCompany = s.marketer?.companyId === companyId;
+                const isSellingCompany = s.marketer?.companyId === companyId || s.lead?.companyId === companyId;
                 const isManagingCompany = s.plot?.estate?.companyId === companyId;
-                const isSellingBranch = s.marketer?.branchId === branchId;
+                const isSellingBranch = s.marketer?.branchId === branchId || s.lead?.branchId === branchId;
                 const isManagingBranch = s.plot?.estate?.managingBranchId === branchId;
                 
                 let saleType = 'Direct Sale';
@@ -134,7 +136,8 @@ export const MDReportController = {
                     sale: {
                         include: {
                             plot: { include: { estate: true } },
-                            marketer: true
+                            marketer: true,
+                            lead: true
                         }
                     }
                 }
@@ -148,9 +151,9 @@ export const MDReportController = {
             cashPayments.forEach(p => {
                 grossCashReceived += p.amount;
                 const s = p.sale;
-                const isSellingCompany = s.marketer?.companyId === companyId;
+                const isSellingCompany = s.marketer?.companyId === companyId || s.lead?.companyId === companyId;
                 const isManagingCompany = s.plot?.estate?.companyId === companyId;
-                const isSellingBranch = s.marketer?.branchId === branchId;
+                const isSellingBranch = s.marketer?.branchId === branchId || s.lead?.branchId === branchId;
                 const isManagingBranch = s.plot?.estate?.managingBranchId === branchId;
                 
                 if (['GROUP_MANAGING_DIRECTOR', 'GLOBAL_CHAIRMAN', 'SUPER_ADMIN'].includes(user?.role) || !branchId) {

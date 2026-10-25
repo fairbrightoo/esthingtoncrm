@@ -544,12 +544,25 @@ async function executeTransfer(transferId: string, receivingApprovalData: any) {
                     assignedToUserId: transfer.reassignedToUserId
                 }
             });
+            // Reassign ongoing sales to the colleague taking over at origin branch
+            await tx.sale.updateMany({
+                where: { marketerId: transfer.userId, status: 'ONGOING' },
+                data: {
+                    marketerId: transfer.reassignedToUserId
+                }
+            });
         } else if (transfer.leadStrategy === 'RETURN_TO_BRANCH_POOL') {
             // Return leads to origin branch pool (unassigned)
             await tx.lead.updateMany({
                 where: { assignedToUserId: transfer.userId },
                 data: {
                     assignedToUserId: null
+                }
+            });
+            await tx.sale.updateMany({
+                where: { marketerId: transfer.userId, status: 'ONGOING' },
+                data: {
+                    marketerId: null
                 }
             });
         }
