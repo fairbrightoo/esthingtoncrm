@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -32,8 +32,19 @@ import {
     ArrowDownToLine,
     TrendingUp,
     Building2,
-    MessageCircle
+    MessageCircle,
+    Globe,
+    PartyPopper,
+    Smile,
+    GraduationCap
 } from 'lucide-react';
+
+interface CompanyOption {
+    id: string;
+    name: string;
+    logoUrl?: string;
+    themeColor?: string;
+}
 
 interface EstateOption {
     id: string;
@@ -46,7 +57,7 @@ interface MediaAsset {
     id: string;
     title: string;
     description?: string | null;
-    type: string; // FLYER, STORY_REEL, PROMO_VIDEO, PRICELIST, BRANDING, IMAGE, VIDEO_LINK
+    type: string; // FLYER, STORY_REEL, PROMO_VIDEO, PRICELIST, BRANDING, MEETING_EVENT, ENTERTAINMENT, TRAINING, IMAGE, VIDEO_LINK
     aspectRatio: string; // 1:1, 9:16, 16:9
     fileUrl: string;
     thumbnailUrl?: string | null;
@@ -67,17 +78,19 @@ interface MediaAsset {
 }
 
 export const MarketingMediaHub: React.FC = () => {
-    const { token, user, selectedCompanyId } = useAuth();
+    const { token, user } = useAuth();
     const { addToast } = useToast();
 
     // Data State
     const [assets, setAssets] = useState<MediaAsset[]>([]);
+    const [companies, setCompanies] = useState<CompanyOption[]>([]);
     const [estates, setEstates] = useState<EstateOption[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedEstate, setSelectedEstate] = useState<string>('ALL');
+    const [selectedCompany, setSelectedCompany] = useState<string>('ALL'); // 'ALL' = Group-wide across all sister companies
+    const [selectedEstate, setSelectedEstate] = useState<string>('ALL'); // 'ALL', 'NON_ESTATE', or estate UUID
     const [selectedType, setSelectedType] = useState<string>('ALL');
     const [selectedAspectRatio, setSelectedAspectRatio] = useState<string>('ALL');
 
@@ -93,7 +106,8 @@ export const MarketingMediaHub: React.FC = () => {
         description: '',
         type: 'FLYER',
         aspectRatio: '1:1',
-        estateId: 'ALL',
+        estateId: 'ALL', // 'ALL' or 'NON_ESTATE' or estate UUID
+        companyId: user?.companyId || 'ALL',
         marketingCaption: '',
         storageMethod: 'FILE', // 'FILE' (R2) or 'LINK' (YouTube/Drive/Vimeo)
         fileUrl: ''
@@ -103,7 +117,7 @@ export const MarketingMediaHub: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
 
-    // Permission Check
+    // Permission Check: ICT Oracles and Admins can publish & edit
     const canManage = useMemo(() => {
         if (!user) return false;
         const privilegedRoles = [
@@ -118,37 +132,27 @@ export const MarketingMediaHub: React.FC = () => {
         return privilegedRoles.includes(user.role);
     }, [user]);
 
-    const companyId = selectedCompanyId || user?.companyId || user?.company?.id;
-    const branchId = user?.branchId || user?.branch?.id;
+    // Load Data on Filter Changes
+    useEffect(() => {
+        fetchCompanies();
+        fetchEstates();
+    }, []);
 
-    // Load Data
     useEffect(() => {
         fetchAssets();
-        fetchEstates();
-    }, [companyId, branchId, selectedEstate, selectedType, selectedAspectRatio]);
+    }, [selectedCompany, selectedEstate, selectedType, selectedAspectRatio]);
 
-    const fetchAssets = async () => {
+    const fetchCompanies = async () => {
         try {
-            setLoading(true);
-            const params: any = {};
-            if (selectedEstate !== 'ALL') params.estateId = selectedEstate;
-            if (selectedType !== 'ALL') params.type = selectedType;
-            if (selectedAspectRatio !== 'ALL') params.aspectRatio = selectedAspectRatio;
-            if (searchQuery.trim()) params.search = searchQuery.trim();
-
             const res = await axios.get(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/media-assets`,
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies`,
                 {
-                    headers: { Authorization: `Bearer ${token}` },
-                    params
+                    headers: { Authorization: `Bearer ${token}` }
                 }
             );
-            setAssets(res.data);
+            setCompanies(res.data || []);
         } catch (error) {
-            console.error('Failed to fetch media assets', error);
-            addToast('Failed to load media assets', 'error');
-        } finally {
-            setLoading(false);
+            console.error('Failed to load companies', error);
         }
     };
 
@@ -166,7 +170,33 @@ export const MarketingMediaHub: React.FC = () => {
         }
     };
 
-    // Filtered Assets (Search Filter)
+    const fetchAssets = async () => {
+        try {
+            setLoading(true);
+            const params: any = {};
+            if (selectedCompany !== 'ALL') params.companyId = selectedCompany;
+            if (selectedEstate !== 'ALL') params.estateId = selectedEstate;
+            if (selectedType !== 'ALL') params.type = selectedType;
+            if (selectedAspectRatio !== 'ALL') params.aspectRatio = selectedAspectRatio;
+            if (searchQuery.trim()) params.search = searchQuery.trim();
+
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/media-assets`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params
+                }
+            );
+            setAssets(res.data || []);
+        } catch (error) {
+            console.error('Failed to fetch media assets', error);
+            addToast('Failed to load media assets', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filtered Assets (Search Query)
     const filteredAssets = useMemo(() => {
         if (!searchQuery.trim()) return assets;
         const q = searchQuery.toLowerCase();
@@ -175,19 +205,24 @@ export const MarketingMediaHub: React.FC = () => {
                 a.title.toLowerCase().includes(q) ||
                 (a.description && a.description.toLowerCase().includes(q)) ||
                 (a.marketingCaption && a.marketingCaption.toLowerCase().includes(q)) ||
-                (a.estate && a.estate.name.toLowerCase().includes(q))
+                (a.estate && a.estate.name.toLowerCase().includes(q)) ||
+                (a.company && a.company.name.toLowerCase().includes(q)) ||
+                (a.branch && a.branch.name.toLowerCase().includes(q))
         );
     }, [assets, searchQuery]);
 
-    // Counters
+    // Metrics Counters
     const metrics = useMemo(() => {
         const total = assets.length;
         const flyers = assets.filter((a) => a.type === 'FLYER' || a.type === 'IMAGE').length;
-        const videos = assets.filter(
+        const estateVideos = assets.filter(
             (a) => a.type === 'STORY_REEL' || a.type === 'PROMO_VIDEO' || a.type === 'VIDEO_LINK'
         ).length;
+        const cultureVideos = assets.filter(
+            (a) => a.type === 'MEETING_EVENT' || a.type === 'ENTERTAINMENT' || a.type === 'TRAINING'
+        ).length;
         const totalDownloads = assets.reduce((sum, a) => sum + (a.downloadCount || 0), 0);
-        return { total, flyers, videos, totalDownloads };
+        return { total, flyers, estateVideos, cultureVideos, totalDownloads };
     }, [assets]);
 
     // Handle File Selection with preview
@@ -221,7 +256,12 @@ export const MarketingMediaHub: React.FC = () => {
             formData.append('type', uploadForm.type);
             formData.append('aspectRatio', uploadForm.aspectRatio);
             formData.append('marketingCaption', uploadForm.marketingCaption);
-            if (uploadForm.estateId && uploadForm.estateId !== 'ALL') {
+
+            if (uploadForm.companyId && uploadForm.companyId !== 'ALL') {
+                formData.append('companyId', uploadForm.companyId);
+            }
+
+            if (uploadForm.estateId && uploadForm.estateId !== 'ALL' && uploadForm.estateId !== 'NON_ESTATE') {
                 formData.append('estateId', uploadForm.estateId);
             }
 
@@ -234,7 +274,7 @@ export const MarketingMediaHub: React.FC = () => {
                 formData.append('fileUrl', uploadForm.fileUrl.trim());
             } else {
                 if (!selectedFile) {
-                    addToast('Please select a file to upload', 'error');
+                    addToast('Please select a creative file to upload', 'error');
                     setIsUploading(false);
                     return;
                 }
@@ -252,7 +292,7 @@ export const MarketingMediaHub: React.FC = () => {
                 }
             );
 
-            addToast('Creative asset published to Media Hub!', 'success');
+            addToast('Creative asset published group-wide across Esthington Group!', 'success');
             setIsUploadModalOpen(false);
             setUploadForm({
                 title: '',
@@ -260,6 +300,7 @@ export const MarketingMediaHub: React.FC = () => {
                 type: 'FLYER',
                 aspectRatio: '1:1',
                 estateId: 'ALL',
+                companyId: user?.companyId || 'ALL',
                 marketingCaption: '',
                 storageMethod: 'FILE',
                 fileUrl: ''
@@ -288,7 +329,10 @@ export const MarketingMediaHub: React.FC = () => {
                     description: editingAsset.description,
                     type: editingAsset.type,
                     aspectRatio: editingAsset.aspectRatio,
-                    estateId: editingAsset.estateId === 'ALL' ? null : editingAsset.estateId,
+                    estateId:
+                        editingAsset.estateId === 'ALL' || editingAsset.estateId === 'NON_ESTATE'
+                            ? null
+                            : editingAsset.estateId,
                     marketingCaption: editingAsset.marketingCaption
                 },
                 {
@@ -308,7 +352,7 @@ export const MarketingMediaHub: React.FC = () => {
 
     // Delete Asset
     const handleDeleteAsset = async (assetId: string) => {
-        if (!window.confirm('Are you sure you want to delete this marketing asset?')) return;
+        if (!window.confirm('Are you sure you want to delete this creative asset?')) return;
         try {
             await axios.delete(
                 `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/media-assets/${assetId}`,
@@ -325,66 +369,64 @@ export const MarketingMediaHub: React.FC = () => {
         }
     };
 
-    // Copy Caption & Hashtags to Clipboard
+    // Copy Caption & Hashtags
     const handleCopyCaption = (asset: MediaAsset) => {
-        const textToCopy = asset.marketingCaption || `${asset.title}\n\nFor inquiries and private site inspections, send a direct message.`;
+        const textToCopy =
+            asset.marketingCaption ||
+            `${asset.title}\n\nFor inquiries, site inspection bookings or more information, reach out to us today!`;
         navigator.clipboard.writeText(textToCopy);
         setCopiedAssetId(asset.id);
-        addToast('Marketing caption & hashtags copied to clipboard!', 'success');
+        addToast('Caption & hashtags copied to clipboard!', 'success');
         setTimeout(() => setCopiedAssetId(null), 3000);
     };
 
-    // Trigger Download & Track
+    // Download Asset
     const handleDownloadAsset = async (asset: MediaAsset) => {
         try {
-            // Track download in backend
-            axios.post(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/media-assets/${asset.id}/download`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            ).catch(() => {});
+            axios
+                .post(
+                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/media-assets/${asset.id}/download`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                )
+                .catch(() => {});
 
-            // Update local state download count
-            setAssets(prev =>
-                prev.map(a => a.id === asset.id ? { ...a, downloadCount: (a.downloadCount || 0) + 1 } : a)
+            setAssets((prev) =>
+                prev.map((a) => (a.id === asset.id ? { ...a, downloadCount: (a.downloadCount || 0) + 1 } : a))
             );
 
-            // Trigger browser download
             const fileUrl = asset.fileUrl.startsWith('http')
                 ? asset.fileUrl
                 : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${asset.fileUrl}`;
 
-            // For external links like YouTube, open in new tab
             if (asset.storageProvider === 'YOUTUBE' || asset.storageProvider === 'VIMEO') {
                 window.open(fileUrl, '_blank');
                 addToast('Opening video in new tab', 'info');
                 return;
             }
 
-            // For R2 / Direct files, fetch as blob to enforce download
-            addToast('Starting asset download...', 'info');
+            addToast('Downloading creative file...', 'info');
             const res = await fetch(fileUrl);
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            // Clean extension
-            const ext = asset.fileUrl.split('.').pop()?.split('?')[0] || (asset.type.includes('VIDEO') ? 'mp4' : 'png');
+            const ext =
+                asset.fileUrl.split('.').pop()?.split('?')[0] || (isVideoType(asset.type) ? 'mp4' : 'png');
             a.download = `${asset.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.${ext}`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            addToast('Asset downloaded successfully!', 'success');
+            addToast('Download complete!', 'success');
         } catch (error) {
             console.error('Download error:', error);
-            // Fallback: direct window open
             window.open(asset.fileUrl, '_blank');
         }
     };
 
-    // Share via WhatsApp
+    // Share to WhatsApp
     const handleShareWhatsApp = (asset: MediaAsset) => {
         const fileUrl = asset.fileUrl.startsWith('http')
             ? asset.fileUrl
@@ -392,7 +434,7 @@ export const MarketingMediaHub: React.FC = () => {
 
         const caption = asset.marketingCaption
             ? `${asset.marketingCaption}\n\nMedia Link: ${fileUrl}`
-            : `*${asset.title}*\n\nExplore this property opportunity!\nMedia Link: ${fileUrl}`;
+            : `*${asset.title}*\n\nCheck out this official update from ${asset.company?.name || 'Esthington Group'}!\nMedia Link: ${fileUrl}`;
 
         const waUrl = `https://wa.me/?text=${encodeURIComponent(caption)}`;
         window.open(waUrl, '_blank');
@@ -401,17 +443,16 @@ export const MarketingMediaHub: React.FC = () => {
     // Video Embed Helper
     const getVideoEmbedUrl = (url: string) => {
         if (!url) return null;
-        // YouTube
-        const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+        const ytMatch = url.match(
+            /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/
+        );
         if (ytMatch && ytMatch[1]) {
             return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
         }
-        // Vimeo
         const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
         if (vimeoMatch && vimeoMatch[1]) {
             return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
         }
-        // Google Drive
         const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
         if (driveMatch && driveMatch[1]) {
             return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
@@ -420,12 +461,62 @@ export const MarketingMediaHub: React.FC = () => {
     };
 
     const isVideoType = (type: string) => {
-        return type === 'STORY_REEL' || type === 'PROMO_VIDEO' || type === 'VIDEO_LINK' || type.includes('VIDEO');
+        return (
+            type === 'STORY_REEL' ||
+            type === 'PROMO_VIDEO' ||
+            type === 'VIDEO_LINK' ||
+            type === 'MEETING_EVENT' ||
+            type === 'ENTERTAINMENT' ||
+            type === 'TRAINING' ||
+            type.includes('VIDEO')
+        );
+    };
+
+    const getTypeIcon = (type: string) => {
+        switch (type) {
+            case 'MEETING_EVENT':
+                return <PartyPopper size={12} className="text-amber-400" />;
+            case 'ENTERTAINMENT':
+                return <Smile size={12} className="text-pink-400" />;
+            case 'TRAINING':
+                return <GraduationCap size={12} className="text-emerald-400" />;
+            case 'STORY_REEL':
+                return <Smartphone size={12} className="text-cyan-400" />;
+            case 'PROMO_VIDEO':
+                return <Film size={12} className="text-purple-400" />;
+            case 'PRICELIST':
+                return <FileText size={12} className="text-blue-400" />;
+            case 'BRANDING':
+                return <Sparkles size={12} className="text-yellow-400" />;
+            default:
+                return <ImageIcon size={12} className="text-emerald-400" />;
+        }
+    };
+
+    const getTypeBadgeLabel = (type: string) => {
+        switch (type) {
+            case 'MEETING_EVENT':
+                return 'Monday Meeting & Event';
+            case 'ENTERTAINMENT':
+                return 'Entertainment & Skit';
+            case 'TRAINING':
+                return 'Staff Training';
+            case 'STORY_REEL':
+                return '9:16 Status Reel';
+            case 'PROMO_VIDEO':
+                return 'Walkthrough Video';
+            case 'PRICELIST':
+                return 'Price List';
+            case 'BRANDING':
+                return 'Branding';
+            default:
+                return 'Flyer';
+        }
     };
 
     // Quick hashtag adder for upload form
     const addHashtag = (tag: string) => {
-        setUploadForm(prev => ({
+        setUploadForm((prev) => ({
             ...prev,
             marketingCaption: prev.marketingCaption ? `${prev.marketingCaption} ${tag}` : tag
         }));
@@ -433,23 +524,22 @@ export const MarketingMediaHub: React.FC = () => {
 
     return (
         <div className="space-y-8 pb-16 min-h-screen text-slate-800">
-            {/* HERO & METRICS BANNER */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-8 md:p-10 shadow-2xl border border-slate-800">
-                {/* Background ambient lighting */}
+            {/* HERO & GROUP-WIDE BANNER */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-8 md:p-10 shadow-2xl border border-slate-800">
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-semibold tracking-wide uppercase mb-3">
-                            <Sparkles size={14} className="text-cyan-400 animate-pulse" />
-                            ICT Creative Studio & Marketing Engine
+                            <Globe size={14} className="text-cyan-400 animate-pulse" />
+                            Esthington Group Creative Hub • Shared Across All Companies & Branches
                         </div>
                         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
                             Marketing Media Hub
                         </h1>
                         <p className="text-slate-300 mt-2 max-w-2xl text-sm md:text-base leading-relaxed">
-                            Official marketing flyers, 9:16 WhatsApp status reels, property walkthrough videos, and high-converting promotional collateral. Instant 1-click download and caption copy for all staff.
+                            Official marketing flyers, property walkthrough videos, Monday meeting highlights, cultural day celebrations, skits, and 9:16 status reels. All creative assets from every ICT Oracle across the entire Esthington Group are accessible to all staff for instant preview, 1-click download, and caption copying.
                         </p>
                     </div>
 
@@ -465,44 +555,54 @@ export const MarketingMediaHub: React.FC = () => {
                 </div>
 
                 {/* KPI METRIC TILES */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-8 border-t border-slate-800/80">
-                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                            <Layers size={22} />
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-8 pt-8 border-t border-slate-800/80">
+                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                            <Layers size={20} />
                         </div>
                         <div>
                             <div className="text-2xl font-black text-white">{metrics.total}</div>
-                            <div className="text-xs text-slate-400 font-medium">Total Assets</div>
+                            <div className="text-[11px] text-slate-400 font-medium">Total Assets</div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <ImageIcon size={22} />
+                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <ImageIcon size={20} />
                         </div>
                         <div>
                             <div className="text-2xl font-black text-white">{metrics.flyers}</div>
-                            <div className="text-xs text-slate-400 font-medium">Flyers & Posters</div>
+                            <div className="text-[11px] text-slate-400 font-medium">Estate Flyers</div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                            <Film size={22} />
+                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                            <Film size={20} />
                         </div>
                         <div>
-                            <div className="text-2xl font-black text-white">{metrics.videos}</div>
-                            <div className="text-xs text-slate-400 font-medium">Reels & Walkthroughs</div>
+                            <div className="text-2xl font-black text-white">{metrics.estateVideos}</div>
+                            <div className="text-[11px] text-slate-400 font-medium">Walkthroughs & Reels</div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                            <TrendingUp size={22} />
+                    <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                            <PartyPopper size={20} />
+                        </div>
+                        <div>
+                            <div className="text-2xl font-black text-white">{metrics.cultureVideos}</div>
+                            <div className="text-[11px] text-slate-400 font-medium">Meetings & Culture</div>
+                        </div>
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1 bg-slate-800/50 backdrop-blur-md rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                            <TrendingUp size={20} />
                         </div>
                         <div>
                             <div className="text-2xl font-black text-white">{metrics.totalDownloads}</div>
-                            <div className="text-xs text-slate-400 font-medium">Staff Downloads</div>
+                            <div className="text-[11px] text-slate-400 font-medium">Staff Downloads</div>
                         </div>
                     </div>
                 </div>
@@ -510,29 +610,74 @@ export const MarketingMediaHub: React.FC = () => {
 
             {/* FILTER & DISCOVERY ENGINE */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-5">
-                {/* Estate Filter Pills Row */}
+                {/* 1. Sister Company Switcher (Group-Wide Scope) */}
                 <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
-                        <Building2 size={14} className="text-slate-500" /> Filter by Estate
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                        <Globe size={14} className="text-slate-500" /> Group Scope & Sister Companies
+                    </label>
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        <button
+                            onClick={() => setSelectedCompany('ALL')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                                selectedCompany === 'ALL'
+                                    ? 'bg-indigo-900 text-white shadow-md shadow-indigo-950/20'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            <Globe size={14} /> 🌐 All Esthington Group (Cross-Company)
+                        </button>
+                        {companies.map((comp) => (
+                            <button
+                                key={comp.id}
+                                onClick={() => setSelectedCompany(comp.id)}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                                    selectedCompany === comp.id
+                                        ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                <Building2 size={13} /> {comp.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 2. Estate / Corporate Filter Row */}
+                <div className="pt-2 border-t border-slate-100">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                        <Building2 size={14} className="text-slate-500" /> Estate / Collateral Scope
                     </label>
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
                         <button
                             onClick={() => setSelectedEstate('ALL')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                                 selectedEstate === 'ALL'
-                                    ? 'bg-slate-900 text-white shadow-md shadow-slate-900/20'
+                                    ? 'bg-slate-900 text-white shadow-sm'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
-                            ✨ All Estates
+                            ✨ All Materials
                         </button>
+
+                        {/* Dedicated Pill for Meetings, Cultural Days & Non-Estate Creatives */}
+                        <button
+                            onClick={() => setSelectedEstate('NON_ESTATE')}
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                                selectedEstate === 'NON_ESTATE'
+                                    ? 'bg-amber-600 text-white shadow-sm'
+                                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60'
+                            }`}
+                        >
+                            <PartyPopper size={13} /> 🏢 Corporate & Culture (Monday Meetings, Events, Skits)
+                        </button>
+
                         {estates.map((est) => (
                             <button
                                 key={est.id}
                                 onClick={() => setSelectedEstate(est.id)}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                                     selectedEstate === est.id
-                                        ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
+                                        ? 'bg-cyan-600 text-white shadow-sm'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
@@ -542,22 +687,25 @@ export const MarketingMediaHub: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Sub-Filters: Type, Aspect Ratio, & Live Search */}
+                {/* 3. Category Tabs, Aspect Ratio & Live Search */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pt-3 border-t border-slate-100">
-                    {/* Media Type Tabs */}
+                    {/* Media Category Tabs */}
                     <div className="md:col-span-6 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                         {[
                             { id: 'ALL', label: 'All Collateral' },
                             { id: 'FLYER', label: '🖼️ Flyers' },
                             { id: 'STORY_REEL', label: '📱 9:16 Reels' },
                             { id: 'PROMO_VIDEO', label: '🎬 Walkthroughs' },
+                            { id: 'MEETING_EVENT', label: '🎪 Monday Meetings & Events' },
+                            { id: 'ENTERTAINMENT', label: '🍿 Skits & Lifestyle' },
+                            { id: 'TRAINING', label: '🎓 Training' },
                             { id: 'PRICELIST', label: '📄 Price Lists' },
                             { id: 'BRANDING', label: '🏷️ Branding' }
                         ].map((t) => (
                             <button
                                 key={t.id}
                                 onClick={() => setSelectedType(t.id)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                                     selectedType === t.id
                                         ? 'bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold'
                                         : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
@@ -568,7 +716,7 @@ export const MarketingMediaHub: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Aspect Ratio Filter */}
+                    {/* Format / Aspect Ratio */}
                     <div className="md:col-span-3 flex items-center gap-1.5 justify-start md:justify-center">
                         <span className="text-xs font-bold text-slate-400 mr-1 hidden lg:inline">Format:</span>
                         {[
@@ -580,7 +728,7 @@ export const MarketingMediaHub: React.FC = () => {
                             <button
                                 key={fmt.id}
                                 onClick={() => setSelectedAspectRatio(fmt.id)}
-                                className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
+                                className={`px-2 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
                                     selectedAspectRatio === fmt.id
                                         ? 'bg-slate-800 text-white font-bold'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -591,7 +739,7 @@ export const MarketingMediaHub: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Search Input */}
+                    {/* Live Search */}
                     <div className="md:col-span-3 relative">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
@@ -617,7 +765,7 @@ export const MarketingMediaHub: React.FC = () => {
             {loading ? (
                 <div className="py-20 text-center space-y-3">
                     <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-sm font-semibold text-slate-500">Loading creative assets...</p>
+                    <p className="text-sm font-semibold text-slate-500">Loading creative library...</p>
                 </div>
             ) : filteredAssets.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200 p-8">
@@ -626,7 +774,7 @@ export const MarketingMediaHub: React.FC = () => {
                     </div>
                     <h3 className="text-lg font-bold text-slate-800">No Creative Materials Found</h3>
                     <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
-                        No marketing collateral matches your current filter criteria. Try adjusting filters or upload new flyers and reels for the estates.
+                        No materials match your current filter selections. Try clearing filters or publish new flyers, Monday meeting highlights, or cultural videos!
                     </p>
                     {canManage && (
                         <button
@@ -654,7 +802,7 @@ export const MarketingMediaHub: React.FC = () => {
                                 <div
                                     className={`relative bg-slate-950 overflow-hidden cursor-pointer ${
                                         asset.aspectRatio === '9:16'
-                                            ? 'aspect-[4/5]' // visually balanced for grid card while keeping 9:16 badge
+                                            ? 'aspect-[4/5]'
                                             : asset.aspectRatio === '16:9'
                                             ? 'aspect-video'
                                             : 'aspect-square'
@@ -674,12 +822,18 @@ export const MarketingMediaHub: React.FC = () => {
                                         />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-center">
-                                            {isVideo ? <Film size={40} className="text-cyan-400/60 mb-2" /> : <ImageIcon size={40} className="text-slate-600 mb-2" />}
-                                            <span className="text-xs font-semibold text-slate-400 line-clamp-2">{asset.title}</span>
+                                            {isVideo ? (
+                                                <Film size={40} className="text-cyan-400/60 mb-2" />
+                                            ) : (
+                                                <ImageIcon size={40} className="text-slate-600 mb-2" />
+                                            )}
+                                            <span className="text-xs font-semibold text-slate-400 line-clamp-2">
+                                                {asset.title}
+                                            </span>
                                         </div>
                                     )}
 
-                                    {/* Video Play Button Overlay */}
+                                    {/* Video Play Overlay */}
                                     {isVideo && (
                                         <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 flex items-center justify-center transition-colors">
                                             <div className="w-13 h-13 rounded-full bg-cyan-500/90 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
@@ -688,19 +842,22 @@ export const MarketingMediaHub: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Top Badges */}
+                                    {/* Top Badges (Format + Category) */}
                                     <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             {asset.aspectRatio && (
                                                 <span className="px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white text-[10px] font-bold tracking-wider uppercase border border-white/10">
-                                                    {asset.aspectRatio === '9:16' ? '📱 9:16' : asset.aspectRatio === '1:1' ? '⏹️ 1:1' : '🖥️ 16:9'}
+                                                    {asset.aspectRatio === '9:16'
+                                                        ? '📱 9:16'
+                                                        : asset.aspectRatio === '1:1'
+                                                        ? '⏹️ 1:1'
+                                                        : '🖥️ 16:9'}
                                                 </span>
                                             )}
-                                            {asset.type && (
-                                                <span className="px-2 py-0.5 rounded-md bg-cyan-900/80 backdrop-blur-md text-cyan-200 text-[10px] font-bold uppercase border border-cyan-500/30">
-                                                    {asset.type.replace('_', ' ')}
-                                                </span>
-                                            )}
+                                            <span className="px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-md text-cyan-200 text-[10px] font-bold uppercase border border-cyan-500/30 flex items-center gap-1">
+                                                {getTypeIcon(asset.type)}
+                                                {getTypeBadgeLabel(asset.type)}
+                                            </span>
                                         </div>
 
                                         {asset.fileSizeMB && (
@@ -710,15 +867,28 @@ export const MarketingMediaHub: React.FC = () => {
                                         )}
                                     </div>
 
-                                    {/* Bottom Estate Badge */}
-                                    {asset.estate && (
-                                        <div className="absolute bottom-3 left-3 pointer-events-none">
+                                    {/* Bottom Badges: Estate OR Corporate Tag + Company Tag */}
+                                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                                        {asset.estate ? (
                                             <span className="px-2.5 py-1 rounded-lg bg-emerald-950/85 backdrop-blur-md text-emerald-300 text-[11px] font-bold border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
                                                 <Building2 size={12} className="text-emerald-400" />
                                                 {asset.estate.name}
                                             </span>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <span className="px-2.5 py-1 rounded-lg bg-amber-950/85 backdrop-blur-md text-amber-300 text-[11px] font-bold border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                                                <PartyPopper size={12} className="text-amber-400" />
+                                                Corporate & Culture
+                                            </span>
+                                        )}
+
+                                        {/* Company & Branch Tag */}
+                                        {asset.company && (
+                                            <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-slate-300 text-[10px] font-semibold border border-white/10">
+                                                {asset.company.name}
+                                                {asset.branch?.name ? ` • ${asset.branch.name}` : ''}
+                                            </span>
+                                        )}
+                                    </div>
 
                                     {/* Hover Preview Overlay */}
                                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
@@ -732,7 +902,10 @@ export const MarketingMediaHub: React.FC = () => {
                                 <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                                     <div>
                                         <div className="flex items-start justify-between gap-2">
-                                            <h3 className="font-bold text-slate-900 text-sm leading-snug line-clamp-1 hover:text-cyan-600 transition" title={asset.title}>
+                                            <h3
+                                                className="font-bold text-slate-900 text-sm leading-snug line-clamp-1 hover:text-cyan-600 transition"
+                                                title={asset.title}
+                                            >
                                                 {asset.title}
                                             </h3>
 
@@ -776,7 +949,9 @@ export const MarketingMediaHub: React.FC = () => {
                                     <div className="pt-3 border-t border-slate-100 space-y-2">
                                         <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
                                             <span>
-                                                {asset.uploadedByOracle ? `By ${asset.uploadedByOracle.fullName}` : 'ICT Oracle'}
+                                                {asset.uploadedByOracle
+                                                    ? `Oracle: ${asset.uploadedByOracle.fullName}`
+                                                    : 'ICT Oracle'}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <ArrowDownToLine size={12} className="text-slate-400" />
@@ -884,21 +1059,34 @@ export const MarketingMediaHub: React.FC = () => {
                         <div className="lg:w-5/12 p-6 md:p-8 flex flex-col justify-between overflow-y-auto space-y-6 bg-slate-900 text-white">
                             <div className="space-y-4">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-400 text-xs font-bold tracking-wide uppercase border border-cyan-500/30">
-                                            {previewAsset.type.replace('_', ' ')}
+                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                        <span className="px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-400 text-xs font-bold tracking-wide uppercase border border-cyan-500/30 flex items-center gap-1">
+                                            {getTypeIcon(previewAsset.type)}
+                                            {getTypeBadgeLabel(previewAsset.type)}
                                         </span>
                                         <span className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 text-xs font-semibold">
                                             {previewAsset.aspectRatio} format
                                         </span>
+                                        {previewAsset.company && (
+                                            <span className="px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 text-xs font-semibold border border-indigo-500/30">
+                                                {previewAsset.company.name}
+                                            </span>
+                                        )}
                                     </div>
+
                                     <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
                                         {previewAsset.title}
                                     </h2>
-                                    {previewAsset.estate && (
+
+                                    {previewAsset.estate ? (
                                         <p className="text-sm text-emerald-400 font-semibold mt-1 flex items-center gap-1.5">
                                             <Building2 size={14} />
                                             {previewAsset.estate.name}
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-amber-400 font-semibold mt-1 flex items-center gap-1.5">
+                                            <PartyPopper size={14} />
+                                            Corporate & Culture Highlight
                                         </p>
                                     )}
                                 </div>
@@ -917,7 +1105,8 @@ export const MarketingMediaHub: React.FC = () => {
                                         </button>
                                     </div>
                                     <div className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-200 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                                        {previewAsset.marketingCaption || 'No custom marketing caption provided for this asset.'}
+                                        {previewAsset.marketingCaption ||
+                                            'No custom promotional caption provided for this asset.'}
                                     </div>
                                 </div>
 
@@ -964,7 +1153,7 @@ export const MarketingMediaHub: React.FC = () => {
                                     <UploadCloud size={22} className="text-cyan-600" /> Publish Creative Asset
                                 </h2>
                                 <p className="text-xs text-slate-500 mt-0.5">
-                                    Upload marketing flyers or link video reels for all marketers and company staff.
+                                    Upload marketing flyers, Monday meeting highlights, cultural videos, or skits for all staff across Esthington Group.
                                 </p>
                             </div>
                             <button
@@ -976,7 +1165,7 @@ export const MarketingMediaHub: React.FC = () => {
                         </div>
 
                         <form onSubmit={handleCreateAsset} className="space-y-5 mt-5">
-                            {/* Title & Estate */}
+                            {/* Title & Company */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -985,7 +1174,7 @@ export const MarketingMediaHub: React.FC = () => {
                                     <input
                                         type="text"
                                         required
-                                        placeholder="e.g. Double King Palms Easter Promo"
+                                        placeholder="e.g. Monday Assembly Highlights / Cultural Day Reel"
                                         value={uploadForm.title}
                                         onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none"
@@ -994,17 +1183,17 @@ export const MarketingMediaHub: React.FC = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                        Estate / Property
+                                        Publishing Company
                                     </label>
                                     <select
-                                        value={uploadForm.estateId}
-                                        onChange={(e) => setUploadForm({ ...uploadForm, estateId: e.target.value })}
+                                        value={uploadForm.companyId}
+                                        onChange={(e) => setUploadForm({ ...uploadForm, companyId: e.target.value })}
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none"
                                     >
-                                        <option value="ALL">🌟 General / Company Collateral</option>
-                                        {estates.map((est) => (
-                                            <option key={est.id} value={est.id}>
-                                                {est.name}
+                                        <option value="ALL">🌐 Esthington Group (All Sister Companies)</option>
+                                        {companies.map((comp) => (
+                                            <option key={comp.id} value={comp.id}>
+                                                {comp.name}
                                             </option>
                                         ))}
                                     </select>
@@ -1024,7 +1213,10 @@ export const MarketingMediaHub: React.FC = () => {
                                     >
                                         <option value="FLYER">🖼️ Marketing Flyer / Graphic</option>
                                         <option value="STORY_REEL">📱 9:16 Reel / WhatsApp Status</option>
-                                        <option value="PROMO_VIDEO">🎬 Estate Walkthrough / Video</option>
+                                        <option value="PROMO_VIDEO">🎬 Estate Walkthrough / Drone Reel</option>
+                                        <option value="MEETING_EVENT">🎪 Monday Meeting / Cultural Day / Event</option>
+                                        <option value="ENTERTAINMENT">🍿 Office Entertainment, Skit & Fun</option>
+                                        <option value="TRAINING">🎓 Staff Training & Masterclass</option>
                                         <option value="PRICELIST">📄 Price List / Layout Sheet</option>
                                         <option value="BRANDING">🏷️ Logo / Brand Kit</option>
                                     </select>
@@ -1040,10 +1232,32 @@ export const MarketingMediaHub: React.FC = () => {
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none"
                                     >
                                         <option value="1:1">⏹️ 1:1 Square (Feed Post)</option>
-                                        <option value="9:16">📱 9:16 Vertical (Stories, Reels, Status)</option>
-                                        <option value="16:9">🖥️ 16:9 Widescreen (YouTube, Ads)</option>
+                                        <option value="9:16">📱 9:16 Vertical (Stories, Reels, WhatsApp Status)</option>
+                                        <option value="16:9">🖥️ 16:9 Widescreen (YouTube, Ads, TV)</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* Estate or Corporate Attachment */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Estate Attachment
+                                </label>
+                                <select
+                                    value={uploadForm.estateId}
+                                    onChange={(e) => setUploadForm({ ...uploadForm, estateId: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none"
+                                >
+                                    <option value="NON_ESTATE">
+                                        🏢 Corporate / Culture (Monday Meeting, Cultural Day, Skit, No Estate)
+                                    </option>
+                                    <option value="ALL">🌟 General / Multi-Estate Promotion</option>
+                                    {estates.map((est) => (
+                                        <option key={est.id} value={est.id}>
+                                            📍 {est.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* Storage Method Toggle */}
@@ -1116,7 +1330,7 @@ export const MarketingMediaHub: React.FC = () => {
                                                     Click to browse or drag & drop creative file
                                                 </p>
                                                 <p className="text-xs text-slate-400 mt-1">
-                                                    High-res images & short reels stored with zero marketer egress limits
+                                                    Images & short video clips stored with zero marketer egress limits
                                                 </p>
                                             </div>
                                         )}
@@ -1135,7 +1349,7 @@ export const MarketingMediaHub: React.FC = () => {
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none"
                                     />
                                     <p className="text-xs text-emerald-600 mt-1 font-medium flex items-center gap-1">
-                                        <Sparkles size={12} /> Large 4K walkthroughs and long reels on YouTube/Drive stream instantly with 0 CRM storage cost!
+                                        <Sparkles size={12} /> Large 4K walkthroughs, Monday meeting recordings, and skits stream instantly with 0 CRM storage cost!
                                     </p>
                                 </div>
                             )}
@@ -1150,7 +1364,7 @@ export const MarketingMediaHub: React.FC = () => {
                                 </div>
                                 <textarea
                                     rows={4}
-                                    placeholder="Write compelling sales copy, pricing highlights, call-to-action, and hashtags here..."
+                                    placeholder="Write compelling sales copy, meeting takeaways, event highlights, or call-to-action with hashtags..."
                                     value={uploadForm.marketingCaption}
                                     onChange={(e) => setUploadForm({ ...uploadForm, marketingCaption: e.target.value })}
                                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none leading-relaxed"
@@ -1161,7 +1375,16 @@ export const MarketingMediaHub: React.FC = () => {
                                     <span className="text-[11px] font-bold text-slate-400 flex items-center gap-0.5">
                                         <Hash size={12} /> Quick Tags:
                                     </span>
-                                    {['#RealEstateAbuja', '#LuxuryLiving', '#LandForSale', '#TitleCofO', '#InvestmentProperty', '#ZeroInterest'].map((tag) => (
+                                    {[
+                                        '#MondayMotivation',
+                                        '#CulturalDay',
+                                        '#EsthingtonGroup',
+                                        '#TeamCulture',
+                                        '#RealEstateAbuja',
+                                        '#LuxuryLiving',
+                                        '#LandForSale',
+                                        '#ZeroInterest'
+                                    ].map((tag) => (
                                         <button
                                             key={tag}
                                             type="button"
@@ -1245,6 +1468,9 @@ export const MarketingMediaHub: React.FC = () => {
                                         <option value="FLYER">Flyer</option>
                                         <option value="STORY_REEL">9:16 Reel</option>
                                         <option value="PROMO_VIDEO">Walkthrough Video</option>
+                                        <option value="MEETING_EVENT">Monday Meeting & Event</option>
+                                        <option value="ENTERTAINMENT">Entertainment & Skit</option>
+                                        <option value="TRAINING">Staff Training</option>
                                         <option value="PRICELIST">Price List</option>
                                         <option value="BRANDING">Branding</option>
                                     </select>
@@ -1265,16 +1491,16 @@ export const MarketingMediaHub: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Estate</label>
+                                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Estate Attachment</label>
                                 <select
-                                    value={editingAsset.estateId || 'ALL'}
+                                    value={editingAsset.estateId || 'NON_ESTATE'}
                                     onChange={(e) => setEditingAsset({ ...editingAsset, estateId: e.target.value })}
                                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 outline-none"
                                 >
-                                    <option value="ALL">General / Company Collateral</option>
+                                    <option value="NON_ESTATE">Corporate & Culture (No Specific Estate)</option>
                                     {estates.map((est) => (
                                         <option key={est.id} value={est.id}>
-                                            {est.name}
+                                            📍 {est.name}
                                         </option>
                                     ))}
                                 </select>
@@ -1285,7 +1511,9 @@ export const MarketingMediaHub: React.FC = () => {
                                 <textarea
                                     rows={4}
                                     value={editingAsset.marketingCaption || ''}
-                                    onChange={(e) => setEditingAsset({ ...editingAsset, marketingCaption: e.target.value })}
+                                    onChange={(e) =>
+                                        setEditingAsset({ ...editingAsset, marketingCaption: e.target.value })
+                                    }
                                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 outline-none leading-relaxed"
                                 />
                             </div>

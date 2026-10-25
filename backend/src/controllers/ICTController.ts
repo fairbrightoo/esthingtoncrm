@@ -50,8 +50,8 @@ export const ICTController = {
 
             const whereClause: any = {};
 
-            // Company & Branch Filtering (unless 'ALL' or global search)
-            if (companyId && companyId !== 'ALL' && scope !== 'ALL_COMPANIES') {
+            // Company & Branch Filtering (default: group-wide across entire Esthington Group)
+            if (companyId && companyId !== 'ALL' && scope !== 'ALL_COMPANIES' && scope !== 'GROUP') {
                 whereClause.companyId = companyId;
             }
             if (branchId && branchId !== 'ALL' && branchId !== 'null' && scope === 'BRANCH_ONLY') {
@@ -59,7 +59,11 @@ export const ICTController = {
             }
 
             if (estateId && estateId !== 'ALL') {
-                whereClause.estateId = String(estateId);
+                if (estateId === 'NON_ESTATE' || estateId === 'CORPORATE') {
+                    whereClause.estateId = null;
+                } else {
+                    whereClause.estateId = String(estateId);
+                }
             }
 
             if (type && type !== 'ALL') {
@@ -76,7 +80,9 @@ export const ICTController = {
                     { title: { contains: s, mode: 'insensitive' } },
                     { description: { contains: s, mode: 'insensitive' } },
                     { marketingCaption: { contains: s, mode: 'insensitive' } },
-                    { estate: { name: { contains: s, mode: 'insensitive' } } }
+                    { estate: { name: { contains: s, mode: 'insensitive' } } },
+                    { company: { name: { contains: s, mode: 'insensitive' } } },
+                    { branch: { name: { contains: s, mode: 'insensitive' } } }
                 ];
             }
 
@@ -168,7 +174,7 @@ export const ICTController = {
                     storageProvider,
                     fileSizeMB,
                     marketingCaption: marketingCaption || null,
-                    estateId: estateId && estateId !== 'ALL' ? estateId : null,
+                    estateId: (estateId && estateId !== 'ALL' && estateId !== 'NON_ESTATE' && estateId !== 'CORPORATE') ? estateId : null,
                     companyId: effectiveCompanyId as string,
                     branchId: effectiveBranchId,
                     uploadedByOracleId: user.userId || user.id
@@ -200,7 +206,7 @@ export const ICTController = {
                     ...(description !== undefined && { description }),
                     ...(type && { type }),
                     ...(aspectRatio && { aspectRatio }),
-                    estateId: estateId && estateId !== 'ALL' ? estateId : null,
+                    estateId: (estateId && estateId !== 'ALL' && estateId !== 'NON_ESTATE' && estateId !== 'CORPORATE') ? estateId : null,
                     ...(marketingCaption !== undefined && { marketingCaption })
                 },
                 include: {
