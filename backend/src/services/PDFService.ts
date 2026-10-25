@@ -202,6 +202,7 @@ export const PDFService = {
 
         // Note: Production API base URL must be set in ENV. Fallback to localhost if missing.
         const baseUrl = process.env.VITE_API_URL || 'http://localhost:3000';
+        html = html.replace(/http:\/\/localhost:3000\/uploads\//g, `${baseUrl}/uploads/`);
 
         // Company Branding (Rendered as image tags if urls exist)
         const resolvedLogoUrl = companyInfo?.logoUrl ? (companyInfo.logoUrl.startsWith('http') ? companyInfo.logoUrl : `${baseUrl}${companyInfo.logoUrl}`) : '';

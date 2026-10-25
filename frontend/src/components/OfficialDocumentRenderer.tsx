@@ -249,6 +249,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{BALANCE_DATE}}/g, balanceDateStr);
 
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        html = html.replace(/http:\/\/localhost:3000\/uploads\//g, `${baseUrl}/uploads/`);
 
         // Company Branding (Rendered as image tags if urls exist)
         const resolvedLogoUrl = companyInfo?.logoUrl ? (companyInfo.logoUrl.startsWith('http') ? companyInfo.logoUrl : `${baseUrl}${companyInfo.logoUrl}`) : '';
