@@ -440,24 +440,29 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose, onSaleUp
     }
 
     return (
-        <div className="bg-gray-100 p-4 rounded-xl border border-gray-200">
+        <div className="bg-gray-100 p-2 sm:p-4 rounded-xl border border-gray-200">
             {/* Toolbar */}
-            <div className="flex flex-col gap-3 mb-4 bg-white p-3 lg:p-4 rounded-xl shadow-sm border border-gray-200/60 sticky top-0 z-10 transition-all">
+            <div className="flex flex-col gap-2.5 mb-3 bg-white p-3 rounded-2xl shadow-xs border border-gray-200/80 sticky top-0 z-10 transition-all">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2.5">
                         <div className="p-1.5 sm:p-2 bg-indigo-50/80 text-indigo-600 rounded-lg shadow-sm border border-indigo-100/50">
-                            <FileText size={18} />
+                            <FileText size={17} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-800 text-[13px] sm:text-sm uppercase tracking-wide">
-                                {documentType.replace('_', ' ')}
-                            </h3>
-                            <p className="text-[10px] sm:text-xs text-gray-400 font-medium">A4 Document Ready for Export & Client Delivery</p>
+                            <div className="flex items-center gap-1.5">
+                                <h3 className="font-bold text-gray-800 text-xs sm:text-sm uppercase tracking-wide">
+                                    {documentType.replace('_', ' ')}
+                                </h3>
+                                <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100/80 px-1.5 py-0.2 rounded-full font-semibold">
+                                    Official
+                                </span>
+                            </div>
+                            <p className="text-[10px] sm:text-xs text-gray-400 font-medium">A4 Document Ready for Export & Delivery</p>
                         </div>
                     </div>
                     {onClose && (
                         <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Close Preview">
-                            <X size={18} />
+                            <X size={17} />
                         </button>
                     )}
                 </div>
@@ -486,36 +491,42 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose, onSaleUp
                     </div>
                 )}
 
-                {/* Action Buttons Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {/* Print / Save PDF */}
+                {/* Action Buttons Toolbar */}
+                <div className="flex flex-col gap-2 pt-0.5">
+                    {/* Primary Hero Action: Print / Save PDF */}
                     <button 
+                        type="button"
                         onClick={() => handlePrint()}
-                        className="relative overflow-hidden group flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]"
+                        className="w-full relative overflow-hidden group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow-md active:scale-[0.99]"
                     >
-                        <Printer size={15} />
-                        <span>Print / Save PDF</span>
+                        <Printer size={14} className="shrink-0" />
+                        <span className="tracking-wide uppercase text-[11px] font-bold">Print / Save PDF</span>
                     </button>
 
-                    {/* Edit Particulars */}
-                    <button 
-                        onClick={handleOpenEditModal}
-                        className="flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs active:scale-[0.98]"
-                        title="Edit name, address, or salutation printed on this document"
-                    >
-                        <Edit3 size={15} className="text-indigo-600" />
-                        <span>Edit Particulars</span>
-                    </button>
+                    {/* Secondary Dual Actions */}
+                    <div className="grid grid-cols-2 gap-2">
+                        {/* Edit Particulars */}
+                        <button 
+                            type="button"
+                            onClick={handleOpenEditModal}
+                            className="flex items-center justify-center gap-1.5 py-2 px-2.5 bg-slate-50/80 hover:bg-slate-100/90 text-slate-700 border border-slate-200/90 rounded-xl text-xs font-semibold transition active:scale-95 shadow-2xs hover:border-slate-300"
+                            title="Edit name, address, or salutation printed on this document"
+                        >
+                            <Edit3 size={13} className="text-indigo-600 shrink-0" />
+                            <span className="truncate">Edit Particulars</span>
+                        </button>
 
-                    {/* Resend via Email */}
-                    <button 
-                        onClick={() => setIsEmailModalOpen(true)}
-                        className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-purple-600/20 active:scale-[0.98]"
-                        title="Resend this document to the client via email"
-                    >
-                        <Send size={15} />
-                        <span>Resend via Email</span>
-                    </button>
+                        {/* Resend via Email */}
+                        <button 
+                            type="button"
+                            onClick={() => setIsEmailModalOpen(true)}
+                            className="flex items-center justify-center gap-1.5 py-2 px-2.5 bg-purple-50/80 hover:bg-purple-100/90 text-purple-700 border border-purple-200/80 rounded-xl text-xs font-semibold transition active:scale-95 shadow-2xs hover:border-purple-300"
+                            title="Resend this document to the client via email"
+                        >
+                            <Send size={13} className="text-purple-600 shrink-0" />
+                            <span className="truncate">Resend Email</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
