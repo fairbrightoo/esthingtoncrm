@@ -53,7 +53,7 @@ export const ResendDocumentModal: React.FC<ResendDocumentModalProps> = ({
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
             const res = await axios.post(
-                `${baseUrl}/api/inventory/sales/${sale.id}/resend-documents`,
+                `${baseUrl}/api/sales/${sale.id}/resend-documents`,
                 {
                     documentType,
                     customEmail: recipientEmail.trim(),

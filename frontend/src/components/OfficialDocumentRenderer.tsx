@@ -152,7 +152,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose, onSaleUp
         setIsUpdatingParticulars(true);
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            const res = await axios.put(`${baseUrl}/api/inventory/sales/${sale.id}/document-info`, {
+            const res = await axios.put(`${baseUrl}/api/sales/${sale.id}/document-info`, {
                 nameOnDocument: editName.trim() || undefined,
                 salutationOnDocument: editSalutation.trim() || undefined,
                 phoneOnDocument: editPhone.trim() || undefined,
@@ -197,7 +197,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose, onSaleUp
         setIsUpdatingParticulars(true);
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            const res = await axios.put(`${baseUrl}/api/inventory/sales/${sale.id}/document-info`, {
+            const res = await axios.put(`${baseUrl}/api/sales/${sale.id}/document-info`, {
                 addressOnDocument: sale.lead.address,
                 syncToBiodata: false
             }, {

@@ -128,6 +128,7 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/scripts', scriptRoutes);
 app.use('/api', inventoryRoutes); // Products and Sales
+app.use('/api/inventory', inventoryRoutes); // Alias for inventory/sales routes
 import analyticsRoutes from './routes/analyticsRoutes.js';
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/announcements', announcementRoutes);
