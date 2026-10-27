@@ -8,6 +8,8 @@ router.use(authenticateToken);
 
 router.post('/', DiscountController.generateDiscount);
 router.get('/', DiscountController.getBranchDiscounts);
+router.get('/validate', DiscountController.validateDiscount);
+router.post('/validate', DiscountController.validateDiscount);
 router.patch('/:id/toggle', DiscountController.toggleDiscountStatus);
 
 export default router;

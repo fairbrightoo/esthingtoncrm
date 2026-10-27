@@ -117,5 +117,45 @@ export const DiscountController = {
             console.error(error);
             res.status(500).json({ error: "Failed to toggle discount" });
         }
+    },
+
+    // 4. Validate a discount code (for live previews and exchange/purchase validation)
+    validateDiscount: async (req: Request, res: Response) => {
+        try {
+            const code = (req.query.code || req.body.code) as string;
+            if (!code || !String(code).trim()) {
+                return res.status(400).json({ error: "Discount code is required." });
+            }
+
+            const cleanCode = String(code).toUpperCase().trim();
+            const discount = await prisma.discountCode.findUnique({
+                where: { code: cleanCode },
+                include: { _count: { select: { sales: true } } }
+            });
+
+            if (!discount || !discount.isActive) {
+                return res.status(404).json({ error: "Invalid or inactive discount code." });
+            }
+
+            if (discount.expiresAt && new Date() > new Date(discount.expiresAt)) {
+                return res.status(400).json({ error: "This discount code has expired." });
+            }
+
+            if (discount.maxUses && discount._count.sales >= discount.maxUses) {
+                return res.status(400).json({ error: "This discount code has reached its maximum usage limit." });
+            }
+
+            res.json({
+                valid: true,
+                id: discount.id,
+                code: discount.code,
+                type: discount.type,
+                value: discount.value,
+                formattedValue: discount.type === 'PERCENTAGE' ? `${discount.value}% OFF` : `₦${discount.value.toLocaleString()} OFF`
+            });
+        } catch (error) {
+            console.error("Validate Discount Error:", error);
+            res.status(500).json({ error: "Failed to validate discount code." });
+        }
     }
 };

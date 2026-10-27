@@ -814,7 +814,7 @@ export const SaleController = {
     exchangePlot: async (req: Request, res: Response) => {
         try {
             const { saleId } = req.params as { saleId: string };
-            const { newPlotId, userId } = req.body;
+            const { newPlotId, discountCode } = req.body;
             
             const user = (req as any).user;
             if (!['BRANCH_ADMIN', 'MANAGING_DIRECTOR', 'SUPER_ADMIN'].includes(user?.role)) {
@@ -823,30 +823,81 @@ export const SaleController = {
 
             const saleA = await prisma.sale.findUnique({
                 where: { id: String(saleId) },
-                include: { lead: true }
+                include: { 
+                    lead: true,
+                    plot: { include: { estate: true } }
+                }
             });
 
             if (!saleA) return res.status(404).json({ error: "Original sale not found" });
 
-            const plotB = await prisma.plot.findUnique({ where: { id: String(newPlotId) } });
+            const plotB = await prisma.plot.findUnique({ 
+                where: { id: String(newPlotId) },
+                include: { estate: true }
+            });
             if (!plotB) return res.status(404).json({ error: "New plot not found" });
 
             if (plotB.status !== 'AVAILABLE') return res.status(400).json({ error: "The new plot is not available for exchange." });
+
+            // Optional Discount Code Processing
+            let finalPrice = plotB.price;
+            let activeDiscountId: string | null = null;
+            let discountDeduction = 0;
+            let discountInfo: any = null;
+
+            if (discountCode && String(discountCode).trim()) {
+                const cleanCode = String(discountCode).toUpperCase().trim();
+                const discount = await prisma.discountCode.findUnique({ 
+                    where: { code: cleanCode },
+                    include: { _count: { select: { sales: true } } }
+                });
+
+                if (discount && discount.isActive) {
+                    if (discount.expiresAt && new Date() > new Date(discount.expiresAt)) {
+                        return res.status(400).json({ error: "This discount code has expired." });
+                    }
+                    if (discount.maxUses && discount._count.sales >= discount.maxUses) {
+                        return res.status(400).json({ error: "This discount code has reached its maximum usage limit." });
+                    }
+
+                    activeDiscountId = discount.id;
+                    if (discount.type === 'FLAT') {
+                        discountDeduction = discount.value;
+                        finalPrice -= discount.value;
+                    } else if (discount.type === 'PERCENTAGE') {
+                        discountDeduction = finalPrice * (discount.value / 100);
+                        finalPrice -= discountDeduction;
+                    }
+                    if (finalPrice < 0) finalPrice = 0;
+
+                    discountInfo = {
+                        code: discount.code,
+                        type: discount.type,
+                        value: discount.value,
+                        deduction: discountDeduction
+                    };
+                } else {
+                    return res.status(400).json({ error: "Invalid or inactive discount code." });
+                }
+            }
 
             const totalEquity = saleA.totalPaid;
             
             let transferredAmount = 0;
             let surplus = 0;
 
-            if (plotB.price <= totalEquity) {
-                transferredAmount = plotB.price;
-                surplus = totalEquity - plotB.price;
+            if (finalPrice <= totalEquity) {
+                transferredAmount = finalPrice;
+                surplus = totalEquity - finalPrice;
             } else {
                 transferredAmount = totalEquity;
                 surplus = 0;
             }
 
-            const isCompleted = transferredAmount >= plotB.price;
+            const isCompleted = transferredAmount >= finalPrice;
+            const actorUserId = user?.id || user?.userId;
+
+            let createdSaleBId = '';
 
             await prisma.$transaction(async (tx) => {
                 // 1. Mark SaleA as EXCHANGED
@@ -872,15 +923,24 @@ export const SaleController = {
                     data: {
                         leadId: saleA.leadId,
                         plotId: newPlotId,
-                        agreedPrice: plotB.price,
+                        plotNumber: plotB.plotNumber,
+                        agreedPrice: finalPrice,
                         totalPaid: transferredAmount,
                         status: isCompleted ? 'COMPLETED' : 'ONGOING',
                         nameOnDocument: saleA.nameOnDocument,
+                        salutationOnDocument: saleA.salutationOnDocument,
                         phoneOnDocument: saleA.phoneOnDocument,
                         addressOnDocument: saleA.addressOnDocument,
-                        isCornerPiece: plotB.isCornerPiece
+                        isCornerPiece: plotB.isCornerPiece,
+                        discountCodeId: activeDiscountId,
+                        marketerId: saleA.marketerId,
+                        marketerCommissionRate: saleA.marketerCommissionRate,
+                        referrerId: saleA.referrerId,
+                        referrerCommissionRate: saleA.referrerCommissionRate
                     }
                 });
+
+                createdSaleBId = saleB.id;
 
                 // 5. Create synthetic Equity Virtual Payment on SaleB
                 if (transferredAmount > 0) {
@@ -891,7 +951,7 @@ export const SaleController = {
                             method: 'EQUITY_TRANSFER',
                             status: 'APPROVED',
                             proofOfPaymentUrl: 'SYSTEM_MIGRATION',
-                            recordedByUserId: user?.userId, 
+                            recordedByUserId: actorUserId, 
                             isCommissionPaid: true, // Prevents dual-commission
                         }
                     });
@@ -908,9 +968,27 @@ export const SaleController = {
                         }
                     });
                 }
+
+                // 7. Log Activity
+                await tx.activity.create({
+                    data: {
+                        leadId: saleA.leadId,
+                        type: 'NOTE',
+                        direction: 'INBOUND',
+                        notes: `Plot Exchanged: Relinquished ${saleA.plot?.estate?.name || ''} #${saleA.plotNumber || saleA.plot?.plotNumber || ''} for ${plotB.estate?.name || ''} #${plotB.plotNumber}. Final Agreed Price: ₦${finalPrice.toLocaleString()}${discountInfo ? ` (Discount Code ${discountInfo.code} applied: -₦${discountDeduction.toLocaleString()})` : ''}. Transferred Equity: ₦${transferredAmount.toLocaleString()}${surplus > 0 ? `, Surplus: ₦${surplus.toLocaleString()} credited to Equity Wallet` : ''}.`,
+                        createdByUserId: actorUserId
+                    }
+                });
             });
 
-            res.json({ message: "Plot exchanged successfully", surplusStored: surplus });
+            res.json({ 
+                message: "Plot exchanged successfully", 
+                surplusStored: surplus,
+                finalPrice,
+                transferredAmount,
+                discountApplied: discountInfo,
+                newSaleId: createdSaleBId
+            });
         } catch (error) {
             console.error("Exchange Plot Error:", error);
             res.status(500).json({ error: "Failed to exchange plot" });
