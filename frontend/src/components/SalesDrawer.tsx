@@ -45,7 +45,8 @@ import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { ReceiptTemplate } from './ReceiptTemplate';
 import { OfficialDocumentRenderer } from './OfficialDocumentRenderer';
-import { FileText, ArrowRightLeft, Trash2 } from 'lucide-react';
+import { ResendDocumentModal } from './ResendDocumentModal';
+import { FileText, ArrowRightLeft, Trash2, Send } from 'lucide-react';
 import { PlotExchangeModal } from './PlotExchangeModal';
 
 // ... (keep existing types)
@@ -109,6 +110,9 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
     // Plot Exchange Component State
     const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
     const [saleToExchange, setSaleToExchange] = useState<any>(null);
+
+    // Resend Documents Email Modal
+    const [saleForResendEmail, setSaleForResendEmail] = useState<any>(null);
 
     // Refund Logic
     const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
@@ -412,6 +416,7 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                       sale={documentToPrint.sale} 
                       documentType={documentToPrint.type} 
                       onClose={() => setDocumentToPrint(null)} 
+                      onSaleUpdated={() => fetchSales()}
                  />
             </div>
         );
@@ -1116,6 +1121,14 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                                         </button>
                                     )}
 
+                                    <button
+                                        onClick={() => setSaleForResendEmail(sale)}
+                                        className="text-[11px] bg-purple-50 text-purple-700 px-2.5 py-1.5 rounded font-medium hover:bg-purple-100 flex items-center shadow-sm"
+                                        title="Resend official documents to client via email"
+                                    >
+                                        <Send size={12} className="mr-1" /> Resend Email
+                                    </button>
+
                                     <div className="flex-1"></div>
 
                                     {['SUPER_ADMIN', 'BRANCH_ADMIN', 'MANAGING_DIRECTOR'].includes(user?.role) && sale.status !== 'EXCHANGED' && !isInactive && (
@@ -1524,6 +1537,13 @@ export const SalesDrawer = ({ leadId, onLeadUpdate }: { leadId: string; onLeadUp
                     </div>
                 </div>
             )}
+            {/* Resend Email Modal */}
+            <ResendDocumentModal
+                isOpen={Boolean(saleForResendEmail)}
+                onClose={() => setSaleForResendEmail(null)}
+                sale={saleForResendEmail}
+                initialDocumentType="OFFER"
+            />
         </div >
     );
 };

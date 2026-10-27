@@ -125,5 +125,159 @@ export const DocumentAutomationService = {
             console.error(`[DocAuto] Failed to dispatch documents for sale ${saleId}:`, error);
             throw error;
         }
+    },
+
+    async resendDocuments(
+        saleId: string, 
+        documentType: 'OFFER' | 'ALLOCATION' | 'PROVISIONAL_ALLOCATION' | 'FINAL_ALLOCATION' | 'RECEIPT' | 'ALL' = 'OFFER', 
+        options?: { paymentId?: string; customEmail?: string; customMessage?: string; userId?: string }
+    ) {
+        try {
+            const sale = await prisma.sale.findUnique({
+                where: { id: saleId },
+                include: {
+                    lead: { include: { branch: true } },
+                    plot: { 
+                        include: { 
+                            estate: { 
+                                include: { 
+                                    branch: {
+                                        include: {
+                                            users: {
+                                                where: { role: 'ACCOUNTANT', isActive: true },
+                                                take: 1
+                                            }
+                                        }
+                                    },
+                                    plotConfigs: true
+                                } 
+                            } 
+                        } 
+                    },
+                    payments: {
+                        where: { status: 'APPROVED' },
+                        orderBy: { createdAt: 'desc' }
+                    }
+                }
+            });
+
+            if (!sale) {
+                throw new Error("Sale record not found.");
+            }
+
+            const targetEmail = options?.customEmail?.trim() || sale.lead?.email;
+            if (!targetEmail) {
+                throw new Error("No client email address is registered for this sale. Please update the client's email in Biodata first.");
+            }
+
+            const companyId = sale.plot?.estate?.companyId;
+            if (!companyId) throw new Error("Sale is not associated with an estate company.");
+
+            const companyInfo = await prisma.company.findUnique({ where: { id: companyId } });
+            const branchInfo = sale.plot?.estate?.branch || sale.lead?.branch;
+            const accountantInfo = sale.plot?.estate?.branch?.users?.[0] || null;
+
+            const branchMDUser = branchInfo?.id ? await prisma.user.findFirst({
+                where: {
+                    branchId: branchInfo.id,
+                    role: 'MANAGING_DIRECTOR'
+                }
+            }) : null;
+
+            const templates = await prisma.documentTemplate.findMany({
+                where: { companyId }
+            });
+
+            const attachments: { filename: string, content: Buffer }[] = [];
+            const estateName = sale.plot?.estate?.name || "Property";
+            const clientName = sale.nameOnDocument || sale.lead?.fullName || "Valued Client";
+            const companyName = companyInfo?.name || "Esthington Group";
+
+            let emailSubject = `Updated Official Documents: ${estateName} - ${companyName}`;
+            let emailBody = `<p>Dear <b>${clientName}</b>,</p>`;
+
+            if (options?.customMessage) {
+                emailBody += `<p>${options.customMessage.replace(/\n/g, '<br/>')}</p>`;
+            } else {
+                emailBody += `<p>Please find attached your updated official documentation for your property at <b>${estateName}</b>. All records and client particulars have been confirmed.</p>`;
+            }
+
+            // 1. Offer Letter
+            if (documentType === 'OFFER' || documentType === 'ALL') {
+                const offerTemplate = templates.find(t => t.type === 'OFFER');
+                if (offerTemplate) {
+                    const html = PDFService.processTemplate(offerTemplate.content, sale, companyInfo, branchInfo, accountantInfo, 'OFFER', branchMDUser);
+                    const pdfBuffer = await PDFService.generatePdfBuffer(html);
+                    attachments.push({ filename: `Offer_Letter_${estateName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`, content: pdfBuffer });
+                }
+            }
+
+            // 2. Allocation Letter
+            if (documentType === 'ALLOCATION' || documentType === 'PROVISIONAL_ALLOCATION' || documentType === 'FINAL_ALLOCATION' || documentType === 'ALL') {
+                const isCompleted = sale.totalPaid >= sale.agreedPrice;
+                const allocationType = (documentType === 'FINAL_ALLOCATION' || (documentType !== 'PROVISIONAL_ALLOCATION' && isCompleted))
+                    ? 'FINAL_ALLOCATION'
+                    : 'PROVISIONAL_ALLOCATION';
+                
+                const allocationTemplate = templates.find(t => t.type === allocationType);
+                if (allocationTemplate) {
+                    const html = PDFService.processTemplate(allocationTemplate.content, sale, companyInfo, branchInfo, accountantInfo, allocationType as any, branchMDUser);
+                    const pdfBuffer = await PDFService.generatePdfBuffer(html);
+                    attachments.push({ filename: `${allocationType === 'FINAL_ALLOCATION' ? 'Final' : 'Provisional'}_Allocation_Letter.pdf`, content: pdfBuffer });
+                }
+            }
+
+            // 3. Receipt
+            if (documentType === 'RECEIPT' || documentType === 'ALL') {
+                const targetPayment = options?.paymentId 
+                    ? await prisma.payment.findUnique({ where: { id: options.paymentId } })
+                    : sale.payments?.[0];
+
+                if (targetPayment) {
+                    let receiptHtml = PDFService.getGenericReceiptTemplate();
+                    receiptHtml = receiptHtml.replace(/{{TRANSACTION_AMOUNT}}/g, new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(targetPayment.amount));
+                    const html = PDFService.processTemplate(receiptHtml, sale, companyInfo, branchInfo, accountantInfo, 'RECEIPT', branchMDUser);
+                    const pdfBuffer = await PDFService.generatePdfBuffer(html);
+                    attachments.push({ filename: `Payment_Receipt_${targetPayment.reference || targetPayment.id.substring(0, 6)}.pdf`, content: pdfBuffer });
+                }
+            }
+
+            if (attachments.length === 0) {
+                throw new Error(`No document templates found for ${documentType}. Please ensure company document templates are configured in Settings.`);
+            }
+
+            emailBody += `<p>Thank you for choosing ${companyName}.</p>`;
+
+            const envEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+            const rawEmail = envEmail.includes('<') ? envEmail.match(/<([^>]+)>/)?.[1] || envEmail : envEmail;
+            const fromName = companyInfo?.name || "Esthington Group";
+            const fromAddress = `"${fromName}" <${rawEmail}>`;
+            const replyToAddress = branchInfo?.email || companyInfo?.email || undefined;
+
+            await EmailService.send(targetEmail, emailSubject, emailBody, attachments, fromAddress, replyToAddress);
+
+            // Log activity on lead
+            await prisma.activity.create({
+                data: {
+                    leadId: sale.leadId,
+                    type: 'EMAIL_SENT',
+                    direction: 'OUTBOUND',
+                    notes: `Resent updated official documents (${documentType}) with ${attachments.length} attachment(s) to ${targetEmail}`,
+                    createdByUserId: options?.userId
+                }
+            });
+
+            console.log(`[DocAuto] Successfully resent ${attachments.length} document(s) for Sale ${saleId} to ${targetEmail}`);
+
+            return {
+                success: true,
+                message: `Successfully sent ${attachments.length} document(s) to ${targetEmail}`,
+                targetEmail,
+                attachmentCount: attachments.length
+            };
+        } catch (error: any) {
+            console.error(`[DocAuto] Failed to resend documents for sale ${saleId}:`, error);
+            throw error;
+        }
     }
 };

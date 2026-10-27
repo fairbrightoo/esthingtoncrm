@@ -54,6 +54,8 @@ router.put('/payments/:paymentId/bank-confirm', authenticateToken, SaleControlle
 router.post('/payments/:paymentId/messages', authenticateToken, SaleController.addPaymentMessage);
 router.get('/payments/:paymentId/messages', authenticateToken, SaleController.getPaymentMessages);
 router.put('/sales/:id/cancel', authenticateToken, SaleController.cancelSale);
+router.put('/sales/:id/document-info', authenticateToken, SaleController.updateDocumentInfo);
+router.post('/sales/:id/resend-documents', authenticateToken, SaleController.resendDocuments);
 
 // --- LEGACY SALE REQUESTS ROUTES ---
 import { LegacySaleRequestController } from '../controllers/LegacySaleRequestController.js';

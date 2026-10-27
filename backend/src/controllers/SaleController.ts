@@ -1288,5 +1288,105 @@ export const SaleController = {
             console.error("Get Deletion History Error", error);
             res.status(500).json({ error: "Failed to fetch deletion history." });
         }
+    },
+
+    // 17. Update Document Particulars for a Sale
+    updateDocumentInfo: async (req: Request, res: Response) => {
+        try {
+            const id = String(req.params.id);
+            const { 
+                nameOnDocument, 
+                salutationOnDocument, 
+                phoneOnDocument, 
+                addressOnDocument, 
+                syncToBiodata 
+            } = req.body;
+
+            const existingSale = await prisma.sale.findUnique({
+                where: { id },
+                include: { 
+                    lead: true,
+                    plot: { include: { estate: true } }
+                }
+            });
+
+            if (!existingSale) {
+                return res.status(404).json({ error: "Sale not found" });
+            }
+
+            const updatedSale = await prisma.sale.update({
+                where: { id },
+                data: {
+                    nameOnDocument: nameOnDocument !== undefined ? (nameOnDocument ? String(nameOnDocument).trim() : null) : undefined,
+                    salutationOnDocument: salutationOnDocument !== undefined ? (salutationOnDocument ? String(salutationOnDocument).trim() : null) : undefined,
+                    phoneOnDocument: phoneOnDocument !== undefined ? (phoneOnDocument ? String(phoneOnDocument).trim() : null) : undefined,
+                    addressOnDocument: addressOnDocument !== undefined ? (addressOnDocument ? String(addressOnDocument).trim() : null) : undefined,
+                },
+                include: {
+                    lead: true,
+                    plot: { include: { estate: true } }
+                }
+            });
+
+            // If syncToBiodata is true, sync back to Lead record as well
+            if (syncToBiodata && existingSale.leadId) {
+                const leadUpdate: any = {};
+                if (addressOnDocument !== undefined) leadUpdate.address = String(addressOnDocument).trim();
+                if (nameOnDocument !== undefined) leadUpdate.fullName = String(nameOnDocument).trim();
+                if (phoneOnDocument !== undefined) leadUpdate.phone = String(phoneOnDocument).trim();
+
+                if (Object.keys(leadUpdate).length > 0) {
+                    await prisma.lead.update({
+                        where: { id: existingSale.leadId },
+                        data: leadUpdate
+                    });
+                }
+            }
+
+            // Log activity
+            // @ts-ignore
+            const userId = req.user?.id;
+            const estateName = (existingSale as any).plot?.estate?.name || '';
+            await prisma.activity.create({
+                data: {
+                    leadId: existingSale.leadId,
+                    type: 'NOTE',
+                    direction: 'INBOUND',
+                    notes: `Updated document particulars for property ${estateName} #${existingSale.plotNumber || ''}: Address: "${addressOnDocument || 'Unchanged'}"`,
+                    createdByUserId: userId
+                }
+            });
+
+            res.json({
+                message: "Document particulars updated successfully.",
+                sale: updatedSale
+            });
+        } catch (error: any) {
+            console.error("Update Document Info Error", error);
+            res.status(500).json({ error: error.message || "Failed to update document particulars." });
+        }
+    },
+
+    // 18. Resend Documents via Email
+    resendDocuments: async (req: Request, res: Response) => {
+        try {
+            const id = String(req.params.id);
+            const { documentType, paymentId, customEmail, customMessage } = req.body;
+
+            // @ts-ignore
+            const userId = req.user?.id;
+
+            const result = await DocumentAutomationService.resendDocuments(id, documentType || 'OFFER', {
+                paymentId,
+                customEmail,
+                customMessage,
+                userId
+            });
+
+            res.json(result);
+        } catch (error: any) {
+            console.error("Resend Documents Error", error);
+            res.status(500).json({ error: error.message || "Failed to resend documents." });
+        }
     }
 };

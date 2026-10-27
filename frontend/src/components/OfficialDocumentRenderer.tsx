@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, FileText } from 'lucide-react';
+import { Printer, FileText, Edit3, Send, AlertTriangle, RefreshCw, X, Check, CheckCircle2 } from 'lucide-react';
+import { ResendDocumentModal } from './ResendDocumentModal';
 
 interface Props {
     sale: any;
     documentType: 'OFFER' | 'PROVISIONAL_ALLOCATION' | 'FINAL_ALLOCATION';
     onClose?: () => void;
+    onSaleUpdated?: (updatedSale: any) => void;
 }
 
-export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props) => {
+export const OfficialDocumentRenderer = ({ sale, documentType, onClose, onSaleUpdated }: Props) => {
     const { token } = useAuth();
+    const { addToast } = useToast();
     const [template, setTemplate] = useState<string | null>(null);
     const [companyInfo, setCompanyInfo] = useState<any>(null);
     const [branchInfo, setBranchInfo] = useState<any>(null); // Branch taking ownership
@@ -19,9 +23,27 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
     const [isLoading, setIsLoading] = useState(true);
     const componentRef = useRef<HTMLDivElement>(null);
 
+    // Active Document Particulars State
+    const [docName, setDocName] = useState<string>(sale?.nameOnDocument || sale?.lead?.fullName || '');
+    const [docSalutation, setDocSalutation] = useState<string>(sale?.salutationOnDocument || '');
+    const [docPhone, setDocPhone] = useState<string>(sale?.phoneOnDocument || sale?.lead?.phone || '');
+    const [docAddress, setDocAddress] = useState<string>(sale?.addressOnDocument || sale?.lead?.address || '');
+
+    // Modal States
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [isUpdatingParticulars, setIsUpdatingParticulars] = useState(false);
+
+    // Form inputs for Particulars Edit Modal
+    const [editName, setEditName] = useState('');
+    const [editSalutation, setEditSalutation] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editAddress, setEditAddress] = useState('');
+    const [syncToBiodata, setSyncToBiodata] = useState(true);
+
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
-        documentTitle: `${documentType}_${sale?.lead?.fullName?.replace(/\s+/g, '_')}`,
+        documentTitle: `${documentType}_${(docName || sale?.lead?.fullName || 'Client').replace(/\s+/g, '_')}`,
         print: async (printIframe) => {
             return new Promise((resolve) => {
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -53,6 +75,10 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
 
     useEffect(() => {
         if (sale && sale.lead?.companyId) {
+            setDocName(sale.nameOnDocument || sale.lead?.fullName || '');
+            setDocSalutation(sale.salutationOnDocument || '');
+            setDocPhone(sale.phoneOnDocument || sale.lead?.phone || '');
+            setDocAddress(sale.addressOnDocument || sale.lead?.address || '');
             fetchData();
         }
     }, [sale]);
@@ -110,6 +136,95 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         }
     };
 
+    // Open Edit Particulars Modal
+    const handleOpenEditModal = () => {
+        setEditName(docName);
+        setEditSalutation(docSalutation);
+        setEditPhone(docPhone);
+        setEditAddress(docAddress);
+        setSyncToBiodata(true);
+        setIsEditModalOpen(true);
+    };
+
+    // Save Updated Particulars
+    const handleSaveParticulars = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsUpdatingParticulars(true);
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+            const res = await axios.put(`${baseUrl}/api/inventory/sales/${sale.id}/document-info`, {
+                nameOnDocument: editName.trim() || undefined,
+                salutationOnDocument: editSalutation.trim() || undefined,
+                phoneOnDocument: editPhone.trim() || undefined,
+                addressOnDocument: editAddress.trim() || undefined,
+                syncToBiodata
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const updatedSale = res.data.sale;
+            setDocName(updatedSale.nameOnDocument || updatedSale.lead?.fullName || editName);
+            setDocSalutation(updatedSale.salutationOnDocument || editSalutation);
+            setDocPhone(updatedSale.phoneOnDocument || updatedSale.lead?.phone || editPhone);
+            setDocAddress(updatedSale.addressOnDocument || updatedSale.lead?.address || editAddress);
+
+            // Mutate current sale prop so subsequent re-renders stay consistent
+            sale.nameOnDocument = updatedSale.nameOnDocument;
+            sale.salutationOnDocument = updatedSale.salutationOnDocument;
+            sale.phoneOnDocument = updatedSale.phoneOnDocument;
+            sale.addressOnDocument = updatedSale.addressOnDocument;
+            if (syncToBiodata && sale.lead) {
+                sale.lead.address = editAddress.trim();
+            }
+
+            if (onSaleUpdated) {
+                onSaleUpdated(updatedSale);
+            }
+
+            addToast("Document particulars updated and saved successfully!", "success");
+            setIsEditModalOpen(false);
+        } catch (error: any) {
+            console.error("Failed to update document particulars:", error);
+            addToast(error.response?.data?.error || "Failed to update particulars.", "error");
+        } finally {
+            setIsUpdatingParticulars(false);
+        }
+    };
+
+    // Quick Sync Address from Biodata
+    const handleQuickSyncBiodata = async () => {
+        if (!sale?.lead?.address) return;
+        setIsUpdatingParticulars(true);
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+            const res = await axios.put(`${baseUrl}/api/inventory/sales/${sale.id}/document-info`, {
+                addressOnDocument: sale.lead.address,
+                syncToBiodata: false
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setDocAddress(sale.lead.address);
+            sale.addressOnDocument = sale.lead.address;
+            if (onSaleUpdated) {
+                onSaleUpdated(res.data.sale);
+            }
+            addToast("Document address updated with client's corrected biodata address!", "success");
+        } catch (error: any) {
+            console.error("Failed to sync biodata address:", error);
+            addToast(error.response?.data?.error || "Failed to sync biodata address.", "error");
+        } finally {
+            setIsUpdatingParticulars(false);
+        }
+    };
+
+    // Check if client biodata address differs from document address
+    const hasBiodataAddressMismatch = Boolean(
+        sale?.lead?.address && 
+        docAddress && 
+        sale.lead.address.trim().toLowerCase() !== docAddress.trim().toLowerCase()
+    );
+
     const numberToWords = (num: number): string => {
         if (!num || isNaN(num) || num <= 0) return 'Zero Naira';
         const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -163,8 +278,8 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         // Gender Salutation Logic
         const salutationRegex = /Dear\s+(Sir\/?Ma|Sir|Ma|Madam|Mr\.?|Mrs\.?|Ms\.?)[^<\n]*?,?/gi;
         
-        if (sale.salutationOnDocument) {
-            html = html.replace(salutationRegex, sale.salutationOnDocument);
+        if (docSalutation) {
+            html = html.replace(salutationRegex, docSalutation);
         } else {
             const gender = sale.lead?.gender?.toLowerCase() || 'male';
             const correctSalutation = (gender === 'female') ? 'Dear Ma,' : 'Dear Sir,';
@@ -174,10 +289,10 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         // General Info
         html = html.replace(/{{CURRENT_DATE}}/g, today);
         
-        // Client Info
-        html = html.replace(/{{CLIENT_NAME}}/g, sale.nameOnDocument || sale.lead.fullName);
-        html = html.replace(/{{CLIENT_ADDRESS}}/g, sale.addressOnDocument || sale.lead.address || '___________________________');
-        html = html.replace(/{{CLIENT_PHONE}}/g, sale.phoneOnDocument || sale.lead.phone || '___________________________');
+        // Client Info (Using active state)
+        html = html.replace(/{{CLIENT_NAME}}/g, docName || sale.lead?.fullName || 'Client');
+        html = html.replace(/{{CLIENT_ADDRESS}}/g, docAddress || sale.lead?.address || '___________________________');
+        html = html.replace(/{{CLIENT_PHONE}}/g, docPhone || sale.lead?.phone || '___________________________');
 
         // Plot Info
         const plotSizeNum = Number(sale.plot?.size || sale.size || 0);
@@ -317,12 +432,11 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
         html = html.replace(/{{BRANCH_PHONE}}/g, branchInfo?.phone || companyInfo?.phone || 'Customer Care Line');
         html = html.replace(/{{BRANCH_EMAIL}}/g, branchInfo?.email || companyInfo?.email || 'Branch Email');
 
-
         return html;
     };
 
     if (isLoading) {
-        return <div className="p-8 text-center animate-pulse">Generating Document...</div>;
+        return <div className="p-8 text-center animate-pulse text-gray-500 font-medium">Generating Document...</div>;
     }
 
     return (
@@ -338,24 +452,71 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                             <h3 className="font-bold text-gray-800 text-[13px] sm:text-sm uppercase tracking-wide">
                                 {documentType.replace('_', ' ')}
                             </h3>
-                            <p className="text-[10px] sm:text-xs text-gray-400 font-medium">A4 Document Ready for Export</p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 font-medium">A4 Document Ready for Export & Client Delivery</p>
                         </div>
                     </div>
                     {onClose && (
                         <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Close Preview">
-                            ✕
+                            <X size={18} />
                         </button>
                     )}
                 </div>
 
-                <button 
-                    onClick={() => handlePrint()}
-                    className="w-full relative overflow-hidden group flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]"
-                >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-                    <Printer size={16} className="relative z-10" />
-                    <span className="relative z-10 tracking-wide">Print / Save PDF</span>
-                </button>
+                {/* Smart Alert: Detects when Client Biodata was corrected, allowing instant sync */}
+                {hasBiodataAddressMismatch && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 gap-2 shadow-xs">
+                        <div className="flex items-start space-x-2.5">
+                            <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                                <span className="font-bold text-amber-800">Biodata Address Correction Detected:</span>
+                                <p className="text-amber-700 mt-0.5">
+                                    Primary address in Client's profile is: <em>"{sale.lead.address}"</em>, but this document was created with an older address.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleQuickSyncBiodata}
+                            disabled={isUpdatingParticulars}
+                            className="shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs transition shadow-sm flex items-center justify-center space-x-1.5 active:scale-95 disabled:opacity-50"
+                        >
+                            <RefreshCw size={12} className={isUpdatingParticulars ? 'animate-spin' : ''} />
+                            <span>Apply to Document</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Action Buttons Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {/* Print / Save PDF */}
+                    <button 
+                        onClick={() => handlePrint()}
+                        className="relative overflow-hidden group flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]"
+                    >
+                        <Printer size={15} />
+                        <span>Print / Save PDF</span>
+                    </button>
+
+                    {/* Edit Particulars */}
+                    <button 
+                        onClick={handleOpenEditModal}
+                        className="flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs active:scale-[0.98]"
+                        title="Edit name, address, or salutation printed on this document"
+                    >
+                        <Edit3 size={15} className="text-indigo-600" />
+                        <span>Edit Particulars</span>
+                    </button>
+
+                    {/* Resend via Email */}
+                    <button 
+                        onClick={() => setIsEmailModalOpen(true)}
+                        className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-purple-600/20 active:scale-[0.98]"
+                        title="Resend this document to the client via email"
+                    >
+                        <Send size={15} />
+                        <span>Resend via Email</span>
+                    </button>
+                </div>
             </div>
 
             {/* Print Area Container */}
@@ -370,7 +531,7 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                         fontFamily: '"Times New Roman", Times, serif', // Formal Letter Font
                     }}
                 >
-                    {/* Invisible boundary for ReactToPrint to target */}
+                    {/* Boundary for ReactToPrint to target */}
                     <div ref={componentRef} className="print-content text-sm leading-relaxed" style={{ padding: '10mm 15mm', width: '100%', maxWidth: '210mm', boxSizing: 'border-box' }}>
                         
                         {/* The Injected HTML Template */}
@@ -401,6 +562,170 @@ export const OfficialDocumentRenderer = ({ sale, documentType, onClose }: Props)
                     </div>
                 </div>
             </div>
+
+            {/* --- EDIT PARTICULARS MODAL --- */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
+                        <div className="p-5 bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 text-white flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2.5 bg-white/10 rounded-xl backdrop-blur-xs border border-white/20">
+                                    <Edit3 size={20} className="text-blue-200" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg leading-tight">Edit Document Particulars</h3>
+                                    <p className="text-xs text-blue-200 mt-0.5">Customize names, address and salutations on legal documents</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSaveParticulars} className="p-6 space-y-4 overflow-y-auto">
+                            {/* Salutation */}
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                                    Salutation on Document
+                                </label>
+                                <div className="grid grid-cols-3 gap-2 mb-2">
+                                    {['Dear Ma,', 'Dear Sir,', 'Dear Client,'].map((opt) => (
+                                        <button
+                                            key={opt}
+                                            type="button"
+                                            onClick={() => setEditSalutation(opt)}
+                                            className={`text-xs py-1.5 px-2 rounded-lg border font-medium transition ${
+                                                editSalutation === opt 
+                                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700' 
+                                                    : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                                            }`}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                                <input
+                                    type="text"
+                                    value={editSalutation}
+                                    onChange={(e) => setEditSalutation(e.target.value)}
+                                    placeholder="e.g. Dear Ma, / Dear Sir, / Dear Mr. & Mrs. Doe,"
+                                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                />
+                            </div>
+
+                            {/* Client Name on Document */}
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                                    Name on Document
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    placeholder="Full Legal Name on Document"
+                                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                />
+                            </div>
+
+                            {/* Phone on Document */}
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                                    Phone on Document
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={editPhone}
+                                    onChange={(e) => setEditPhone(e.target.value)}
+                                    placeholder="Phone number on Document"
+                                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                />
+                            </div>
+
+                            {/* Address on Document */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Primary Address on Document
+                                    </label>
+                                    {sale?.lead?.address && sale.lead.address !== editAddress && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditAddress(sale.lead.address)}
+                                            className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1"
+                                        >
+                                            <RefreshCw size={11} /> Copy from Biodata
+                                        </button>
+                                    )}
+                                </div>
+                                <textarea
+                                    rows={3}
+                                    value={editAddress}
+                                    onChange={(e) => setEditAddress(e.target.value)}
+                                    placeholder="Enter client's address to print on offer/allocation letters"
+                                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white resize-none"
+                                />
+                            </div>
+
+                            {/* Sync to Biodata Checkbox */}
+                            <div className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 flex items-start space-x-3">
+                                <input
+                                    type="checkbox"
+                                    id="syncBiodataCheck"
+                                    checked={syncToBiodata}
+                                    onChange={(e) => setSyncToBiodata(e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <label htmlFor="syncBiodataCheck" className="text-xs text-indigo-900 cursor-pointer">
+                                    <strong>Also sync these changes to Client's Master Biodata</strong>
+                                    <p className="text-indigo-700 text-[11px] mt-0.5">
+                                        Keeps the Client KYC & Biodata profile permanently updated with this address.
+                                    </p>
+                                </label>
+                            </div>
+
+                            {/* Footer Buttons */}
+                            <div className="pt-2 flex items-center justify-end space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    disabled={isUpdatingParticulars}
+                                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUpdatingParticulars}
+                                    className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {isUpdatingParticulars ? (
+                                        <>
+                                            <RefreshCw size={15} className="animate-spin" />
+                                            <span>Saving...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check size={16} />
+                                            <span>Save & Update Document</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- RESEND DOCUMENT VIA EMAIL MODAL --- */}
+            <ResendDocumentModal
+                isOpen={isEmailModalOpen}
+                onClose={() => setIsEmailModalOpen(false)}
+                sale={sale}
+                initialDocumentType={documentType}
+            />
         </div>
     );
 };

@@ -489,6 +489,38 @@ export const LeadController = {
                 data: updateData
             });
 
+            // Automatically cascade biodata corrections to all associated sales
+            if (updateData.address !== undefined) {
+                await prisma.sale.updateMany({
+                    where: { leadId: id },
+                    data: { addressOnDocument: updateData.address }
+                });
+            }
+            if (updateData.fullName !== undefined) {
+                await prisma.sale.updateMany({
+                    where: { 
+                        leadId: id,
+                        OR: [
+                            { nameOnDocument: null },
+                            { nameOnDocument: lead.fullName }
+                        ]
+                    },
+                    data: { nameOnDocument: updateData.fullName }
+                });
+            }
+            if (updateData.phone !== undefined) {
+                await prisma.sale.updateMany({
+                    where: { 
+                        leadId: id,
+                        OR: [
+                            { phoneOnDocument: null },
+                            { phoneOnDocument: lead.phone }
+                        ]
+                    },
+                    data: { phoneOnDocument: updateData.phone }
+                });
+            }
+
             if (auditNotes.length > 0) {
                 await prisma.activity.create({
                     data: {
